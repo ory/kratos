@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/ory/x/configx"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver"
@@ -39,27 +40,21 @@ func createIdentity(t *testing.T, ctx context.Context, reg driver.Registry, id u
 
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
 	providerID := "test-provider"
-
-	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
-	ctx = contextx.WithConfigValue(
-		ctx,
-		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config",
-		map[string]interface{}{
-			"providers": []map[string]interface{}{
-				{
-					"provider":      "generic",
-					"id":            providerID,
-					"client_id":     "invalid",
-					"client_secret": "invalid",
-					"issuer_url":    "https://foobar/",
-					"mapper_url":    "file://./stub/oidc.facebook.jsonnet",
-				},
-			},
-		},
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeOIDC, true)),
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config.providers",
+			[]map[string]any{{
+				"provider":      "generic",
+				"id":            providerID,
+				"client_id":     "invalid",
+				"client_secret": "invalid",
+				"issuer_url":    "https://foobar/",
+				"mapper_url":    "file://./stub/oidc.facebook.jsonnet",
+			}},
+		),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/stub.schema.json")),
 	)
-	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/stub.schema.json")
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeOIDC)
 	require.NoError(t, err)
@@ -76,7 +71,7 @@ func TestFormHydration(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := login.NewFlow(reg.Config(), time.Minute, "csrf_token", r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
 	}
@@ -91,7 +86,7 @@ func TestFormHydration(t *testing.T) {
 		r, f := newFlow(ctx, t)
 
 		id := createIdentity(t, ctx, reg, x.NewUUID(), providerID)
-		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		f.Refresh = true
 
 		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))

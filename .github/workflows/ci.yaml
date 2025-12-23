@@ -32,9 +32,6 @@ jobs:
         ports:
           - 3306:3306
     env:
-      TEST_SELFSERVICE_OIDC_HYDRA_ADMIN: http://localhost:4445
-      TEST_SELFSERVICE_OIDC_HYDRA_PUBLIC: http://localhost:4444
-      TEST_SELFSERVICE_OIDC_HYDRA_INTEGRATION_ADDR: http://127.0.0.1:4499
       TEST_DATABASE_POSTGRESQL: "postgres://test:test@localhost:5432/postgres?sslmode=disable"
       TEST_DATABASE_MYSQL: "mysql://root:test@(localhost:3306)/mysql?parseTime=true&multiStatements=true"
       TEST_DATABASE_COCKROACHDB: "cockroach://root@localhost:26257/defaultdb?sslmode=disable"
@@ -45,19 +42,8 @@ jobs:
             || true
           docker start cockroach
         name: Start CockroachDB
-      - run: |
-          docker create --name hydra -p 4445:4445 -p 4444:4444 \
-            -e DSN=memory \
-            -e URLS_SELF_ISSUER=http://localhost:4444/ \
-            -e URLS_LOGIN=http://localhost:4499/login \
-            -e URLS_CONSENT=http://localhost:4499/consent \
-            -e LOG_LEAK_SENSITIVE_VALUES=true \
-            -e SECRETS_SYSTEM=someverylongsecretthatis32byteslong \
-            oryd/hydra:v2.2.0-rc.3 serve all --dev \
-            || true
-          docker start hydra
-          docker logs -f hydra &> /tmp/hydra.log &
-        name: Start Hydra
+      - run: docker pull oryd/hydra:v2.2.0-rc.3
+        name: Pull Hydra
       - uses: ory/ci/checkout@master
         with:
           fetch-depth: 2

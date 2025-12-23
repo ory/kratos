@@ -8,37 +8,32 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/hydra"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/ui/node"
-
-	"github.com/gobuffalo/httptest"
-
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/urlx"
+	"github.com/ory/x/configx"
 
 	"github.com/ory/herodot"
-
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
 )
 
 type opts struct {
@@ -52,12 +47,14 @@ func withLoginChallenge(challenge string) func(*opts) {
 }
 
 func TestHandleError(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	reg.SetHydra(hydra.NewFake())
+	t.Parallel()
 
-	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeySelfServiceRegistrationEnabled, true),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")),
+	)
+	reg.SetHydra(hydra.NewFake())
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 

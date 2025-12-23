@@ -44,6 +44,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/pop/v6"
 	"github.com/ory/pop/v6/logging"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlcon/dockertest"
@@ -94,7 +95,7 @@ func pl(t testing.TB) func(lvl logging.Level, s string, args ...interface{}) {
 
 func createCleanDatabases(t testing.TB) map[string]string {
 	conns := map[string]string{
-		"sqlite": "sqlite://file:" + t.TempDir() + "/db.sqlite?_fk=true&max_conns=1&lock=false",
+		"sqlite": dbal.NewSQLiteTestDatabase(t),
 	}
 	connsMtx := sync.Mutex{}
 

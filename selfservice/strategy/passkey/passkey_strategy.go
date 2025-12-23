@@ -67,9 +67,9 @@ type strategyDependencies interface {
 }
 
 var (
-	_ login.Strategy                    = new(Strategy)
-	_ registration.Strategy             = new(Strategy)
-	_ identity.ActiveCredentialsCounter = new(Strategy)
+	_ login.Strategy                    = (*Strategy)(nil)
+	_ registration.Strategy             = (*Strategy)(nil)
+	_ identity.ActiveCredentialsCounter = (*Strategy)(nil)
 )
 
 type Strategy struct {

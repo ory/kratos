@@ -5,6 +5,8 @@ package internal
 
 import (
 	"cmp"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -25,6 +27,12 @@ import (
 )
 
 func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) *config.Config {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`OK`))
+	}))
+	t.Cleanup(ts.Close)
+
 	configOpts := append([]configx.OptionModifier{
 		configx.WithValues(map[string]interface{}{
 			"log.level":                                      "error",
@@ -36,12 +44,13 @@ func NewConfigurationWithDefaults(t testing.TB, opts ...configx.OptionModifier) 
 			config.ViperKeyHasherBcryptCost:                  4,
 			config.ViperKeyHasherArgon2ConfigKeyLength:       16,
 			config.ViperKeyCourierSMTPURL:                    "smtp://foo:bar@baz.com/",
-			config.ViperKeySelfServiceBrowserDefaultReturnTo: "https://www.ory.sh/redirect-not-set",
+			config.ViperKeySelfServiceBrowserDefaultReturnTo: ts.URL,
 			config.ViperKeySecretsCipher:                     []string{"secret-thirty-two-character-long"},
 			config.ViperKeySecretsPagination:                 []string{uuid.Must(uuid.NewV4()).String()},
 			config.ViperKeySelfServiceLoginFlowStyle:         "unified",
 		}),
 		configx.SkipValidation(),
+		configx.DisableEnvLoading(),
 	}, opts...)
 	return config.MustNew(t, logrusx.New("", ""),
 		contextx.NewTestConfigProvider(embedx.ConfigSchema, configOpts...),
@@ -66,7 +75,6 @@ func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*co
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
 func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
-	ctx := t.Context()
 	c := NewConfigurationWithDefaults(t, append([]configx.OptionModifier{configx.WithValues(map[string]interface{}{
 		config.ViperKeyDSN:             cmp.Or(dsn, dbal.NewSQLiteTestDatabase(t)),
 		"dev":                          true,
@@ -75,7 +83,7 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionM
 		config.ViperKeySecretsDefault:  []string{randx.MustString(32, randx.AlphaNum)},
 		config.ViperKeyCipherAlgorithm: "xchacha20-poly1305",
 	})}, opts...)...)
-	reg, err := driver.NewRegistryFromDSN(ctx, c, logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel)))
+	reg, err := driver.NewRegistryFromDSN(t.Context(), c, logrusx.New("", "", logrusx.ForceLevel(logrus.ErrorLevel)))
 	require.NoError(t, err)
 
 	reg.SetJSONNetVMProvider(jsonnetsecure.NewTestProvider(t))

@@ -26,6 +26,8 @@ import (
 	"github.com/tidwall/gjson"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/ory/x/configx"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
@@ -43,23 +45,22 @@ import (
 var ignoreDefault = []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
 
 func TestHandler(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	t.Parallel()
+
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
+			"default":         "file://./stub/identity.schema.json",
+			"customer":        "file://./stub/handler/customer.schema.json",
+			"multiple_emails": "file://./stub/handler/multiple_emails.schema.json",
+			"employee":        "file://./stub/handler/employee.schema.json",
+		})),
+	)
 
 	// Start kratos server
 	publicTS, adminTS := testhelpers.NewKratosServerWithCSRF(t, reg)
 
 	mockServerURL := urlx.ParseOrPanic(publicTS.URL)
 	defaultSchemaExternalURL := (&schema.Schema{ID: "default"}).SchemaURL(mockServerURL).String()
-
-	conf.MustSet(ctx, config.ViperKeyAdminBaseURL, adminTS.URL)
-	testhelpers.SetIdentitySchemas(t, conf, map[string]string{
-		"default":         "file://./stub/identity.schema.json",
-		"customer":        "file://./stub/handler/customer.schema.json",
-		"multiple_emails": "file://./stub/handler/multiple_emails.schema.json",
-		"employee":        "file://./stub/handler/employee.schema.json",
-	})
-
-	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, mockServerURL.String())
 
 	getFull := func(t *testing.T, base *httptest.Server, href string, expectCode int) (gjson.Result, *http.Response) {
 		t.Helper()
@@ -231,7 +232,7 @@ func TestHandler(t *testing.T) {
 		ignoreDefault := []string{"id", "schema_url", "state_changed_at", "created_at", "updated_at"}
 		t.Run("without any credentials", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, identity.CreateIdentityBody{Traits: []byte(`{"email": "import-1@ory.sh"}`)})
-			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
 			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...))
@@ -239,7 +240,7 @@ func TestHandler(t *testing.T) {
 
 		t.Run("without traits", func(t *testing.T) {
 			res := send(t, adminTS, "POST", "/identities", http.StatusCreated, json.RawMessage("{}"))
-			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
 			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...))
@@ -277,7 +278,7 @@ func TestHandler(t *testing.T) {
 				},
 			})
 
-			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
 			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
@@ -292,7 +293,7 @@ func TestHandler(t *testing.T) {
 			assert.Contains(t, identifiers, "okta:import-saml-2")
 			assert.Contains(t, identifiers, "onelogin:import-saml-2")
 
-			require.NoError(t, hash.Compare(ctx, []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+			require.NoError(t, hash.Compare(t.Context(), []byte("123456"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 		})
 
 		t.Run("with organization oidc and saml credentials", func(t *testing.T) {
@@ -319,7 +320,7 @@ func TestHandler(t *testing.T) {
 				},
 			})
 
-			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
 			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
@@ -389,12 +390,12 @@ func TestHandler(t *testing.T) {
 							Config: identity.AdminIdentityImportCredentialsPasswordConfig{HashedPassword: tt.hash},
 						}},
 					})
-					actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+					actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 					require.NoError(t, err)
 
 					snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...), snapshotx.ExceptNestedKeys("hashed_password"))
 
-					require.NoError(t, hash.Compare(ctx, []byte(tt.pass), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+					require.NoError(t, hash.Compare(t.Context(), []byte(tt.pass), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 				})
 			}
 		})
@@ -406,7 +407,7 @@ func TestHandler(t *testing.T) {
 					Config: identity.AdminIdentityImportCredentialsPasswordConfig{UsePasswordMigrationHook: true},
 				}},
 			})
-			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
 			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(ignoreDefault...), snapshotx.ExceptNestedKeys("hashed_password"))
@@ -426,7 +427,7 @@ func TestHandler(t *testing.T) {
 				}},
 				RecoveryAddresses: []identity.RecoveryAddress{{Value: "UpperCased@ory.sh"}},
 			})
-			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+			actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 			require.NoError(t, err)
 
 			require.Len(t, actual.VerifiableAddresses, 1)
@@ -521,7 +522,7 @@ func TestHandler(t *testing.T) {
 				if token == "" {
 					return ""
 				}
-				c, err := reg.Cipher(ctx).Encrypt(context.Background(), []byte(token+suffix))
+				c, err := reg.Cipher(t.Context()).Encrypt(context.Background(), []byte(token+suffix))
 				require.NoError(t, err)
 				return c
 			}
@@ -822,7 +823,7 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=should return decrypted token", func(t *testing.T) {
-			e, _ := reg.Cipher(ctx).Encrypt(context.Background(), []byte("foo_token"))
+			e, _ := reg.Cipher(t.Context()).Encrypt(context.Background(), []byte("foo_token"))
 			id := createOIDCorSAMLIdentity(t, identity.CredentialsTypeOIDC, "foo-failed-2.oidc@bar.com", e, "bar_token", "id_token", false)
 			for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
 				t.Run("endpoint="+name, func(t *testing.T) {
@@ -913,7 +914,7 @@ func TestHandler(t *testing.T) {
 					assert.NotEqualValues(t, i.StateChangedAt, sqlxx.NullTime(res.Get("state_changed_at").Time()), "%s", res.Raw)
 					actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), i.ID)
 					require.NoError(t, err)
-					require.NoError(t, hash.Compare(ctx, []byte("pswd1234"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
+					require.NoError(t, hash.Compare(t.Context(), []byte("pswd1234"), []byte(gjson.GetBytes(actual.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())))
 				})
 			}
 		})
@@ -1073,7 +1074,7 @@ func TestHandler(t *testing.T) {
 				var identityIDs []uuid.UUID
 				require.NoErrorf(t, json.Unmarshal(([]byte)(body.Get("identities.#.identity").Raw), &identityIDs), "%s", body)
 
-				actualIdentities, _, err := reg.Persister().ListIdentities(ctx, identity.ListIdentityParameters{IdsFilter: identityIDs})
+				actualIdentities, _, err := reg.Persister().ListIdentities(t.Context(), identity.ListIdentityParameters{IdsFilter: identityIDs})
 				require.NoError(t, err)
 				actualIdentityIDs := make([]uuid.UUID, len(actualIdentities))
 				for i, id := range actualIdentities {
@@ -1521,7 +1522,7 @@ func TestHandler(t *testing.T) {
 
 				send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
 
-				updated, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, i.ID)
+				updated, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
 				require.NoError(t, err)
 				assert.Equal(t, "foo",
 					gjson.GetBytes(updated.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())
@@ -1537,7 +1538,7 @@ func TestHandler(t *testing.T) {
 			t.Helper()
 			email := x.NewUUID().String() + "@ory.sh"
 			password := "ljanf123akf"
-			p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+			p, err := reg.Hasher(t.Context()).Generate(context.Background(), []byte(password))
 			require.NoError(t, err)
 			i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
 			i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
@@ -1852,7 +1853,7 @@ func TestHandler(t *testing.T) {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					orgID := uuid.Must(uuid.NewV4())
 					email := x.NewUUID().String() + "@ory.sh"
-					require.NoError(t, reg.IdentityManager().Create(ctx, &identity.Identity{
+					require.NoError(t, reg.IdentityManager().Create(t.Context(), &identity.Identity{
 						Traits:         identity.Traits(`{"email":"` + email + `"}`),
 						OrganizationID: uuid.NullUUID{UUID: orgID, Valid: true},
 					}))
@@ -2012,7 +2013,7 @@ func TestHandler(t *testing.T) {
 					},
 				})(t)
 				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/password", http.StatusNoContent)
-				actual, creds, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, pwIdentifier)
+				actual, creds, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePassword, pwIdentifier)
 				require.NoError(t, err)
 				assert.Equal(t, "{}", string(creds.Config))
 				assert.Equal(t, i.ID, actual.ID)
@@ -2159,7 +2160,7 @@ func TestHandler(t *testing.T) {
 				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 
-				actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+				actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 				require.NoError(t, err)
 				snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
 			})
@@ -2230,7 +2231,7 @@ func TestHandler(t *testing.T) {
 				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
 				assert.EqualValues(t, i.ID.String(), res.Get("id").String(), "%s", res.Raw)
 
-				actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(res.Get("id").String()))
+				actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), uuid.FromStringOrNil(res.Get("id").String()))
 				require.NoError(t, err)
 				snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual), snapshotx.ExceptNestedKeys(append(ignoreDefault, "hashed_password")...), snapshotx.ExceptPaths("credentials.oidc.identifiers"))
 			})
@@ -2307,17 +2308,15 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=should paginate all identities", func(t *testing.T) {
 		// Start new server
-		conf, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := internal.NewFastRegistryWithMocks(t,
+			configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
+				"default":         "file://./stub/identity.schema.json",
+				"customer":        "file://./stub/handler/customer.schema.json",
+				"multiple_emails": "file://./stub/handler/multiple_emails.schema.json",
+				"employee":        "file://./stub/handler/employee.schema.json",
+			})),
+		)
 		_, ts := testhelpers.NewKratosServerWithCSRF(t, reg)
-		mockServerURL := urlx.ParseOrPanic(publicTS.URL)
-		conf.MustSet(ctx, config.ViperKeyAdminBaseURL, ts.URL)
-		testhelpers.SetIdentitySchemas(t, conf, map[string]string{
-			"default":         "file://./stub/identity.schema.json",
-			"customer":        "file://./stub/handler/customer.schema.json",
-			"multiple_emails": "file://./stub/handler/multiple_emails.schema.json",
-			"employee":        "file://./stub/handler/employee.schema.json",
-		})
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, mockServerURL.String())
 
 		var toCreate []*identity.Identity
 		count := 500

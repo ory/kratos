@@ -8,21 +8,12 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/randx"
 )
-
-func UseConfigFile(t *testing.T, path string) *pflag.FlagSet {
-	flags := pflag.NewFlagSet("config", pflag.ContinueOnError)
-	configx.RegisterFlags(flags)
-	require.NoError(t, flags.Parse([]string{"--config", path}))
-	return flags
-}
 
 func DefaultIdentitySchemaConfig(url string) map[string]any {
 	return map[string]any{
@@ -31,6 +22,10 @@ func DefaultIdentitySchemaConfig(url string) map[string]any {
 			{ID: "default", URL: url},
 		},
 	}
+}
+
+func DefaultRawIdentitySchemaConfig(schema []byte) map[string]any {
+	return DefaultIdentitySchemaConfig("base64://" + base64.URLEncoding.EncodeToString(schema))
 }
 
 func WithDefaultIdentitySchema(ctx context.Context, url string) context.Context {

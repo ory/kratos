@@ -4,7 +4,6 @@
 package totp_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -20,11 +19,11 @@ func TestCountActiveCredentials(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	strategy := totp.NewStrategy(reg)
 
-	key, err := totp.NewKey(context.Background(), "foo", reg)
+	key, err := totp.NewKey(t.Context(), "foo", reg)
 	require.NoError(t, err)
 
 	t.Run("first factor", func(t *testing.T) {
-		actual, err := strategy.CountActiveFirstFactorCredentials(context.TODO(), nil)
+		actual, err := strategy.CountActiveFirstFactorCredentials(t.Context(), nil)
 		require.NoError(t, err)
 		assert.Equal(t, 0, actual)
 	})
@@ -74,7 +73,7 @@ func TestCountActiveCredentials(t *testing.T) {
 					cc[c.Type] = c
 				}
 
-				actual, err := strategy.CountActiveMultiFactorCredentials(context.TODO(), cc)
+				actual, err := strategy.CountActiveMultiFactorCredentials(t.Context(), cc)
 				require.NoError(t, err)
 				assert.Equal(t, tc.expected, actual)
 			})

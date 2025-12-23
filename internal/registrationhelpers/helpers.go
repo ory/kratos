@@ -30,6 +30,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/stringslice"
@@ -45,11 +46,10 @@ func setupServer(t *testing.T, reg *driver.RegistryDefault) *httptest.Server {
 	return publicTS
 }
 
-func ExpectValidationError(t *testing.T, ts *httptest.Server, conf *config.Config, flow string, values func(url.Values)) string {
+func ExpectValidationError(ctx context.Context, t *testing.T, ts *httptest.Server, conf *config.Config, flow string, values func(url.Values)) string {
 	isSPA := flow == "spa"
 	isAPI := flow == "api"
-	ctx := context.Background()
-	return testhelpers.SubmitRegistrationForm(t, isAPI, nil, ts, values,
+	return testhelpers.SubmitRegistrationFormCtx(ctx, t, isAPI, nil, ts, values,
 		isSPA,
 		testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
 		testhelpers.ExpectURL(isAPI || isSPA, ts.URL+registration.RouteSubmitFlow, conf.SelfServiceFlowRegistrationUI(ctx).String()))
@@ -267,17 +267,17 @@ func AssertRegistrationRespectsValidation(t *testing.T, reg *driver.RegistryDefa
 
 		for _, f := range flows {
 			t.Run("type="+f, func(t *testing.T) {
-				check(t, ExpectValidationError(t, publicTS, conf, f, values))
+				check(t, ExpectValidationError(t.Context(), t, publicTS, conf, f, values))
 			})
 		}
 	})
 }
 
 func AssertCommonErrorCases(t *testing.T, flows []string) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
-	testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true),
+		configx.WithValues(testhelpers.DefaultRawIdentitySchemaConfig(basicSchema)),
+	)
 	uiTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	publicTS := setupServer(t, reg)
 	apiClient := testhelpers.NewDebugClient(t)
@@ -286,16 +286,16 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 	t.Run("description=can call endpoints only without session", func(t *testing.T) {
 		values := url.Values{}
 		t.Run("type=browser", func(t *testing.T) {
-			res, err := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, ctx, reg).
+			res, err := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t.Context(), t, reg).
 				Do(httpx.MustNewRequest("POST", publicTS.URL+registration.RouteSubmitFlow, strings.NewReader(values.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
 			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
-			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
+			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(t.Context()).String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			res, err := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg).
+			res, err := testhelpers.NewHTTPClientWithArbitrarySessionToken(t.Context(), t, reg).
 				Do(httpx.MustNewRequest("POST", publicTS.URL+registration.RouteSubmitFlow, strings.NewReader(testhelpers.EncodeFormAsJSON(t, true, values)), "application/json"))
 			require.NoError(t, err)
 			assert.Len(t, res.Cookies(), 0)
@@ -306,7 +306,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+			f := testhelpers.InitializeRegistrationFlowViaAPICtx(t.Context(), t, apiClient, publicTS)
 			body, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -314,7 +314,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, apiClient, publicTS, true, false, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, apiClient, publicTS, true, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -323,7 +323,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -335,16 +335,16 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 		values := url.Values{}
 
 		t.Run("type=browser", func(t *testing.T) {
-			res, err := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, ctx, reg).
+			res, err := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t.Context(), t, reg).
 				Do(httpx.MustNewRequest("POST", publicTS.URL+registration.RouteSubmitFlow, strings.NewReader(values.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
 			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%+v", res.Request)
-			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(ctx).String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
+			assert.Contains(t, res.Request.URL.String(), conf.GetProvider(t.Context()).String(config.ViperKeySelfServiceBrowserDefaultReturnTo))
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			res, err := testhelpers.NewHTTPClientWithArbitrarySessionToken(t, ctx, reg).
+			res, err := testhelpers.NewHTTPClientWithArbitrarySessionToken(t.Context(), t, reg).
 				Do(httpx.MustNewRequest("POST", publicTS.URL+registration.RouteSubmitFlow, strings.NewReader(testhelpers.EncodeFormAsJSON(t, true, values)), "application/json"))
 			require.NoError(t, err)
 			assert.Len(t, res.Cookies(), 0)
@@ -355,7 +355,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+			f := testhelpers.InitializeRegistrationFlowViaAPICtx(t.Context(), t, apiClient, publicTS)
 			body, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -363,7 +363,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, apiClient, publicTS, true, false, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, apiClient, publicTS, true, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -372,7 +372,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -383,7 +383,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 	t.Run("case=should show the error ui because the method is missing in payload", func(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+			f := testhelpers.InitializeRegistrationFlowViaAPICtx(t.Context(), t, apiClient, publicTS)
 			body, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "{}}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -392,7 +392,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 		t.Run("type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, true, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, "{}}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -401,7 +401,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, false, false)
 			body, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "foo=bar")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
@@ -442,26 +442,26 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationRequestLifespan, "500ms")
+		conf.MustSet(t.Context(), config.ViperKeySelfServiceRegistrationRequestLifespan, "500ms")
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationRequestLifespan, "10m")
+			conf.MustSet(context.Background(), config.ViperKeySelfServiceRegistrationRequestLifespan, "10m")
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
+			f := testhelpers.InitializeRegistrationFlowViaAPICtx(t.Context(), t, apiClient, publicTS)
 
-			time.Sleep(time.Millisecond * 600)
-			actual, res := testhelpers.RegistrationMakeRequest(t, true, false, f, apiClient, "{}")
+			time.Sleep(600 * time.Millisecond)
+			actual, res := testhelpers.RegistrationMakeRequestCtx(t.Context(), t, true, false, f, apiClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "")
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, true, false, false)
 
-			time.Sleep(time.Millisecond * 600)
+			time.Sleep(600 * time.Millisecond)
 			actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
@@ -470,9 +470,9 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
+			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, false, false)
 
-			time.Sleep(time.Millisecond * 600)
+			time.Sleep(600 * time.Millisecond)
 			actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
@@ -505,7 +505,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 
 		for _, f := range flows {
 			t.Run("type="+f, func(t *testing.T) {
-				check(t, ExpectValidationError(t, publicTS, conf, f, values))
+				check(t, ExpectValidationError(t.Context(), t, publicTS, conf, f, values))
 			})
 		}
 	})

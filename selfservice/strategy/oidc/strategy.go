@@ -17,9 +17,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-	"github.com/ory/kratos/x/redir"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
@@ -46,13 +43,14 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/reqlog"
 	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
 )
 
@@ -343,7 +341,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 
 func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flow.Flow, *oidcv1.State, *AuthCodeContainer, error) {
 	var (
-		codeParam  = stringsx.Coalesce(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
+		codeParam  = cmp.Or(r.URL.Query().Get("code"), r.URL.Query().Get("authCode"))
 		stateParam = r.URL.Query().Get("state")
 		errorParam = r.URL.Query().Get("error")
 	)
@@ -783,6 +781,8 @@ func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow,
 		case text.InfoSelfServiceLoginWith:
 			p := gjson.GetBytes(n.Meta.Label.Context, "provider").String()
 			n.Meta.Label = text.NewInfoLoginWithAndLink(p)
+		default:
+			// do nothing
 		}
 
 		// This can happen, if login hints are disabled. In that case, we need to make sure to show all credential options.

@@ -14,54 +14,47 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/ory/kratos/selfservice/flow"
-
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/contextx"
-	"github.com/ory/x/snapshotx"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/text"
-
 	"github.com/pquerna/otp"
+	stdtotp "github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	stdtotp "github.com/pquerna/otp/totp"
-
-	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/totp"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/sqlxx"
 )
 
 const totpCodeGJSONQuery = "ui.nodes.#(attributes.name==totp_code)"
 
-func createIdentityWithoutTOTP(t *testing.T, reg driver.Registry) *identity.Identity {
-	id, _, _ := createIdentity(t, reg)
+func createIdentityWithoutTOTP(ctx context.Context, t *testing.T, reg driver.Registry) *identity.Identity {
+	id, _, _ := createIdentity(ctx, t, reg)
 	delete(id.Credentials, identity.CredentialsTypeTOTP)
-	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(ctx, id))
 	return id
 }
 
-func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, string, *otp.Key) {
-	ctx := context.Background()
+func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry) (*identity.Identity, string, *otp.Key) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
-	key, err := totp.NewKey(context.Background(), "foo", reg)
+	key, err := totp.NewKey(ctx, "foo", reg)
 	require.NoError(t, err)
-	p, err := reg.Hasher(ctx).Generate(context.Background(), []byte(password))
+	p, err := reg.Hasher(ctx).Generate(ctx, []byte(password))
 	require.NoError(t, err)
 	i := &identity.Identity{
 		Traits: identity.Traits(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
@@ -73,7 +66,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, stri
 			},
 		},
 	}
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{
 		identity.CredentialsTypePassword: {
 			Type:        identity.CredentialsTypePassword,
@@ -86,16 +79,20 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, stri
 			Config:      sqlxx.JSONRawMessage(`{"totp_url":"` + string(key.URL()) + `"}`),
 		},
 	}
-	require.NoError(t, i.SetAvailableAAL(context.Background(), reg.IdentityManager()))
-	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), i))
+	require.NoError(t, i.SetAvailableAAL(ctx, reg.IdentityManager()))
+	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(ctx, i))
 	return i, password, key
 }
 
 func TestCompleteLogin(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": true})
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, true)),
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeTOTP, true)),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")),
+	)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{redirTS.URL + "/return-to-wherever"})
 
@@ -105,46 +102,39 @@ func TestCompleteLogin(t *testing.T) {
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	// Overwrite these two to make it more explicit when tests fail
-	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
-
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
-
 	t.Run("case=totp payload is set when identity has totp", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(context.Background(), t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
 		})
 	})
 
 	t.Run("case=totp payload is not set when identity has no totp", func(t *testing.T) {
-		id := createIdentityWithoutTOTP(t, reg)
+		id := createIdentityWithoutTOTP(t.Context(), t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(context.Background(), t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
 
 	t.Run("case=should show the error ui because the request payload is malformed", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 
 		t.Run("type=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
-			f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
+			f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
-			body, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
+			body, res := testhelpers.LoginMakeRequestCtx(t.Context(), t, true, false, f, apiClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 			assert.Contains(t, body, `Expected JSON sent in request body to be an object but got: Number`)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
 			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
@@ -154,10 +144,10 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
+			f := testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, true, false, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 
-			body, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
+			body, res := testhelpers.LoginMakeRequestCtx(t.Context(), t, false, true, f, browserClient, "14=)=!(%)$/ZP()GHIÖ")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
 			assert.Contains(t, gjson.Get(body, "ui.messages.0.text").String(), "invalid URL escape", "%s", body)
@@ -165,28 +155,28 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
 		v(values)
 		payload := testhelpers.EncodeFormAsJSON(t, true, values)
-		return testhelpers.LoginMakeRequest(t, true, false, f, apiClient, payload)
+		return testhelpers.LoginMakeRequestCtx(t.Context(), t, true, false, f, apiClient, payload)
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity, returnTo string) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
 
 		opts := []testhelpers.InitFlowWithOption{testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2)}
 		if len(returnTo) > 0 {
 			opts = append(opts, testhelpers.InitFlowWithReturnTo(returnTo))
 		}
 
-		f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, spa, false, false, opts...)
+		f := testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, spa, false, false, opts...)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
 		v(values)
-		return testhelpers.LoginMakeRequest(t, false, spa, f, browserClient, values.Encode())
+		return testhelpers.LoginMakeRequestCtx(t.Context(), t, false, spa, f, browserClient, values.Encode())
 	}
 
 	checkURL := func(t *testing.T, shouldRedirect bool, res *http.Response) {
@@ -198,7 +188,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	t.Run("case=should fail if code is empty", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 		payload := func(v url.Values) {
 			v.Set("totp_code", "")
 		}
@@ -226,7 +216,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should fail if code is invalid", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 		payload := func(v url.Values) {
 			v.Set("totp_code", "111111")
 		}
@@ -254,7 +244,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should fail if code is too long", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 		payload := func(v url.Values) {
 			v.Set("totp_code", "1111111111")
 		}
@@ -282,7 +272,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should fail if TOTP was not set up for identity", func(t *testing.T) {
-		id := createIdentityWithoutTOTP(t, reg)
+		id := createIdentityWithoutTOTP(t.Context(), t, reg)
 
 		payload := func(v url.Values) {
 			v.Set("totp_code", "111111")
@@ -311,7 +301,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should pass when TOTP is supplied correctly", func(t *testing.T) {
-		id, _, key := createIdentity(t, reg)
+		id, _, key := createIdentity(t.Context(), t, reg)
 		code, err := stdtotp.GenerateCode(key.Secret(), time.Now())
 		require.NoError(t, err)
 		payload := func(v url.Values) {
@@ -376,12 +366,12 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("case=should fail because totp can not handle AAL1", func(t *testing.T) {
 		apiClient := testhelpers.NewDebugClient(t)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
-		update, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+		update, err := reg.LoginFlowPersister().GetLoginFlow(t.Context(), uuid.FromStringOrNil(f.Id))
 		require.NoError(t, err)
 		update.RequestedAAL = identity.AuthenticatorAssuranceLevel1
-		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), update))
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(t.Context(), update))
 
 		req, err := http.NewRequest("POST", f.Ui.Action, bytes.NewBufferString(`{"method":"totp"}`))
 		require.NoError(t, err)
@@ -397,7 +387,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should pass without csrf if API flow", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 		body, res := doAPIFlow(t, func(v url.Values) {
 			v.Del("csrf_token")
 			v.Set("totp_code", "111111")
@@ -408,7 +398,7 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should fail if CSRF token is invalid", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 		t.Run("type=browser", func(t *testing.T) {
 			body, res := doBrowserFlow(t, false, func(v url.Values) {
 				v.Del("csrf_token")
@@ -431,12 +421,12 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should pass return_to URL after login", func(t *testing.T) {
-		id, pwd, _ := createIdentity(t, reg)
+		id, pwd, _ := createIdentity(t.Context(), t, reg)
 
 		t.Run("type=browser", func(t *testing.T) {
 			returnTo := redirTS.URL + "/return-to-wherever"
 			browserClient := testhelpers.NewClientWithCookies(t)
-			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false, testhelpers.InitFlowWithReturnTo(returnTo))
+			f := testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, false, false, false, testhelpers.InitFlowWithReturnTo(returnTo))
 
 			cred, ok := id.GetCredentials(identity.CredentialsTypePassword)
 			require.True(t, ok)
@@ -445,7 +435,7 @@ func TestCompleteLogin(t *testing.T) {
 				"password": {pwd}, "csrf_token": {nosurfx.FakeCSRFToken},
 			}.Encode()
 
-			body, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values)
+			body, res := testhelpers.LoginMakeRequestCtx(t.Context(), t, false, false, f, browserClient, values)
 			require.Contains(t, res.Request.URL.Path, "login", "%s", res.Request.URL.String())
 			assert.Equal(t, gjson.Get(body, "requested_aal").String(), "aal2", "%s", body)
 			assert.Equal(t, gjson.Get(body, "return_to").String(), returnTo, "%s", body)
@@ -454,12 +444,10 @@ func TestCompleteLogin(t *testing.T) {
 }
 
 func TestFormHydration(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-
-	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP)+".enabled", true)
-
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeTOTP, true)),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")),
+	)
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeTOTP)
 	require.NoError(t, err)
@@ -484,9 +472,9 @@ func TestFormHydration(t *testing.T) {
 	}
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
-		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
-		r, f := newFlow(ctx, t)
+		id, _, _ := createIdentity(t.Context(), t, reg)
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r, f := newFlow(t.Context(), t)
 
 		r.Header = headers
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
@@ -496,9 +484,9 @@ func TestFormHydration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
-		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
-		r, f := newFlow(ctx, t)
+		id, _, _ := createIdentity(t.Context(), t, reg)
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r, f := newFlow(t.Context(), t)
 
 		r.Header = headers
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2

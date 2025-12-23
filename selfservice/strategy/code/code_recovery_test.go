@@ -9,21 +9,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/selfservice/strategy/code"
-	"github.com/ory/kratos/x"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/urlx"
-
+	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/urlx"
 )
 
 func TestRecoveryCode(t *testing.T) {
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	conf := internal.NewConfigurationWithDefaults(t)
 
 	newCode := func(expiresIn time.Duration, f *recovery.Flow) *code.RecoveryCode {
 		return &code.RecoveryCode{

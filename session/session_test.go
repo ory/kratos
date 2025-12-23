@@ -4,28 +4,27 @@
 package session_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/contextx"
 )
 
 func TestSession(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
+	)
 	authAt := time.Now()
 
 	t.Run("case=active session", func(t *testing.T) {
@@ -348,20 +347,18 @@ func TestSession(t *testing.T) {
 	t.Run("case=session refresh", func(t *testing.T) {
 		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 
-		conf.MustSet(ctx, config.ViperKeySessionLifespan, "24h")
-		conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, "12h")
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySessionLifespan, "1m")
-			conf.MustSet(ctx, config.ViperKeySessionRefreshMinTimeLeft, "1m")
+		ctx := contextx.WithConfigValues(t.Context(), map[string]any{
+			config.ViperKeySessionLifespan:           "24h",
+			config.ViperKeySessionRefreshMinTimeLeft: "12h",
 		})
 		i := new(identity.Identity)
 		i.State = identity.StateActive
 		i.NID = x.NewUUID()
 		s, err := testhelpers.NewActiveSession(req, reg, i, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		require.NoError(t, err)
-		assert.False(t, s.CanBeRefreshed(ctx, conf), "fresh session is not refreshable")
+		assert.False(t, s.CanBeRefreshed(ctx, reg.Config()), "fresh session is not refreshable")
 
 		s.ExpiresAt = s.ExpiresAt.Add(-12 * time.Hour)
-		assert.True(t, s.CanBeRefreshed(ctx, conf), "session is refreshable after 12hrs")
+		assert.True(t, s.CanBeRefreshed(ctx, reg.Config()), "session is refreshable after 12hrs")
 	})
 }

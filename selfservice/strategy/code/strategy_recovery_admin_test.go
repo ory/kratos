@@ -11,6 +11,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -29,16 +30,19 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	. "github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/snapshotx"
 )
 
 func TestAdminStrategy(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	initViper(t, ctx, conf)
-	conf.MustSet(ctx, config.ViperKeyUseContinueWithTransitions, true)
+	t.Parallel()
+
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(defaultConfig),
+		configx.WithValue(config.ViperKeyUseContinueWithTransitions, true),
+	)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewSettingsUIFlowEchoServer(t, reg)
@@ -129,7 +133,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.Contains(t, code.RecoveryLink, "flow=")
 		require.NotContains(t, code.RecoveryLink, "code=")
 		require.NotEmpty(t, code.RecoveryCode)
-		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(ctx))))
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(t.Context()))))
 
 		client := pointerx.Ptr(*publicTS.Client())
 		client.Jar, _ = cookiejar.New(nil)
@@ -154,10 +158,10 @@ func TestAdminStrategy(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 100)
 		require.NotEmpty(t, code.RecoveryLink)
-		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(ctx))))
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(t.Context()))))
 
 		body := submitRecoveryCode(t, nil, code.RecoveryLink, code.RecoveryCode)
-		testhelpers.AssertMessage(t, body, "The recovery flow expired 0.00 minutes ago, please try again.")
+		assert.Regexpf(t, regexp.MustCompile(`The recovery flow expired 0\.0\d minutes ago, please try again\.`), gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
 
 		// The recovery address should not be verified if the flow was initiated by the admins
 		assertEmailNotVerified(t, recoveryEmail)
@@ -174,7 +178,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.NoError(t, err)
 
 		require.NotEmpty(t, code.RecoveryLink)
-		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(ctx)+time.Second)))
+		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(t.Context())+time.Second)))
 
 		body := submitRecoveryCode(t, nil, code.RecoveryLink, code.RecoveryCode)
 

@@ -5,72 +5,69 @@ package identity_test
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/urfave/negroni"
-
-	"github.com/ory/jsonschema/v3/httploader"
-	"github.com/ory/kratos/x"
-	"github.com/ory/x/httpx"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/herodot"
+	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/driver/config"
 	. "github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/httpx"
 )
 
 func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	t.Parallel()
 
-	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
-		{ID: "localhost", URL: "https://localhost/schema/whatever"},
-		{ID: "privateRef", URL: "file://stub/localhost-ref.schema.json"},
-	})
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
+			"localhost":  "https://localhost/schema/whatever",
+			"privateRef": "file://stub/localhost-ref.schema.json",
+			"inlineRef":  "base64://" + base64.StdEncoding.EncodeToString([]byte(`{"traits": {}}`)),
+		})),
+		configx.WithValue(config.ViperKeyClientHTTPNoPrivateIPRanges, true),
+	)
 
 	v := NewValidator(reg)
-	n := negroni.New(x.HTTPLoaderContextMiddleware(reg))
-	router := http.NewServeMux()
-	router.HandleFunc("GET /{id}", func(w http.ResponseWriter, r *http.Request) {
-		i := &Identity{
-			SchemaID: r.PathValue("id"),
-			Traits:   Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
-		}
-		_, _ = fmt.Fprintf(w, "%+v", v.Validate(r.Context(), i))
-	})
-	n.UseHandler(router)
 
-	ts := httptest.NewServer(n)
-	t.Cleanup(ts.Close)
-
-	// Make the request
-	do := func(t *testing.T, id string) string {
-		res, err := ts.Client().Get(ts.URL + "/" + id)
-		require.NoError(t, err)
-		defer func() { _ = res.Body.Close() }()
-		body, err := io.ReadAll(res.Body)
-		require.NoError(t, err)
-		return string(body)
-	}
-
-	for _, tc := range [][2]string{
-		{"localhost", "is not a permitted destination"},
-		{"privateRef", "is not a permitted destination"},
+	for id, expectedErr := range map[string]string{
+		"localhost":  "is not a permitted destination",
+		"privateRef": "is not a permitted destination",
+		"inlineRef":  "",
 	} {
-		t.Run(fmt.Sprintf("case=%s", tc[0]), func(t *testing.T) {
-			assert.Contains(t, do(t, tc[0]), tc[1])
+		t.Run(id, func(t *testing.T) {
+			t.Parallel()
+
+			i := &Identity{
+				SchemaID: id,
+				Traits:   Traits(`{ "firstName": "first-name", "lastName": "last-name", "age": 1 }`),
+			}
+			ctx := context.WithValue(t.Context(), httploader.ContextKey, reg.HTTPClient(t.Context()))
+			err := v.Validate(ctx, i)
+			if expectedErr == "" {
+				assert.NoError(t, err)
+				return
+			}
+
+			var hErr *herodot.DefaultError
+			require.ErrorAs(t, err, &hErr)
+			assert.Contains(t, hErr.Debug(), expectedErr)
 		})
 	}
 }
 
 func TestSchemaValidator(t *testing.T) {
+	t.Parallel()
+
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -109,12 +106,13 @@ func TestSchemaValidator(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, []config.Schema{
-		{ID: "default", URL: ts.URL + "/schema/firstName"},
-		{ID: "whatever", URL: ts.URL + "/schema/whatever"},
-		{ID: "unreachable-url", URL: ts.URL + "/404-not-found"},
-	})
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
+			"default":         ts.URL + "/schema/firstName",
+			"whatever":        ts.URL + "/schema/whatever",
+			"unreachable-url": ts.URL + "/404-not-found",
+		})),
+	)
 	v := NewValidator(reg)
 
 	for k, tc := range []struct {
@@ -160,7 +158,7 @@ func TestSchemaValidator(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			ctx := context.WithValue(ctx, httploader.ContextKey, httpx.NewResilientClient())
+			ctx := context.WithValue(t.Context(), httploader.ContextKey, httpx.NewResilientClient())
 			err := v.Validate(ctx, tc.i)
 			if tc.err == "" {
 				require.NoError(t, err)

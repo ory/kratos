@@ -30,14 +30,13 @@ import (
 )
 
 func NewLoginUIFlowEchoServer(t *testing.T, reg driver.Registry) *httptest.Server {
-	ctx := context.Background()
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		e, err := reg.LoginFlowPersister().GetLoginFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("flow")))
 		require.NoError(t, err)
 		reg.Writer().Write(w, r, e)
 	}))
 	ts.URL = strings.ReplaceAll(ts.URL, "127.0.0.1", "localhost")
-	reg.Config().MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
+	reg.Config().MustSet(t.Context(), config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -47,8 +46,7 @@ func NewLoginUIWith401Response(t *testing.T, c *config.Config) *httptest.Server 
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
 	ts.URL = strings.ReplaceAll(ts.URL, "127.0.0.1", "localhost")
-	ctx := context.Background()
-	c.MustSet(ctx, config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
+	c.MustSet(t.Context(), config.ViperKeySelfServiceLoginUI, ts.URL+"/login-ts")
 	t.Cleanup(ts.Close)
 	return ts
 }
@@ -66,13 +64,6 @@ type initFlowOptions struct {
 
 func newInitFlowOptions(opts []InitFlowWithOption) *initFlowOptions {
 	return new(initFlowOptions).apply(opts)
-}
-
-func (o *initFlowOptions) Context() context.Context {
-	if o.ctx == nil {
-		return context.Background()
-	}
-	return o.ctx
 }
 
 func (o *initFlowOptions) apply(opts []InitFlowWithOption) *initFlowOptions {
@@ -164,7 +155,12 @@ func InitFlowWithVia(via string) InitFlowWithOption {
 	}
 }
 
-func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, isSPA bool, expectInitError bool, expectGetError bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+// Deprecated: use InitializeLoginFlowViaBrowserCtx instead.
+func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httptest.Server, forced, isSPA, expectInitError, expectGetError bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+	return InitializeLoginFlowViaBrowserCtx(t.Context(), t, client, ts, forced, isSPA, expectInitError, expectGetError, opts...)
+}
+
+func InitializeLoginFlowViaBrowserCtx(ctx context.Context, t *testing.T, client *http.Client, ts *httptest.Server, forced, isSPA, expectInitError, expectGetError bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	req, err := http.NewRequest("GET", getURLFromInitOptions(ts, login.RouteInitBrowserFlow, forced, opts...), nil)
@@ -175,11 +171,11 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		req.Header.Set("Accept", "application/json")
 	}
 
-	res, err := client.Do(req.WithContext(o.Context()))
+	res, err := client.Do(req.WithContext(ctx))
 	require.NoError(t, err)
 	body := x.MustReadAll(res.Body)
 	if isSPA {
-		require.True(t, gjson.ValidBytes(body), "body is not valid JSON: %s", string(body))
+		require.Truef(t, gjson.ValidBytes(body), "body is not valid JSON: %s", body)
 	}
 	require.NoError(t, res.Body.Close())
 	require.Equal(t, 200, res.StatusCode, "%s", body)
@@ -196,23 +192,24 @@ func InitializeLoginFlowViaBrowser(t *testing.T, client *http.Client, ts *httpte
 		require.NotEmpty(t, flowID)
 	}
 
-	rs, r, err := publicClient.FrontendAPI.GetLoginFlow(context.Background()).Id(flowID).Execute()
+	rs, r, err := publicClient.FrontendAPI.GetLoginFlow(ctx).Id(flowID).Execute()
 	if expectGetError {
 		require.Error(t, err)
 		require.Nil(t, rs)
 	} else {
-		require.NoError(t, err, "%s", ioutilx.MustReadAll(r.Body))
+		require.NoError(t, err)
+		require.NoErrorf(t, err, "%s", ioutilx.MustReadAll(r.Body))
 		assert.Equal(t, o.expectActive, rs.Active)
 	}
 
 	return rs
 }
 
-func InitializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
-	return initializeLoginFlowViaAPIWithContext(t, ctx, client, ts, forced, false, opts...)
+func InitializeLoginFlowViaAPICtx(ctx context.Context, t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+	return initializeLoginFlowViaAPI(ctx, t, client, ts, forced, false, opts...)
 }
 
-func initializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, client *http.Client, ts *httptest.Server, forced bool, expectError bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+func initializeLoginFlowViaAPI(ctx context.Context, t *testing.T, client *http.Client, ts *httptest.Server, forced bool, expectError bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
 	publicClient := NewSDKCustomClient(ts, client)
 
 	o := new(initFlowOptions).apply(opts)
@@ -239,34 +236,21 @@ func initializeLoginFlowViaAPIWithContext(t *testing.T, ctx context.Context, cli
 	return rs
 }
 
+// Deprecated: use InitializeLoginFlowViaAPICtx instead.
 func InitializeLoginFlowViaAPI(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
-	return InitializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, opts...)
+	return InitializeLoginFlowViaAPICtx(t.Context(), t, client, ts, forced, opts...)
 }
 
-func InitializeLoginFlowViaAPIExpectError(t *testing.T, client *http.Client, ts *httptest.Server, forced bool, expectActive bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
-	return initializeLoginFlowViaAPIWithContext(t, context.Background(), client, ts, forced, true, opts...)
+func InitializeLoginFlowViaAPIExpectError(ctx context.Context, t *testing.T, client *http.Client, ts *httptest.Server, forced bool, opts ...InitFlowWithOption) *kratos.LoginFlow {
+	return initializeLoginFlowViaAPI(ctx, t, client, ts, forced, true, opts...)
 }
 
-func LoginMakeRequest(
-	t *testing.T,
-	isAPI bool,
-	isSPA bool,
-	f *kratos.LoginFlow,
-	hc *http.Client,
-	values string,
-) (string, *http.Response) {
-	return LoginMakeRequestWithContext(t, context.Background(), isAPI, isSPA, f, hc, values)
+// Deprecated: use LoginMakeRequestCtx instead.
+func LoginMakeRequest(t *testing.T, isAPI bool, isSPA bool, f *kratos.LoginFlow, hc *http.Client, values string) (string, *http.Response) {
+	return LoginMakeRequestCtx(context.Background(), t, isAPI, isSPA, f, hc, values)
 }
 
-func LoginMakeRequestWithContext(
-	t *testing.T,
-	ctx context.Context,
-	isAPI bool,
-	isSPA bool,
-	f *kratos.LoginFlow,
-	hc *http.Client,
-	values string,
-) (string, *http.Response) {
+func LoginMakeRequestCtx(ctx context.Context, t *testing.T, isAPI bool, isSPA bool, f *kratos.LoginFlow, hc *http.Client, values string) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
 	req := NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values))
@@ -288,10 +272,27 @@ func GetLoginFlow(t *testing.T, client *http.Client, ts *httptest.Server, flowID
 	return rs
 }
 
-// SubmitLoginForm initiates a login flow (for Browser and API!), fills out the form and modifies
+// Deprecated: use SubmitLoginFormCtx instead.
+func SubmitLoginForm(
+	t *testing.T,
+	isAPI bool,
+	hc *http.Client,
+	publicTS *httptest.Server,
+	withValues func(v url.Values),
+	isSPA bool,
+	forced bool,
+	expectedStatusCode int,
+	expectedURL string,
+	opts ...InitFlowWithOption,
+) string {
+	return SubmitLoginFormCtx(context.Background(), t, isAPI, hc, publicTS, withValues, isSPA, forced, expectedStatusCode, expectedURL, opts...)
+}
+
+// SubmitLoginFormCtx initiates a login flow (for Browser and API!), fills out the form and modifies
 // the form values with `withValues`, and submits the form. Returns the body and checks for expectedStatusCode and
 // expectedURL on completion
-func SubmitLoginForm(
+func SubmitLoginFormCtx(
+	ctx context.Context,
 	t *testing.T,
 	isAPI bool,
 	hc *http.Client,
@@ -313,18 +314,18 @@ func SubmitLoginForm(
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)
 	var f *kratos.LoginFlow
 	if isAPI {
-		f = InitializeLoginFlowViaAPI(t, hc, publicTS, forced, opts...)
+		f = InitializeLoginFlowViaAPICtx(ctx, t, hc, publicTS, forced, opts...)
 	} else {
-		f = InitializeLoginFlowViaBrowser(t, hc, publicTS, forced, isSPA, false, false, opts...)
+		f = InitializeLoginFlowViaBrowserCtx(ctx, t, hc, publicTS, forced, isSPA, false, false, opts...)
 	}
 
 	time.Sleep(time.Millisecond) // add a bit of delay to allow `1ns` to time out.
 
 	payload := SDKFormFieldsToURLValues(f.Ui.Nodes)
 	withValues(payload)
-	b, res := LoginMakeRequest(t, isAPI, isSPA, f, hc, EncodeFormAsJSON(t, isAPI, payload))
-	assert.EqualValues(t, expectedStatusCode, res.StatusCode, "%s", b)
-	assert.Contains(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
+	b, res := LoginMakeRequestCtx(ctx, t, isAPI, isSPA, f, hc, EncodeFormAsJSON(t, isAPI, payload))
+	assert.EqualValuesf(t, expectedStatusCode, res.StatusCode, "%s", b)
+	assert.Containsf(t, res.Request.URL.String(), expectedURL, "%+v\n\t%s", res.Request, b)
 
 	t.Logf("%+v", res.Header)
 

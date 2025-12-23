@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -17,6 +18,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver"
@@ -86,13 +89,16 @@ func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry, with
 }
 
 func TestLoginCodeStrategy(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeCodeAuth, true)),
+		configx.WithValues(map[string]any{
+			fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth): true,
+		}),
+	)
 
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -130,9 +136,9 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 		var clientInit *oryClient.LoginFlow
 		if apiType == ApiTypeNative {
-			clientInit = testhelpers.InitializeLoginFlowViaAPI(t, client, public, false)
+			clientInit = testhelpers.InitializeLoginFlowViaAPICtx(ctx, t, client, public, false)
 		} else {
-			clientInit = testhelpers.InitializeLoginFlowViaBrowser(t, client, public, false, apiType == ApiTypeSPA, false, false)
+			clientInit = testhelpers.InitializeLoginFlowViaBrowserCtx(ctx, t, client, public, false, apiType == ApiTypeSPA, false, false)
 		}
 
 		body, err := json.Marshal(clientInit)
@@ -179,7 +185,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 		values.Set("method", "code")
 		vals(&values)
 
-		body, resp := testhelpers.LoginMakeRequest(t, apiType == ApiTypeNative, apiType == ApiTypeSPA, lf, s.client, testhelpers.EncodeFormAsJSON(t, apiType == ApiTypeNative, values))
+		body, resp := testhelpers.LoginMakeRequestCtx(ctx, t, apiType == ApiTypeNative, apiType == ApiTypeSPA, lf, s.client, testhelpers.EncodeFormAsJSON(t, apiType == ApiTypeNative, values))
 
 		if submitAssertion != nil {
 			submitAssertion(t, s, body, resp)
@@ -190,6 +196,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 		if mustHaveSession {
 			req, err := http.NewRequest("GET", s.testServer.URL+session.RouteWhoami, nil)
 			require.NoError(t, err)
+			req = req.WithContext(ctx)
 
 			if apiType == ApiTypeNative {
 				req.Header.Set("Authorization", "Bearer "+gjson.Get(body, "session_token").String())
@@ -198,14 +205,14 @@ func TestLoginCodeStrategy(t *testing.T) {
 			resp, err = s.client.Do(req)
 			require.NoError(t, err)
 			body = string(ioutilx.MustReadAll(resp.Body))
-			require.EqualValues(t, http.StatusOK, resp.StatusCode, "%s", body)
+			require.EqualValuesf(t, http.StatusOK, resp.StatusCode, "%s", body)
 		} else {
 			// SPAs need to be informed that the login has not yet completed using status 400.
 			// Browser clients will redirect back to the login URL.
 			if apiType == ApiTypeBrowser {
-				require.EqualValues(t, http.StatusOK, resp.StatusCode, "%s", body)
+				require.EqualValuesf(t, http.StatusOK, resp.StatusCode, "%s", body)
 			} else {
-				require.EqualValues(t, http.StatusBadRequest, resp.StatusCode, "%s", body)
+				require.EqualValuesf(t, http.StatusBadRequest, resp.StatusCode, "%s", body)
 			}
 		}
 
@@ -638,10 +645,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 						body, err := json.Marshal(lf)
 						require.NoError(t, err)
-						assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "flow expired 0.00 minutes ago")
+						assert.Regexpf(t, regexp.MustCompile(`The login flow expired 0\.0\d minutes ago, please try again\.`), gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
 					} else {
 						require.EqualValues(t, http.StatusGone, resp.StatusCode)
-						require.Contains(t, gjson.Get(body, "error.reason").String(), "self-service flow expired 0.00 minutes ago")
+						assert.Regexpf(t, regexp.MustCompile(`The self-service flow expired 0\.0\d minutes ago, initialize a new one\.`), gjson.Get(body, "error.reason").Str, "%s", body)
 					}
 				})
 			})
@@ -776,11 +783,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 						var cl *http.Client
 						var f *oryClient.LoginFlow
 						if tc.apiType == ApiTypeNative {
-							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, user)
-							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"), testhelpers.ExpectActive("code"))
+							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, user)
+							f = testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"), testhelpers.ExpectActive("code"))
 						} else {
-							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, user)
-							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"), testhelpers.ExpectActive("code"))
+							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, user)
+							f = testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"), testhelpers.ExpectActive("code"))
 						}
 
 						body, err := json.Marshal(f)
@@ -961,11 +968,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 					run := func(t *testing.T, identifierField string, identifier string) {
 						if tc.apiType == ApiTypeNative {
-							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, user)
-							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"))
+							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, user)
+							f = testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"))
 						} else {
-							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, user)
-							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
+							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, user)
+							f = testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"))
 						}
 
 						body, err := json.Marshal(f)
@@ -1028,11 +1035,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 					var cl *http.Client
 					var f *oryClient.LoginFlow
 					if tc.apiType == ApiTypeNative {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
-						f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
+						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, identity)
+						f = testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
 					} else {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
-						f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
+						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, identity)
+						f = testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email"))
 					}
 
 					body, err := json.Marshal(f)
@@ -1063,11 +1070,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 					var cl *http.Client
 					var f *oryClient.LoginFlow
 					if tc.apiType == ApiTypeNative {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
-						f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, identity)
+						f = testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
 					} else {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
-						f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, identity)
+						f = testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
 					}
 
 					body, err := json.Marshal(f)
@@ -1087,11 +1094,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 					var cl *http.Client
 					var f *oryClient.LoginFlow
 					if tc.apiType == ApiTypeNative {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
-						f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"))
+						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, identity)
+						f = testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"))
 					} else {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
-						f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"))
+						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, identity)
+						f = testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"))
 					}
 
 					body, err := json.Marshal(f)
@@ -1113,11 +1120,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 						var cl *http.Client
 						var f *oryClient.LoginFlow
 						if tc.apiType == ApiTypeNative {
-							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
-							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, identity)
+							f = testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
 						} else {
-							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
-							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, identity)
+							f = testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
 						}
 
 						body, err := json.Marshal(f)
@@ -1137,20 +1144,20 @@ func TestLoginCodeStrategy(t *testing.T) {
 						var cl *http.Client
 						var f *oryClient.LoginFlow
 						if tc.apiType == ApiTypeNative {
-							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
-							f = testhelpers.InitializeLoginFlowViaAPI(t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+							cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, identity)
+							f = testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, cl, public, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
 						} else {
-							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
-							f = testhelpers.InitializeLoginFlowViaBrowser(t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
+							cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, identity)
+							f = testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, cl, public, false, tc.apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithAAL("aal2"), testhelpers.InitFlowWithVia("email_1"), testhelpers.ExpectActive("code"))
 						}
 
 						body, err := json.Marshal(f)
 						require.NoError(t, err)
 
-						require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(body, "state").String(), "%s", body)
-						require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
-						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
-						require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
+						require.EqualValuesf(t, flow.StateEmailSent, gjson.GetBytes(body, "state").String(), "%s", body)
+						require.Lenf(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
+						require.Lenf(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
+						require.EqualValuesf(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
 
 						snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("ui.nodes.5.attributes.value", "id", "created_at", "expires_at", "updated_at", "issued_at", "request_url", "ui.action"))
 					})
@@ -1162,10 +1169,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 					var res *http.Response
 					var err error
 					if tc.apiType == ApiTypeNative {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
+						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, identity)
 						res, err = cl.Get(public.URL + "/self-service/login/api?aal=aal2&via=doesnt_exist")
 					} else {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
+						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, identity)
 						res, err = cl.Get(public.URL + "/self-service/login/browser?aal=aal2&via=doesnt_exist")
 					}
 					require.NoError(t, err)
@@ -1183,10 +1190,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 					var res *http.Response
 					var err error
 					if tc.apiType == ApiTypeNative {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, identity)
+						cl = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, identity)
 						res, err = cl.Get(public.URL + "/self-service/login/api?aal=aal2&via=email_1")
 					} else {
-						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(t, ctx, reg, identity)
+						cl = testhelpers.NewHTTPClientWithIdentitySessionCookieLocalhost(ctx, t, reg, identity)
 						res, err = cl.Get(public.URL + "/self-service/login/browser?aal=aal2&via=email_1")
 					}
 					require.NoError(t, err)
@@ -1203,13 +1210,15 @@ func TestLoginCodeStrategy(t *testing.T) {
 }
 
 func TestFormHydration(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
-		"enabled":              true,
-		"passwordless_enabled": true,
-	})
-	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/code.identity.schema.json")
+	t.Parallel()
+
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+			"enabled":              true,
+			"passwordless_enabled": true,
+		}),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
+	)
 
 	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeCodeAuth)
 	require.NoError(t, err)
@@ -1225,43 +1234,47 @@ func TestFormHydration(t *testing.T) {
 		snapshotx.SnapshotT(t, f.UI.Nodes)
 	}
 	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		t.Helper()
 		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
 		r = r.WithContext(ctx)
-		t.Helper()
-		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := login.NewFlow(reg.Config(), time.Minute, "csrf_token", r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
 	}
 
-	passwordlessEnabled := contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
-		"enabled":              true,
-		"passwordless_enabled": true,
-		"mfa_enabled":          false,
-	})
+	passwordlessEnabled := func(ctx context.Context) context.Context {
+		return contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+			"enabled":              true,
+			"passwordless_enabled": true,
+			"mfa_enabled":          false,
+		})
+	}
 
-	mfaEnabled := contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
-		"enabled":              true,
-		"passwordless_enabled": false,
-		"mfa_enabled":          true,
-	})
+	mfaEnabled := func(ctx context.Context) context.Context {
+		return contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+			"enabled":              true,
+			"passwordless_enabled": false,
+			"mfa_enabled":          true,
+		})
+	}
 
-	toMFARequest := func(t *testing.T, r *http.Request, f *login.Flow, traits string) {
+	toMFARequest := func(ctx context.Context, t *testing.T, r *http.Request, f *login.Flow, traits string) {
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 		r.URL = &url.URL{Path: "/", RawQuery: "via=email"}
 		// I only fear god.
-		r.Header = testhelpers.NewHTTPClientWithArbitrarySessionTokenAndTraits(t, ctx, reg, []byte(traits)).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r.Header = testhelpers.NewHTTPClientWithArbitrarySessionTokenAndTraits(ctx, t, reg, []byte(traits)).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 	}
 
 	t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
 		t.Run("case=code is used for 2fa but request is 1fa", func(t *testing.T) {
-			r, f := newFlow(mfaEnabled, t)
+			r, f := newFlow(mfaEnabled(t.Context()), t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactor(r, f))
 			toSnapshot(t, f)
 		})
 
 		t.Run("case=code is used for passwordless login and request is 1fa", func(t *testing.T) {
-			r, f := newFlow(passwordlessEnabled, t)
+			r, f := newFlow(passwordlessEnabled(t.Context()), t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactor(r, f))
 			toSnapshot(t, f)
@@ -1270,7 +1283,7 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodFirstFactorRefresh", func(t *testing.T) {
 		t.Run("case=code is used for passwordless login and request is 1fa with refresh", func(t *testing.T) {
-			r, f := newFlow(passwordlessEnabled, t)
+			r, f := newFlow(passwordlessEnabled(t.Context()), t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			f.Refresh = true
 			require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
@@ -1278,7 +1291,7 @@ func TestFormHydration(t *testing.T) {
 		})
 
 		t.Run("case=code is used for 2fa and request is 1fa with refresh", func(t *testing.T) {
-			r, f := newFlow(mfaEnabled, t)
+			r, f := newFlow(mfaEnabled(t.Context()), t)
 			f.RequestedAAL = identity.AuthenticatorAssuranceLevel1
 			f.Refresh = true
 			require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
@@ -1288,9 +1301,9 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
 		t.Run("using via", func(t *testing.T) {
-			test := func(t *testing.T, ctx context.Context, email string) {
+			test := func(ctx context.Context, t *testing.T, email string) {
 				r, f := newFlow(ctx, t)
-				toMFARequest(t, r, f, `{"email":"`+email+`"}`)
+				toMFARequest(ctx, t, r, f, `{"email":"`+email+`"}`)
 
 				// We still use the legacy hydrator under the hood here and thus need to set this correctly.
 				f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
@@ -1301,18 +1314,18 @@ func TestFormHydration(t *testing.T) {
 			}
 
 			t.Run("case=code is used for 2fa", func(t *testing.T) {
-				test(t, mfaEnabled, "PopulateLoginMethodSecondFactor-code-mfa-via-2fa@ory.sh")
+				test(mfaEnabled(t.Context()), t, "PopulateLoginMethodSecondFactor-code-mfa-via-2fa@ory.sh")
 			})
 
 			t.Run("case=code is used for passwordless login", func(t *testing.T) {
-				test(t, passwordlessEnabled, "PopulateLoginMethodSecondFactor-code-mfa-via-passwordless@ory.sh")
+				test(passwordlessEnabled(t.Context()), t, "PopulateLoginMethodSecondFactor-code-mfa-via-passwordless@ory.sh")
 			})
 		})
 
 		t.Run("without via", func(t *testing.T) {
-			test := func(t *testing.T, ctx context.Context, traits string) {
+			test := func(ctx context.Context, t *testing.T, traits string) {
 				r, f := newFlow(ctx, t)
-				toMFARequest(t, r, f, traits)
+				toMFARequest(ctx, t, r, f, traits)
 
 				// We still use the legacy hydrator under the hood here and thus need to set this correctly.
 				f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
@@ -1323,26 +1336,28 @@ func TestFormHydration(t *testing.T) {
 			}
 
 			t.Run("case=code is used for 2fa", func(t *testing.T) {
-				ctx = testhelpers.WithDefaultIdentitySchema(mfaEnabled, "file://./stub/code-mfa.identity.schema.json")
-				test(t, ctx, `{"email1":"PopulateLoginMethodSecondFactor-no-via-2fa-0@ory.sh","email2":"PopulateLoginMethodSecondFactor-no-via-2fa-1@ory.sh","phone1":"+4917655138291"}`)
+				ctx := testhelpers.WithDefaultIdentitySchema(mfaEnabled(t.Context()), "file://./stub/code-mfa.identity.schema.json")
+				test(ctx, t, `{"email1":"PopulateLoginMethodSecondFactor-no-via-2fa-0@ory.sh","email2":"PopulateLoginMethodSecondFactor-no-via-2fa-1@ory.sh","phone1":"+4917655138291"}`)
 			})
 
 			t.Run("case=code is used for passwordless login", func(t *testing.T) {
-				ctx = testhelpers.WithDefaultIdentitySchema(passwordlessEnabled, "file://./stub/code-mfa.identity.schema.json")
-				test(t, ctx, `{"email1":"PopulateLoginMethodSecondFactor-no-via-passwordless-0@ory.sh","email2":"PopulateLoginMethodSecondFactor-no-via-passwordless-1@ory.sh","phone1":"+4917655138292"}`)
+				ctx := testhelpers.WithDefaultIdentitySchema(passwordlessEnabled(t.Context()), "file://./stub/code-mfa.identity.schema.json")
+				test(ctx, t, `{"email1":"PopulateLoginMethodSecondFactor-no-via-passwordless-0@ory.sh","email2":"PopulateLoginMethodSecondFactor-no-via-passwordless-1@ory.sh","phone1":"+4917655138292"}`)
 			})
 		})
 
 		t.Run("case=code is used for 2fa and request is 2fa", func(t *testing.T) {
-			r, f := newFlow(mfaEnabled, t)
-			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
+			ctx := mfaEnabled(t.Context())
+			r, f := newFlow(ctx, t)
+			toMFARequest(ctx, t, r, f, `{"email":"foo@ory.sh"}`)
 			require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactor(r, f))
 			toSnapshot(t, f)
 		})
 
 		t.Run("case=code is used for passwordless login and request is 2fa", func(t *testing.T) {
-			r, f := newFlow(passwordlessEnabled, t)
-			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
+			ctx := passwordlessEnabled(t.Context())
+			r, f := newFlow(ctx, t)
+			toMFARequest(ctx, t, r, f, `{"email":"fooaewasd@ory.sh"}`)
 			require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactor(r, f))
 			toSnapshot(t, f)
 		})
@@ -1350,16 +1365,18 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
 		t.Run("case=code is used for 2fa and request is 2fa with refresh", func(t *testing.T) {
-			r, f := newFlow(mfaEnabled, t)
-			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
+			ctx := mfaEnabled(t.Context())
+			r, f := newFlow(ctx, t)
+			toMFARequest(ctx, t, r, f, `{"email":"fooaewdk@ory.sh"}`)
 			f.Refresh = true
 			require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactorRefresh(r, f))
 			toSnapshot(t, f)
 		})
 
 		t.Run("case=code is used for passwordless login and request is 2fa with refresh", func(t *testing.T) {
-			r, f := newFlow(passwordlessEnabled, t)
-			toMFARequest(t, r, f, `{"email":"foo@ory.sh"}`)
+			ctx := passwordlessEnabled(t.Context())
+			r, f := newFlow(ctx, t)
+			toMFARequest(ctx, t, r, f, `{"email":"foojoajweids@ory.sh"}`)
 			f.Refresh = true
 			require.NoError(t, fhAAL2.PopulateLoginMethodSecondFactorRefresh(r, f))
 			toSnapshot(t, f)
@@ -1369,13 +1386,13 @@ func TestFormHydration(t *testing.T) {
 	t.Run("method=PopulateLoginMethodIdentifierFirstCredentials", func(t *testing.T) {
 		t.Run("case=no options", func(t *testing.T) {
 			t.Run("case=code is used for 2fa", func(t *testing.T) {
-				r, f := newFlow(mfaEnabled, t)
+				r, f := newFlow(mfaEnabled(t.Context()), t)
 				require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactor(r, f))
 				toSnapshot(t, f)
 			})
 
 			t.Run("case=code is used for passwordless login", func(t *testing.T) {
-				r, f := newFlow(passwordlessEnabled, t)
+				r, f := newFlow(passwordlessEnabled(t.Context()), t)
 				require.NoError(t, fhAAL1.PopulateLoginMethodFirstFactor(r, f))
 				toSnapshot(t, f)
 			})
@@ -1385,7 +1402,7 @@ func TestFormHydration(t *testing.T) {
 			t.Run("case=account enumeration mitigation enabled", func(t *testing.T) {
 				t.Run("case=code is used for 2fa", func(t *testing.T) {
 					r, f := newFlow(
-						contextx.WithConfigValue(mfaEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						contextx.WithConfigValue(mfaEnabled(t.Context()), config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")), idfirst.ErrNoCredentialsFound)
@@ -1394,7 +1411,7 @@ func TestFormHydration(t *testing.T) {
 
 				t.Run("case=code is used for passwordless login", func(t *testing.T) {
 					r, f := newFlow(
-						contextx.WithConfigValue(passwordlessEnabled, config.ViperKeySecurityAccountEnumerationMitigate, true),
+						contextx.WithConfigValue(passwordlessEnabled(t.Context()), config.ViperKeySecurityAccountEnumerationMitigate, true),
 						t,
 					)
 					require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentifier("foo@bar.com")))
@@ -1405,29 +1422,29 @@ func TestFormHydration(t *testing.T) {
 			t.Run("case=account enumeration mitigation disabled", func(t *testing.T) {
 				t.Run("case=with no identity", func(t *testing.T) {
 					t.Run("case=code is used for 2fa", func(t *testing.T) {
-						r, f := newFlow(mfaEnabled, t)
+						r, f := newFlow(mfaEnabled(t.Context()), t)
 						require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 
 					t.Run("case=code is used for passwordless login", func(t *testing.T) {
-						r, f := newFlow(passwordlessEnabled, t)
+						r, f := newFlow(passwordlessEnabled(t.Context()), t)
 						require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 				})
 				t.Run("case=identity has code method", func(t *testing.T) {
-					identifier := x.NewUUID().String()
-					id := createIdentity(ctx, t, reg, false, false, identifier)
+					identifier := x.NewUUID().String() + "@ory.sh"
+					id := createIdentity(t.Context(), t, reg, false, false, identifier)
 
 					t.Run("case=code is used for 2fa", func(t *testing.T) {
-						r, f := newFlow(mfaEnabled, t)
+						r, f := newFlow(mfaEnabled(t.Context()), t)
 						require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 
 					t.Run("case=code is used for passwordless login", func(t *testing.T) {
-						r, f := newFlow(passwordlessEnabled, t)
+						r, f := newFlow(passwordlessEnabled(t.Context()), t)
 						require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 						toSnapshot(t, f)
 					})
@@ -1437,13 +1454,13 @@ func TestFormHydration(t *testing.T) {
 					id := identity.NewIdentity("default")
 
 					t.Run("case=code is used for 2fa", func(t *testing.T) {
-						r, f := newFlow(mfaEnabled, t)
+						r, f := newFlow(mfaEnabled(t.Context()), t)
 						require.ErrorIs(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)), idfirst.ErrNoCredentialsFound)
 						toSnapshot(t, f)
 					})
 
 					t.Run("case=code is used for passwordless login", func(t *testing.T) {
-						r, f := newFlow(passwordlessEnabled, t)
+						r, f := newFlow(passwordlessEnabled(t.Context()), t)
 						require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstCredentials(r, f, login.WithIdentityHint(id)))
 						toSnapshot(t, f)
 					})
@@ -1453,7 +1470,7 @@ func TestFormHydration(t *testing.T) {
 	})
 
 	t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
+		r, f := newFlow(t.Context(), t)
 		require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})

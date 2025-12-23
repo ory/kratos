@@ -16,6 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/configx"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -95,9 +97,7 @@ func TestRegistration(t *testing.T) {
 
 	t.Run("case=passkey button does not exist when passwordless is disabled", func(t *testing.T) {
 		t.Parallel()
-		fix := newRegistrationFixture(t)
-		fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyEnabled, false)
-		t.Cleanup(func() { fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyEnabled, true) })
+		fix := newRegistrationFixture(t, configx.WithValue(config.ViperKeyPasskeyEnabled, false))
 		for _, flowType := range flows {
 			flowType := flowType
 			t.Run(flowType, func(t *testing.T) {
@@ -144,7 +144,7 @@ func TestRegistration(t *testing.T) {
 
 		for _, f := range flows {
 			t.Run("type="+f, func(t *testing.T) {
-				actual := registrationhelpers.ExpectValidationError(t, fix.publicTS, fix.conf, f, values)
+				actual := registrationhelpers.ExpectValidationError(t.Context(), t, fix.publicTS, fix.conf, f, values)
 
 				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), fix.publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
@@ -170,14 +170,14 @@ func TestRegistration(t *testing.T) {
 
 		for _, f := range flows {
 			t.Run("type="+f, func(t *testing.T) {
-				actual := registrationhelpers.ExpectValidationError(t, fix.publicTS, fix.conf, f, values)
+				actual := registrationhelpers.ExpectValidationError(t.Context(), t, fix.publicTS, fix.conf, f, values)
 
-				assert.NotEmpty(t, gjson.Get(actual, "id").String(), "%s", actual)
-				assert.Contains(t, gjson.Get(actual, "ui.action").String(), fix.publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
+				assert.NotEmptyf(t, gjson.Get(actual, "id").String(), "%s", actual)
+				assert.Containsf(t, gjson.Get(actual, "ui.action").String(), fix.publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 				registrationhelpers.CheckFormContent(t, []byte(actual), "csrf_token", "traits.username", "traits.foobar")
-				assert.Equal(t, "bar", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).attributes.value").String(), "%s", actual)
-				assert.Equal(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
-				assert.Equal(t, int64(4000026), gjson.Get(actual, "ui.nodes.#(attributes.name==transient_payload).messages.0.id").Int(), "%s", actual)
+				assert.Equalf(t, "bar", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.foobar).attributes.value").String(), "%s", actual)
+				assert.Equalf(t, email, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.username).attributes.value").String(), "%s", actual)
+				assert.Equalf(t, int64(4000026), gjson.Get(actual, "ui.nodes.#(attributes.name==transient_payload).messages.0.id").Int(), "%s", actual)
 			})
 		}
 	})
@@ -313,7 +313,7 @@ func TestRegistration(t *testing.T) {
 						assert.Equal(t, "null\n", actual, "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
 					}
 
-					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(fix.ctx, identity.CredentialsTypePasskey, userID)
+					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePasskey, userID)
 					require.NoError(t, err)
 					assert.Equal(t, "aal1", i.InternalAvailableAAL.String)
 					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
@@ -342,7 +342,7 @@ func TestRegistration(t *testing.T) {
 						assert.Equal(t, "null\n", actual, "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
 					}
 
-					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(fix.ctx, identity.CredentialsTypePasskey, userID)
+					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePasskey, userID)
 					require.NoError(t, err)
 					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
 
@@ -358,8 +358,8 @@ func TestRegistration(t *testing.T) {
 
 		t.Run("case=should create the identity and a session and use the correct schema", func(t *testing.T) {
 			fix.enableSessionAfterRegistration()
-			fix.conf.MustSet(fix.ctx, config.ViperKeyDefaultIdentitySchemaID, "advanced-user")
-			fix.conf.MustSet(fix.ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+			fix.conf.MustSet(t.Context(), config.ViperKeyDefaultIdentitySchemaID, "advanced-user")
+			fix.conf.MustSet(t.Context(), config.ViperKeyIdentitySchemas, config.Schemas{
 				{ID: "does-not-exist", URL: "file://./stub/profile.schema.json"},
 				{ID: "advanced-user", URL: "file://./stub/registration.schema.json"},
 			})
@@ -375,7 +375,7 @@ func TestRegistration(t *testing.T) {
 					assert.Equal(t, email, gjson.Get(actual, prefix+"identity.traits.username").String(), "%s", actual)
 					assert.True(t, gjson.Get(actual, prefix+"active").Bool(), "%s", actual)
 
-					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(fix.ctx, identity.CredentialsTypePasskey, userID)
+					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePasskey, userID)
 					require.NoError(t, err)
 					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
 				})
@@ -437,14 +437,14 @@ func TestRegistration(t *testing.T) {
 			t.Cleanup(fix.useRedirTS)
 			fix.disableSessionAfterRegistration()
 
-			prevRPID := fix.conf.GetProvider(fix.ctx).String(config.ViperKeyPasskeyRPID)
-			prevOrigins := fix.conf.GetProvider(fix.ctx).String(config.ViperKeyPasskeyRPOrigins)
+			prevRPID := fix.conf.GetProvider(t.Context()).String(config.ViperKeyPasskeyRPID)
+			prevOrigins := fix.conf.GetProvider(t.Context()).String(config.ViperKeyPasskeyRPOrigins)
 
-			fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyRPID, "www.troweprice.com")
-			fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyRPOrigins, []string{"android:apk-key-hash:S2RfNYgJmQiKgd6-sdbjW7phcL_OTP4vGE8L51Q2GB0"})
+			fix.conf.MustSet(t.Context(), config.ViperKeyPasskeyRPID, "www.troweprice.com")
+			fix.conf.MustSet(t.Context(), config.ViperKeyPasskeyRPOrigins, []string{"android:apk-key-hash:S2RfNYgJmQiKgd6-sdbjW7phcL_OTP4vGE8L51Q2GB0"})
 			t.Cleanup(func() {
-				fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyRPID, prevRPID)
-				fix.conf.MustSet(fix.ctx, config.ViperKeyPasskeyRPOrigins, prevOrigins)
+				fix.conf.MustSet(t.Context(), config.ViperKeyPasskeyRPID, prevRPID)
+				fix.conf.MustSet(t.Context(), config.ViperKeyPasskeyRPOrigins, prevOrigins)
 			})
 
 			for _, f := range flows {
@@ -466,12 +466,12 @@ func TestRegistration(t *testing.T) {
 						assert.Equal(t, "null\n", actual, "because the registration yielded no session, the user is not expected to be signed in: %s", actual)
 					}
 
-					assert.Contains(t, res.Request.URL.String(), expectReturnTo, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, actual))
+					assert.Containsf(t, res.Request.URL.String(), expectReturnTo, "%+v\n\t%s", res.Request, assertx.PrettifyJSONPayload(t, actual))
 
-					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(fix.ctx, identity.CredentialsTypePasskey, userID)
+					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePasskey, userID)
 					require.NoError(t, err)
 					assert.Equal(t, "aal1", i.InternalAvailableAAL.String)
-					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
+					assert.Equalf(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
 				})
 			}
 		})
@@ -499,8 +499,8 @@ func TestRegistration(t *testing.T) {
 			}
 		}
 
-		fix.conf.MustSet(fix.ctx, config.ViperKeyDefaultIdentitySchemaID, "does-not-exist")
-		fix.conf.MustSet(fix.ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+		fix.conf.MustSet(t.Context(), config.ViperKeyDefaultIdentitySchemaID, "does-not-exist")
+		fix.conf.MustSet(t.Context(), config.ViperKeyIdentitySchemas, config.Schemas{
 			{ID: "does-not-exist", URL: "file://./stub/profile.schema.json"},
 			{ID: "advanced-user", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
 		})
@@ -517,7 +517,7 @@ func TestRegistration(t *testing.T) {
 					assert.Equal(t, email, gjson.Get(actual, prefix+"identity.traits.username").String(), "%s", actual)
 					assert.True(t, gjson.Get(actual, prefix+"active").Bool(), "%s", actual)
 
-					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(fix.ctx, identity.CredentialsTypePasskey, userID)
+					i, _, err := fix.reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePasskey, userID)
 					require.NoError(t, err)
 					assert.Equal(t, email, gjson.GetBytes(i.Traits, "username").String(), "%s", actual)
 					assert.Equal(t, "advanced-user", i.SchemaID, "%s", actual)

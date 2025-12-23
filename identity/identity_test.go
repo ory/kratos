@@ -383,7 +383,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 	i.Credentials = credentials
 
 	t.Run("case=no-include", func(t *testing.T) {
-		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, nil)
+		actualIdentity, err := i.WithDeclassifiedCredentials(t.Context(), &cipherProvider{}, nil)
 		require.NoError(t, err)
 
 		for ct, actual := range actualIdentity.Credentials {
@@ -394,7 +394,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 	})
 
 	t.Run("case=include-webauthn", func(t *testing.T) {
-		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, []CredentialsType{CredentialsTypeWebAuthn})
+		actualIdentity, err := i.WithDeclassifiedCredentials(t.Context(), &cipherProvider{}, []CredentialsType{CredentialsTypeWebAuthn})
 		require.NoError(t, err)
 
 		for ct, actual := range actualIdentity.Credentials {
@@ -405,7 +405,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 	})
 
 	t.Run("case=include-multi", func(t *testing.T) {
-		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, []CredentialsType{CredentialsTypeWebAuthn, CredentialsTypePassword})
+		actualIdentity, err := i.WithDeclassifiedCredentials(t.Context(), &cipherProvider{}, []CredentialsType{CredentialsTypeWebAuthn, CredentialsTypePassword})
 		require.NoError(t, err)
 
 		for ct, actual := range actualIdentity.Credentials {
@@ -416,7 +416,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 	})
 
 	t.Run("case=oidc", func(t *testing.T) {
-		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, []CredentialsType{CredentialsTypeOIDC})
+		actualIdentity, err := i.WithDeclassifiedCredentials(t.Context(), &cipherProvider{}, []CredentialsType{CredentialsTypeOIDC})
 		require.NoError(t, err)
 
 		for ct, actual := range actualIdentity.Credentials {
@@ -426,7 +426,7 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 		}
 	})
 	t.Run("case=saml", func(t *testing.T) {
-		actualIdentity, err := i.WithDeclassifiedCredentials(ctx, &cipherProvider{}, []CredentialsType{CredentialsTypeSAML})
+		actualIdentity, err := i.WithDeclassifiedCredentials(t.Context(), &cipherProvider{}, []CredentialsType{CredentialsTypeSAML})
 		require.NoError(t, err)
 
 		for ct, actual := range actualIdentity.Credentials {

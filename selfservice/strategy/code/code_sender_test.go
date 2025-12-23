@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/configx"
+
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -31,13 +33,18 @@ var b64 = func(str string) string {
 }
 
 func TestSender(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
-	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-	conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
-	conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients, true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/default.schema.json")),
+		configx.WithValues(map[string]any{
+			config.ViperKeyPublicBaseURL:                                  "https://www.ory.sh/",
+			config.ViperKeyCourierSMTPURL:                                 "smtp://foo@bar@dev.null/",
+			config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients:     true,
+			config.ViperKeySelfServiceVerificationNotifyUnknownRecipients: true,
+		}),
+	)
 
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 

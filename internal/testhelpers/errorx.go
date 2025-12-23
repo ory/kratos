@@ -38,7 +38,7 @@ func NewErrorTestServer(t *testing.T, reg interface {
 	}))
 	t.Cleanup(ts.Close)
 	ts.URL = strings.ReplaceAll(ts.URL, "127.0.0.1", "localhost")
-	reg.Config().MustSet(context.Background(), config.ViperKeySelfServiceErrorUI, ts.URL)
+	reg.Config().MustSet(t.Context(), config.ViperKeySelfServiceErrorUI, ts.URL)
 	return ts
 }
 

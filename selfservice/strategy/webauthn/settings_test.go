@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/selfservice/flow"
 
@@ -55,13 +56,13 @@ var settingsFixtureSuccessInternalContext []byte
 const registerDisplayNameGJSONQuery = "ui.nodes.#(attributes.name==" + node.WebAuthnRegisterDisplayName + ")"
 
 func createIdentityWithoutWebAuthn(t *testing.T, reg driver.Registry) *identity.Identity {
-	id := createIdentity(t, ctx, reg)
+	id := createIdentity(t.Context(), t, reg)
 	delete(id.Credentials, identity.CredentialsTypeWebAuthn)
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
 	return id
 }
 
-func createIdentityAndReturnIdentifier(t *testing.T, ctx context.Context, reg driver.Registry, conf []byte) (*identity.Identity, string) {
+func createIdentityAndReturnIdentifier(ctx context.Context, t *testing.T, reg driver.Registry, conf []byte) (*identity.Identity, string) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
 	p, err := reg.Hasher(ctx).Generate(ctx, []byte(password))
@@ -98,18 +99,20 @@ func createIdentityAndReturnIdentifier(t *testing.T, ctx context.Context, reg dr
 	return i, identifier
 }
 
-func createIdentity(t *testing.T, ctx context.Context, reg driver.Registry) *identity.Identity {
-	id, _ := createIdentityAndReturnIdentifier(t, ctx, reg, nil)
+func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry) *identity.Identity {
+	id, _ := createIdentityAndReturnIdentifier(ctx, t, reg, nil)
 	return id
 }
 
-func enableWebAuthn(conf *config.Config) {
+var enabledWebauthn = func() configx.OptionModifier {
 	webauthn := config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypeWebAuthn)
-	conf.MustSet(ctx, webauthn+".enabled", true)
-	conf.MustSet(ctx, webauthn+".config.rp.display_name", "Ory Corp")
-	conf.MustSet(ctx, webauthn+".config.rp.id", "localhost")
-	conf.MustSet(ctx, webauthn+".config.rp.origin", "http://localhost:4455")
-}
+	return configx.WithValues(map[string]any{
+		webauthn + ".enabled":                true,
+		webauthn + ".config.rp.display_name": "Ory Corp",
+		webauthn + ".config.rp.id":           "localhost",
+		webauthn + ".config.rp.origin":       "http://localhost:4455",
+	})
+}()
 
 func ensureReplacement(t *testing.T, index string, ui kratos.UiContainer, expected string) {
 	actual, err := json.Marshal(ui.Nodes)
@@ -117,14 +120,17 @@ func ensureReplacement(t *testing.T, index string, ui kratos.UiContainer, expect
 	assert.Contains(t, gjson.GetBytes(actual, index+".attributes.onclick").String(), expected, "ensure that the replacement works")
 }
 
-var ctx = context.Background()
-
 func TestCompleteSettings(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
-	enableWebAuthn(conf)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(map[string]any{
+			config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypePassword) + ".enabled": false,
+			config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":                                          false,
+			config.ViperKeySelfServiceSettingsRequiredAAL:                                                          "aal1",
+			config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter:                                        "1m",
+		}),
+		enabledWebauthn,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/settings.schema.json")),
+	)
 
 	router := x.NewRouterPublic(reg)
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
@@ -134,15 +140,10 @@ func TestCompleteSettings(t *testing.T) {
 	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
-
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
-	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
-
 	t.Run("case=a device is shown which can be unlinked", func(t *testing.T) {
-		id := createIdentity(t, ctx, reg)
+		id := createIdentity(t.Context(), t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -157,9 +158,9 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=one activation element is shown", func(t *testing.T) {
 		id := createIdentityWithoutWebAuthn(t, reg)
-		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
 
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
@@ -175,15 +176,15 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=webauthn only works for browsers", func(t *testing.T) {
 		id := createIdentityWithoutWebAuthn(t, reg)
-		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		assert.Empty(t, f.Ui.Nodes)
 	})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -192,7 +193,7 @@ func TestCompleteSettings(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -283,9 +284,9 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("case=requires privileged session for register", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 		})
 
 		run := func(t *testing.T, spa bool) {
@@ -320,8 +321,8 @@ func TestCompleteSettings(t *testing.T) {
 			var id identity.Identity
 			require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 			id.NID = uuid.Must(uuid.NewV4())
-			_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, &id)
+			_ = reg.PrivilegedIdentityPool().DeleteIdentity(t.Context(), id.ID)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, &id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 
 			// We inject the session to replay
@@ -369,17 +370,17 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("case=fails to remove security key if it is passwordless and the last credential available", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, true)
+		conf.MustSet(t.Context(), config.ViperKeyWebAuthnPasswordless, true)
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeyWebAuthnPasswordless, false)
+			conf.MustSet(t.Context(), config.ViperKeyWebAuthnPasswordless, false)
 		})
 
 		run := func(t *testing.T, spa bool) {
-			id := createIdentity(t, ctx, reg)
+			id := createIdentity(t.Context(), t, reg)
 			id.DeleteCredentialsType(identity.CredentialsTypePassword)
 			conf := sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":true}]}`)
 			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, conf, 0)
-			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), id, identity.ManagerAllowWriteProtectedTraits))
 
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
 				// The remove key should be empty
@@ -417,10 +418,10 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=possible to remove webauthn credential if it is MFA at all times", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
-			id := createIdentity(t, ctx, reg)
+			id := createIdentity(t.Context(), t, reg)
 			id.DeleteCredentialsType(identity.CredentialsTypePassword)
 			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":false}]}`), 0)
-			require.NoError(t, reg.IdentityManager().Update(ctx, id, identity.ManagerAllowWriteProtectedTraits))
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), id, identity.ManagerAllowWriteProtectedTraits))
 
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
 				// The remove key should be set
@@ -457,7 +458,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=remove all security keys", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
-			id := createIdentity(t, ctx, reg)
+			id := createIdentity(t.Context(), t, reg)
 			allCred, ok := id.GetCredentials(identity.CredentialsTypeWebAuthn)
 			assert.True(t, ok)
 
@@ -505,7 +506,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=fails with browser submit register payload is invalid", func(t *testing.T) {
 		run := func(t *testing.T, spa bool) {
-			id := createIdentity(t, ctx, reg)
+			id := createIdentity(t.Context(), t, reg)
 			body, res := doBrowserFlow(t, spa, func(v url.Values) {
 				v.Set(node.WebAuthnRemove, fmt.Sprintf("%x", []byte("foofoo")))
 			}, id)
@@ -545,7 +546,7 @@ func TestCompleteSettings(t *testing.T) {
 				id.NID = uuid.Must(uuid.NewV4())
 				require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
 				_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), id.ID)
-				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, &id)
+				browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, &id)
 				f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, isSPA, publicTS)
 
 				// We inject the session to replay

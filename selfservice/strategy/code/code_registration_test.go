@@ -20,7 +20,7 @@ import (
 )
 
 func TestRegistrationCode(t *testing.T) {
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	conf := internal.NewConfigurationWithDefaults(t)
 	newCode := func(expiresIn time.Duration, f *registration.Flow) *code.RegistrationCode {
 		return &code.RegistrationCode{
 			ID:        x.NewUUID(),

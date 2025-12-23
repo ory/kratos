@@ -13,30 +13,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/ory/x/sqlcon"
-
 	"github.com/gofrs/uuid"
-
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/configx"
+	"github.com/ory/x/snapshotx"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy/lookup"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -93,11 +92,16 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []id
 
 func TestCompleteSettings(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeLookup)+".enabled", true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
+		configx.WithValues(testhelpers.MethodEnableConfig("profile", false)),
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeLookup, true)),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")),
+		configx.WithValues(map[string]any{
+			config.ViperKeySelfServiceSettingsRequiredAAL:                   "aal1",
+			config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter: "1m",
+		}),
+	)
 
 	router := x.NewRouterPublic(reg)
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
@@ -107,13 +111,8 @@ func TestCompleteSettings(t *testing.T) {
 	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
-
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
-
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -122,7 +121,7 @@ func TestCompleteSettings(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		v(values)
@@ -131,28 +130,28 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("case=hide recovery codes behind reveal button and show disable button", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
-			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
+			snapshotx.SnapshotT(t, f.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value"))
 		})
 
 		t.Run("case=browser", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, false, publicTS)
-			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
+			snapshotx.SnapshotT(t, f.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value"))
 		})
 
 		t.Run("case=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
-			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
+			snapshotx.SnapshotT(t, f.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value"))
 		})
 	})
 
 	t.Run("case=button for regeneration is displayed when identity has no recovery codes yet", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 
 		t.Run("case=spa", func(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
@@ -165,7 +164,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("case=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 			testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 		})
@@ -391,7 +390,7 @@ func TestCompleteSettings(t *testing.T) {
 
 				t.Run("type=api", func(t *testing.T) {
 					id, _ := createIdentity(t, reg)
-					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -412,7 +411,7 @@ func TestCompleteSettings(t *testing.T) {
 				runBrowser := func(t *testing.T, spa bool) {
 					id, _ := createIdentity(t, reg)
 
-					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -485,7 +484,7 @@ func TestCompleteSettings(t *testing.T) {
 
 				t.Run("type=api", func(t *testing.T) {
 					id, _ := createIdentity(t, reg)
-					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+					apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 
@@ -503,7 +502,7 @@ func TestCompleteSettings(t *testing.T) {
 				runBrowser := func(t *testing.T, spa bool) {
 					id, _ := createIdentity(t, reg)
 
-					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+					browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
 					f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 					values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 

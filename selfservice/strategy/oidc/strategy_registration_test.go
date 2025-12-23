@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/configx"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
@@ -20,31 +21,25 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/assertx"
-	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
 )
 
 func TestPopulateRegistrationMethod(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	t.Parallel()
 
-	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
-	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".enabled", true)
-	ctx = contextx.WithConfigValue(
-		ctx,
-		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config",
-		map[string]interface{}{
-			"providers": []map[string]interface{}{
-				{
-					"provider":      "generic",
-					"id":            "providerID",
-					"client_id":     "invalid",
-					"client_secret": "invalid",
-					"issuer_url":    "https://foobar/",
-					"mapper_url":    "file://./stub/oidc.facebook.jsonnet",
-				},
-			},
-		},
+	ctx := context.Background()
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/registration.schema.json")),
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeOIDC, true)),
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config.providers",
+			[]map[string]any{{
+				"provider":      "generic",
+				"id":            "providerID",
+				"client_id":     "invalid",
+				"client_secret": "invalid",
+				"issuer_url":    "https://foobar/",
+				"mapper_url":    "file://./stub/oidc.facebook.jsonnet",
+			}}),
 	)
 
 	s, err := reg.AllRegistrationStrategies().Strategy(identity.CredentialsTypeOIDC)

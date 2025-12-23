@@ -144,7 +144,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=fails with invalid internal state", func(t *testing.T) {
 			run := func(t *testing.T, spa bool) {
-				fix.conf.MustSet(fix.ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+				fix.conf.MustSet(t.Context(), config.ViperKeySessionWhoAmIAAL, "aal1")
 				// We load our identity which we will use to replay the webauth session
 				fix.createIdentityWithPasskey(t, identity.Credentials{
 					Config:  loginPasswordlessCredentials,
@@ -184,7 +184,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=succeeds with passwordless login", func(t *testing.T) {
 			run := func(t *testing.T, spa bool) {
-				fix.conf.MustSet(fix.ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+				fix.conf.MustSet(t.Context(), config.ViperKeySessionWhoAmIAAL, "aal1")
 				// We load our identity which we will use to replay the webauth session
 				id := fix.createIdentityWithPasskey(t, identity.Credentials{
 					Config:  loginPasswordlessCredentials,
@@ -215,7 +215,7 @@ func TestCompleteLogin(t *testing.T) {
 				assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypePasskey, passkey.InternalContextKeySessionData)))
 				if spa {
 					assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
-					assert.Contains(t, gjson.Get(body, "continue_with.0.redirect_browser_to").String(), fix.conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", body)
+					assert.Contains(t, gjson.Get(body, "continue_with.0.redirect_browser_to").String(), fix.conf.SelfServiceBrowserDefaultReturnTo(t.Context()).String(), "%s", body)
 				} else {
 					assert.Empty(t, gjson.Get(body, "continue_with").Array(), "%s", body)
 				}
@@ -239,7 +239,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("flow=refresh", func(t *testing.T) {
 		fix := newLoginFixture(t)
-		fix.conf.MustSet(ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
+		fix.conf.MustSet(t.Context(), config.ViperKeySessionWhoAmIAAL, "aal1")
 		loginFixtureSuccessEmail := gjson.GetBytes(loginSuccessIdentity, "traits.email").String()
 
 		run := func(t *testing.T, ctx context.Context, id *identity.Identity, context, response []byte, isSPA bool, expectedAAL identity.AuthenticatorAssuranceLevel) {
@@ -299,7 +299,7 @@ func TestCompleteLogin(t *testing.T) {
 					"spa",
 				} {
 					t.Run(f, func(t *testing.T) {
-						run(t, ctx, id, tc.context, tc.response, f == "spa", expectedAAL)
+						run(t, t.Context(), id, tc.context, tc.response, f == "spa", expectedAAL)
 					})
 				}
 			})
@@ -371,7 +371,7 @@ func TestFormHydration(t *testing.T) {
 		r, f := newFlow(ctx, t)
 
 		id := createIdentity(t, ctx, reg, x.NewUUID())
-		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		f.Refresh = true
 
 		require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))

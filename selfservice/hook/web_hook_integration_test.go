@@ -1075,8 +1075,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 			TemplateURI: "file://stub/test_body.jsonnet",
 		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "is not a permitted destination")
+		assert.ErrorContains(t, err, "is not a permitted destination")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
@@ -1108,8 +1107,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 			TemplateURI: "http://192.168.178.0/test_body.jsonnet",
 		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "is not a permitted destination")
+		require.ErrorContains(t, err, "is not a permitted destination")
 	})
 }
 

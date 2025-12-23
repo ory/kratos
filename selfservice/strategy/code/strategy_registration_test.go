@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -20,6 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -47,13 +50,15 @@ type state struct {
 }
 
 func TestRegistrationCodeStrategyDisabled(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypePassword.String()), false)
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), false)
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), false)
-	conf.MustSet(ctx, "selfservice.flows.registration.enable_legacy_one_step", true)
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeCodeAuth, false)),
+		configx.WithValues(map[string]any{
+			fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth): false,
+			config.ViperKeySelfServiceRegistrationEnableLegacyOneStep:                                                             true,
+		}),
+	)
 
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -76,7 +81,7 @@ func TestRegistrationCodeStrategyDisabled(t *testing.T) {
 		"method":       {"code"},
 		"traits.email": {testhelpers.RandomEmail()},
 	}.Encode())
-	req, err := http.NewRequestWithContext(ctx, "POST", public.URL+registration.RouteSubmitFlow+"?flow="+gjson.GetBytes(body, "id").String(), payload)
+	req, err := http.NewRequestWithContext(t.Context(), "POST", public.URL+registration.RouteSubmitFlow+"?flow="+gjson.GetBytes(body, "id").String(), payload)
 	require.NoError(t, err)
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -91,6 +96,8 @@ func TestRegistrationCodeStrategyDisabled(t *testing.T) {
 }
 
 func TestRegistrationCodeStrategy(t *testing.T) {
+	t.Parallel()
+
 	type ApiType string
 
 	const (
@@ -99,18 +106,19 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		ApiTypeNative  ApiType = "api"
 	)
 
-	setup := func(ctx context.Context, t *testing.T) (*config.Config, *driver.RegistryDefault, *httptest.Server) {
-		conf, reg := internal.NewFastRegistryWithMocks(t)
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/code.identity.schema.json")
-		conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypePassword.String()), false)
-		conf.MustSet(ctx, fmt.Sprintf("%s.%s.enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth.String()), true)
-		conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), true)
-		conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh")
-		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh"})
-		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationAfter+".code.hooks", []map[string]interface{}{
-			{"hook": "session"},
-		})
-		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
+	setup := func(ctx context.Context, t *testing.T, cfgOpts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault, *httptest.Server) {
+		conf, reg := internal.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
+			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
+			configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
+			configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeCodeAuth, true)),
+			configx.WithValues(map[string]any{
+				fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth): true,
+				config.ViperKeySelfServiceRegistrationAfter + ".code.hooks": []map[string]any{
+					{"hook": "session"},
+				},
+				config.ViperKeySelfServiceRegistrationEnableLegacyOneStep: true,
+			}),
+		}, cfgOpts...)...)
 
 		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 		_ = testhelpers.NewErrorTestServer(t, reg)
@@ -135,9 +143,9 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 
 		var clientInit *oryClient.RegistrationFlow
 		if apiType == ApiTypeNative {
-			clientInit = testhelpers.InitializeRegistrationFlowViaAPI(t, client, public, testhelpers.InitFlowWithIdentitySchema(identitySchema))
+			clientInit = testhelpers.InitializeRegistrationFlowViaAPICtx(ctx, t, client, public, testhelpers.InitFlowWithIdentitySchema(identitySchema))
 		} else {
-			clientInit = testhelpers.InitializeRegistrationFlowViaBrowser(t, client, public, apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithIdentitySchema(identitySchema))
+			clientInit = testhelpers.InitializeRegistrationFlowViaBrowserCtx(ctx, t, client, public, apiType == ApiTypeSPA, false, false, testhelpers.InitFlowWithIdentitySchema(identitySchema))
 		}
 
 		body, err := json.Marshal(clientInit)
@@ -518,6 +526,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 	})
 
 	t.Run("test=cases with different configs", func(t *testing.T) {
+		t.Parallel()
+
 		ctx := context.Background()
 		conf, reg, public := setup(ctx, t)
 
@@ -627,7 +637,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 							require.NotEqual(t, s.flowID, resp.Request.URL.Query().Get("flow"))
 						} else {
 							require.Equal(t, http.StatusGone, resp.StatusCode)
-							require.Containsf(t, gjson.Get(body, "error.reason").String(), "self-service flow expired 0.00 minutes ago", "%s", body)
+							assert.Regexpf(t, regexp.MustCompile(`The self-service flow expired 0\.0\d minutes ago, initialize a new one\.`), gjson.Get(body, "error.reason").Str, "%s", body)
 						}
 					})
 				})
@@ -639,12 +649,13 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 		t.Parallel()
 
 		ctx := context.Background()
-		conf, reg, public := setup(ctx, t)
-		conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
-			{ID: "code", URL: "file://./stub/code.identity.schema.json", SelfserviceSelectable: true},
-			{ID: "no-code", URL: "file://stub/no-code.schema.json", SelfserviceSelectable: true},
-		})
-		conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "no-code")
+		conf, reg, public := setup(ctx, t, configx.WithValues(map[string]any{
+			config.ViperKeyIdentitySchemas: config.Schemas{
+				{ID: "code", URL: "file://./stub/code.identity.schema.json", SelfserviceSelectable: true},
+				{ID: "no-code", URL: "file://stub/no-code.schema.json", SelfserviceSelectable: true},
+			},
+			config.ViperKeyDefaultIdentitySchemaID: "no-code",
+		}))
 
 		for _, tc := range []struct {
 			d       string
@@ -704,14 +715,12 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 				})
 
 				t.Run("case=registration should fail with invalid form data", func(t *testing.T) {
-					ctx := context.Background()
-
 					// 1. Initiate flow
-					s := createRegistrationFlowWithIdentity(ctx, t, public, tc.apiType, "code")
+					s := createRegistrationFlowWithIdentity(t.Context(), t, public, tc.apiType, "code")
 					s.email = "invalidemail"
 
 					// 2. Submit Identifier (email)
-					registerNewUser(ctx, t, s, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
+					registerNewUser(t.Context(), t, s, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
 						if tc.apiType == ApiTypeBrowser {
 							require.EqualValues(t, http.StatusOK, resp.StatusCode)
 						} else {
@@ -727,11 +736,12 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 }
 
 func TestPopulateRegistrationMethod(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/code.identity.schema.json")
+	t.Parallel()
 
-	conf.MustSet(ctx, fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), true)
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/code.identity.schema.json")),
+		configx.WithValue(fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), true),
+	)
 
 	s, err := reg.AllRegistrationStrategies().Strategy(identity.CredentialsTypeCodeAuth)
 	require.NoError(t, err)
@@ -750,32 +760,32 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := registration.NewFlow(reg.Config(), time.Minute, "csrf_token", r, flow.TypeBrowser)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f
 	}
 
 	t.Run("method=PopulateRegistrationMethod", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
+		r, f := newFlow(t.Context(), t)
 		require.NoError(t, fh.PopulateRegistrationMethod(r, f))
 		toSnapshot(t, f.UI.Nodes)
 	})
 
 	t.Run("method=PopulateRegistrationMethodProfile", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
+		r, f := newFlow(t.Context(), t)
 		require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
 		toSnapshot(t, f.UI.Nodes)
 	})
 
 	t.Run("method=PopulateRegistrationMethodCredentials", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
+		r, f := newFlow(t.Context(), t)
 		require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
 		toSnapshot(t, f.UI.Nodes)
 	})
 
 	t.Run("method=idempotency", func(t *testing.T) {
-		r, f := newFlow(ctx, t)
+		r, f := newFlow(t.Context(), t)
 
 		var snapshots []node.Nodes
 

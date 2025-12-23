@@ -15,23 +15,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/configx"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
@@ -41,9 +41,11 @@ var lookupCodeGJSONQuery = "ui.nodes.#(attributes.name==" + identity.Credentials
 
 func TestCompleteLogin(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", false)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeLookup)+".enabled", true)
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeLookup, true)),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")),
+	)
 
 	router := x.NewRouterPublic(reg)
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
@@ -52,39 +54,32 @@ func TestCompleteLogin(t *testing.T) {
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-	// Overwrite these two to make it more explicit when tests fail
-	conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, errTS.URL+"/error-ts")
-	conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, uiTS.URL+"/login-ts")
-
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
-	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
-
 	t.Run("case=lookup payload is set when identity has lookup", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{"0.attributes.value"})
 	})
 
 	t.Run("case=lookup payload is not set when identity has no lookup", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
 
 	t.Run("case=lookup payload is not set when identity has no lookup", func(t *testing.T) {
 		id := createIdentityWithoutLookup(t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		assertx.EqualAsJSON(t, nil, f.Ui.Nodes)
 	})
 
 	doAPIFlowWithClient := func(t *testing.T, v func(url.Values), id *identity.Identity, apiClient *http.Client, forced bool) (string, *http.Response) {
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, forced, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, forced, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", identity.CredentialsTypeLookup.String())
 		v(values)
@@ -93,7 +88,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 		return doAPIFlowWithClient(t, v, id, apiClient, false)
 	}
 
@@ -106,7 +101,7 @@ func TestCompleteLogin(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
 		return doBrowserFlowWithClient(t, spa, v, id, browserClient, false)
 	}
 
@@ -242,7 +237,7 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id)
 			body, res := doAPIFlowWithClient(t, payload("key-0"), id, apiClient, false)
 			check(t, false, body, res, "key-0", 2)
 			// We can still use another key
@@ -252,7 +247,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
 			body, res := doBrowserFlowWithClient(t, false, payload("key-3"), id, browserClient, false)
 			check(t, true, body, res, "key-3", 2)
 			// We can still use another key
@@ -262,7 +257,7 @@ func TestCompleteLogin(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, id)
 			body, res := doBrowserFlowWithClient(t, true, payload("key-6"), id, browserClient, false)
 			check(t, false, body, res, "key-6", 2)
 			// We can still use another key
@@ -276,7 +271,7 @@ func TestCompleteLogin(t *testing.T) {
 
 	t.Run("case=should fail because lookup can not handle AAL1", func(t *testing.T) {
 		apiClient := testhelpers.NewDebugClient(t)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, apiClient, publicTS, false)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(ctx, t, apiClient, publicTS, false)
 
 		update, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
 		require.NoError(t, err)
@@ -363,7 +358,7 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodSecondFactor", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
-		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		r, f := newFlow(ctx, t)
 
 		r.Header = headers
@@ -375,7 +370,7 @@ func TestFormHydration(t *testing.T) {
 
 	t.Run("method=PopulateLoginMethodSecondFactorRefresh", func(t *testing.T) {
 		id, _ := createIdentity(t, reg)
-		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+		headers := testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
 		r, f := newFlow(ctx, t)
 
 		r.Header = headers

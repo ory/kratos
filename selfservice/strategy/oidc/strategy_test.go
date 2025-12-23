@@ -20,62 +20,65 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/gofrs/uuid"
+	"github.com/ory/x/configx"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
-	"golang.org/x/oauth2"
-
-	"github.com/ory/kratos/selfservice/hook/hooktest"
-	"github.com/ory/x/sqlxx"
-	"github.com/ory/x/uuidx"
-
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/selfservice/sessiontokenexchange"
-	"github.com/ory/kratos/session"
-	"github.com/ory/x/randx"
-	"github.com/ory/x/snapshotx"
-
-	"github.com/ory/kratos/text"
-
-	"github.com/ory/x/ioutilx"
-
-	"github.com/ory/x/assertx"
-
-	"github.com/ory/kratos/ui/container"
-
-	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
-
-	"github.com/ory/x/urlx"
+	"golang.org/x/oauth2"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
-
+	"github.com/ory/kratos/selfservice/hook/hooktest"
+	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/randx"
+	"github.com/ory/x/snapshotx"
+	"github.com/ory/x/sqlxx"
+	"github.com/ory/x/urlx"
+	"github.com/ory/x/uuidx"
 )
 
 func TestStrategy(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
-	if testing.Short() {
-		t.Skip()
-	}
 
 	var (
-		conf, reg = internal.NewFastRegistryWithMocks(t)
-		subject   string
-		claims    idTokenClaims
-		scope     []string
+		subject string
+		claims  idTokenClaims
+		scope   []string
 	)
+
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(map[string]any{
+			config.ViperKeyIdentitySchemas: config.Schemas{
+				{ID: "default", URL: "file://./stub/registration.schema.json"},
+				{ID: "email", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
+				{ID: "phone", URL: "file://./stub/registration-phone.schema.json", SelfserviceSelectable: true},
+				{ID: "extra_data", URL: "file://./stub/registration-multi-schema-extra-fields.schema.json", SelfserviceSelectable: true},
+			},
+			config.ViperKeyDefaultIdentitySchemaID: "default",
+			config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()): []config.SelfServiceHook{{Name: "session"}},
+		}),
+	)
+
 	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &claims, &scope)
 	returnTS := newReturnTS(t, reg)
-	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTS.URL})
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	routerP := x.NewRouterPublic(reg)
@@ -112,19 +115,6 @@ func TestStrategy(t *testing.T) {
 			Mapper:    "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
-
-	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
-
-	conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
-		{ID: "default", URL: "file://./stub/registration.schema.json"},
-		{ID: "email", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
-		{ID: "phone", URL: "file://./stub/registration-phone.schema.json", SelfserviceSelectable: true},
-		{ID: "extra_data", URL: "file://./stub/registration-multi-schema-extra-fields.schema.json", SelfserviceSelectable: true},
-	})
-	conf.MustSet(ctx, config.ViperKeyDefaultIdentitySchemaID, "default")
-
-	conf.MustSet(ctx, config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter,
-		identity.CredentialsTypeOIDC.String()), []config.SelfServiceHook{{Name: "session"}})
 
 	t.Logf("Kratos Public URL: %s", ts.URL)
 	t.Logf("Kratos Error URL: %s", errTS.URL)
@@ -182,7 +172,7 @@ func TestStrategy(t *testing.T) {
 		require.NoError(t, res.Body.Close())
 		require.NoError(t, err)
 
-		require.Equal(t, 200, res.StatusCode, "%s: %s\n\t%s", action, res.Request.URL.String(), body)
+		require.Equalf(t, 200, res.StatusCode, "%s: %s\n\t%s", action, res.Request.URL.String(), body)
 
 		return res, body
 	}
@@ -398,12 +388,12 @@ func TestStrategy(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 		})
 		bc := testhelpers.NewDebugClient(t)
-		f := testhelpers.InitializeLoginFlowViaAPI(t, bc, ts, false)
+		f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, bc, ts, false)
 
-		update, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+		update, err := reg.LoginFlowPersister().GetLoginFlow(t.Context(), uuid.FromStringOrNil(f.Id))
 		require.NoError(t, err)
 		update.RequestedAAL = identity.AuthenticatorAssuranceLevel2
-		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(context.Background(), update))
+		require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(t.Context(), update))
 
 		req, err := http.NewRequest("POST", f.Ui.Action, bytes.NewBufferString(`{"method":"oidc"}`))
 		require.NoError(t, err)
@@ -1970,7 +1960,7 @@ func TestDisabledEndpoint(t *testing.T) {
 
 		t.Run("flow=settings", func(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://stub/stub.schema.json")
-			c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(t, ctx, reg)
+			c := testhelpers.NewHTTPClientWithArbitrarySessionCookie(ctx, t, reg)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, c, publicTS)
 
 			res, err := c.PostForm(f.Ui.Action, url.Values{"link": {"oidc"}})
@@ -1982,7 +1972,7 @@ func TestDisabledEndpoint(t *testing.T) {
 		})
 
 		t.Run("flow=login", func(t *testing.T) {
-			f := testhelpers.InitializeLoginFlowViaAPI(t, c, publicTS, false)
+			f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, c, publicTS, false)
 			res, err := c.PostForm(f.Ui.Action, url.Values{"provider": {"oidc"}})
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusNotFound, res.StatusCode)
@@ -2004,13 +1994,17 @@ func TestDisabledEndpoint(t *testing.T) {
 }
 
 func TestPostEndpointRedirect(t *testing.T) {
-	var (
-		conf, reg = internal.NewFastRegistryWithMocks(t)
-		subject   string
-		claims    idTokenClaims
-		scope     []string
+	t.Parallel()
+
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeOIDC, true)),
 	)
-	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), true)
+
+	var (
+		subject string
+		claims  idTokenClaims
+		scope   []string
+	)
 
 	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
 
@@ -2040,7 +2034,7 @@ func TestPostEndpointRedirect(t *testing.T) {
 			assert.Equal(t, publicTS.URL+"/self-service/methods/oidc/callback/"+providerID+"?state=foo&test=3", location.String())
 
 			// We don't want to add/override CSRF cookie when redirecting
-			testhelpers.AssertNoCSRFCookieInResponse(t, publicTS, c, res)
+			testhelpers.AssertNoCSRFCookieInResponse(t, res)
 		})
 	}
 }

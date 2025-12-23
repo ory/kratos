@@ -28,9 +28,9 @@ import (
 
 // var _ login.Strategy = new(Strategy)
 var (
-	_ settings.Strategy                 = new(Strategy)
-	_ login.AAL2FormHydrator            = new(Strategy)
-	_ identity.ActiveCredentialsCounter = new(Strategy)
+	_ settings.Strategy                 = (*Strategy)(nil)
+	_ login.AAL2FormHydrator            = (*Strategy)(nil)
+	_ identity.ActiveCredentialsCounter = (*Strategy)(nil)
 )
 
 type lookupStrategyDependencies interface {

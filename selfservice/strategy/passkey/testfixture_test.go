@@ -19,6 +19,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
 
+	"github.com/ory/x/configx"
+
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -33,36 +35,40 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
-func newRegistrationRegistry(t *testing.T) *driver.RegistryDefault {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true)
-	enablePasskeyStrategy(conf)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
+func newRegistrationRegistry(t *testing.T, cfgOpts ...configx.OptionModifier) *driver.RegistryDefault {
+	_, reg := internal.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
+		configx.WithValues(map[string]any{
+			config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypePassword) + ".enabled": true,
+			config.ViperKeySelfServiceRegistrationEnableLegacyOneStep:                                              true,
+			config.ViperKeySelfServiceRegistrationLoginHints:                                                       true,
+		}),
+		withEnabledPasskeyStrategy,
+	}, cfgOpts...)...)
 	return reg
 }
 
-func newLoginRegistry(t *testing.T) *driver.RegistryDefault {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true)
-	enablePasskeyStrategy(conf)
-	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationLoginHints, true)
+func newLoginRegistry(t *testing.T, cfgOpts ...configx.OptionModifier) *driver.RegistryDefault {
+	_, reg := internal.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
+		configx.WithValues(map[string]any{
+			config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypePassword) + ".enabled": true,
+			config.ViperKeySelfServiceRegistrationLoginHints:                                                       true,
+		}),
+		withEnabledPasskeyStrategy,
+	}, cfgOpts...)...)
 	return reg
 }
 
-func enablePasskeyStrategy(conf *config.Config) {
-	ctx := context.Background()
+var withEnabledPasskeyStrategy = func() configx.OptionModifier {
 	key := config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypePasskey)
-	conf.MustSet(ctx, key+".enabled", true)
-	conf.MustSet(ctx, key+".config.rp.display_name", "Ory Corp")
-	conf.MustSet(ctx, key+".config.rp.id", "localhost")
-	conf.MustSet(ctx, key+".config.rp.origins", []string{"http://localhost:4455"})
-}
+	return configx.WithValues(map[string]any{
+		key + ".enabled":                true,
+		key + ".config.rp.display_name": "Ory Corp",
+		key + ".config.rp.id":           "localhost",
+		key + ".config.rp.origins":      []string{"http://localhost:4455"},
+	})
+}()
 
 type fixture struct {
-	ctx  context.Context
 	conf *config.Config
 	reg  *driver.RegistryDefault
 
@@ -74,12 +80,13 @@ type fixture struct {
 	loginTS          *httptest.Server
 }
 
-func newRegistrationFixture(t *testing.T) *fixture {
+func newRegistrationFixture(t *testing.T, cfgOpts ...configx.OptionModifier) *fixture {
 	fix := new(fixture)
-	fix.ctx = context.Background()
-	fix.reg = newRegistrationRegistry(t)
+	fix.reg = newRegistrationRegistry(t, append([]configx.OptionModifier{
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/registration.schema.json")),
+		configx.WithValue(config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"}),
+	}, cfgOpts...)...)
 	fix.conf = fix.reg.Config()
-	ctx := fix.ctx
 
 	router := x.NewRouterPublic(fix.reg)
 	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin(fix.reg))
@@ -87,9 +94,6 @@ func newRegistrationFixture(t *testing.T) *fixture {
 	_ = testhelpers.NewErrorTestServer(t, fix.reg)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, fix.reg)
 	_ = testhelpers.NewRedirSessionEchoTS(t, fix.reg)
-
-	testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/registration.schema.json")
-	fix.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
 
 	fix.redirTS = testhelpers.NewRedirSessionEchoTS(t, fix.reg)
 	fix.redirNoSessionTS = testhelpers.NewRedirNoSessionTS(t, fix.reg)
@@ -99,16 +103,16 @@ func newRegistrationFixture(t *testing.T) *fixture {
 	return fix
 }
 
-func newLoginFixture(t *testing.T) *fixture {
+func newLoginFixture(t *testing.T, cfgOpts ...configx.OptionModifier) *fixture {
 	fix := new(fixture)
-	fix.ctx = context.Background()
-	fix.reg = newLoginRegistry(t)
+	fix.reg = newLoginRegistry(t, append([]configx.OptionModifier{
+		configx.WithValues(map[string]any{
+			config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypePassword) + ".enabled": false,
+			config.ViperKeySecretsDefault: []string{"not-a-secure-session-key"},
+		}),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")),
+	}, cfgOpts...)...)
 	fix.conf = fix.reg.Config()
-	ctx := fix.ctx
-
-	fix.conf.MustSet(ctx,
-		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled",
-		false)
 
 	router := x.NewRouterPublic(fix.reg)
 	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin(fix.reg))
@@ -118,11 +122,7 @@ func newLoginFixture(t *testing.T) *fixture {
 	fix.loginTS = fix.uiTS
 
 	// Overwrite these two to make it more explicit when tests fail
-	fix.conf.MustSet(ctx, config.ViperKeySelfServiceErrorUI, fix.errTS.URL+"/error-ts")
-	fix.conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, fix.uiTS.URL+"/login-ts")
-
-	testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/login.schema.json")
-	fix.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
+	fix.conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginUI, fix.uiTS.URL+"/login-ts")
 
 	fix.redirTS = testhelpers.NewRedirSessionEchoTS(t, fix.reg)
 	fix.redirNoSessionTS = testhelpers.NewRedirNoSessionTS(t, fix.reg)
@@ -132,15 +132,17 @@ func newLoginFixture(t *testing.T) *fixture {
 	return fix
 }
 
-func newSettingsFixture(t *testing.T) *fixture {
-	fix := newLoginFixture(t)
+func newSettingsFixture(t *testing.T, cfgOpts ...configx.OptionModifier) *fixture {
+	fix := newLoginFixture(t, append([]configx.OptionModifier{
+		configx.WithValues(map[string]any{
+			config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter: "1m",
+			config.ViperKeySelfServiceSettingsRequiredAAL:                   "aal1",
+			config.ViperKeySessionWhoAmIAAL:                                 "aal1",
+			config.ViperKeySelfServiceStrategyConfig + ".profile.enabled":   false,
+		}),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/settings.schema.json")),
+	}, cfgOpts...)...)
 	fix.uiTS = testhelpers.NewSettingsUIFlowEchoServer(t, fix.reg)
-	fix.conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
-	testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/settings.schema.json")
-	fix.conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
-	fix.conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
-	fix.conf.MustSet(fix.ctx, config.ViperKeySessionWhoAmIAAL, "aal1")
-	fix.conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".profile.enabled", false)
 
 	return fix
 }
@@ -172,19 +174,19 @@ func (fix *fixture) createIdentityWithPasskey(t *testing.T, c identity.Credentia
 	})
 
 	// We clean up the identity in case it has been created before
-	_ = fix.reg.PrivilegedIdentityPool().DeleteIdentity(fix.ctx, id.ID)
+	_ = fix.reg.PrivilegedIdentityPool().DeleteIdentity(t.Context(), id.ID)
 
-	require.NoError(t, fix.reg.PrivilegedIdentityPool().CreateIdentity(fix.ctx, &id))
+	require.NoError(t, fix.reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), &id))
 
 	return &id
 }
 
 func (fix *fixture) submitWebAuthnLoginFlowWithClient(t *testing.T, isSPA bool, f *kratos.LoginFlow, contextFixture []byte, client *http.Client, cb func(values url.Values)) (string, *http.Response, *kratos.LoginFlow) {
 	// We inject the session to replay
-	interim, err := fix.reg.LoginFlowPersister().GetLoginFlow(fix.ctx, uuid.FromStringOrNil(f.Id))
+	interim, err := fix.reg.LoginFlowPersister().GetLoginFlow(t.Context(), uuid.FromStringOrNil(f.Id))
 	require.NoError(t, err)
 	interim.InternalContext = contextFixture
-	require.NoError(t, fix.reg.LoginFlowPersister().UpdateLoginFlow(fix.ctx, interim))
+	require.NoError(t, fix.reg.LoginFlowPersister().UpdateLoginFlow(t.Context(), interim))
 
 	values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 	cb(values)
@@ -200,7 +202,7 @@ func (fix *fixture) submitWebAuthnLoginWithClient(t *testing.T, isSPA bool, cont
 }
 
 func (fix *fixture) submitWebAuthnLogin(t *testing.T, ctx context.Context, isSPA bool, id *identity.Identity, contextFixture []byte, cb func(values url.Values), opts ...testhelpers.InitFlowWithOption) (string, *http.Response, *kratos.LoginFlow) {
-	browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, fix.reg, id)
+	browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, fix.reg, id)
 	return fix.submitWebAuthnLoginWithClient(t, isSPA, contextFixture, browserClient, cb, opts...)
 }
 
@@ -208,21 +210,21 @@ func (fix *fixture) submitWebAuthnLogin(t *testing.T, ctx context.Context, isSPA
 // state (redirTS: enforce that a session exists, redirNoSessionTS: enforce that
 // no session exists)
 func (fix *fixture) useReturnToFromTS(ts *httptest.Server) {
-	fix.conf.MustSet(fix.ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/default-return-to")
-	fix.conf.MustSet(fix.ctx, config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, ts.URL+"/registration-return-ts")
+	fix.conf.MustSet(context.TODO(), config.ViperKeySelfServiceBrowserDefaultReturnTo, ts.URL+"/default-return-to")
+	fix.conf.MustSet(context.TODO(), config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, ts.URL+"/registration-return-ts")
 }
 func (fix *fixture) useRedirTS()          { fix.useReturnToFromTS(fix.redirTS) }
 func (fix *fixture) useRedirNoSessionTS() { fix.useReturnToFromTS(fix.redirNoSessionTS) }
 
 func (fix *fixture) disableSessionAfterRegistration() {
-	fix.conf.MustSet(fix.ctx, config.HookStrategyKey(
+	fix.conf.MustSet(context.TODO(), config.HookStrategyKey(
 		config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypePasskey.String(),
 	), nil)
 }
 
 func (fix *fixture) enableSessionAfterRegistration() {
-	fix.conf.MustSet(fix.ctx, config.HookStrategyKey(
+	fix.conf.MustSet(context.TODO(), config.HookStrategyKey(
 		config.ViperKeySelfServiceRegistrationAfter,
 		identity.CredentialsTypePasskey.String(),
 	), []config.SelfServiceHook{{Name: "session"}})
@@ -261,7 +263,7 @@ func (fix *fixture) submitPasskeyBrowserRegistration(
 	cb func(values url.Values),
 	opts ...submitPasskeyOption,
 ) (string, *http.Response, *kratos.RegistrationFlow) {
-	return fix.submitPasskeyRegistration(t, flowType, client, cb, append([]submitPasskeyOption{withInternalContext(registrationFixtureSuccessBrowserInternalContext)}, opts...)...)
+	return fix.submitPasskeyRegistration(t.Context(), t, flowType, client, cb, append([]submitPasskeyOption{withInternalContext(registrationFixtureSuccessBrowserInternalContext)}, opts...)...)
 }
 
 func (fix *fixture) submitPasskeyAndroidRegistration(
@@ -271,13 +273,14 @@ func (fix *fixture) submitPasskeyAndroidRegistration(
 	cb func(values url.Values),
 	opts ...submitPasskeyOption,
 ) (string, *http.Response, *kratos.RegistrationFlow) {
-	return fix.submitPasskeyRegistration(t, flowType, client, cb,
+	return fix.submitPasskeyRegistration(t.Context(), t, flowType, client, cb,
 		append([]submitPasskeyOption{withInternalContext(
 			registrationFixtureSuccessAndroidInternalContext,
 		)}, opts...)...)
 }
 
 func (fix *fixture) submitPasskeyRegistration(
+	ctx context.Context,
 	t *testing.T,
 	flowType string,
 	client *http.Client,
@@ -290,7 +293,7 @@ func (fix *fixture) submitPasskeyRegistration(
 	}
 
 	isSPA := flowType == "spa"
-	regFlow := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, fix.publicTS, isSPA, false, false, o.initFlowOpts...)
+	regFlow := testhelpers.InitializeRegistrationFlowViaBrowserCtx(ctx, t, client, fix.publicTS, isSPA, false, false, o.initFlowOpts...)
 
 	// First step: fill out traits and click on "sign up with passkey"
 	values := testhelpers.SDKFormFieldsToURLValues(regFlow.Ui.Nodes)
@@ -301,14 +304,14 @@ func (fix *fixture) submitPasskeyRegistration(
 	_, _ = testhelpers.RegistrationMakeRequest(t, false, isSPA, regFlow, client, values.Encode())
 
 	// We inject the session to replay
-	interim, err := fix.reg.RegistrationFlowPersister().GetRegistrationFlow(fix.ctx, uuid.FromStringOrNil(regFlow.Id))
+	interim, err := fix.reg.RegistrationFlowPersister().GetRegistrationFlow(ctx, uuid.FromStringOrNil(regFlow.Id))
 	require.NoError(t, err)
 	interim.InternalContext = o.internalContext
 	if o.userID != "" {
 		interim.InternalContext, err = sjson.SetBytes(interim.InternalContext, "passkey_session_data.user_id", o.userID)
 		require.NoError(t, err)
 	}
-	require.NoError(t, fix.reg.RegistrationFlowPersister().UpdateRegistrationFlow(fix.ctx, interim))
+	require.NoError(t, fix.reg.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, interim))
 
 	// Second step: fill out passkey response
 	values.Set(node.PasskeyRegister, passkeyRegisterVal)
@@ -319,7 +322,7 @@ func (fix *fixture) submitPasskeyRegistration(
 
 func (fix *fixture) makeRegistration(t *testing.T, flowType string, values func(v url.Values), opts ...submitPasskeyOption) (actual string, res *http.Response, fetchedFlow *registration.Flow) {
 	actual, res, actualFlow := fix.submitPasskeyBrowserRegistration(t, flowType, testhelpers.NewClientWithCookies(t), values, opts...)
-	fetchedFlow, err := fix.reg.RegistrationFlowPersister().GetRegistrationFlow(fix.ctx, uuid.FromStringOrNil(actualFlow.Id))
+	fetchedFlow, err := fix.reg.RegistrationFlowPersister().GetRegistrationFlow(t.Context(), uuid.FromStringOrNil(actualFlow.Id))
 	require.NoError(t, err)
 
 	return actual, res, fetchedFlow
@@ -342,14 +345,14 @@ func (fix *fixture) makeUnsuccessfulRegistration(t *testing.T, flowType string, 
 func (fix *fixture) createIdentityWithoutPasskey(t *testing.T) *identity.Identity {
 	id := fix.createIdentity(t)
 	delete(id.Credentials, identity.CredentialsTypePasskey)
-	require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(fix.ctx, id))
+	require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), id))
 	return id
 }
 
 func (fix *fixture) createIdentityAndReturnIdentifier(t *testing.T, conf []byte) (*identity.Identity, string) {
 	identifier := x.NewUUID().String() + "@ory.sh"
 	password := x.NewUUID().String()
-	p, err := fix.reg.Hasher(fix.ctx).Generate(fix.ctx, []byte(password))
+	p, err := fix.reg.Hasher(t.Context()).Generate(t.Context(), []byte(password))
 	require.NoError(t, err)
 	i := &identity.Identity{
 		Traits: identity.Traits(fmt.Sprintf(`{"email":"%s"}`, identifier)),
@@ -364,7 +367,7 @@ func (fix *fixture) createIdentityAndReturnIdentifier(t *testing.T, conf []byte)
 	if conf == nil {
 		conf = []byte(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo"},{"id":"YmFyYmFy","display_name":"bar"}]}`)
 	}
-	require.NoError(t, fix.reg.PrivilegedIdentityPool().CreateIdentity(fix.ctx, i))
+	require.NoError(t, fix.reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), i))
 	i.Credentials = map[identity.CredentialsType]identity.Credentials{
 		identity.CredentialsTypePassword: {
 			Type:        identity.CredentialsTypePassword,
@@ -377,7 +380,7 @@ func (fix *fixture) createIdentityAndReturnIdentifier(t *testing.T, conf []byte)
 			Config:      conf,
 		},
 	}
-	require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(fix.ctx, i))
+	require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), i))
 	return i, identifier
 }
 

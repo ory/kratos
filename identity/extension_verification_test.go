@@ -5,7 +5,6 @@ package identity
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net"
 	"reflect"
@@ -29,8 +28,6 @@ const (
 	legacyEmailMissingFormatSchemaPath = "file://./stub/extension/verify/legacy-email-missing-format.schema.json"
 	noValidateSchemaPath               = "file://./stub/extension/verify/no-validate.schema.json"
 )
-
-var ctx = context.Background()
 
 func TestSchemaExtensionVerification(t *testing.T) {
 	net.IP{}.IsPrivate()
@@ -390,13 +387,13 @@ func TestSchemaExtensionVerification(t *testing.T) {
 
 				c := jsonschema.NewCompiler()
 
-				runner, err := schema.NewExtensionRunner(ctx)
+				runner, err := schema.NewExtensionRunner(t.Context())
 				require.NoError(t, err)
 
 				e := NewSchemaExtensionVerification(id, time.Minute)
 				runner.AddRunner(e).Register(c)
 
-				err = c.MustCompile(ctx, tc.schema).Validate(bytes.NewBufferString(tc.doc))
+				err = c.MustCompile(t.Context(), tc.schema).Validate(bytes.NewBufferString(tc.doc))
 				if tc.expectErr != nil {
 					require.EqualError(t, err, tc.expectErr.Error())
 					return

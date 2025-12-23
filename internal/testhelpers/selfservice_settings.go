@@ -7,12 +7,13 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gobuffalo/httptest"
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -171,27 +172,50 @@ func NewSettingsLoginAcceptAPIServer(t *testing.T, publicClient *kratos.APIClien
 	return loginTS
 }
 
+// AddAndLoginIdentity adds the given identity to the store (like a registration flow) and returns an http.Client
+// which contain their session.
+func AddAndLoginIdentity(t *testing.T, reg *driver.RegistryDefault, i *identity.Identity) (uuid.UUID, *http.Client) {
+	loggedIn := AddAndLoginIdentities(t, reg, map[string]*identity.Identity{"": i})[""]
+	return loggedIn.ID, loggedIn.Client
+}
+
 // AddAndLoginIdentities adds the given identities to the store (like a registration flow) and returns http.Clients
 // which contain their sessions.
-func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, public *httptest.Server, ids map[string]*identity.Identity) map[string]*http.Client {
-	result := map[string]*http.Client{}
-	for k := range ids {
+func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, ids map[string]*identity.Identity) map[string]struct {
+	Client *http.Client
+	ID     uuid.UUID
+} {
+	result := map[string]struct {
+		Client *http.Client
+		ID     uuid.UUID
+	}{}
+	r := http.NewServeMux()
+	s := httptest.NewServer(r)
+	defer s.Close()
+
+	for k, i := range ids {
+		i.ID = uuid.Must(uuid.NewV4())
 		tid := x.NewUUID().String()
-		_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), ids[k].ID)
-		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, ids[k])
+		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, i)
 		location := "/sessions/set/" + tid
 
-		if router, ok := public.Config.Handler.(*x.RouterPublic); ok {
+		if router, ok := s.Config.Handler.(*x.RouterPublic); ok {
 			router.GET(location, route)
-		} else if router, ok := public.Config.Handler.(*http.ServeMux); ok {
+		} else if router, ok := s.Config.Handler.(*http.ServeMux); ok {
 			router.Handle("GET "+location, route)
-		} else if router, ok := public.Config.Handler.(*x.RouterAdmin); ok {
+		} else if router, ok := s.Config.Handler.(*x.RouterAdmin); ok {
 			router.GET(location, route)
 		} else {
-			t.Logf("Got unknown type: %T", public.Config.Handler)
+			t.Logf("Got unknown type: %T", s.Config.Handler)
 			t.FailNow()
 		}
-		result[k] = NewSessionClient(t, public.URL+location)
+		result[k] = struct {
+			Client *http.Client
+			ID     uuid.UUID
+		}{
+			Client: NewSessionClient(t, s.URL+location),
+			ID:     i.ID,
+		}
 	}
 	return result
 }

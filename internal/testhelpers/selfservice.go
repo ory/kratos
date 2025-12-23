@@ -241,15 +241,15 @@ func GetSelfServiceRedirectLocation(t *testing.T, url string) string {
 	return res.Header.Get("Location")
 }
 
-func AssertMessage(t *testing.T, body []byte, message string) {
+func AssertMessage[B string | []byte](t *testing.T, body B, message string) {
 	t.Helper()
-	assert.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1)
-	assert.Equal(t, message, gjson.GetBytes(body, "ui.messages.0.text").String(), "%v", string(body))
+	require.Len(t, gjson.Get(string(body), "ui.messages").Array(), 1)
+	assert.Equalf(t, message, gjson.Get(string(body), "ui.messages.0.text").String(), "%s", body)
 }
 
-func AssertFieldMessage(t *testing.T, body []byte, fieldName string, message string) {
+func AssertFieldMessage[B string | []byte](t *testing.T, body B, fieldName, message string) {
 	t.Helper()
-	messages := gjson.GetBytes(body, "ui.nodes.#(attributes.name=="+fieldName+").messages")
-	assert.Len(t, messages.Array(), 1, "expected field %s to have one message, got %s", fieldName, messages)
-	assert.Equal(t, message, messages.Get("0.text").String(), "%v", string(body))
+	messages := gjson.Get(string(body), "ui.nodes.#(attributes.name=="+fieldName+").messages")
+	require.Len(t, messages.Array(), 1, "expected field %s to have one message, got %s", fieldName, messages)
+	assert.Equalf(t, message, messages.Get("0.text").String(), "%s", body)
 }

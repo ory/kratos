@@ -4,7 +4,6 @@
 package totp_test
 
 import (
-	"context"
 	_ "embed"
 	"encoding/json"
 	"net/http"
@@ -12,43 +11,44 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-
 	"github.com/gofrs/uuid"
-
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/pquerna/otp"
 	stdtotp "github.com/pquerna/otp/totp"
-
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/selfservice/strategy/totp"
-	"github.com/ory/kratos/ui/node"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/assertx"
-	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/kratos/selfservice/flow/settings"
-	"github.com/ory/kratos/text"
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	kratos "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/strategy/totp"
+	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlcon"
 )
 
 func TestCompleteSettings(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword), map[string]interface{}{"enabled": false})
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".profile", map[string]interface{}{"enabled": false})
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeTOTP), map[string]interface{}{"enabled": true})
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, "aal1")
+	t.Parallel()
+
+	conf, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
+		configx.WithValues(testhelpers.MethodEnableConfig("profile", false)),
+		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeTOTP, true)),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/settings.schema.json")),
+		configx.WithValues(map[string]any{
+			config.ViperKeySelfServiceSettingsRequiredAAL:                   "aal1",
+			config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter: "1m",
+		}),
+	)
 
 	router := x.NewRouterPublic(reg)
 	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
@@ -58,15 +58,10 @@ func TestCompleteSettings(t *testing.T) {
 	_ = testhelpers.NewRedirSessionEchoTS(t, reg)
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
-	conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
-
-	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/settings.schema.json")
-	conf.MustSet(ctx, config.ViperKeySecretsDefault, []string{"not-a-secure-session-key"})
-
 	t.Run("case=device unlinking is available when identity has totp", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
@@ -74,11 +69,11 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("case=device setup is available when identity has no totp yet", func(t *testing.T) {
-		id, _, _ := createIdentity(t, reg)
+		id, _, _ := createIdentity(t.Context(), t, reg)
 		id.Credentials = nil
-		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(context.Background(), id))
+		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), id))
 
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		testhelpers.SnapshotTExcept(t, f.Ui.Nodes, []string{
 			"0.attributes.value",
@@ -89,7 +84,7 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	doAPIFlow := func(t *testing.T, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
@@ -99,7 +94,7 @@ func TestCompleteSettings(t *testing.T) {
 	}
 
 	doBrowserFlow := func(t *testing.T, spa bool, v func(url.Values), id *identity.Identity) (string, *http.Response) {
-		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
 		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, spa, publicTS)
 		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 		values.Set("method", "totp")
@@ -108,7 +103,7 @@ func TestCompleteSettings(t *testing.T) {
 	}
 
 	t.Run("case=should pass without csrf if API flow", func(t *testing.T) {
-		id := createIdentityWithoutTOTP(t, reg)
+		id := createIdentityWithoutTOTP(t.Context(), t, reg)
 
 		body, res := doAPIFlow(t, func(v url.Values) {
 			v.Del("csrf_token")
@@ -120,7 +115,7 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("case=should fail if CSRF token is invalid", func(t *testing.T) {
-		id := createIdentityWithoutTOTP(t, reg)
+		id := createIdentityWithoutTOTP(t.Context(), t, reg)
 
 		t.Run("type=browser", func(t *testing.T) {
 			body, res := doBrowserFlow(t, false, func(v url.Values) {
@@ -144,18 +139,18 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("type=can not unlink without privileged session", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 		})
 
-		id, _, key := createIdentity(t, reg)
+		id, _, key := createIdentity(t.Context(), t, reg)
 		payload := func(v url.Values) {
 			v.Set("totp_unlink", "true")
 		}
 
 		checkIdentity := func(t *testing.T) {
-			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			_, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.NoError(t, err)
 			assert.Equal(t, key.URL(), gjson.GetBytes(cred.Config, "totp_url").String())
 		}
@@ -186,18 +181,18 @@ func TestCompleteSettings(t *testing.T) {
 	})
 
 	t.Run("type=can not set up new totp device without privileged session", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+		conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
 		})
 
-		id := createIdentityWithoutTOTP(t, reg)
+		id := createIdentityWithoutTOTP(t.Context(), t, reg)
 		payload := func(v url.Values) {
 			v.Set(node.TOTPCode, "111111")
 		}
 
 		checkIdentity := func(t *testing.T) {
-			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		}
 
@@ -232,12 +227,12 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		checkIdentity := func(t *testing.T, id *identity.Identity) {
-			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			id, _, _ := createIdentity(t, reg)
+			id, _, _ := createIdentity(t.Context(), t, reg)
 			actual, res := doAPIFlow(t, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
@@ -247,7 +242,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			id, _, _ := createIdentity(t, reg)
+			id, _, _ := createIdentity(t.Context(), t, reg)
 			actual, res := doBrowserFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
@@ -259,7 +254,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			id, _, _ := createIdentity(t, reg)
+			id, _, _ := createIdentity(t.Context(), t, reg)
 			actual, res := doBrowserFlow(t, false, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
@@ -275,12 +270,12 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		checkIdentity := func(t *testing.T, id *identity.Identity) {
-			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.ErrorIs(t, err, sqlcon.ErrNoRows)
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			id := createIdentityWithoutTOTP(t, reg)
+			id := createIdentityWithoutTOTP(t.Context(), t, reg)
 			actual, res := doAPIFlow(t, payload, id)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
@@ -289,7 +284,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			id := createIdentityWithoutTOTP(t, reg)
+			id := createIdentityWithoutTOTP(t.Context(), t, reg)
 			actual, res := doBrowserFlow(t, true, payload, id)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
@@ -298,7 +293,7 @@ func TestCompleteSettings(t *testing.T) {
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			id := createIdentityWithoutTOTP(t, reg)
+			id := createIdentityWithoutTOTP(t.Context(), t, reg)
 			actual, res := doBrowserFlow(t, false, payload, id)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
@@ -309,7 +304,7 @@ func TestCompleteSettings(t *testing.T) {
 
 	t.Run("type=set up TOTP device", func(t *testing.T) {
 		checkIdentity := func(t *testing.T, id *identity.Identity, key string) {
-			i, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(context.Background(), identity.CredentialsTypeTOTP, id.ID.String())
+			i, cred, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypeTOTP, id.ID.String())
 			require.NoError(t, err)
 			var c identity.CredentialsTOTPConfig
 			require.NoError(t, json.Unmarshal(cred.Config, &c))
@@ -345,7 +340,7 @@ func TestCompleteSettings(t *testing.T) {
 				assert.EqualValues(t, flow.StateSuccess, gjson.Get(actual, "state").String(), actual)
 			}
 
-			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+			actualFlow, err := reg.SettingsFlowPersister().GetSettingsFlow(t.Context(), uuid.FromStringOrNil(f.Id))
 			require.NoError(t, err)
 			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeTOTP, totp.InternalContextKeyURL)))
 
@@ -361,27 +356,27 @@ func TestCompleteSettings(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
-			id := createIdentityWithoutTOTP(t, reg)
+			id := createIdentityWithoutTOTP(t.Context(), t, reg)
 
-			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t, ctx, reg, id)
+			apiClient := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaAPI(t, apiClient, publicTS)
 
 			run(t, true, false, id, apiClient, f)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
-			id := createIdentityWithoutTOTP(t, reg)
+			id := createIdentityWithoutTOTP(t.Context(), t, reg)
 
-			user := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+			user := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, user, true, publicTS)
 
 			run(t, false, true, id, user, f)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
-			id := createIdentityWithoutTOTP(t, reg)
+			id := createIdentityWithoutTOTP(t.Context(), t, reg)
 
-			user := testhelpers.NewHTTPClientWithIdentitySessionCookie(t, ctx, reg, id)
+			user := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, user, false, publicTS)
 
 			run(t, false, false, id, user, f)

@@ -5,7 +5,6 @@ package continuity_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,23 +13,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/driver/config"
-
-	"github.com/ory/kratos/internal/testhelpers"
-
-	"github.com/ory/x/ioutilx"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/logrusx"
-
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/ioutilx"
+	"github.com/ory/x/logrusx"
 )
 
 type persisterTestCase struct {
@@ -45,13 +40,12 @@ type persisterTestPayload struct {
 }
 
 func TestManager(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://../test/stub/identity/empty.schema.json")),
+	)
 
-	testhelpers.SetDefaultIdentitySchema(conf, "file://../test/stub/identity/empty.schema.json")
-	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh")
 	i := identity.NewIdentity("")
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), i))
 
 	newServer := func(t *testing.T, p continuity.Manager, tc *persisterTestCase) *httptest.Server {
 		writer := herodot.NewJSONWriter(logrusx.New("", ""))
@@ -97,9 +91,7 @@ func TestManager(t *testing.T) {
 		})
 
 		ts := httptest.NewServer(router)
-		t.Cleanup(func() {
-			ts.Close()
-		})
+		t.Cleanup(ts.Close)
 		return ts
 	}
 

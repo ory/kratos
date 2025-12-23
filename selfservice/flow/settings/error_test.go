@@ -70,7 +70,7 @@ func TestHandleError(t *testing.T) {
 	// This needs an authenticated client in order to call the RouteGetFlow endpoint
 	s, err := testhelpers.NewActiveSession(req, reg, &id, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 	require.NoError(t, err)
-	c := testhelpers.NewHTTPClientWithSessionToken(t, ctx, reg, s)
+	c := testhelpers.NewHTTPClientWithSessionToken(ctx, t, reg, s)
 	router.HandleFunc("GET /error", func(w http.ResponseWriter, r *http.Request) {
 		h.WriteFlowError(ctx, w, r, flowMethod, settingsFlow, &id, s, flowError)
 	})
