@@ -21,13 +21,14 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gofrs/uuid"
-	"github.com/ory/x/configx"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 	"golang.org/x/oauth2"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"

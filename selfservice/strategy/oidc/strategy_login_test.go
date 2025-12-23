@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/ory/x/configx"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"

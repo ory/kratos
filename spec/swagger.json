@@ -6517,7 +6517,7 @@
           "type": "string"
         },
         "email": {
-          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\na email with details on what happened will be sent instead.\n\nformat: email",
+          "description": "Email to Recover\n\nNeeds to be set when initiating the flow. If the email is a registered\nrecovery email, a recovery link will be sent. If the email is not known,\nan email with details on what happened will be sent instead.\n\nformat: email",
           "type": "string"
         },
         "method": {
