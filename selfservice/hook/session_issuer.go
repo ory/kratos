@@ -13,12 +13,14 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/kratos/x/nosurfx"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -26,14 +28,17 @@ import (
 )
 
 var _ registration.PostHookPostPersistExecutor = new(SessionIssuer)
+var _ verification.PostHookExecutor = new(SessionIssuer)
 
 type (
 	sessionIssuerDependencies interface {
 		session.ManagementProvider
 		session.PersistenceProvider
 		sessiontokenexchange.PersistenceProvider
+		verification.FlowPersistenceProvider
 		config.Provider
 		x.WriterProvider
+		nosurfx.CSRFTokenGeneratorProvider
 		hydra.Provider
 	}
 	SessionIssuerProvider interface {
@@ -152,4 +157,72 @@ func willVerificationFollow(f *registration.Flow) bool {
 		}
 	}
 	return false
+}
+
+func (e *SessionIssuer) ExecutePostVerificationHook(w http.ResponseWriter, r *http.Request, a *verification.Flow, i *identity.Identity, s *session.Session) error {
+	return otelx.WithSpan(r.Context(), "selfservice.hook.SessionIssuer.ExecutePostVerificationHook", func(ctx context.Context) error {
+		return e.executePostVerificationHook(w, r.WithContext(ctx), a, i, s)
+	})
+}
+
+func (e *SessionIssuer) executePostVerificationHook(w http.ResponseWriter, r *http.Request, a *verification.Flow, i *identity.Identity, s *session.Session) error {
+	if a.Type == flow.TypeAPI {
+		if handled, err := e.r.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, node.LinkGroup); err != nil {
+			return errors.WithStack(err)
+		} else if handled {
+			return nil
+		}
+
+		a.AddContinueWith(flow.NewContinueWithSetToken(s.Token))
+		e.r.Writer().Write(w, r, &verification.APIFlowResponse{
+			Session:      s,
+			Token:        s.Token,
+			Identity:     i,
+			ContinueWith: a.ContinueWithItems,
+		})
+
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
+			SessionID:  s.ID,
+			IdentityID: i.ID,
+			FlowID:     a.ID,
+			FlowType:   string(a.Type),
+			Method:     a.Active.String(),
+		}))
+
+		return errors.WithStack(verification.ErrHookAbortFlow)
+	}
+
+	// cookie is issued both for browser and for SPA flows
+	if err := e.r.SessionManager().IssueCookie(r.Context(), w, r, s); err != nil {
+		return err
+	}
+
+	// The CSRF token was regenered when the cookie was issued; we now need to
+	// make sure the flow has the new CSRF token set.
+	if a.Type == flow.TypeBrowser {
+		a.SetCSRFToken(e.r.GenerateCSRFToken(r))
+		if err := e.r.VerificationFlowPersister().UpdateVerificationFlow(r.Context(), a); err != nil {
+			return err
+		}
+	}
+
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginSucceeded(r.Context(), &events.LoginSucceededOpts{
+		SessionID:  s.ID,
+		IdentityID: s.Identity.ID,
+		FlowID:     a.ID,
+		FlowType:   string(a.Type),
+		Method:     a.Active.String(),
+	}))
+
+	// SPA flows additionally send the session
+	if x.IsJSONRequest(r) {
+		e.r.Writer().Write(w, r, &verification.APIFlowResponse{
+			Session:      s,
+			Identity:     i,
+			ContinueWith: a.ContinueWithItems,
+		})
+		return errors.WithStack(verification.ErrHookAbortFlow)
+	}
+
+	return nil
 }

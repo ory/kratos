@@ -57,7 +57,7 @@ func NewVerifier(r verifierDependencies) *Verifier {
 
 func (e *Verifier) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter, r *http.Request, f *registration.Flow, s *session.Session) error {
 	return otelx.WithSpan(r.Context(), "selfservice.hook.Verifier.ExecutePostRegistrationPostPersistHook", func(ctx context.Context) error {
-		return e.do(w, r.WithContext(ctx), s.Identity, f, func(v *verification.Flow) {
+		return e.do(w, r.WithContext(ctx), s.Identity, f.AntiEnumerationFlow, f, func(v *verification.Flow) {
 			v.OAuth2LoginChallenge = f.OAuth2LoginChallenge
 			v.SessionID = uuid.NullUUID{UUID: s.ID, Valid: true}
 			v.IdentityID = uuid.NullUUID{UUID: s.Identity.ID, Valid: true}
@@ -68,7 +68,7 @@ func (e *Verifier) ExecutePostRegistrationPostPersistHook(w http.ResponseWriter,
 
 func (e *Verifier) ExecuteSettingsPostPersistHook(w http.ResponseWriter, r *http.Request, f *settings.Flow, i *identity.Identity, _ *session.Session) error {
 	return otelx.WithSpan(r.Context(), "selfservice.hook.Verifier.ExecuteSettingsPostPersistHook", func(ctx context.Context) error {
-		return e.do(w, r.WithContext(ctx), i, f, nil)
+		return e.do(w, r.WithContext(ctx), i, false, f, nil)
 	})
 }
 
@@ -81,7 +81,7 @@ func (e *Verifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	return e.do(w, r.WithContext(ctx), s.Identity, f, nil)
+	return e.do(w, r.WithContext(ctx), s.Identity, false, f, nil)
 }
 
 const InternalContextRegistrationVerificationFlow = "registration_verification_flow_continue_with"
@@ -90,6 +90,7 @@ func (e *Verifier) do(
 	w http.ResponseWriter,
 	r *http.Request,
 	i *identity.Identity,
+	antiEnumerationFlow bool,
 	f interface {
 		flow.FlowWithContinueWith
 		flow.InternalContexter
@@ -145,6 +146,8 @@ func (e *Verifier) do(
 		if err != nil {
 			return err
 		}
+
+		verificationFlow.AntiEnumerationFlow = antiEnumerationFlow
 
 		if flowCallback != nil {
 			flowCallback(verificationFlow)
