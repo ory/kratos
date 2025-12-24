@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ory/kratos/cmd/cleanup"
+	configCmd "github.com/ory/kratos/cmd/config"
 	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/cmd/hashers"
 	"github.com/ory/kratos/cmd/identities"
@@ -31,6 +32,7 @@ func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 	}
 	cmdx.EnableUsageTemplating(cmd)
 
+	configCmd.RegisterCommandRecursive(cmd, driverOpts)
 	courier.RegisterCommandRecursive(cmd, driverOpts)
 	cmd.AddCommand(identities.NewGetCmd())
 	cmd.AddCommand(identities.NewDeleteCmd())
