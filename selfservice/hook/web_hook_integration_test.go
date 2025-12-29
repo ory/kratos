@@ -277,7 +277,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Verification Hook",
 			createFlow: func() flow.Flow { return &verification.Flow{ID: x.NewUUID(), TransientPayload: transientPayload} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity)
+				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity, s)
 			},
 			expectedBody: func(req *http.Request, f flow.Flow, s *session.Session) string {
 				return bodyWithFlowAndIdentityAndTransientPayload(req, f, s, transientPayload)
@@ -579,7 +579,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Verification Hook - no block",
 			createFlow: func() flow.Flow { return &verification.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity)
+				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity, s)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusOK, []byte{}
@@ -590,7 +590,7 @@ func TestWebHooks(t *testing.T) {
 			uc:         "Post Verification Hook - block",
 			createFlow: func() flow.Flow { return &verification.Flow{ID: x.NewUUID()} },
 			callWebHook: func(wh *hook.WebHook, req *http.Request, f flow.Flow, s *session.Session) error {
-				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity)
+				return wh.ExecutePostVerificationHook(nil, req, f.(*verification.Flow), s.Identity, s)
 			},
 			webHookResponse: func() (int, []byte) {
 				return http.StatusBadRequest, webHookResponse
@@ -1421,5 +1421,67 @@ func TestRemoveDisallowedHeaders(t *testing.T) {
 		h, present := newHeaders["Content-Type"]
 		require.True(t, present)
 		require.Equal(t, []string{"text/html"}, h)
+	})
+}
+
+func TestWebHookSkipsAntiEnumeration(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	logger := logrusx.New("kratos", "test")
+	whDeps := struct {
+		x.SimpleLoggerWithClient
+		*jsonnetsecure.TestProvider
+		config.Provider
+	}{
+		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(ctx), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		jsonnetsecure.NewTestProvider(t),
+		reg,
+	}
+
+	webhookCalled := false
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		webhookCalled = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(ts.Close)
+
+	wh := hook.NewWebHook(&whDeps, &request.Config{
+		Method:      "POST",
+		URL:         ts.URL + "/webhook",
+		TemplateURI: "file://./stub/test_body.jsonnet",
+	})
+
+	req := &http.Request{
+		Host:   "www.ory.sh",
+		Header: map[string][]string{},
+		URL:    &url.URL{Path: "/registration"},
+		Method: http.MethodPost,
+	}
+
+	t.Run("skips webhook for anti-enumeration flow", func(t *testing.T) {
+		webhookCalled = false
+		flow := &registration.Flow{
+			ID:                  x.NewUUID(),
+			AntiEnumerationFlow: true,
+		}
+		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
+
+		err := wh.ExecutePostRegistrationPostPersistHook(nil, req, flow, s)
+		require.NoError(t, err)
+		require.False(t, webhookCalled, "webhook should not be called for anti-enumeration flow")
+	})
+
+	t.Run("executes webhook for normal flow", func(t *testing.T) {
+		webhookCalled = false
+		flow := &registration.Flow{
+			ID:                  x.NewUUID(),
+			AntiEnumerationFlow: false,
+		}
+		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
+
+		err := wh.ExecutePostRegistrationPostPersistHook(nil, req, flow, s)
+		require.NoError(t, err)
+		require.True(t, webhookCalled, "webhook should be called for normal flow")
 	})
 }

@@ -256,6 +256,9 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 	}
 
 	if err := s.d.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
+		if errors.Is(err, verification.ErrHookAbortFlow) {
+			return errors.WithStack(flow.ErrCompletedByStrategy)
+		}
 		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
 	}
 
@@ -318,6 +321,10 @@ func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.Re
 }
 
 func (s *Strategy) SendVerificationCode(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) error {
+	if f.AntiEnumerationFlow {
+		return nil
+	}
+
 	token := NewSelfServiceVerificationToken(a, f, s.d.Config().SelfServiceLinkMethodLifespan(ctx))
 	if err := s.d.VerificationTokenPersister().CreateVerificationToken(ctx, token); err != nil {
 		return err
