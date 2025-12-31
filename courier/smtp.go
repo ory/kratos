@@ -85,6 +85,12 @@ func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, erro
 			dialer.TLSConfig = tlsConfig
 			// Enforcing StartTLS
 			dialer.StartTLSPolicy = gomail.MandatoryStartTLS
+		} else {
+			// Set NoStartTLS to completely disable TLS negotiation when disable_starttls=true.
+			// This is required for development environments and SMTP servers that don't support TLS.
+			// Without this, the default OpportunisticStartTLS would still attempt TLS if the server
+			// advertises STARTTLS capability
+			dialer.StartTLSPolicy = gomail.NoStartTLS
 		}
 	case "smtps":
 		dialer.TLSConfig = tlsConfig
