@@ -64,10 +64,14 @@ const (
 	AttributeKeyReason                          semconv.AttributeKey = "Reason" // Deprecated, use AttributeKeyErrorReason
 	// AttributeKeySelfServiceFlowType is the type of self-service flow, e.g. "api" or "browser".
 	AttributeKeySelfServiceFlowType semconv.AttributeKey = "SelfServiceFlowType"
-	// AttributeKeySelfServiceMethodUsed is the method used in the self-service flow, e.g. "oidc" or "password".
+	// AttributeKeySelfServiceFlowName is the client used in the self-service flow, e.g. "login" or "registration"
+	AttributeKeySelfServiceFlowName semconv.AttributeKey = "SelfServiceFlowName"
+	// AttributeKeySelfServiceMethodUsed is the strategy used in the self-service flow, e.g. "oidc" or "password".
 	AttributeKeySelfServiceMethodUsed      semconv.AttributeKey = "SelfServiceMethodUsed"
 	AttributeKeySelfServiceSSOProviderUsed semconv.AttributeKey = "SelfServiceSSOProviderUsed"
-	// AttributeKeySelfServiceStrategyUsed is the strategy used in the self-service flow, e.g. "login" or "registration".
+	// AttributeKeySelfServiceStrategyUsed is the name of the Flow used in the self-service flow, e.g. "login" or "registration".
+	//
+	// Deprecated: use AttributeKeySelfServiceFlowName instead.
 	AttributeKeySelfServiceStrategyUsed    semconv.AttributeKey = "SelfServiceStrategyUsed"
 	AttributeKeySessionAAL                 semconv.AttributeKey = "SessionAAL"
 	AttributeKeySessionExpiresAt           semconv.AttributeKey = "SessionExpiresAt"
@@ -411,12 +415,13 @@ func NewIdentityUpdated(ctx context.Context, identityID uuid.UUID) (string, trac
 		)
 }
 
-func NewLoginFailed(ctx context.Context, flowID uuid.UUID, flowType, requestedAAL string, isRefresh bool, err error) (string, trace.EventOption) {
+func NewLoginFailed(ctx context.Context, flowID uuid.UUID, flowType, method, requestedAAL string, isRefresh bool, err error) (string, trace.EventOption) {
 	attrs := append(
 		semconv.AttributesFromContext(ctx),
 		attrSelfServiceFlowType(flowType),
 		attLoginRequestedAAL(requestedAAL),
 		attLoginRequestedPrivilegedSession(isRefresh),
+		attrSelfServiceMethodUsed(method),
 		attrReason(err),
 		attrErrorReason(err),
 		attrFlowID(flowID),

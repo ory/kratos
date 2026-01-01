@@ -85,6 +85,7 @@ func (s *ErrorHandler) WriteFlowError(
 	w http.ResponseWriter,
 	r *http.Request,
 	f *Flow,
+	ct identity.CredentialsType,
 	group node.UiNodeGroup,
 	err error,
 ) {
@@ -104,8 +105,7 @@ func (s *ErrorHandler) WriteFlowError(
 		WithRequest(r).
 		WithField("registration_flow", f.ToLoggerField())
 
-	logger.
-		Info("Encountered self-service flow error.")
+	logger.Info("Encountered self-service flow error.")
 
 	if f == nil {
 		trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context(), uuid.Nil, "", "", err))
@@ -113,7 +113,7 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 	span.SetAttributes(attribute.String("flow_id", f.ID.String()))
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context(), f.ID, string(f.Type), f.Active.String(), err))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewRegistrationFailed(r.Context(), f.ID, string(f.Type), ct.String(), err))
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, err); inner != nil {
 		s.forward(w, r, f, err)

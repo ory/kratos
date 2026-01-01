@@ -652,18 +652,21 @@ type updateRegistrationFlowBody struct{}
 //	  default: errorGeneric
 func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	ctx = semconv.ContextWithAttributes(ctx, attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "registration"))
+	ctx = semconv.ContextWithAttributes(ctx,
+		attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "registration"),
+		attribute.String(events.AttributeKeySelfServiceFlowName.String(), "registration"),
+	)
 	r = r.WithContext(ctx)
 
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
-		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, "", node.DefaultGroup, err)
 		return
 	}
 
 	f, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), rid)
 	if err != nil {
-		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, nil, "", node.DefaultGroup, err)
 		return
 	}
 
@@ -678,7 +681,7 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := f.Valid(); err != nil {
-		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, err)
 		return
 	}
 
@@ -690,7 +693,7 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
+			h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, ss.ID(), ss.NodeGroup(), err)
 			return
 		}
 
@@ -699,12 +702,12 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 	}
 
 	if s == nil {
-		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 		return
 	}
 
 	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), "", "", f, i); err != nil {
-		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, s.NodeGroup(), err)
+		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, s.ID(), s.NodeGroup(), err)
 		return
 	}
 }

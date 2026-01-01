@@ -84,7 +84,7 @@ func TestNewLoginFailed(t *testing.T) {
 	baseErr := errors.New("login failed")
 
 	t.Run("case=without identity ID", func(t *testing.T) {
-		eventName, opts := events.NewLoginFailed(ctx, flowID, "browser", "aal1", false, baseErr)
+		eventName, opts := events.NewLoginFailed(ctx, flowID, "browser", "password", "aal1", false, baseErr)
 
 		assert.Equal(t, events.LoginFailed.String(), eventName)
 
@@ -101,11 +101,12 @@ func TestNewLoginFailed(t *testing.T) {
 		assert.Contains(t, attrs, attribute.String("LoginRequestedAAL", "aal1"))
 		assert.Contains(t, attrs, attribute.Bool("LoginRequestedPrivilegedSession", false))
 		assert.Contains(t, attrs, attribute.String("ErrorReason", "login failed"))
+		assert.Contains(t, attrs, attribute.String("SelfServiceMethodUsed", "password"))
 	})
 
 	t.Run("case=with identity ID", func(t *testing.T) {
 		wrappedErr := x.WrapWithIdentityIDError(baseErr, identityID)
-		eventName, opts := events.NewLoginFailed(ctx, flowID, "browser", "aal1", false, wrappedErr)
+		eventName, opts := events.NewLoginFailed(ctx, flowID, "browser", "password", "aal1", false, wrappedErr)
 
 		assert.Equal(t, events.LoginFailed.String(), eventName)
 

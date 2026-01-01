@@ -26,7 +26,7 @@ export default defineConfig({
   projects: [
     {
       name: "mobile-chrome",
-      testMatch: "mobile/**/*.spec.ts",
+      testMatch: /.*\/mobile\/.*\.spec\.ts/,
       use: {
         ...devices["Pixel 5"],
         baseURL: "http://localhost:19006",
@@ -34,7 +34,7 @@ export default defineConfig({
     },
     {
       name: "chromium",
-      testMatch: "desktop/**/*.spec.ts",
+      testMatch: /.*\/desktop\/.*\.spec\.ts/,
       use: {
         ...devices["Desktop Chrome"],
         baseURL: "http://localhost:4455",

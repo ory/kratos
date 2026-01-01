@@ -283,7 +283,7 @@ preLoginHook:
 	}
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, err)
 		return f, sess, nil
 	}
 
@@ -854,19 +854,22 @@ type updateLoginFlowBody struct{}
 func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.updateLoginFlow")
-	ctx = semconv.ContextWithAttributes(ctx, attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "login"))
+	ctx = semconv.ContextWithAttributes(ctx,
+		attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "login"),
+		attribute.String(events.AttributeKeySelfServiceFlowName.String(), "login"),
+	)
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
 	rid, err := flow.GetFlowID(r)
 	if err != nil {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, nil, "", node.DefaultGroup, err)
 		return
 	}
 
 	f, err := h.d.LoginFlowPersister().GetLoginFlow(ctx, rid)
 	if err != nil {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, err)
 		return
 	}
 
@@ -884,7 +887,7 @@ func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 
 		if x.IsJSONRequest(r) || f.Type == flow.TypeAPI {
 			// We are not upgrading AAL, nor are we refreshing. Error!
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(ErrAlreadyLoggedIn))
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, errors.WithStack(ErrAlreadyLoggedIn))
 			return
 		}
 
@@ -894,22 +897,23 @@ func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 		// Only failure scenario here is if we try to upgrade the session to a higher AAL without actually
 		// having a session.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(ErrSessionRequiredForHigherAAL))
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, errors.WithStack(ErrSessionRequiredForHigherAAL))
 			return
 		}
 
 		sess = session.NewInactiveSession()
 	} else {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, err)
 		return
 	}
 
 continueLogin:
 	if err := f.Valid(); err != nil {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, err)
 		return
 	}
 
+	var ct identity.CredentialsType
 	var i *identity.Identity
 	var group node.UiNodeGroup
 	for _, ss := range h.d.AllLoginStrategies() {
@@ -920,7 +924,7 @@ continueLogin:
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, group, err)
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.ID(), group, err)
 			return
 		}
 
@@ -933,21 +937,22 @@ continueLogin:
 		method := ss.CompletedAuthenticationMethod(ctx)
 		sess.CompletedLoginForMethod(method)
 		i = interim
+		ct = ss.ID()
 		break
 	}
 
 	if i == nil {
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ct, node.DefaultGroup, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
 		return
 	}
 
 	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, group, f, i, sess, ""); err != nil {
 		if errors.Is(err, ErrAddressNotVerified) {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ct, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
 			return
 		}
 
-		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
+		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ct, node.DefaultGroup, err)
 		return
 	}
 }

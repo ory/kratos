@@ -14,6 +14,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/events"
@@ -86,7 +87,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 	return errExpired.WithFlow(newFlow), nil
 }
 
-func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f *Flow, group node.UiNodeGroup, err error) {
+func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f *Flow, ct identity.CredentialsType, group node.UiNodeGroup, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.ErrorHandler.WriteFlowError",
 		trace.WithAttributes(attribute.String("error", err.Error())))
 	r = r.WithContext(ctx)
@@ -97,20 +98,19 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		WithRequest(r).
 		WithField("login_flow", f.ToLoggerField())
 
-	logger.
-		Info("Encountered self-service login error.")
+	logger.Info("Encountered self-service login error.")
 
 	if f == nil {
-		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context(), uuid.Nil, "", "", false, err))
+		trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context(), uuid.Nil, "", "", "", false, err))
 		s.forward(w, r, nil, err)
 		return
 	}
 
 	span.SetAttributes(attribute.String("flow_id", f.ID.String()))
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context(), f.ID, string(f.Type), string(f.RequestedAAL), f.Refresh, err))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewLoginFailed(r.Context(), f.ID, string(f.Type), ct.String(), string(f.RequestedAAL), f.Refresh, err))
 
 	if expired, inner := s.PrepareReplacementForExpiredFlow(w, r, f, err); inner != nil {
-		s.WriteFlowError(w, r, f, group, inner)
+		s.WriteFlowError(w, r, f, ct, group, inner)
 		return
 	} else if expired != nil {
 		if f.Type == flow.TypeAPI || x.IsJSONRequest(r) {

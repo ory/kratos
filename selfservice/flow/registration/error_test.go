@@ -72,7 +72,7 @@ func TestHandleError(t *testing.T) {
 	var flowError error
 	var group node.UiNodeGroup
 	router.HandleFunc("GET /error", func(w http.ResponseWriter, r *http.Request) {
-		h.WriteFlowError(w, r, registrationFlow, group, flowError)
+		h.WriteFlowError(w, r, registrationFlow, "", group, flowError)
 	})
 
 	reset := func() {

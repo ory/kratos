@@ -70,15 +70,15 @@ func TestHandleError(t *testing.T) {
 
 	var loginFlow *login.Flow
 	var flowError error
-	var ct node.UiNodeGroup
+	var group node.UiNodeGroup
 	router.HandleFunc("GET /error", func(w http.ResponseWriter, r *http.Request) {
-		h.WriteFlowError(w, r, loginFlow, ct, flowError)
+		h.WriteFlowError(w, r, loginFlow, "", group, flowError)
 	})
 
 	reset := func() {
 		loginFlow = nil
 		flowError = nil
-		ct = ""
+		group = ""
 	}
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type, options ...func(*opts)) *login.Flow {
@@ -125,7 +125,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = node.PasswordGroup
+		group = node.PasswordGroup
 
 		sse, _ := expectErrorUI(t)
 		assertx.EqualAsJSON(t, flowError, sse)
@@ -135,7 +135,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 		reg.Config().MustSet(ctx, config.ViperKeySelfServiceErrorUI, "/login-ts")
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = node.PasswordGroup
+		group = node.PasswordGroup
 		assert.Regexp(
 			t,
 			"^/login-ts.*$",
@@ -147,7 +147,7 @@ func TestHandleError(t *testing.T) {
 		t.Cleanup(reset)
 
 		flowError = herodot.ErrInternalServerError.WithReason("system error")
-		ct = node.PasswordGroup
+		group = node.PasswordGroup
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 		require.NoError(t, err)
@@ -173,7 +173,7 @@ func TestHandleError(t *testing.T) {
 
 				loginFlow = newFlow(t, time.Minute, tc.t)
 				flowError = flow.NewFlowExpiredError(anHourAgo)
-				ct = node.PasswordGroup
+				group = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -192,7 +192,7 @@ func TestHandleError(t *testing.T) {
 
 				loginFlow = newFlow(t, time.Minute, tc.t)
 				flowError = schema.NewInvalidCredentialsError()
-				ct = node.PasswordGroup
+				group = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -210,7 +210,7 @@ func TestHandleError(t *testing.T) {
 
 				loginFlow = newFlow(t, time.Minute, tc.t)
 				flowError = herodot.ErrInternalServerError.WithReason("system error")
-				ct = node.PasswordGroup
+				group = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -226,7 +226,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				loginFlow = newFlow(t, time.Minute, flow.TypeBrowser, withLoginChallenge(hydra.FakeInvalidLoginChallenge))
-				ct = node.PasswordGroup
+				group = node.PasswordGroup
 				flowError = herodot.ErrBadRequest.WithReason("missing field 'password' fake error")
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -248,7 +248,7 @@ func TestHandleError(t *testing.T) {
 				})
 
 				loginFlow = newFlow(t, time.Minute, flow.TypeBrowser, withLoginChallenge(hydra.FakeValidLoginChallenge))
-				ct = node.PasswordGroup
+				group = node.PasswordGroup
 				flowError = herodot.ErrBadRequest.WithReason("missing field 'password' fake error")
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -280,7 +280,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = &login.Flow{Type: flow.TypeBrowser}
 			flowError = flow.NewFlowExpiredError(anHourAgo)
-			ct = node.PasswordGroup
+			group = node.PasswordGroup
 
 			lf, _ := expectLoginUI(t)
 			require.Len(t, lf.UI.Messages, 1)
@@ -292,7 +292,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = schema.NewInvalidCredentialsError()
-			ct = node.PasswordGroup
+			group = node.PasswordGroup
 
 			lf, _ := expectLoginUI(t)
 			require.NotEmpty(t, lf.UI.Nodes, x.MustEncodeJSON(t, lf))
@@ -305,7 +305,7 @@ func TestHandleError(t *testing.T) {
 
 			loginFlow = newFlow(t, time.Minute, flow.TypeBrowser)
 			flowError = herodot.ErrInternalServerError.WithReason("system error")
-			ct = node.PasswordGroup
+			group = node.PasswordGroup
 
 			sse, _ := expectErrorUI(t)
 			assertx.EqualAsJSON(t, flowError, sse)

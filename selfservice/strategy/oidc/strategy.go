@@ -642,9 +642,9 @@ func (s *Strategy) Provider(ctx context.Context, id string) (Provider, error) {
 func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, err error) {
 	switch ff := f.(type) {
 	case *login.Flow:
-		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, ff, s.NodeGroup(), err)
+		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, ff, s.ID(), s.NodeGroup(), err)
 	case *registration.Flow:
-		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, ff, s.NodeGroup(), err)
+		s.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, ff, s.ID(), s.NodeGroup(), err)
 	case *settings.Flow:
 		var i *identity.Identity
 		var sess *session.Session
