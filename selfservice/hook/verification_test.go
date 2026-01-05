@@ -111,6 +111,8 @@ func TestVerifier(t *testing.T) {
 						expectedVerificationFlow, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, verificationID)
 						require.NoError(t, err)
 						require.Equal(t, expectedVerificationFlow.State, flow.StateEmailSent)
+						require.NotEmpty(t, expectedVerificationFlow.SessionID.UUID)
+						require.NotEmpty(t, expectedVerificationFlow.IdentityID.UUID)
 						require.NotNil(t, expectedVerificationFlow.UI.Nodes.Find("email"))
 
 						messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)

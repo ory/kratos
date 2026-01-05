@@ -6,6 +6,7 @@ package hook
 import (
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -14,6 +15,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/pkg/errors"
 
@@ -105,11 +107,15 @@ func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Re
 			return err
 		}
 
+		verificationFlow.SessionID = uuid.NullUUID{UUID: s.ID, Valid: true}
+		verificationFlow.IdentityID = uuid.NullUUID{UUID: s.Identity.ID, Valid: true}
+
 		verificationFlow.UI.Nodes.Append(
 			node.NewInputField(address.Via, address.Value, node.CodeGroup, node.InputAttributeTypeSubmit).
 				WithMetaLabel(text.NewInfoNodeResendOTP()),
 		)
 
+		verificationFlow.Active = sqlxx.NullString(strategy.NodeGroup())
 		if err := e.r.VerificationFlowPersister().CreateVerificationFlow(ctx, verificationFlow); err != nil {
 			return err
 		}

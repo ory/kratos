@@ -81,7 +81,20 @@ func (e *Verifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Request, 
 		return nil
 	}
 
-	return e.do(w, r.WithContext(ctx), s.Identity, f, nil)
+	return e.do(w, r.WithContext(ctx), s.Identity, f, func(vf *verification.Flow) {
+		vf.OAuth2LoginChallenge = f.OAuth2LoginChallenge
+		var sID uuid.UUID
+		if s != nil {
+			sID = s.ID
+		}
+		vf.SessionID = uuid.NullUUID{UUID: sID, Valid: sID != uuid.Nil}
+		var iID uuid.UUID
+		if s != nil && s.Identity != nil {
+			iID = s.Identity.ID
+		}
+		vf.IdentityID = uuid.NullUUID{UUID: iID, Valid: iID != uuid.Nil}
+		vf.AMR = s.AMR
+	})
 }
 
 const InternalContextRegistrationVerificationFlow = "registration_verification_flow_continue_with"
