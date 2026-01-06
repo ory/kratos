@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
