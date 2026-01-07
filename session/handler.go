@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
+	"github.com/ory/x/httprouterx"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/otelx/semconv"
@@ -77,7 +78,7 @@ const (
 	AdminRouteSessionExtendId    = RouteSession + "/extend"
 )
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	admin.GET(RouteCollection, h.adminListSessions)
 	admin.GET(RouteSession, h.getSession)
 	admin.DELETE(RouteSession, h.disableSession)
@@ -89,7 +90,7 @@ func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
 	admin.DELETE(RouteCollection, redir.RedirectToPublicRoute(h.r))
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	// We need to completely ignore the whoami/logout path so that we do not accidentally set
 	// some cookie.
 	h.r.CSRFHandler().IgnorePath(RouteWhoami)

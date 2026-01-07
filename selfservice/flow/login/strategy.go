@@ -13,14 +13,12 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
 )
 
 type Strategy interface {
 	ID() identity.CredentialsType
 	NodeGroup() node.UiNodeGroup
-	RegisterLoginRoutes(*x.RouterPublic)
 	Login(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (i *identity.Identity, err error)
 	CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod
 }
@@ -56,12 +54,6 @@ func (s Strategies) MustStrategy(id identity.CredentialsType) Strategy {
 		panic(err)
 	}
 	return strategy
-}
-
-func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
-	for _, ss := range s {
-		ss.RegisterLoginRoutes(r)
-	}
 }
 
 type StrategyFilter func(strategy Strategy) bool

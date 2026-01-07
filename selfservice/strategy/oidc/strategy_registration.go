@@ -36,8 +36,8 @@ import (
 )
 
 var (
-	_ registration.Strategy     = new(Strategy)
-	_ registration.FormHydrator = new(Strategy)
+	_ registration.Strategy     = (*Strategy)(nil)
+	_ registration.FormHydrator = (*Strategy)(nil)
 )
 
 var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
@@ -59,10 +59,6 @@ const (
 	PublicMetadata MetadataType = "identity.metadata_public"
 	AdminMetadata  MetadataType = "identity.metadata_admin"
 )
-
-func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
-	s.setRoutes(r)
-}
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
 	return s.populateMethod(r, f, text.NewInfoRegistrationWith)

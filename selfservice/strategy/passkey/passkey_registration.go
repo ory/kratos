@@ -28,7 +28,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/webauthnx"
 	"github.com/ory/x/randx"
 )
@@ -69,10 +68,6 @@ type updateRegistrationFlowWithPasskeyMethod struct {
 	//
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty"`
-}
-
-func (s *Strategy) RegisterRegistrationRoutes(r *x.RouterPublic) {
-	webauthnx.RegisterWebauthnRoute(r)
 }
 
 func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithPasskeyMethod, err error) error {

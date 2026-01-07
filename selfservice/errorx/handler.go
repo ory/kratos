@@ -7,16 +7,14 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/ory/herodot"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
-
-	"github.com/ory/x/stringsx"
-
-	"github.com/ory/kratos/driver/config"
-
-	"github.com/ory/herodot"
-	"github.com/ory/kratos/x"
 	"github.com/ory/nosurf"
+	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/stringsx"
 )
 
 const RouteGet = "/self-service/errors"
@@ -48,11 +46,11 @@ func (h *Handler) WithTokenGenerator(f func(r *http.Request) string) {
 	h.csrf = f
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	public.GET(RouteGet, h.publicFetchError)
 }
 
-func (h *Handler) RegisterAdminRoutes(public *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(public *httprouterx.RouterAdmin) {
 	public.GET(RouteGet, redir.RedirectToPublicRoute(h.r))
 }
 

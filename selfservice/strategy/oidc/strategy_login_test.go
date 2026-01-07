@@ -13,8 +13,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/configx"
-
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -24,6 +22,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
 )

@@ -61,9 +61,7 @@ func TestHandler(t *testing.T) {
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
-	router := x.NewRouterPublic(reg)
-	admin := x.NewRouterAdmin(reg)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	_ = testhelpers.NewSettingsUITestServer(t, conf)
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)

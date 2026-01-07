@@ -199,16 +199,7 @@ func AddAndLoginIdentities(t *testing.T, reg *driver.RegistryDefault, ids map[st
 		route, _ := MockSessionCreateHandlerWithIdentity(t, reg, i)
 		location := "/sessions/set/" + tid
 
-		if router, ok := s.Config.Handler.(*x.RouterPublic); ok {
-			router.GET(location, route)
-		} else if router, ok := s.Config.Handler.(*http.ServeMux); ok {
-			router.Handle("GET "+location, route)
-		} else if router, ok := s.Config.Handler.(*x.RouterAdmin); ok {
-			router.GET(location, route)
-		} else {
-			t.Logf("Got unknown type: %T", s.Config.Handler)
-			t.FailNow()
-		}
+		r.Handle("GET "+location, route)
 		result[k] = struct {
 			Client *http.Client
 			ID     uuid.UUID

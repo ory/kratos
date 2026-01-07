@@ -22,6 +22,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/httprouterx"
+
 	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
@@ -49,8 +51,9 @@ func TestFlowLifecycle(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	reg.SetHydra(hydra.NewFake())
-	router := x.NewRouterPublic(reg)
-	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
+
+	routerPublic := httprouterx.NewTestRouterPublic(t)
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerPublic, httprouterx.NewTestRouterAdminWithPrefix(t))
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	returnToTS := testhelpers.NewRedirTS(t, "return_to", conf)
@@ -83,7 +86,7 @@ func TestFlowLifecycle(t *testing.T) {
 		}
 		req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+route, nil)
 		req.URL.RawQuery = extQuery.Encode()
-		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, req)
+		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, routerPublic, req)
 		if isAPI {
 			assert.Len(t, res.Header.Get("Set-Cookie"), 0)
 		}
@@ -349,7 +352,7 @@ func TestFlowLifecycle(t *testing.T) {
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-				body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, req)
+				body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, routerPublic, req)
 				return string(body), res
 			}
 
@@ -462,7 +465,7 @@ func TestFlowLifecycle(t *testing.T) {
 				require.Equal(t, identity.AuthenticatorAssuranceLevel1, sess.AuthenticatorAssuranceLevel)
 			}
 
-			router.GET("/mock-session", h)
+			routerPublic.GET("/mock-session", h)
 
 			client := testhelpers.NewClientWithCookies(t)
 

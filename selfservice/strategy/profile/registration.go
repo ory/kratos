@@ -91,8 +91,6 @@ func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsTypeProfile
 }
 
-func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {}
-
 func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *registration.Flow, options ...registration.FormHydratorModifier) error {
 	f.UI.Nodes.Append(nodePreviousScreen())
 	f.UI.Nodes.RemoveMatching(nodeSubmitProfile())

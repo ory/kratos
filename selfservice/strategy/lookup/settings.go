@@ -33,9 +33,6 @@ import (
 	"github.com/ory/x/decoderx"
 )
 
-func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {
-}
-
 func (s *Strategy) SettingsStrategyID() string {
 	return identity.CredentialsTypeLookup.String()
 }

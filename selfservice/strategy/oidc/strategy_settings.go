@@ -52,8 +52,6 @@ var UnlinkAllFirstFactorConnectionsError = &jsonschema.ValidationError{
 	Message: "can not unlink OpenID Connect connection because it is the last remaining first factor credential", InstancePtr: "#/",
 }
 
-func (s *Strategy) RegisterSettingsRoutes(*x.RouterPublic) {}
-
 func (s *Strategy) SettingsStrategyID() string {
 	return s.ID().String()
 }

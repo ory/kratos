@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"net/http"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -52,11 +51,13 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/webauthnx"
 	"github.com/ory/nosurf"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/jwksx"
@@ -70,20 +71,18 @@ import (
 )
 
 type RegistryDefault struct {
-	rwl sync.RWMutex
-	l   *logrusx.Logger
-	c   *config.Config
+	l *logrusx.Logger
+	c *config.Config
 
 	ctxer contextx.Contextualizer
 
 	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
-	extraHandlerFactories    []NewHandlerRegistrar
-	extraHandlers            []x.HandlerRegistrar
+	extraHandlerFactories    []NewHandler
+	extraHandlers            []x.Handler
 	slOptions                *servicelocatorx.Options
 
 	nosurf         nosurf.Handler
 	trc            *otelx.Tracer
-	pmm            *prometheusx.MetricsManager
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
 	metricsHandler *prometheusx.Handler
@@ -152,10 +151,6 @@ type RegistryDefault struct {
 
 	hydra hydra.Hydra
 
-	buildVersion string
-	buildHash    string
-	buildDate    string
-
 	csrfTokenGenerator nosurfx.CSRFToken
 
 	jsonnetVMProvider jsonnetsecure.VMProvider
@@ -174,7 +169,7 @@ func (m *RegistryDefault) Audit() *logrusx.Logger {
 	return m.Logger().WithField("audience", "audit")
 }
 
-func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.RouterPublic) {
+func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *httprouterx.RouterPublic) {
 	for _, h := range m.ExtraHandlers() {
 		h.RegisterPublicRoutes(router)
 	}
@@ -184,23 +179,26 @@ func (m *RegistryDefault) RegisterPublicRoutes(ctx context.Context, router *x.Ro
 	m.SettingsHandler().RegisterPublicRoutes(router)
 	m.IdentityHandler().RegisterPublicRoutes(router)
 	m.CourierHandler().RegisterPublicRoutes(router)
-	m.AllLoginStrategies().RegisterPublicRoutes(router)
-	m.AllSettingsStrategies().RegisterPublicRoutes(router)
-	m.AllRegistrationStrategies().RegisterPublicRoutes(router)
 	m.SessionHandler().RegisterPublicRoutes(router)
 	m.SelfServiceErrorHandler().RegisterPublicRoutes(router)
 	m.SchemaHandler().RegisterPublicRoutes(router)
 
-	m.AllRecoveryStrategies().RegisterPublicRoutes(router)
 	m.RecoveryHandler().RegisterPublicRoutes(router)
 
 	m.VerificationHandler().RegisterPublicRoutes(router)
-	m.AllVerificationStrategies().RegisterPublicRoutes(router)
 
 	m.HealthHandler(ctx).SetHealthRoutes(router, false)
+	webauthnx.RegisterWebauthnRoute(router)
+
+	for _, s := range m.selfServiceStrategies() {
+		s, ok := s.(x.PublicHandler)
+		if ok {
+			s.RegisterPublicRoutes(router)
+		}
+	}
 }
 
-func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.RouterAdmin) {
+func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *httprouterx.RouterAdmin) {
 	for _, h := range m.ExtraHandlers() {
 		h.RegisterAdminRoutes(router)
 	}
@@ -214,22 +212,21 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *x.Rou
 	m.SelfServiceErrorHandler().RegisterAdminRoutes(router)
 
 	m.RecoveryHandler().RegisterAdminRoutes(router)
-	m.AllRecoveryStrategies().RegisterAdminRoutes(router)
 	m.SessionHandler().RegisterAdminRoutes(router)
 
 	m.VerificationHandler().RegisterAdminRoutes(router)
-	m.AllVerificationStrategies().RegisterAdminRoutes(router)
 
 	m.HealthHandler(ctx).SetHealthRoutes(router, true)
 	m.HealthHandler(ctx).SetVersionRoutes(router)
 	m.MetricsHandler().SetMuxRoutes(router)
+	config.RegisterConfigHashRoute(m, router)
 
-	config.NewConfigHashHandler(m, router)
-}
-
-func (m *RegistryDefault) RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin) {
-	m.RegisterAdminRoutes(ctx, admin)
-	m.RegisterPublicRoutes(ctx, public)
+	for _, s := range m.selfServiceStrategies() {
+		s, ok := s.(x.AdminHandler)
+		if ok {
+			s.RegisterAdminRoutes(router)
+		}
+	}
 }
 
 func (m *RegistryDefault) HTTPMiddlewares() []negroni.Handler {
@@ -841,15 +838,6 @@ func (m *RegistryDefault) IdentityManager() *identity.Manager {
 	return m.identityManager
 }
 
-func (m *RegistryDefault) PrometheusManager() *prometheusx.MetricsManager {
-	m.rwl.Lock()
-	defer m.rwl.Unlock()
-	if m.pmm == nil {
-		m.pmm = prometheusx.NewMetricsManagerWithPrefix("kratos", prometheusx.HTTPMetrics, m.buildVersion, m.buildHash, m.buildDate)
-	}
-	return m.pmm
-}
-
 func (m *RegistryDefault) HTTPClient(_ context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
 	opts = append(opts,
 		httpx.ResilientClientWithLogger(m.Logger()),
@@ -906,7 +894,7 @@ func (m *RegistryDefault) SessionTokenizer() *session.Tokenizer {
 	return m.sessionTokenizer
 }
 
-func (m *RegistryDefault) ExtraHandlers() []x.HandlerRegistrar {
+func (m *RegistryDefault) ExtraHandlers() []x.Handler {
 	if m.extraHandlers == nil {
 		for _, newHandler := range m.extraHandlerFactories {
 			m.extraHandlers = append(m.extraHandlers, newHandler(m))

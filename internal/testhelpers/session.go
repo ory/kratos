@@ -6,11 +6,11 @@ package testhelpers
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gobuffalo/httptest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -86,7 +86,7 @@ func NewHTTPClientWithSessionCookieLocalhost(ctx context.Context, t *testing.T, 
 
 	c := NewClientWithCookies(t)
 
-	ts.URL = strings.Replace(ts.URL, "127.0.0.1", "localhost", 1)
+	ts.URL = strings.ReplaceAll(ts.URL, "127.0.0.1", "localhost")
 	MockHydrateCookieClient(t, c, ts.URL)
 	return c
 }

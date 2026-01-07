@@ -6,18 +6,16 @@ package courier
 import (
 	"net/http"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/x/nosurfx"
-	"github.com/ory/kratos/x/redir"
-
-	"github.com/gofrs/uuid"
-
 	"github.com/ory/herodot"
-	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+	"github.com/ory/x/httprouterx"
+	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 )
 
 const (
@@ -46,13 +44,13 @@ func NewHandler(r handlerDependencies) *Handler {
 	return &Handler{r: r}
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
-	h.r.CSRFHandler().IgnoreGlobs(x.AdminPrefix+AdminRouteListMessages, AdminRouteListMessages)
-	public.GET(x.AdminPrefix+AdminRouteListMessages, redir.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+AdminRouteGetMessage, redir.RedirectToAdminRoute(h.r))
+func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
+	h.r.CSRFHandler().IgnoreGlobs(httprouterx.AdminPrefix+AdminRouteListMessages, AdminRouteListMessages)
+	public.GET(httprouterx.AdminPrefix+AdminRouteListMessages, redir.RedirectToAdminRoute(h.r))
+	public.GET(httprouterx.AdminPrefix+AdminRouteGetMessage, redir.RedirectToAdminRoute(h.r))
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	admin.GET(AdminRouteListMessages, h.listCourierMessages)
 	admin.GET(AdminRouteGetMessage, h.getCourierMessage)
 }

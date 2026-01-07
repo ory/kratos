@@ -26,6 +26,7 @@ import (
 	"github.com/ory/nosurf"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/urlx"
 )
 
@@ -245,7 +246,7 @@ func TestManagerHTTP(t *testing.T) {
 		)
 
 		var s *session.Session
-		rp := x.NewRouterPublic(reg)
+		rp := httprouterx.NewTestRouterPublic(t)
 		rp.GET("/session/revoke", func(w http.ResponseWriter, r *http.Request) {
 			require.NoError(t, reg.SessionManager().PurgeFromRequest(r.Context(), w, r))
 			w.WriteHeader(http.StatusOK)

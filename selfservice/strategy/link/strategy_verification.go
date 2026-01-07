@@ -20,7 +20,6 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
@@ -30,12 +29,6 @@ import (
 
 func (s *Strategy) VerificationStrategyID() string {
 	return string(verification.VerificationStrategyLink)
-}
-
-func (s *Strategy) RegisterPublicVerificationRoutes(_ *x.RouterPublic) {
-}
-
-func (s *Strategy) RegisterAdminVerificationRoutes(_ *x.RouterAdmin) {
 }
 
 func (s *Strategy) PopulateVerificationMethod(r *http.Request, f *verification.Flow) error {

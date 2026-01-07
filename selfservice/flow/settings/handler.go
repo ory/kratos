@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
@@ -84,11 +85,9 @@ type (
 	}
 )
 
-func NewHandler(d handlerDependencies) *Handler {
-	return &Handler{d: d, csrf: nosurf.Token}
-}
+func NewHandler(d handlerDependencies) *Handler { return &Handler{d: d, csrf: nosurf.Token} }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
@@ -113,7 +112,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.updateSettingsFlow, OnUnauthenticated(h.d)))
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	admin.GET(RouteInitBrowserFlow, redir.RedirectToPublicRoute(h.d))
 
 	admin.GET(RouteInitAPIFlow, redir.RedirectToPublicRoute(h.d))

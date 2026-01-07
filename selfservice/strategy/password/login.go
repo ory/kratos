@@ -36,9 +36,6 @@ import (
 
 var _ login.AAL1FormHydrator = new(Strategy)
 
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-}
-
 func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload updateLoginFlowWithPasswordMethod, err error) error {
 	if f != nil {
 		f.UI.Nodes.ResetNodes("password")

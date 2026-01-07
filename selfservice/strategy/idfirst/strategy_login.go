@@ -194,5 +194,3 @@ func (s *Strategy) PopulateLoginMethodIdentifierFirstIdentification(r *http.Requ
 func (s *Strategy) PopulateLoginMethodIdentifierFirstCredentials(_ *http.Request, f *login.Flow, opts ...login.FormHydratorModifier) error {
 	return ErrNoCredentialsFound
 }
-
-func (s *Strategy) RegisterLoginRoutes(_ *x.RouterPublic) {}

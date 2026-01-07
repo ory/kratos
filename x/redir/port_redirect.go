@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/httprouterx"
 )
 
 func RedirectToAdminRoute(reg config.Provider) http.HandlerFunc {
@@ -19,8 +19,8 @@ func RedirectToAdminRoute(reg config.Provider) http.HandlerFunc {
 		dest := *r.URL
 		dest.Host = admin.Host
 		dest.Scheme = admin.Scheme
-		dest.Path = strings.TrimPrefix(dest.Path, x.AdminPrefix)
-		dest.Path = path.Join(admin.Path, x.AdminPrefix, dest.Path)
+		dest.Path = strings.TrimPrefix(dest.Path, httprouterx.AdminPrefix)
+		dest.Path = path.Join(admin.Path, httprouterx.AdminPrefix, dest.Path)
 
 		http.Redirect(w, r, dest.String(), http.StatusTemporaryRedirect)
 	}
@@ -33,7 +33,7 @@ func RedirectToPublicRoute(reg config.Provider) http.HandlerFunc {
 		dest := *r.URL
 		dest.Host = public.Host
 		dest.Scheme = public.Scheme
-		dest.Path = strings.TrimPrefix(dest.Path, x.AdminPrefix)
+		dest.Path = strings.TrimPrefix(dest.Path, httprouterx.AdminPrefix)
 		dest.Path = path.Join(public.Path, dest.Path)
 
 		http.Redirect(w, r, dest.String(), http.StatusTemporaryRedirect)

@@ -41,10 +41,6 @@ import (
 
 var _ login.AAL1FormHydrator = new(Strategy)
 
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	webauthnx.RegisterWebauthnRoute(r)
-}
-
 func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *login.Flow) error {
 	ctx := r.Context()
 

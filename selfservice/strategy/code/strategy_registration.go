@@ -68,8 +68,6 @@ func (p *updateRegistrationFlowWithCodeMethod) GetResend() string {
 	return p.Resend
 }
 
-func (s *Strategy) RegisterRegistrationRoutes(*x.RouterPublic) {}
-
 func (s *Strategy) HandleRegistrationError(ctx context.Context, r *http.Request, f *registration.Flow, body *updateRegistrationFlowWithCodeMethod, err error) error {
 	if errors.Is(err, flow.ErrCompletedByStrategy) {
 		return err

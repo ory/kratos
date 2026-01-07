@@ -9,11 +9,10 @@ import (
 	"strconv"
 	"time"
 
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
@@ -33,6 +32,7 @@ import (
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
@@ -76,11 +76,9 @@ type (
 	}
 )
 
-func NewHandler(d handlerDependencies) *Handler {
-	return &Handler{d: d, hd: decoderx.NewHTTP()}
-}
+func NewHandler(d handlerDependencies) *Handler { return &Handler{d: d, hd: decoderx.NewHTTP()} }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
@@ -92,7 +90,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteSubmitFlow, h.updateLoginFlow)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	admin.GET(RouteInitBrowserFlow, redir.RedirectToPublicRoute(h.d))
 	admin.GET(RouteInitAPIFlow, redir.RedirectToPublicRoute(h.d))
 	admin.GET(RouteGetFlow, redir.RedirectToPublicRoute(h.d))

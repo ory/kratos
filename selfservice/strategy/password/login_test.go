@@ -45,6 +45,7 @@ import (
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/snapshotx"
@@ -89,8 +90,8 @@ func TestCompleteLogin(t *testing.T) {
 			"default":   "file://./stub/login.schema.json",
 		})),
 	)
-	router := x.NewRouterPublic(reg)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
+	router := httprouterx.NewTestRouterPublic(t)
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)

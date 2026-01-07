@@ -18,8 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/configx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -30,9 +28,10 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -50,8 +49,8 @@ func TestCompleteSettings(t *testing.T) {
 		}),
 	)
 
-	router := x.NewRouterPublic(reg)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
+	router := httprouterx.NewTestRouterPublic(t)
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewSettingsUIFlowEchoServer(t, reg)

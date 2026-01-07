@@ -9,6 +9,7 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
+	"github.com/ory/x/httprouterx"
 
 	"go.opentelemetry.io/otel/trace"
 
@@ -59,7 +60,7 @@ func NewHandler(d handlerDependencies) *Handler {
 	}
 }
 
-func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(router *httprouterx.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteAPIFlow)
 
 	router.GET(RouteInitBrowserFlow, h.createBrowserLogoutFlow)
@@ -67,7 +68,7 @@ func (h *Handler) RegisterPublicRoutes(router *x.RouterPublic) {
 	router.GET(RouteSubmitFlow, h.updateLogoutFlow)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	admin.GET(RouteInitBrowserFlow, redir.RedirectToPublicRoute(h.d))
 	admin.DELETE(RouteAPIFlow, redir.RedirectToPublicRoute(h.d))
 	admin.GET(RouteSubmitFlow, redir.RedirectToPublicRoute(h.d))

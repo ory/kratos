@@ -20,11 +20,11 @@ import (
 	"github.com/ory/kratos/selfservice/strategy"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
 )
@@ -33,12 +33,12 @@ const (
 	RouteAdminCreateRecoveryCode = "/recovery/code"
 )
 
-func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
+func (s *Strategy) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	s.deps.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryCode)
 	public.POST(RouteAdminCreateRecoveryCode, redir.RedirectToAdminRoute(s.deps))
 }
 
-func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
+func (s *Strategy) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	wrappedCreateRecoveryCode := strategy.IsDisabled(s.deps, s.RecoveryStrategyID(), s.createRecoveryCodeForIdentity)
 	admin.POST(RouteAdminCreateRecoveryCode, wrappedCreateRecoveryCode)
 }

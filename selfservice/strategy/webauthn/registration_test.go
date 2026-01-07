@@ -31,7 +31,6 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
@@ -68,8 +67,7 @@ func TestRegistration(t *testing.T) {
 	reg := newRegistrationRegistry(t, configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/registration.schema.json")))
 	conf := reg.Config()
 
-	router := x.NewRouterPublic(reg)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)

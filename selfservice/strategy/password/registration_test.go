@@ -18,9 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/selfservice/flow/login"
-	"github.com/ory/x/configx"
-
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -29,6 +26,7 @@ import (
 	"github.com/ory/kratos/internal/registrationhelpers"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
@@ -36,6 +34,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlcon"
 )
@@ -70,10 +69,7 @@ func TestRegistration(t *testing.T) {
 		}))
 		conf := reg.Config()
 
-		router := x.NewRouterPublic(reg)
-		admin := x.NewRouterAdmin(reg)
-
-		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, admin)
+		publicTS, _ := testhelpers.NewKratosServer(t, reg)
 		_ = testhelpers.NewErrorTestServer(t, reg)
 		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 		redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
@@ -883,8 +879,7 @@ func TestRegistration(t *testing.T) {
 			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/sort.schema.json")),
 		)
 
-		router := x.NewRouterPublic(reg)
-		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
+		publicTS, _ := testhelpers.NewKratosServer(t, reg)
 		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 
 		browserClient := testhelpers.NewClientWithCookies(t)

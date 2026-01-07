@@ -132,8 +132,7 @@ func TestCompleteSettings(t *testing.T) {
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/settings.schema.json")),
 	)
 
-	router := x.NewRouterPublic(reg)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
+	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewSettingsUIFlowEchoServer(t, reg)

@@ -88,8 +88,7 @@ func newRegistrationFixture(t *testing.T, cfgOpts ...configx.OptionModifier) *fi
 	}, cfgOpts...)...)
 	fix.conf = fix.reg.Config()
 
-	router := x.NewRouterPublic(fix.reg)
-	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin(fix.reg))
+	fix.publicTS, _ = testhelpers.NewKratosServer(t, fix.reg)
 
 	_ = testhelpers.NewErrorTestServer(t, fix.reg)
 	_ = testhelpers.NewRegistrationUIFlowEchoServer(t, fix.reg)
@@ -114,8 +113,7 @@ func newLoginFixture(t *testing.T, cfgOpts ...configx.OptionModifier) *fixture {
 	}, cfgOpts...)...)
 	fix.conf = fix.reg.Config()
 
-	router := x.NewRouterPublic(fix.reg)
-	fix.publicTS, _ = testhelpers.NewKratosServerWithRouters(t, fix.reg, router, x.NewRouterAdmin(fix.reg))
+	fix.publicTS, _ = testhelpers.NewKratosServer(t, fix.reg)
 
 	fix.errTS = testhelpers.NewErrorTestServer(t, fix.reg)
 	fix.uiTS = testhelpers.NewLoginUIFlowEchoServer(t, fix.reg)

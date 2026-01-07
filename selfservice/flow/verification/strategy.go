@@ -11,8 +11,6 @@ import (
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/kratos/x"
 )
 
 //swagger:enum VerificationStrategy
@@ -30,12 +28,6 @@ type (
 		PopulateVerificationMethod(*http.Request, *Flow) error
 		Verify(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
 		SendVerificationCode(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress) error
-	}
-	AdminHandler interface {
-		RegisterAdminVerificationRoutes(admin *x.RouterAdmin)
-	}
-	PublicHandler interface {
-		RegisterPublicVerificationRoutes(public *x.RouterPublic)
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {
@@ -63,20 +55,4 @@ func (s Strategies) MustStrategy(id string) Strategy {
 		panic(err)
 	}
 	return strategy
-}
-
-func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
-	for _, ss := range s {
-		if h, ok := ss.(PublicHandler); ok {
-			h.RegisterPublicVerificationRoutes(r)
-		}
-	}
-}
-
-func (s Strategies) RegisterAdminRoutes(r *x.RouterAdmin) {
-	for _, ss := range s {
-		if h, ok := ss.(AdminHandler); ok {
-			h.RegisterAdminVerificationRoutes(r)
-		}
-	}
 }

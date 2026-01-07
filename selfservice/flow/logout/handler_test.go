@@ -40,17 +40,17 @@ func TestLogout(t *testing.T) {
 	publicRouter.GET("/session/browser/set", func(writer http.ResponseWriter, request *http.Request) {
 		testhelpers.MockSetSession(t, reg, conf)(writer, request)
 	})
-	publicRouter.HandleFunc("GET /session/browser/get", func(w http.ResponseWriter, r *http.Request) {
+	publicRouter.Handler("GET", "/session/browser/get", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
 		if err != nil {
 			reg.Writer().WriteError(w, r, err)
 			return
 		}
 		reg.Writer().Write(w, r, sess)
-	})
-	publicRouter.HandleFunc("POST /csrf/check", func(w http.ResponseWriter, r *http.Request) {
+	}))
+	publicRouter.Handler("POST", "/csrf/check", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
-	})
+	}))
 	conf.MustSet(ctx, config.ViperKeySelfServiceLogoutBrowserDefaultReturnTo, public.URL+"/session/browser/get")
 
 	t.Run("case=successful logout for API clients", func(t *testing.T) {

@@ -52,7 +52,7 @@ func (m *RegistryDefault) HookShowVerificationUI() *hook.ShowVerificationUIHook 
 func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook) interface{}) {
 	m.injectedSelfserviceHooks = hooks
 }
-func (m *RegistryDefault) WithExtraHandlers(handlers []NewHandlerRegistrar) {
+func (m *RegistryDefault) WithExtraHandlers(handlers []NewHandler) {
 	m.extraHandlerFactories = handlers
 }
 

@@ -24,6 +24,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/migrationpagination"
 )
@@ -55,18 +56,18 @@ const (
 	maxSchemaSize        = 1024 * 1024 // 1 MB
 )
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlobs(
 		"/"+SchemasPath+"/*",
-		x.AdminPrefix+"/"+SchemasPath+"/*",
+		httprouterx.AdminPrefix+"/"+SchemasPath+"/*",
 	)
 	public.GET(fmt.Sprintf("/%s/{id}", SchemasPath), h.getIdentitySchema)
 	public.GET(fmt.Sprintf("/%s", SchemasPath), h.getAll)
-	public.GET(fmt.Sprintf("%s/%s/{id}", x.AdminPrefix, SchemasPath), h.getIdentitySchema)
-	public.GET(fmt.Sprintf("%s/%s", x.AdminPrefix, SchemasPath), h.getAll)
+	public.GET(fmt.Sprintf("%s/%s/{id}", httprouterx.AdminPrefix, SchemasPath), h.getIdentitySchema)
+	public.GET(fmt.Sprintf("%s/%s", httprouterx.AdminPrefix, SchemasPath), h.getAll)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	admin.GET(fmt.Sprintf("/%s/{id}", SchemasPath), redir.RedirectToPublicRoute(h.r))
 	admin.GET(fmt.Sprintf("/%s", SchemasPath), redir.RedirectToPublicRoute(h.r))
 }

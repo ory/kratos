@@ -21,15 +21,9 @@ import (
 )
 
 var (
-	_ recovery.Strategy      = new(Strategy)
-	_ recovery.AdminHandler  = new(Strategy)
-	_ recovery.PublicHandler = new(Strategy)
-)
-
-var (
-	_ verification.Strategy      = new(Strategy)
-	_ verification.AdminHandler  = new(Strategy)
-	_ verification.PublicHandler = new(Strategy)
+	_ recovery.Strategy     = (*Strategy)(nil)
+	_ verification.Strategy = (*Strategy)(nil)
+	_ x.Handler             = (*Strategy)(nil)
 )
 
 type (

@@ -36,11 +36,12 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/metricsx"
 	"github.com/ory/x/networkx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
-	prometheus "github.com/ory/x/prometheusx"
+	"github.com/ory/x/prometheusx"
 	"github.com/ory/x/reqlog"
 	"github.com/ory/x/urlx"
 )
@@ -48,6 +49,8 @@ import (
 func init() {
 	graceful.DefaultShutdownTimeout = 120 * time.Second
 }
+
+var prometheusManager = prometheusx.NewMetricsManagerWithPrefix("kratos", prometheusx.HTTPMetrics, config.Version, config.Commit, config.Date)
 
 func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Command) (func() error, error) {
 	cfg := r.Config().ServePublic(ctx)
@@ -67,9 +70,10 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	n.UseFunc(semconv.Middleware)
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
+	n.UseFunc(httprouterx.NoCacheNegroni)
 	n.Use(sqa(ctx, cmd, r))
 
-	router := x.NewRouterPublic(r)
+	router := httprouterx.NewRouterPublic(prometheusManager)
 	csrf := nosurfx.NewCSRFHandler(otelx.SpanNameRecorderMiddleware(router), r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
@@ -90,7 +94,7 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	csrf.DisablePath(healthx.AliveCheckPath)
 	csrf.DisablePath(healthx.ReadyCheckPath)
 	csrf.DisablePath(healthx.VersionPath)
-	csrf.DisablePath(prometheus.MetricsPrometheusPath)
+	csrf.DisablePath(prometheusx.MetricsPrometheusPath)
 
 	r.RegisterPublicRoutes(ctx, router)
 
@@ -154,15 +158,20 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 	adminLogger := reqlog.NewMiddlewareFromLogger(l, "admin#"+cfg.BaseURL.String())
 
 	if cfg.RequestLog.DisableHealth {
-		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath, x.AdminPrefix+prometheus.MetricsPrometheusPath)
+		adminLogger.ExcludePaths(
+			httprouterx.AdminPrefix+healthx.AliveCheckPath,
+			httprouterx.AdminPrefix+healthx.ReadyCheckPath,
+			httprouterx.AdminPrefix+prometheusx.MetricsPrometheusPath,
+		)
 	}
 	n.UseFunc(semconv.Middleware)
 	n.Use(adminLogger)
-	n.UseFunc(x.RedirectAdminMiddleware)
+	n.UseFunc(httprouterx.AddAdminPrefixIfNotPresentNegroni)
+	n.UseFunc(httprouterx.NoCacheNegroni)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
 
-	router := x.NewRouterAdmin(r)
+	router := httprouterx.NewRouterAdminWithPrefix(prometheusManager)
 	r.RegisterAdminRoutes(ctx, router)
 
 	n.UseHandler(router)
@@ -271,8 +280,8 @@ func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.S
 
 				session.RouteWhoami,
 
-				x.AdminPrefix + "/" + schema.SchemasPath,
-				x.AdminPrefix + identity.RouteCollection,
+				httprouterx.AdminPrefix + "/" + schema.SchemasPath,
+				httprouterx.AdminPrefix + identity.RouteCollection,
 
 				settings.RouteInitBrowserFlow,
 				settings.RouteInitAPIFlow,
@@ -292,7 +301,7 @@ func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.S
 				link.RouteAdminCreateRecoveryLink,
 
 				errorx.RouteGet,
-				prometheus.MetricsPrometheusPath,
+				prometheusx.MetricsPrometheusPath,
 			},
 			BuildVersion: config.Version,
 			BuildHash:    config.Commit,

@@ -12,8 +12,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/x/configx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
@@ -22,6 +20,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/snapshotx"
 )
 

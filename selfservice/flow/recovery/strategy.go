@@ -11,8 +11,6 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/ui/node"
-
-	"github.com/ory/kratos/x"
 )
 
 //swagger:enum RecoveryMethod
@@ -29,12 +27,6 @@ type (
 		NodeGroup() node.UiNodeGroup
 		PopulateRecoveryMethod(*http.Request, *Flow) error
 		Recover(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
-	}
-	AdminHandler interface {
-		RegisterAdminRecoveryRoutes(admin *x.RouterAdmin)
-	}
-	PublicHandler interface {
-		RegisterPublicRecoveryRoutes(public *x.RouterPublic)
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {
@@ -54,20 +46,4 @@ func (s Strategies) Strategy(id string) (Strategy, error) {
 	}
 
 	return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("unable to find strategy for %s have %v", id, ids))
-}
-
-func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
-	for _, ss := range s {
-		if h, ok := ss.(PublicHandler); ok {
-			h.RegisterPublicRecoveryRoutes(r)
-		}
-	}
-}
-
-func (s Strategies) RegisterAdminRoutes(r *x.RouterAdmin) {
-	for _, ss := range s {
-		if h, ok := ss.(AdminHandler); ok {
-			h.RegisterAdminRecoveryRoutes(r)
-		}
-	}
 }

@@ -12,13 +12,11 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x"
 )
 
 type Strategy interface {
 	ID() identity.CredentialsType
 	NodeGroup() node.UiNodeGroup
-	RegisterRegistrationRoutes(*x.RouterPublic)
 	Register(w http.ResponseWriter, r *http.Request, f *Flow, i *identity.Identity) (err error)
 }
 
@@ -42,12 +40,6 @@ func (s Strategies) MustStrategy(id identity.CredentialsType) Strategy {
 		panic(err)
 	}
 	return strategy
-}
-
-func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
-	for _, ss := range s {
-		ss.RegisterRegistrationRoutes(r)
-	}
 }
 
 type StrategyFilter func(strategy Strategy) bool

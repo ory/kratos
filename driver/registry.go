@@ -7,10 +7,6 @@ import (
 	"context"
 	"io/fs"
 
-	"github.com/ory/pop/v6"
-	"github.com/ory/x/configx"
-	"github.com/ory/x/servicelocatorx"
-
 	"github.com/gorilla/sessions"
 
 	"github.com/ory/kratos/cipher"
@@ -36,13 +32,17 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/nosurf"
+	"github.com/ory/pop/v6"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/healthx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/popx"
 	prometheus "github.com/ory/x/prometheusx"
+	"github.com/ory/x/servicelocatorx"
 )
 
 type Registry interface {
@@ -59,10 +59,8 @@ type Registry interface {
 	CookieManager(ctx context.Context) sessions.StoreExact
 	ContinuityCookieManager(ctx context.Context) sessions.StoreExact
 
-	RegisterRoutes(ctx context.Context, public *x.RouterPublic, admin *x.RouterAdmin)
-	RegisterPublicRoutes(ctx context.Context, public *x.RouterPublic)
-	RegisterAdminRoutes(ctx context.Context, admin *x.RouterAdmin)
-	PrometheusManager() *prometheus.MetricsManager
+	RegisterPublicRoutes(ctx context.Context, public *httprouterx.RouterPublic)
+	RegisterAdminRoutes(ctx context.Context, admin *httprouterx.RouterAdmin)
 	Tracer(context.Context) *otelx.Tracer
 	SetTracer(*otelx.Tracer)
 
@@ -181,7 +179,7 @@ type options struct {
 	extraGoMigrations             popx.Migrations
 	replacementStrategies         []NewStrategy
 	extraHooks                    map[string]func(config.SelfServiceHook) any
-	extraHandlers                 []NewHandlerRegistrar
+	extraHandlers                 []NewHandler
 	disableMigrationLogging       bool
 	jsonnetPool                   jsonnetsecure.Pool
 	serviceLocatorOptions         []servicelocatorx.Option
@@ -249,9 +247,9 @@ func WithExtraHooks(hooks map[string]func(config.SelfServiceHook) any) RegistryO
 	}
 }
 
-type NewHandlerRegistrar func(deps any) x.HandlerRegistrar
+type NewHandler func(deps any) x.Handler
 
-func WithExtraHandlers(handlers ...NewHandlerRegistrar) RegistryOption {
+func WithExtraHandlers(handlers ...NewHandler) RegistryOption {
 	return func(o *options) {
 		o.extraHandlers = handlers
 	}

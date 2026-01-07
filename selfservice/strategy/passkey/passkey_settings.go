@@ -40,8 +40,6 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
-func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {}
-
 func (s *Strategy) SettingsStrategyID() string { return s.ID().String() }
 
 const (

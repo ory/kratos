@@ -37,9 +37,6 @@ import (
 
 const InternalContextKeyURL = "url"
 
-func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {
-}
-
 func (s *Strategy) SettingsStrategyID() string {
 	return identity.CredentialsTypeTOTP.String()
 }

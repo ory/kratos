@@ -14,20 +14,19 @@ import (
 
 	"github.com/go-faker/faker/v4"
 	"github.com/gofrs/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/urlx"
 	"github.com/ory/x/uuidx"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var defaultPageToken = courier.Message{}.DefaultPageToken().Encrypt(nil)
@@ -74,7 +73,7 @@ func TestHandler(t *testing.T) {
 		ts := adminTS
 
 		if tsName == "public" {
-			href = x.AdminPrefix + href
+			href = httprouterx.AdminPrefix + href
 			ts = publicTS
 		}
 
@@ -130,7 +129,7 @@ func TestHandler(t *testing.T) {
 					t.Run("endpoint="+tc.name, func(t *testing.T) {
 						path := courier.AdminRouteListMessages + qs
 						if tc.name == "public" {
-							path = x.AdminPrefix + path
+							path = httprouterx.AdminPrefix + path
 						}
 						resp, err := tc.s.Client().Get(tc.s.URL + path)
 						require.NoError(t, err)

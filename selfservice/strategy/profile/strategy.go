@@ -84,8 +84,6 @@ func (s *Strategy) SettingsStrategyID() string {
 	return settings.StrategyProfile
 }
 
-func (s *Strategy) RegisterSettingsRoutes(_ *x.RouterPublic) {}
-
 func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, id *identity.Identity, f *settings.Flow) (err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.profile.Strategy.PopulateSettingsMethod")
 	defer otelx.End(span, &err)

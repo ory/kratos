@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
+	"github.com/ory/x/httprouterx"
 
 	"github.com/gofrs/uuid"
 
@@ -70,10 +71,6 @@ type (
 	}
 )
 
-func (h *Handler) Config(ctx context.Context) *config.Config {
-	return h.r.Config()
-}
-
 func NewHandler(r handlerDependencies) *Handler {
 	return &Handler{
 		r:  r,
@@ -81,12 +78,14 @@ func NewHandler(r handlerDependencies) *Handler {
 	}
 }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	h.r.CSRFHandler().IgnoreGlobs(
-		RouteCollection, RouteCollection+"/*",
+		RouteCollection,
+		RouteCollection+"/*",
 		RouteCollection+"/*/credentials/*",
-		x.AdminPrefix+RouteCollection, x.AdminPrefix+RouteCollection+"/*",
-		x.AdminPrefix+RouteCollection+"/*/credentials/*",
+		httprouterx.AdminPrefix+RouteCollection,
+		httprouterx.AdminPrefix+RouteCollection+"/*",
+		httprouterx.AdminPrefix+RouteCollection+"/*/credentials/*",
 	)
 
 	public.GET(RouteCollection, redir.RedirectToAdminRoute(h.r))
@@ -98,17 +97,17 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.PATCH(RouteItem, redir.RedirectToAdminRoute(h.r))
 	public.DELETE(RouteCredentialItem, redir.RedirectToAdminRoute(h.r))
 
-	public.GET(x.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+RouteCollection+"/by/external/{externalID}", redir.RedirectToAdminRoute(h.r))
-	public.GET(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
-	public.POST(x.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
-	public.PUT(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
-	public.PATCH(x.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
-	public.DELETE(x.AdminPrefix+RouteCredentialItem, redir.RedirectToAdminRoute(h.r))
+	public.GET(httprouterx.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.GET(httprouterx.AdminPrefix+RouteCollection+"/by/external/{externalID}", redir.RedirectToAdminRoute(h.r))
+	public.GET(httprouterx.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(httprouterx.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.POST(httprouterx.AdminPrefix+RouteCollection, redir.RedirectToAdminRoute(h.r))
+	public.PUT(httprouterx.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.PATCH(httprouterx.AdminPrefix+RouteItem, redir.RedirectToAdminRoute(h.r))
+	public.DELETE(httprouterx.AdminPrefix+RouteCredentialItem, redir.RedirectToAdminRoute(h.r))
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	admin.GET(RouteCollection, h.list)
 	admin.GET(RouteItem, h.get)
 	admin.GET(RouteCollection+"/by/external/{externalID}", h.getByExternalID)

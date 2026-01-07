@@ -72,9 +72,6 @@ type updateRegistrationFlowWithWebAuthnMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) RegisterRegistrationRoutes(_ *x.RouterPublic) {
-}
-
 func (s *Strategy) handleRegistrationError(r *http.Request, f *registration.Flow, p updateRegistrationFlowWithWebAuthnMethod, err error) error {
 	if f != nil {
 		for _, n := range container.NewFromJSON("", node.DefaultGroup, p.Traits, "traits").Nodes {

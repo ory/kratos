@@ -13,8 +13,8 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/httprouterx"
 )
 
 type configProvider struct {
@@ -28,8 +28,8 @@ func (c *configProvider) Config() *config.Config {
 func TestNewConfigHashHandler(t *testing.T) {
 	ctx := context.Background()
 	cfg := internal.NewConfigurationWithDefaults(t)
-	router := x.NewTestRouterPublic(t)
-	config.NewConfigHashHandler(&configProvider{cfg: cfg}, router)
+	router := httprouterx.NewTestRouterAdmin(t)
+	config.RegisterConfigHashRoute(&configProvider{cfg: cfg}, router)
 	ts := contextx.NewConfigurableTestServer(router)
 	t.Cleanup(ts.Close)
 

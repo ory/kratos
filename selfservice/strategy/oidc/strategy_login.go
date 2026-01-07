@@ -34,13 +34,9 @@ import (
 )
 
 var (
-	_ login.AAL1FormHydrator = new(Strategy)
-	_ login.Strategy         = new(Strategy)
+	_ login.AAL1FormHydrator = (*Strategy)(nil)
+	_ login.Strategy         = (*Strategy)(nil)
 )
-
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	s.setRoutes(r)
-}
 
 // Update Login Flow with OpenID Connect Method
 //

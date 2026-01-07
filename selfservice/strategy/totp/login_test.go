@@ -21,8 +21,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/x/configx"
-
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -36,6 +34,8 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
 )
@@ -96,8 +96,8 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{redirTS.URL + "/return-to-wherever"})
 
-	router := x.NewRouterPublic(reg)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
+	router := httprouterx.NewTestRouterPublic(t)
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)

@@ -7,28 +7,24 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/kratos/x/nosurfx"
-	"github.com/ory/kratos/x/redir"
-
-	"github.com/ory/kratos/hydra"
-	"github.com/ory/kratos/session"
-	"github.com/ory/nosurf"
-
-	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/ui/node"
-	"github.com/ory/x/sqlcon"
-
-	"github.com/ory/herodot"
-
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/urlx"
-
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/redir"
+	"github.com/ory/nosurf"
+	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/urlx"
 )
 
 const (
@@ -67,11 +63,9 @@ type (
 	}
 )
 
-func NewHandler(d handlerDependencies) *Handler {
-	return &Handler{d: d}
-}
+func NewHandler(d handlerDependencies) *Handler { return &Handler{d: d} }
 
-func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
+func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
@@ -83,7 +77,7 @@ func (h *Handler) RegisterPublicRoutes(public *x.RouterPublic) {
 	public.GET(RouteSubmitFlow, h.updateVerificationFlow)
 }
 
-func (h *Handler) RegisterAdminRoutes(admin *x.RouterAdmin) {
+func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	admin.GET(RouteInitBrowserFlow, redir.RedirectToPublicRoute(h.d))
 	admin.GET(RouteInitAPIFlow, redir.RedirectToPublicRoute(h.d))
 	admin.GET(RouteGetFlow, redir.RedirectToPublicRoute(h.d))

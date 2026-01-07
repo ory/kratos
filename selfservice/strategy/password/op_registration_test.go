@@ -13,23 +13,19 @@ import (
 	"strings"
 	"testing"
 
-	"golang.org/x/oauth2"
-
-	"github.com/ory/x/configx"
-
-	"github.com/urfave/negroni"
-
-	hydraclientgo "github.com/ory/hydra-client-go/v2"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/urfave/negroni"
+	"golang.org/x/oauth2"
 
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
 )
 
 func TestOAuth2ProviderRegistration(t *testing.T) {
@@ -38,13 +34,13 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true))
 
-	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, x.NewRouterPublic(reg), x.NewRouterAdmin(reg))
+	kratosPublicTS, _ := testhelpers.NewKratosServer(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
 	var hydraAdminClient hydraclientgo.OAuth2API
 
-	router := x.NewRouterPublic(reg)
+	router := http.NewServeMux()
 
 	type contextKey string
 	const (

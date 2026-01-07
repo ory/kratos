@@ -29,6 +29,7 @@ import (
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pointerx"
 	"github.com/ory/x/sqlcon"
@@ -42,12 +43,12 @@ func (s *Strategy) RecoveryStrategyID() string {
 	return string(recovery.RecoveryStrategyLink)
 }
 
-func (s *Strategy) RegisterPublicRecoveryRoutes(public *x.RouterPublic) {
+func (s *Strategy) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	s.d.CSRFHandler().IgnorePath(RouteAdminCreateRecoveryLink)
 	public.POST(RouteAdminCreateRecoveryLink, redir.RedirectToAdminRoute(s.d))
 }
 
-func (s *Strategy) RegisterAdminRecoveryRoutes(admin *x.RouterAdmin) {
+func (s *Strategy) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 	wrappedCreateRecoveryLink := strategy.IsDisabled(s.d, s.RecoveryStrategyID(), s.createRecoveryLinkForIdentity)
 	admin.POST(RouteAdminCreateRecoveryLink, wrappedCreateRecoveryLink)
 }

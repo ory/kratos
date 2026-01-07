@@ -28,8 +28,6 @@ import (
 	"github.com/tidwall/gjson"
 	"golang.org/x/oauth2"
 
-	"github.com/ory/x/configx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
@@ -46,6 +44,8 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/snapshotx"
@@ -82,8 +82,7 @@ func TestStrategy(t *testing.T) {
 	returnTS := newReturnTS(t, reg)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
-	routerP := x.NewRouterPublic(reg)
-	routerA := x.NewRouterAdmin(reg)
+	routerP, routerA := httprouterx.NewTestRouterPublic(t), httprouterx.NewTestRouterAdminWithPrefix(t)
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
 

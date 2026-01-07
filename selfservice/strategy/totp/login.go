@@ -7,13 +7,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"go.opentelemetry.io/otel/attribute"
-
-	"github.com/ory/x/otelx"
-
 	"github.com/pkg/errors"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
@@ -25,10 +22,8 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/otelx"
 )
-
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-}
 
 func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.AuthenticatorAssuranceLevel, sr *login.Flow) error {
 	// This strategy can only solve AAL2

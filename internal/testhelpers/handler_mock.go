@@ -4,7 +4,6 @@
 package testhelpers
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -22,6 +21,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/httprouterx"
 )
 
 type mockDeps interface {
@@ -43,7 +43,7 @@ func MockSetSession(t *testing.T, reg mockDeps, conf *config.Config) http.Handle
 				Identifiers: []string{faker.Email()},
 			},
 			json.RawMessage(`{"hashed_password":"$"}`)))
-		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+		require.NoError(t, reg.IdentityManager().Create(t.Context(), i))
 
 		MockSetSessionWithIdentity(t, reg, conf, i)(w, r)
 	}
@@ -56,30 +56,26 @@ func MockSetSessionWithIdentity(t *testing.T, reg mockDeps, _ *config.Config, i 
 		if aal := r.URL.Query().Get("set_aal"); len(aal) > 0 {
 			activeSession.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel(aal)
 		}
-		require.NoError(t, reg.SessionManager().UpsertAndIssueCookie(context.Background(), w, r, activeSession))
+		require.NoError(t, reg.SessionManager().UpsertAndIssueCookie(t.Context(), w, r, activeSession))
 
 		w.WriteHeader(http.StatusOK)
 	}
 }
 
-type router interface {
-	HandleFunc(pattern string, handler http.HandlerFunc)
-}
-
-func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Config, router router, req *http.Request) ([]byte, *http.Response) {
+func MockMakeAuthenticatedRequest(t *testing.T, reg mockDeps, conf *config.Config, router *httprouterx.RouterPublic, req *http.Request) ([]byte, *http.Response) {
 	return MockMakeAuthenticatedRequestWithClient(t, reg, conf, router, req, NewClientWithCookies(t))
 }
 
-func MockMakeAuthenticatedRequestWithClient(t *testing.T, reg mockDeps, conf *config.Config, router router, req *http.Request, client *http.Client) ([]byte, *http.Response) {
+func MockMakeAuthenticatedRequestWithClient(t *testing.T, reg mockDeps, conf *config.Config, router *httprouterx.RouterPublic, req *http.Request, client *http.Client) ([]byte, *http.Response) {
 	return MockMakeAuthenticatedRequestWithClientAndID(t, reg, conf, router, req, client, nil)
 }
 
-func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, conf *config.Config, router router, req *http.Request, client *http.Client, id *identity.Identity) ([]byte, *http.Response) {
+func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, conf *config.Config, router *httprouterx.RouterPublic, req *http.Request, client *http.Client, id *identity.Identity) ([]byte, *http.Response) {
 	set := "/" + uuid.Must(uuid.NewV4()).String() + "/set"
 	if id == nil {
-		router.HandleFunc("GET "+set, MockSetSession(t, reg, conf))
+		router.Handler("GET", set, MockSetSession(t, reg, conf))
 	} else {
-		router.HandleFunc("GET "+set, MockSetSessionWithIdentity(t, reg, conf, id))
+		router.Handler("GET", set, MockSetSessionWithIdentity(t, reg, conf, id))
 	}
 
 	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set+"?"+req.URL.Query().Encode())
@@ -174,22 +170,21 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 
 	sess.SetAuthenticatorAssuranceLevel()
 
-	ctx := context.Background()
-	if _, err := reg.Config().DefaultIdentityTraitsSchemaURL(ctx); err != nil {
+	if _, err := reg.Config().DefaultIdentityTraitsSchemaURL(t.Context()); err != nil {
 		SetDefaultIdentitySchema(reg.Config(), "file://./stub/fake-session.schema.json")
 	}
 
-	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), i))
 
-	inserted, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(context.Background(), i.ID)
+	inserted, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
 	require.NoError(t, err)
 	sess.Identity = inserted
 
-	require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), &sess))
+	require.NoError(t, reg.SessionPersister().UpsertSession(t.Context(), &sess))
 	require.Len(t, inserted.Credentials, len(i.Credentials))
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		require.NoError(t, reg.SessionManager().IssueCookie(context.Background(), w, r, &sess))
+		require.NoError(t, reg.SessionManager().IssueCookie(t.Context(), w, r, &sess))
 	}, &sess
 }
 

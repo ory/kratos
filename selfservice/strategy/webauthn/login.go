@@ -47,10 +47,6 @@ var (
 	_ login.AAL2FormHydrator = new(Strategy)
 )
 
-func (s *Strategy) RegisterLoginRoutes(r *x.RouterPublic) {
-	webauthnx.RegisterWebauthnRoute(r)
-}
-
 func (s *Strategy) populateLoginMethodForPasswordless(r *http.Request, sr *login.Flow) error {
 	sr.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	sr.UI.GetNodes().Append(node.NewInputField("method", "webauthn", node.WebAuthnGroup, node.InputAttributeTypeSubmit).WithMetaLabel(text.NewInfoSelfServiceLoginWebAuthn()))

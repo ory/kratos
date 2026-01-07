@@ -29,12 +29,6 @@ func (s *Strategy) VerificationStrategyID() string {
 	return string(verification.VerificationStrategyCode)
 }
 
-func (s *Strategy) RegisterPublicVerificationRoutes(public *x.RouterPublic) {
-}
-
-func (s *Strategy) RegisterAdminVerificationRoutes(admin *x.RouterAdmin) {
-}
-
 // PopulateVerificationMethod set's the appropriate UI nodes on this flow
 //
 // If the flow's state is `sent_email`, the `code` input and the success notification is set

@@ -13,20 +13,15 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/ory/kratos/x/nosurfx"
-	"github.com/ory/x/configx"
-
+	"github.com/gofrs/uuid"
 	"github.com/tidwall/gjson"
 	"github.com/urfave/negroni"
 	"golang.org/x/oauth2"
 
-	"github.com/gofrs/uuid"
-
-	hydraclientgo "github.com/ory/hydra-client-go/v2"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
@@ -34,6 +29,9 @@ import (
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/configx"
+	"github.com/ory/x/httprouterx"
 )
 
 func TestOAuth2Provider(t *testing.T) {
@@ -47,12 +45,12 @@ func TestOAuth2Provider(t *testing.T) {
 	var testRequireLogin atomic.Bool
 	testRequireLogin.Store(true)
 
-	router := x.NewRouterPublic(reg)
-	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, x.NewRouterAdmin(reg))
+	router := httprouterx.NewTestRouterPublic(t)
+	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-	router.HandleFunc("GET /login-ts", func(w http.ResponseWriter, r *http.Request) {
+	router.Handler("GET", "/login-ts", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Log("[loginTS] navigated to the login ui")
 		c := r.Context().Value(TestUIConfig).(*testConfig)
 		*c.callTrace = append(*c.callTrace, LoginUI)
@@ -112,9 +110,9 @@ func TestOAuth2Provider(t *testing.T) {
 			t.Log("[loginTS] login flow is ignored here since it will be handled by the code above, we just need to return")
 			return
 		}
-	})
+	}))
 
-	router.HandleFunc("GET /consent", func(w http.ResponseWriter, r *http.Request) {
+	router.Handler("GET", "/consent", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Log("[consentTS] navigated to the consent ui")
 		c := r.Context().Value(TestUIConfig).(*testConfig)
 		*c.callTrace = append(*c.callTrace, Consent)
@@ -155,7 +153,7 @@ func TestOAuth2Provider(t *testing.T) {
 		resp, err = c.browserClient.Get(completedAcceptRequest.RedirectTo)
 		require.NoError(t, err)
 		require.Equal(t, c.clientAppTS.URL, fmt.Sprintf("%s://%s", resp.Request.URL.Scheme, resp.Request.URL.Host))
-	})
+	}))
 
 	kratosUIMiddleware := negroni.New()
 	kratosUIMiddleware.UseFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

@@ -35,6 +35,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/sqlcon"
@@ -352,7 +353,7 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	r := x.NewRouterPublic(reg)
+	r := httprouterx.NewTestRouterPublic(t)
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
 
 	ts := httptest.NewServer(r)
@@ -382,7 +383,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	r := x.NewRouterPublic(reg)
+	r := httprouterx.NewTestRouterPublic(t)
 
 	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
@@ -439,7 +440,7 @@ func TestIsAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
 	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
-	r := x.NewRouterPublic(reg)
+	r := httprouterx.NewTestRouterPublic(t)
 
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)

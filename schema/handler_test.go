@@ -22,14 +22,14 @@ import (
 	_ "github.com/ory/jsonschema/v3/fileloader"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/urlx"
 )
 
 func TestHandler(t *testing.T) {
-	router := x.NewTestRouterPublic(t)
+	router := httprouterx.NewTestRouterPublic(t)
 	ts := contextx.NewConfigurableTestServer(router)
 	t.Cleanup(ts.Close)
 

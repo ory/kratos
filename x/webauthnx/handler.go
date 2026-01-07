@@ -7,7 +7,7 @@ import (
 	_ "embed"
 	"net/http"
 
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/httprouterx"
 )
 
 //go:embed js/webauthn.js
@@ -42,11 +42,9 @@ type webAuthnJavaScript string
 //
 //	Responses:
 //	  200: webAuthnJavaScript
-func RegisterWebauthnRoute(r *x.RouterPublic) {
-	if !r.HasRoute("GET", ScriptURL) {
-		r.GET(ScriptURL, func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
-			_, _ = w.Write(jsOnLoad)
-		})
-	}
+func RegisterWebauthnRoute(r *httprouterx.RouterPublic) {
+	r.GET(ScriptURL, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
+		_, _ = w.Write(jsOnLoad)
+	})
 }

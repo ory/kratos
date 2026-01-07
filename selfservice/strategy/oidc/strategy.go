@@ -46,6 +46,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
@@ -63,7 +64,10 @@ const (
 	RouteOrganizationCallback = RouteBase + "/organization/{organization}/callback/{provider}"
 )
 
-var _ identity.ActiveCredentialsCounter = new(Strategy)
+var (
+	_ identity.ActiveCredentialsCounter = (*Strategy)(nil)
+	_ x.Handler                         = (*Strategy)(nil)
+)
 
 type Dependencies interface {
 	errorx.ManagementProvider
@@ -197,29 +201,25 @@ func (s *Strategy) CountActiveMultiFactorCredentials(_ context.Context, _ map[id
 	return 0, nil
 }
 
-func (s *Strategy) setRoutes(r *x.RouterPublic) {
+func (s *Strategy) RegisterPublicRoutes(r *httprouterx.RouterPublic) {
 	wrappedHandleCallback := strategy.IsDisabled(s.d, s.ID().String(), s.HandleCallback)
-	if !r.HasRoute("GET", RouteCallback) {
-		r.GET(RouteCallback, wrappedHandleCallback)
-	}
-	if !r.HasRoute("GET", RouteCallbackGeneric) {
-		r.GET(RouteCallbackGeneric, wrappedHandleCallback)
-	}
+	r.GET(RouteCallback, wrappedHandleCallback)
+	r.GET(RouteCallbackGeneric, wrappedHandleCallback)
 
 	// Apple can use the POST request method when calling the callback
-	if !r.HasRoute("POST", RouteCallback) {
-		// Apple is the only (known) provider that sometimes does a form POST to the callback URL.
-		// This is a workaround to handle this case.
-		// But since the URL contains the `id` of the provider, we just allow all OIDC provider callbacks to bypass CSRF.
-		// This is fine, because all other providers seem to use GET, which is CSRF safe.
-		s.d.CSRFHandler().IgnoreGlob(RouteBase + "/callback/*")
+	// Apple is the only (known) provider that sometimes does a form POST to the callback URL.
+	// This is a workaround to handle this case.
+	// But since the URL contains the `id` of the provider, we just allow all OIDC provider callbacks to bypass CSRF.
+	// This is fine, because all other providers seem to use GET, which is CSRF safe.
+	s.d.CSRFHandler().IgnoreGlob(RouteBase + "/callback/*")
 
-		// When handler is called using POST method, the cookies are not attached to the request
-		// by the browser. So here we just redirect the request to the same location rewriting the
-		// form fields to query params. This second GET request should have the cookies attached.
-		r.POST(RouteCallback, s.redirectToGET)
-	}
+	// When handler is called using POST method, the cookies are not attached to the request
+	// by the browser. So here we just redirect the request to the same location rewriting the
+	// form fields to query params. This second GET request should have the cookies attached.
+	r.POST(RouteCallback, s.redirectToGET)
 }
+
+func (s *Strategy) RegisterAdminRoutes(*httprouterx.RouterAdmin) {}
 
 // Redirect POST request to GET rewriting form fields to query params.
 func (s *Strategy) redirectToGET(w http.ResponseWriter, r *http.Request) {

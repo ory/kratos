@@ -35,8 +35,8 @@ import (
 
 var (
 	_ login.AAL1FormHydrator = new(Strategy)
-	_ login.AAL2FormHydrator = new(Strategy)
-	_ login.Strategy         = new(Strategy)
+	_ login.AAL2FormHydrator = (*Strategy)(nil)
+	_ login.Strategy         = (*Strategy)(nil)
 )
 
 // Update Login flow using the code method
@@ -76,8 +76,6 @@ type updateLoginFlowWithCodeMethod struct {
 	// required: false
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
-
-func (s *Strategy) RegisterLoginRoutes(*x.RouterPublic) {}
 
 func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod {
 	aal := identity.AuthenticatorAssuranceLevel1

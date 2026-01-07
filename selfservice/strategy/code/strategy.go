@@ -10,11 +10,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/ory/kratos/x/nosurfx"
-
-	"github.com/samber/lo"
-
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
@@ -36,27 +33,19 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/urlx"
 )
 
 var (
-	_ recovery.Strategy      = (*Strategy)(nil)
-	_ recovery.AdminHandler  = (*Strategy)(nil)
-	_ recovery.PublicHandler = (*Strategy)(nil)
-)
-
-var (
-	_ verification.Strategy      = (*Strategy)(nil)
-	_ verification.AdminHandler  = (*Strategy)(nil)
-	_ verification.PublicHandler = (*Strategy)(nil)
-)
-
-var (
+	_ recovery.Strategy                 = (*Strategy)(nil)
+	_ verification.Strategy             = (*Strategy)(nil)
 	_ login.Strategy                    = (*Strategy)(nil)
 	_ registration.Strategy             = (*Strategy)(nil)
 	_ identity.ActiveCredentialsCounter = (*Strategy)(nil)
+	_ x.Handler                         = (*Strategy)(nil)
 )
 
 type (

@@ -19,11 +19,12 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/httprouterx"
 )
 
 func TestRedirectToPublicAdminRoute(t *testing.T) {
-	pub := x.NewTestRouterPublic(t)
-	adm := x.NewTestRouterAdmin(t)
+	pub, adm := httprouterx.NewTestRouterPublic(t), httprouterx.NewTestRouterAdminWithPrefix(t)
+
 	adminTS := httptest.NewServer(adm)
 	pubTS := httptest.NewServer(pub)
 	t.Cleanup(pubTS.Close)

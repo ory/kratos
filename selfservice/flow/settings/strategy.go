@@ -15,7 +15,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/x"
 )
 
 const (
@@ -27,7 +26,6 @@ var pkgName = reflect.TypeOf(Strategies{}).PkgPath()
 type Strategy interface {
 	SettingsStrategyID() string
 	NodeGroup() node.UiNodeGroup
-	RegisterSettingsRoutes(*x.RouterPublic)
 	PopulateSettingsMethod(context.Context, *http.Request, *identity.Identity, *Flow) error
 	Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (*UpdateContext, error)
 }
@@ -52,12 +50,6 @@ func (s Strategies) MustStrategy(id string) Strategy {
 		panic(err)
 	}
 	return strategy
-}
-
-func (s Strategies) RegisterPublicRoutes(r *x.RouterPublic) {
-	for _, ss := range s {
-		ss.RegisterSettingsRoutes(r)
-	}
 }
 
 type StrategyProvider interface {
