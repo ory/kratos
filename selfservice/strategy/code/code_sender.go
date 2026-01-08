@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
+
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template/email"
@@ -24,7 +26,6 @@ import (
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
-	"github.com/pkg/errors"
 )
 
 type (
