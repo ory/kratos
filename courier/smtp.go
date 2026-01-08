@@ -67,7 +67,7 @@ func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, erro
 	}
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: sslSkipVerify, //#nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
+		InsecureSkipVerify: sslSkipVerify, // #nosec G402 -- This is ok (and required!) because it is configurable and disabled by default.
 		Certificates:       tlsCertificates,
 		ServerName:         serverName,
 		MinVersion:         tls.VersionTLS12,
@@ -120,15 +120,24 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 		return uuid.Nil, errors.WithStack(err)
 	}
 
+	requestHeaders := []byte(`{}`)
+	if t, ok := t.(RequestHeadersCarrier); ok {
+		requestHeaders, err = json.Marshal(t.RequestHeaders())
+		if err != nil {
+			return uuid.Nil, err
+		}
+	}
+
 	message := &Message{
-		Status:       MessageStatusQueued,
-		Type:         MessageTypeEmail,
-		Channel:      "email",
-		Recipient:    recipient,
-		Body:         bodyPlaintext,
-		Subject:      subject,
-		TemplateType: t.TemplateType(),
-		TemplateData: templateData,
+		Status:         MessageStatusQueued,
+		Type:           MessageTypeEmail,
+		Channel:        "email",
+		Recipient:      recipient,
+		Body:           bodyPlaintext,
+		Subject:        subject,
+		TemplateType:   t.TemplateType(),
+		TemplateData:   templateData,
+		RequestHeaders: requestHeaders,
 	}
 
 	if err := c.deps.CourierPersister().AddMessage(ctx, message); err != nil {

@@ -228,7 +228,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 				f := testhelpers.InitializeRegistrationFlowViaAPI(t, apiClient, publicTS)
 				c := f.Ui
 
-				req := testhelpers.NewRequest(t, true, "POST", c.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+				req := testhelpers.NewPostRequest(t, true, c.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
 				tc.mod(req.Header)
 
 				res, err := apiClient.Do(req)

@@ -6,6 +6,7 @@ package courier
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/ory/kratos/courier/template"
 
@@ -26,6 +27,10 @@ type (
 		EmailBody(context.Context) (string, error)
 		EmailBodyPlaintext(context.Context) (string, error)
 		EmailRecipient() (string, error)
+	}
+
+	RequestHeadersCarrier interface {
+		RequestHeaders() http.Header
 	}
 )
 

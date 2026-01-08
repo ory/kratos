@@ -189,7 +189,7 @@ func TestStrategyTraits(t *testing.T) {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				f := testhelpers.InitializeSettingsFlowViaAPI(t, apiUser1, publicTS)
 
-				req := testhelpers.NewRequest(t, true, "POST", f.Ui.Action, bytes.NewBufferString(`{"traits.booly":true,"method":"profile","csrf_token":"invalid"}`))
+				req := testhelpers.NewPostRequest(t, true, f.Ui.Action, bytes.NewBufferString(`{"traits.booly":true,"method":"profile","csrf_token":"invalid"}`))
 				tc.mod(req.Header)
 
 				res, err := apiUser1.Do(req)

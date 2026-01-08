@@ -99,6 +99,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 			fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth): true,
 		}),
 	)
+	conf.MustSet(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{"x-CUSTOM-header", "uSER-Agent"})
 
 	_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
@@ -185,7 +186,18 @@ func TestLoginCodeStrategy(t *testing.T) {
 		values.Set("method", "code")
 		vals(&values)
 
-		body, resp := testhelpers.LoginMakeRequestCtx(ctx, t, apiType == ApiTypeNative, apiType == ApiTypeSPA, lf, s.client, testhelpers.EncodeFormAsJSON(t, apiType == ApiTypeNative, values))
+		body, resp := testhelpers.LoginMakeRequestCtx(ctx,
+			t,
+			apiType == ApiTypeNative,
+			apiType == ApiTypeSPA,
+			lf,
+			s.client,
+			testhelpers.EncodeFormAsJSON(t, apiType == ApiTypeNative, values),
+			testhelpers.WithHeader("uSER-Agent", "ory-kratos-test"),
+			testhelpers.WithHeader("x-CUSTOM-header", "value 1"),
+			testhelpers.WithHeader("x-custom-HEADER", "value 2"),
+			testhelpers.WithHeader("x-unknown-header", "should not be forwarded"),
+		)
 
 		if submitAssertion != nil {
 			submitAssertion(t, s, body, resp)
@@ -406,7 +418,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 
 				s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
 
-				// submit email
+				// submit phone
 				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("identifier", phone)
 				}, false, nil)
@@ -414,6 +426,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 				message := testhelpers.CourierExpectMessage(ctx, t, reg, x.GracefulNormalization(phone), "Your login code is:")
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
+				headers := message.RequestHeaders
+				assert.Equal(t, []any{"ory-kratos-test"}, gjson.GetBytes(headers, "User-Agent").Value())
+				assert.Equal(t, []any{"value 1", "value 2"}, gjson.GetBytes(headers, "X-Custom-Header").Value())
+				assert.Empty(t, gjson.GetBytes(headers, "Some-Other-Header").Value(), "Expected Some-Other-Header to be empty")
 
 				// 3. Submit OTP
 				state := submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
@@ -466,6 +482,10 @@ func TestLoginCodeStrategy(t *testing.T) {
 				loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 				assert.NotEmpty(t, loginCode)
 
+				headers := message.RequestHeaders
+				assert.Equal(t, []any{"ory-kratos-test"}, gjson.GetBytes(headers, "User-Agent").Value())
+				assert.Equal(t, []any{"value 1", "value 2"}, gjson.GetBytes(headers, "X-Custom-Header").Value())
+				assert.Empty(t, gjson.GetBytes(headers, "Some-Other-Header").Value(), "Expected Some-Other-Header to be empty")
 				// submit code
 				s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
 					v.Set("code", loginCode)

@@ -60,11 +60,11 @@ func TestCompleteLogin(t *testing.T) {
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-	//ensureFieldsExist := func(t *testing.T, body []byte) {
+	// ensureFieldsExist := func(t *testing.T, body []byte) {
 	//	registrationhelpers.CheckFormContent(t, body, "identifier",
 	//		"password",
 	//		"csrf_token")
-	//}
+	// }
 
 	apiClient := testhelpers.NewDebugClient(t)
 
@@ -260,7 +260,7 @@ func TestCompleteLogin(t *testing.T) {
 				t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 					f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
 
-					req := testhelpers.NewRequest(t, true, "POST", f.Ui.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+					req := testhelpers.NewPostRequest(t, true, f.Ui.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
 					tc.mod(req.Header)
 
 					res, err := apiClient.Do(req)

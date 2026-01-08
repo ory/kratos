@@ -13,6 +13,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/configx"
 
@@ -46,6 +47,8 @@ func TestSender(t *testing.T) {
 		}),
 	)
 
+	conf.MustSet(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{"user-agent", "X-CUSTOM-HEADER"})
+
 	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -67,8 +70,13 @@ func TestSender(t *testing.T) {
 
 			require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f))
 
-			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "tracked@ory.sh"))
-			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
+			header := http.Header{}
+			header.Add("user-agent", "user-agent header")
+			header.Add("X-CUSTOM-HEADER", "x-custom header 1")
+			header.Add("X-Custom-header", "x-custom header 2")
+			header.Add("some-other-header", "some-other-value")
+			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "tracked@ory.sh", header))
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh", header), code.ErrUnknownAddress)
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -86,6 +94,11 @@ func TestSender(t *testing.T) {
 			assert.Contains(t, messages[1].Subject, "Account access attempted")
 
 			assert.NotRegexp(t, testhelpers.CodeRegex, messages[1].Body, "Expected message to not contain an 6 digit recovery code, but it did: ", messages[1].Body)
+
+			headers := messages[0].RequestHeaders
+			assert.Equal(t, []any{"user-agent header"}, gjson.GetBytes(headers, "User-Agent").Value())
+			assert.Equal(t, []any{"x-custom header 1", "x-custom header 2"}, gjson.GetBytes(headers, "X-Custom-Header").Value())
+			assert.Empty(t, gjson.GetBytes(headers, "Some-Other-Header").Value(), "Expected Some-Other-Header to be empty")
 		})
 
 		t.Run("case=with custom templates", func(t *testing.T) {
@@ -111,6 +124,11 @@ func TestSender(t *testing.T) {
 			assert.EqualValues(t, "not-tracked@ory.sh", messages[1].Recipient)
 			assert.Equal(t, messages[1].Subject, subject+" invalid")
 			assert.Equal(t, messages[1].Body, body)
+
+			headers := messages[0].RequestHeaders
+			assert.Equal(t, []any{"user-agent header"}, gjson.GetBytes(headers, "User-Agent").Value())
+			assert.Equal(t, []any{"x-custom header 1", "x-custom header 2"}, gjson.GetBytes(headers, "X-Custom-Header").Value())
+			assert.Empty(t, gjson.GetBytes(headers, "Some-Other-Header").Value(), "Expected Some-Other-Header to be empty")
 		})
 	})
 
@@ -122,8 +140,13 @@ func TestSender(t *testing.T) {
 
 			require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f))
 
-			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberKnown))
-			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberUnknown), code.ErrUnknownAddress)
+			header := http.Header{}
+			header.Add("user-agent", "user-agent header")
+			header.Add("X-CUSTOM-HEADER", "x-custom header 1")
+			header.Add("X-Custom-header", "x-custom header 2")
+			header.Add("some-other-header", "some-other-value")
+			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberKnown, header))
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberUnknown, header), code.ErrUnknownAddress)
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -152,6 +175,10 @@ func TestSender(t *testing.T) {
 
 			assert.EqualValues(t, phoneNumberKnown, messages[0].Recipient)
 			assert.Contains(t, messages[0].Body, body)
+			headers := messages[0].RequestHeaders
+			assert.Equal(t, []any{"user-agent header"}, gjson.GetBytes(headers, "User-Agent").Value())
+			assert.Equal(t, []any{"x-custom header 1", "x-custom header 2"}, gjson.GetBytes(headers, "X-Custom-Header").Value())
+			assert.Empty(t, gjson.GetBytes(headers, "Some-Other-Header").Value(), "Expected Some-Other-Header to be empty")
 
 			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
 		})
@@ -230,7 +257,7 @@ func TestSender(t *testing.T) {
 
 					require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f))
 
-					err = reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh")
+					err = reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh", nil)
 					require.ErrorIs(t, err, code.ErrUnknownAddress)
 				},
 			},

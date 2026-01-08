@@ -642,7 +642,7 @@ func (s *Strategy) recoveryV2HandleStateConfirmingAddress(r *http.Request, f *re
 	// NOTE: We do not fetch the db address here. We only (try to) send the code to the user provided address.
 	// That way we avoid information exfiltration.
 	// `SendRecoveryCode` will anyway check by itself if the provided address is a known address or not.
-	if err := s.deps.CodeSender().SendRecoveryCode(r.Context(), f, hackyInferChannel(body.RecoveryConfirmAddress), body.RecoveryConfirmAddress); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(r.Context(), f, hackyInferChannel(body.RecoveryConfirmAddress), body.RecoveryConfirmAddress, r.Header); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return err
 		}
@@ -765,7 +765,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	}
 
 	f.TransientPayload = body.TransientPayload
-	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.AddressTypeEmail, body.Email); err != nil {
+	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.AddressTypeEmail, body.Email, r.Header); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}

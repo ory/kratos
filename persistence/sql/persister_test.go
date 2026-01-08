@@ -250,7 +250,10 @@ func TestPersister(t *testing.T) {
 				settings.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=session.TestPersister", func(t *testing.T) {
-				t.Parallel()
+				// Don't run this in parallel on SQLite as it causes table locks.
+				if name != "sqlite" {
+					t.Parallel()
+				}
 				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				session.TestPersister(ctx, reg.Config(), p)(t)

@@ -6,6 +6,7 @@ package sms
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"os"
 
 	"github.com/ory/kratos/courier/template"
@@ -18,15 +19,20 @@ type (
 	}
 
 	RecoveryCodeValidModel struct {
-		To               string                 `json:"to"`
-		RecoveryCode     string                 `json:"verification_code"`
-		Identity         map[string]interface{} `json:"identity"`
-		RequestURL       string                 `json:"request_url"`
-		RequestURLDomain string                 `json:"request_url_domain"`
-		TransientPayload map[string]interface{} `json:"transient_payload"`
-		ExpiresInMinutes int                    `json:"expires_in_minutes"`
+		To                 string         `json:"to"`
+		RecoveryCode       string         `json:"verification_code"`
+		Identity           map[string]any `json:"identity"`
+		RequestURL         string         `json:"request_url"`
+		RequestURLDomain   string         `json:"request_url_domain"`
+		TransientPayload   map[string]any `json:"transient_payload"`
+		ExpiresInMinutes   int            `json:"expires_in_minutes"`
+		UserRequestHeaders http.Header    `json:"-"`
 	}
 )
+
+func NewRecoveryCodeValid(d template.Dependencies, m *RecoveryCodeValidModel) *RecoveryCodeValid {
+	return &RecoveryCodeValid{deps: d, model: m}
+}
 
 func (t *RecoveryCodeValid) PhoneNumber() (string, error) {
 	return t.model.To, nil
@@ -47,11 +53,10 @@ func (t *RecoveryCodeValid) SMSBody(ctx context.Context) (string, error) {
 func (t *RecoveryCodeValid) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.model)
 }
-
 func (t *RecoveryCodeValid) TemplateType() template.TemplateType {
 	return template.TypeRecoveryCodeValid
 }
+func (t *RecoveryCodeValid) RequestHeaders() http.Header {
+	return t.model.UserRequestHeaders
 
-func NewRecoveryCodeValid(d template.Dependencies, m *RecoveryCodeValidModel) *RecoveryCodeValid {
-	return &RecoveryCodeValid{deps: d, model: m}
 }

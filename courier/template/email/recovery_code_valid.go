@@ -6,6 +6,7 @@ package email
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"os"
 	"strings"
 
@@ -18,12 +19,13 @@ type (
 		model *RecoveryCodeValidModel
 	}
 	RecoveryCodeValidModel struct {
-		To               string                 `json:"to"`
-		RecoveryCode     string                 `json:"recovery_code"`
-		Identity         map[string]interface{} `json:"identity"`
-		RequestURL       string                 `json:"request_url"`
-		TransientPayload map[string]interface{} `json:"transient_payload"`
-		ExpiresInMinutes int                    `json:"expires_in_minutes"`
+		To                 string                 `json:"to"`
+		RecoveryCode       string                 `json:"recovery_code"`
+		Identity           map[string]interface{} `json:"identity"`
+		RequestURL         string                 `json:"request_url"`
+		TransientPayload   map[string]interface{} `json:"transient_payload"`
+		ExpiresInMinutes   int                    `json:"expires_in_minutes"`
+		UserRequestHeaders http.Header            `json:"-"`
 	}
 )
 
@@ -55,4 +57,7 @@ func (t *RecoveryCodeValid) MarshalJSON() ([]byte, error) {
 
 func (t *RecoveryCodeValid) TemplateType() template.TemplateType {
 	return template.TypeRecoveryCodeValid
+}
+func (t *RecoveryCodeValid) RequestHeaders() http.Header {
+	return t.model.UserRequestHeaders
 }

@@ -51,7 +51,7 @@ func DebugRedirects(t *testing.T) CheckRedirectFunc {
 	}
 }
 
-func NewRequest(t *testing.T, isAPI bool, method string, url string, payload io.Reader) *http.Request {
+func NewPostRequest(t *testing.T, isAPI bool, url string, payload io.Reader) *http.Request {
 	req, err := http.NewRequest("POST", url, payload)
 	require.NoError(t, err)
 

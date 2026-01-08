@@ -276,7 +276,7 @@ func TestSessionWhoAmI(t *testing.T) {
 				require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 				require.NotEmpty(t, s.Token)
 
-				req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+				req, err := http.NewPostRequest("GET", pts.URL+"/session/get", nil)
 				require.NoError(t, err)
 				req.Header.Set("Authorization", "Bearer "+s.Token)
 
@@ -309,7 +309,7 @@ func TestSessionWhoAmI(t *testing.T) {
 					require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), s))
 					require.NotEmpty(t, s.Token)
 
-					req, err := http.NewRequest("GET", pts.URL+"/session/get", nil)
+					req, err := http.NewPostRequest("GET", pts.URL+"/session/get", nil)
 					require.NoError(t, err)
 					req.Header.Set("Authorization", "Bearer "+s.Token)
 

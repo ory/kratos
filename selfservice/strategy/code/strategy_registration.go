@@ -236,7 +236,7 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above
-	if err := s.deps.CodeSender().SendCode(ctx, f, i, addresses...); err != nil {
+	if err := s.deps.CodeSender().SendCode(ctx, f, i, r.Header, addresses...); err != nil {
 		return errors.WithStack(err)
 	}
 

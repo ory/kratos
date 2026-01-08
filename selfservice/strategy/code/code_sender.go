@@ -5,27 +5,26 @@ package code
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/gofrs/uuid"
-	"github.com/pkg/errors"
-
-	"github.com/ory/x/urlx"
-
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/courier/template/sms"
-
-	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
+	"github.com/ory/x/urlx"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -65,7 +64,7 @@ func NewSender(deps senderDependencies) *Sender {
 	return &Sender{deps: deps}
 }
 
-func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identity, addresses ...Address) error {
+func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identity, header http.Header, addresses ...Address) error {
 	s.deps.Logger().
 		WithSensitiveField("address", addresses).
 		Debugf("Preparing %s code", f.GetFlowName())
@@ -112,21 +111,23 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			switch address.Via {
 			case identity.ChannelTypeEmail:
 				t = email.NewRegistrationCodeValid(s.deps, &email.RegistrationCodeValidModel{
-					To:               address.To,
-					RegistrationCode: rawCode,
-					Traits:           model,
-					RequestURL:       f.GetRequestURL(),
-					TransientPayload: transientPayload,
-					ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					To:                 address.To,
+					RegistrationCode:   rawCode,
+					Traits:             model,
+					RequestURL:         f.GetRequestURL(),
+					TransientPayload:   transientPayload,
+					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 				})
 			case identity.ChannelTypeSMS:
 				t = sms.NewRegistrationCodeValid(s.deps, &sms.RegistrationCodeValidModel{
-					To:               address.To,
-					RegistrationCode: rawCode,
-					Identity:         model,
-					RequestURL:       f.GetRequestURL(),
-					TransientPayload: transientPayload,
-					ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					To:                 address.To,
+					RegistrationCode:   rawCode,
+					Identity:           model,
+					RequestURL:         f.GetRequestURL(),
+					TransientPayload:   transientPayload,
+					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 				})
 			}
 
@@ -163,21 +164,23 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			switch address.Via {
 			case identity.ChannelTypeEmail:
 				t = email.NewLoginCodeValid(s.deps, &email.LoginCodeValidModel{
-					To:               address.To,
-					LoginCode:        rawCode,
-					Identity:         model,
-					RequestURL:       f.GetRequestURL(),
-					TransientPayload: transientPayload,
-					ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					To:                 address.To,
+					LoginCode:          rawCode,
+					Identity:           model,
+					RequestURL:         f.GetRequestURL(),
+					TransientPayload:   transientPayload,
+					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 				})
 			case identity.ChannelTypeSMS:
 				t = sms.NewLoginCodeValid(s.deps, &sms.LoginCodeValidModel{
-					To:               address.To,
-					LoginCode:        rawCode,
-					Identity:         model,
-					RequestURL:       f.GetRequestURL(),
-					TransientPayload: transientPayload,
-					ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					To:                 address.To,
+					LoginCode:          rawCode,
+					Identity:           model,
+					RequestURL:         f.GetRequestURL(),
+					TransientPayload:   transientPayload,
+					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 				})
 			}
 
@@ -198,7 +201,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 // If the address does not exist in the store and dispatching invalid emails is enabled (CourierEnableInvalidDispatch is
 // true), an email is still being sent to prevent account enumeration attacks. In that case, this function returns the
 // ErrUnknownAddress error.
-func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to string) error {
+func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to string, requestHeader http.Header) error {
 	s.deps.Logger().
 		WithField("via", via).
 		WithSensitiveField("address", to).
@@ -260,10 +263,10 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to
 		return err
 	}
 
-	return s.SendRecoveryCodeTo(ctx, i, rawCode, code, f)
+	return s.SendRecoveryCodeTo(ctx, i, rawCode, code, f, requestHeader)
 }
 
-func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode, f *recovery.Flow) error {
+func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode, f *recovery.Flow, requestHeader http.Header) error {
 	s.deps.Audit().
 		WithField("via", code.RecoveryAddress.Via).
 		WithField("identity_id", code.RecoveryAddress.IdentityID).
@@ -287,12 +290,13 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 	switch code.RecoveryAddress.Via {
 	case identity.AddressTypeEmail:
 		t = email.NewRecoveryCodeValid(s.deps, &email.RecoveryCodeValidModel{
-			To:               code.RecoveryAddress.Value,
-			RecoveryCode:     codeString,
-			Identity:         model,
-			RequestURL:       f.GetRequestURL(),
-			TransientPayload: transientPayload,
-			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+			To:                 code.RecoveryAddress.Value,
+			RecoveryCode:       codeString,
+			Identity:           model,
+			RequestURL:         f.GetRequestURL(),
+			TransientPayload:   transientPayload,
+			ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+			UserRequestHeaders: hook.RemoveDisallowedHeaders(requestHeader, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 		})
 	case identity.AddressTypeSMS:
 		u, err := url.Parse(f.GetRequestURL())
@@ -301,13 +305,14 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 		}
 
 		t = sms.NewRecoveryCodeValid(s.deps, &sms.RecoveryCodeValidModel{
-			To:               code.RecoveryAddress.Value,
-			RecoveryCode:     codeString,
-			Identity:         model,
-			RequestURL:       f.GetRequestURL(),
-			RequestURLDomain: u.Hostname(),
-			TransientPayload: transientPayload,
-			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+			To:                 code.RecoveryAddress.Value,
+			RecoveryCode:       codeString,
+			Identity:           model,
+			RequestURL:         f.GetRequestURL(),
+			RequestURLDomain:   u.Hostname(),
+			TransientPayload:   transientPayload,
+			ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+			UserRequestHeaders: hook.RemoveDisallowedHeaders(requestHeader, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 		})
 	default:
 		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.RecoveryAddress.Via))

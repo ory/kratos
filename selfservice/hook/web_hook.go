@@ -437,11 +437,13 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 	return nil
 }
 
+// RemoveDisallowedHeaders removes all headers from httpHeaders that are not in
+// headerAllowlist.
 func RemoveDisallowedHeaders(httpHeaders http.Header, headerAllowlist []string) http.Header {
 	res := make(http.Header, len(headerAllowlist))
 	for _, allowed := range headerAllowlist {
-		h, present := httpHeaders[textproto.CanonicalMIMEHeaderKey(allowed)]
-		if present {
+		allowed = textproto.CanonicalMIMEHeaderKey(allowed)
+		if h, ok := httpHeaders[allowed]; ok {
 			res[allowed] = h
 		}
 	}

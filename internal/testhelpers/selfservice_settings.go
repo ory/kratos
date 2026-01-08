@@ -221,7 +221,7 @@ func SettingsMakeRequest(
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
-	req := NewRequest(t, isSPA || isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values))
+	req := NewPostRequest(t, isSPA || isAPI, f.Ui.Action, bytes.NewBufferString(values))
 	if isSPA || isAPI {
 		req.Header.Set("Accept", "application/json")
 	}

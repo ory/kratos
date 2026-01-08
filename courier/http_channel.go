@@ -5,6 +5,7 @@ package courier
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 
@@ -50,11 +51,12 @@ type httpDataModel struct {
 	Recipient string `json:"recipient"`
 	Subject   string `json:"subject"`
 	Body      string `json:"body"`
-	// Optional HTMLBody contains the HTML version of an email template when available.
-	HTMLBody     string                `json:"html_body,omitempty"`
-	TemplateType template.TemplateType `json:"template_type"`
-	TemplateData Template              `json:"template_data"`
-	MessageType  string                `json:"message_type"`
+	// HTMLBody optionally contains the HTML version of an email template when available.
+	HTMLBody       string                `json:"html_body,omitempty"`
+	TemplateType   template.TemplateType `json:"template_type"`
+	TemplateData   Template              `json:"template_data"`
+	MessageType    string                `json:"message_type"`
+	RequestHeaders json.RawMessage       `json:"request_headers"`
 }
 
 func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
@@ -72,12 +74,13 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	}
 
 	td := httpDataModel{
-		Recipient:    msg.Recipient,
-		Subject:      msg.Subject,
-		Body:         msg.Body,
-		TemplateType: msg.TemplateType,
-		TemplateData: tmpl,
-		MessageType:  msg.Type.String(),
+		Recipient:      msg.Recipient,
+		Subject:        msg.Subject,
+		Body:           msg.Body,
+		TemplateType:   msg.TemplateType,
+		TemplateData:   tmpl,
+		RequestHeaders: msg.RequestHeaders,
+		MessageType:    msg.Type.String(),
 	}
 
 	c.tryPopulateHTMLBody(ctx, tmpl, &td)

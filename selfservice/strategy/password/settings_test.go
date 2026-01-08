@@ -494,7 +494,7 @@ func TestSettings(t *testing.T) {
 				values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
 				values.Set("password", x.NewUUID().String())
 
-				req := testhelpers.NewRequest(t, true, "POST", f.Ui.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
+				req := testhelpers.NewPostRequest(t, true, f.Ui.Action, bytes.NewBufferString(testhelpers.EncodeFormAsJSON(t, true, values)))
 				tc.mod(req.Header)
 
 				res, err := apiUser1.Do(req)

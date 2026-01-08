@@ -26,14 +26,23 @@ func (c *courier) QueueSMS(ctx context.Context, t SMSTemplate) (uuid.UUID, error
 		return uuid.Nil, err
 	}
 
+	requestHeaders := []byte(`{}`)
+	if t, ok := t.(RequestHeadersCarrier); ok {
+		requestHeaders, err = json.Marshal(t.RequestHeaders())
+		if err != nil {
+			return uuid.Nil, err
+		}
+	}
+
 	message := &Message{
-		Status:       MessageStatusQueued,
-		Type:         MessageTypeSMS,
-		Channel:      "sms",
-		Recipient:    recipient,
-		TemplateType: t.TemplateType(),
-		TemplateData: templateData,
-		Body:         body,
+		Status:         MessageStatusQueued,
+		Type:           MessageTypeSMS,
+		Channel:        "sms",
+		Recipient:      recipient,
+		TemplateType:   t.TemplateType(),
+		TemplateData:   templateData,
+		RequestHeaders: requestHeaders,
+		Body:           body,
 	}
 	if err := c.deps.CourierPersister().AddMessage(ctx, message); err != nil {
 		return uuid.Nil, err

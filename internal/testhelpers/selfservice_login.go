@@ -246,16 +246,44 @@ func InitializeLoginFlowViaAPIExpectError(ctx context.Context, t *testing.T, cli
 }
 
 // Deprecated: use LoginMakeRequestCtx instead.
-func LoginMakeRequest(t *testing.T, isAPI bool, isSPA bool, f *kratos.LoginFlow, hc *http.Client, values string) (string, *http.Response) {
-	return LoginMakeRequestCtx(context.Background(), t, isAPI, isSPA, f, hc, values)
+func LoginMakeRequest(
+	t *testing.T,
+	isAPI bool,
+	isSPA bool,
+	f *kratos.LoginFlow,
+	hc *http.Client,
+	values string,
+	opt ...RequestOption,
+) (string, *http.Response) {
+	return LoginMakeRequestCtx(t.Context(), t, isAPI, isSPA, f, hc, values, opt...)
 }
 
-func LoginMakeRequestCtx(ctx context.Context, t *testing.T, isAPI bool, isSPA bool, f *kratos.LoginFlow, hc *http.Client, values string) (string, *http.Response) {
+type RequestOption func(*http.Request)
+
+func WithHeader(key, value string) RequestOption {
+	return func(r *http.Request) {
+		r.Header.Add(key, value)
+	}
+}
+
+func LoginMakeRequestCtx(
+	ctx context.Context,
+	t *testing.T,
+	isAPI bool,
+	isSPA bool,
+	f *kratos.LoginFlow,
+	hc *http.Client,
+	values string,
+	opt ...RequestOption,
+) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
-	req := NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values))
+	req := NewPostRequest(t, isAPI, f.Ui.Action, bytes.NewBufferString(values))
 	if isSPA && !isAPI {
 		req.Header.Set("Accept", "application/json")
+	}
+	for _, o := range opt {
+		o(req)
 	}
 
 	res, err := hc.Do(req.WithContext(ctx))

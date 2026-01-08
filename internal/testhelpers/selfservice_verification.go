@@ -188,7 +188,7 @@ func RecoveryMakeRequest(
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
-	res, err := hc.Do(NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values)))
+	res, err := hc.Do(NewPostRequest(t, isAPI, f.Ui.Action, bytes.NewBufferString(values)))
 	require.NoError(t, err)
 	defer func() { _ = res.Body.Close() }()
 

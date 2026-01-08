@@ -1,0 +1,1 @@
+ALTER TABLE courier_messages DROP COLUMN IF EXISTS request_headers;

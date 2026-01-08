@@ -188,7 +188,8 @@ type Message struct {
 
 	Channel sqlxx.NullString `json:"channel" db:"channel"`
 
-	TemplateData []byte `json:"-" db:"template_data"`
+	TemplateData   []byte `json:"-" db:"template_data"`
+	RequestHeaders []byte `json:"-" faker:"-" db:"request_headers"`
 	// required: true
 	SendCount int `json:"send_count" db:"send_count"`
 

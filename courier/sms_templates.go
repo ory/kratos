@@ -14,10 +14,9 @@ import (
 )
 
 type SMSTemplate interface {
-	json.Marshaler
+	Template
 	SMSBody(context.Context) (string, error)
 	PhoneNumber() (string, error)
-	TemplateType() template.TemplateType
 }
 
 func NewSMSTemplateFromMessage(d template.Dependencies, m Message) (SMSTemplate, error) {

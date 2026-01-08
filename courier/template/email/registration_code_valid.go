@@ -6,6 +6,7 @@ package email
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"os"
 	"strings"
 
@@ -18,12 +19,13 @@ type (
 		model *RegistrationCodeValidModel
 	}
 	RegistrationCodeValidModel struct {
-		To               string                 `json:"to"`
-		Traits           map[string]interface{} `json:"traits"`
-		RegistrationCode string                 `json:"registration_code"`
-		RequestURL       string                 `json:"request_url"`
-		TransientPayload map[string]interface{} `json:"transient_payload"`
-		ExpiresInMinutes int                    `json:"expires_in_minutes"`
+		To                 string                 `json:"to"`
+		Traits             map[string]interface{} `json:"traits"`
+		RegistrationCode   string                 `json:"registration_code"`
+		RequestURL         string                 `json:"request_url"`
+		TransientPayload   map[string]interface{} `json:"transient_payload"`
+		ExpiresInMinutes   int                    `json:"expires_in_minutes"`
+		UserRequestHeaders http.Header            `json:"-"`
 	}
 )
 
@@ -55,4 +57,8 @@ func (t *RegistrationCodeValid) MarshalJSON() ([]byte, error) {
 
 func (t *RegistrationCodeValid) TemplateType() template.TemplateType {
 	return template.TypeRegistrationCodeValid
+}
+func (t *RegistrationCodeValid) RequestHeaders() http.Header {
+	return t.model.UserRequestHeaders
+
 }

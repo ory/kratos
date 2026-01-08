@@ -135,7 +135,7 @@ func RegistrationMakeRequestCtx(
 ) (string, *http.Response) {
 	require.NotEmpty(t, f.Ui.Action)
 
-	req := NewRequest(t, isAPI, "POST", f.Ui.Action, bytes.NewBufferString(values))
+	req := NewPostRequest(t, isAPI, f.Ui.Action, bytes.NewBufferString(values))
 	if isSPA {
 		req.Header.Set("Accept", "application/json")
 	}

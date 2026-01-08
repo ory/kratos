@@ -6,6 +6,7 @@ package sms
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"os"
 
 	"github.com/ory/kratos/courier/template"
@@ -17,12 +18,13 @@ type (
 		model *RegistrationCodeValidModel
 	}
 	RegistrationCodeValidModel struct {
-		To               string                 `json:"to"`
-		RegistrationCode string                 `json:"registration_code"`
-		Identity         map[string]interface{} `json:"identity"`
-		RequestURL       string                 `json:"request_url"`
-		TransientPayload map[string]interface{} `json:"transient_payload"`
-		ExpiresInMinutes int                    `json:"expires_in_minutes"`
+		To                 string         `json:"to"`
+		RegistrationCode   string         `json:"registration_code"`
+		Identity           map[string]any `json:"identity"`
+		RequestURL         string         `json:"request_url"`
+		TransientPayload   map[string]any `json:"transient_payload"`
+		ExpiresInMinutes   int            `json:"expires_in_minutes"`
+		UserRequestHeaders http.Header    `json:"-"`
 	}
 )
 
@@ -52,4 +54,9 @@ func (t *RegistrationCodeValid) MarshalJSON() ([]byte, error) {
 
 func (t *RegistrationCodeValid) TemplateType() template.TemplateType {
 	return template.TypeRegistrationCodeValid
+}
+
+func (t *RegistrationCodeValid) RequestHeaders() http.Header {
+	return t.model.UserRequestHeaders
+
 }
