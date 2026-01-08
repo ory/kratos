@@ -50,7 +50,8 @@ func init() {
 func TestFlowLifecycle(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := internal.NewFastRegistryWithMocks(t)
-	reg.SetHydra(hydra.NewFake())
+	fakeHydra := hydra.NewFake()
+	reg.SetHydra(fakeHydra)
 
 	routerPublic := httprouterx.NewTestRouterPublic(t)
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerPublic, httprouterx.NewTestRouterAdminWithPrefix(t))
@@ -836,6 +837,31 @@ func TestFlowLifecycle(t *testing.T) {
 				assert.NotContains(t, res.Request.URL.String(), loginTS.URL)
 
 				assert.NotEmpty(t, gjson.GetBytes(body, "oauth2_login_request").Value(), "%s", body)
+			})
+
+			t.Run("case=oauth2 flow with existing session and JSON request should not return null", func(t *testing.T) {
+				// This test reproduces issue #10255 where the /self-service/login/browser endpoint
+				// returns null when called with an existing session, a Hydra login challenge, and
+				// an Accept: application/json header.
+
+				// Has a side effect on this test suite but since its running serial and there is no significantly easier way it's acceptable.
+				fakeHydra.Skip = true
+				t.Cleanup(func() {
+					fakeHydra.Skip = false
+				})
+
+				// Make a login request with an authenticated session, Hydra login challenge, and JSON accept
+				req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteInitBrowserFlow+"?login_challenge="+hydra.FakeValidLoginChallenge, nil)
+				req.Header.Set("Accept", "application/json")
+				body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, routerPublic, req)
+
+				// Before the fix, this would return 200 OK with "null" as body because of variable shadowing
+				// After the fix, it should return a proper error response with ErrAlreadyLoggedIn
+				assert.Equal(t, http.StatusBadRequest, res.StatusCode, "Response should be 400 Bad Request, got body: %s", body)
+				assert.NotEqual(t, "null", string(body), "Response should not be null")
+				assert.NotEmpty(t, gjson.GetBytes(body, "error.id").String(), "Should have error.id field, got body: %s", body)
+				assert.Equal(t, "session_already_available", gjson.GetBytes(body, "error.id").String(), "Should return session_already_available error, got body: %s", body)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "A valid session was detected", "Should have proper error reason, got body: %s", body)
 			})
 		})
 

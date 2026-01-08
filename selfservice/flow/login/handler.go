@@ -5,7 +5,6 @@ package login
 
 import (
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
@@ -599,23 +598,18 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request)
 				return
 			}
 
-			rt, err := h.d.Hydra().AcceptLoginRequest(ctx,
+			rt, hydraErr := h.d.Hydra().AcceptLoginRequest(ctx,
 				hydra.AcceptLoginRequestParams{
 					LoginChallenge:        string(hydraLoginChallenge),
 					IdentityID:            sess.IdentityID.String(),
 					SessionID:             sess.ID.String(),
 					AuthenticationMethods: sess.AMR,
 				})
-			if err != nil {
-				h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
+			if hydraErr != nil {
+				h.d.SelfServiceErrorManager().Forward(ctx, w, r, hydraErr)
 				return
 			}
-			returnTo, err := url.Parse(rt)
-			if err != nil {
-				h.d.SelfServiceErrorManager().Forward(ctx, w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
-				return
-			}
-			x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
+			x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, rt)
 			return
 		}
 
