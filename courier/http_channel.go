@@ -10,8 +10,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/ory/x/httpx"
 	"github.com/pkg/errors"
+
+	"github.com/ory/x/httpx"
 
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/request"
