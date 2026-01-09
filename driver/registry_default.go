@@ -839,11 +839,11 @@ func (m *RegistryDefault) IdentityManager() *identity.Manager {
 }
 
 func (m *RegistryDefault) HTTPClient(_ context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
-	opts = append(opts,
+	opts = append([]httpx.ResilientOptions{
 		httpx.ResilientClientWithLogger(m.Logger()),
 		httpx.ResilientClientWithMaxRetry(2),
-		httpx.ResilientClientWithConnectionTimeout(30*time.Second),
-	)
+		httpx.ResilientClientWithConnectionTimeout(30 * time.Second),
+	}, opts...)
 
 	// One of the few exceptions, this usually should not be hot reloaded.
 	if m.Config().ClientHTTPNoPrivateIPRanges(contextx.RootContext) {

@@ -8,7 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
+	"github.com/ory/x/httpx"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/courier/template"
@@ -91,7 +93,11 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	}
 	req = req.WithContext(ctx)
 
-	res, err := c.d.HTTPClient(ctx).Do(req)
+	res, err := c.d.HTTPClient(ctx,
+		// fail fast and let the courier retry if needed instead of blocking the queue
+		httpx.ResilientClientWithMaxRetry(0),
+		httpx.ResilientClientWithConnectionTimeout(10*time.Second),
+	).Do(req)
 	if err != nil {
 		return errors.WithStack(err)
 	}
