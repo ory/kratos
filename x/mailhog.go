@@ -7,11 +7,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	stdlog "log"
 	"net"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gorilla/pat"
+	"github.com/ian-kent/go-log/levels"
+	"github.com/ian-kent/go-log/log"
 	"github.com/mailhog/MailHog-Server/api"
 	mailhogconf "github.com/mailhog/MailHog-Server/config"
 	"github.com/mailhog/MailHog-Server/monkey"
@@ -26,6 +29,10 @@ import (
 // If withChaosMonkey is true, the SMTP server will randomly drop connections and simulate network issues.
 func StartMailhog(t testing.TB, withChaosMonkey bool) (smtpAddr, apiAddr string) {
 	t.Helper()
+
+	// hacky but should silence most MailHog logs during tests
+	log.Logger().SetLevel(levels.FATAL)
+	stdlog.Default().SetOutput(io.Discard)
 
 	apiconf := &mailhogconf.Config{
 		Storage:     storage.CreateInMemory(),
