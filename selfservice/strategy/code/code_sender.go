@@ -23,6 +23,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
 	"github.com/ory/x/urlx"
@@ -36,7 +38,7 @@ type (
 		identity.PoolProvider
 		identity.ManagementProvider
 		identity.PrivilegedPoolProvider
-		x.LoggingProvider
+		logrusx.Provider
 		config.Provider
 
 		RecoveryCodePersistenceProvider
@@ -44,7 +46,7 @@ type (
 		RegistrationCodePersistenceProvider
 		LoginCodePersistenceProvider
 
-		x.HTTPClientProvider
+		httpx.ClientProvider
 	}
 	SenderProvider interface {
 		CodeSender() *Sender
@@ -102,7 +104,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 				return err
 			}
 
-			s.deps.Audit().
+			s.deps.Logger().
 				WithField("registration_flow_id", code.FlowID).
 				WithField("registration_code_id", code.ID).
 				WithSensitiveField("registration_code", rawCode).
@@ -155,7 +157,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			if err != nil {
 				return err
 			}
-			s.deps.Audit().
+			s.deps.Logger().
 				WithField("login_flow_id", code.FlowID).
 				WithField("login_code_id", code.ID).
 				WithSensitiveField("login_code", rawCode).
@@ -211,7 +213,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to
 	address, err := s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, via, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
-		s.deps.Audit().
+		s.deps.Logger().
 			WithField("via", via).
 			WithSensitiveField("address", to).
 			WithField("strategy", "code").
@@ -268,7 +270,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to
 }
 
 func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, codeString string, code *RecoveryCode, f *recovery.Flow, requestHeader http.Header) error {
-	s.deps.Audit().
+	s.deps.Logger().
 		WithField("via", code.RecoveryAddress.Via).
 		WithField("identity_id", code.RecoveryAddress.IdentityID).
 		WithField("recovery_code_id", code.ID).
@@ -336,7 +338,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 	address, err := s.deps.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowVerificationNotifyUnknownRecipients(ctx)
-		s.deps.Audit().
+		s.deps.Logger().
 			WithField("via", via).
 			WithField("strategy", "code").
 			WithSensitiveField("email_address", to).
@@ -392,7 +394,7 @@ func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, c
 }
 
 func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode) error {
-	s.deps.Audit().
+	s.deps.Logger().
 		WithField("via", code.VerifiableAddress.Via).
 		WithField("identity_id", i.ID).
 		WithField("verification_code_id", code.ID).

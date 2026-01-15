@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/x/otelx"
 
@@ -42,9 +44,9 @@ type (
 	strategyDependencies interface {
 		nosurfx.CSRFProvider
 		nosurfx.CSRFTokenGeneratorProvider
-		x.WriterProvider
-		x.LoggingProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		logrusx.Provider
+		otelx.Provider
 
 		config.Provider
 

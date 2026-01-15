@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 )
 
@@ -33,7 +34,7 @@ type (
 		session.PersistenceProvider
 		sessiontokenexchange.PersistenceProvider
 		config.Provider
-		x.WriterProvider
+		httpx.WriterProvider
 		hydra.Provider
 	}
 	SessionIssuerProvider interface {

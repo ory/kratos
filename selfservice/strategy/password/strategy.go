@@ -14,7 +14,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
 
 	"github.com/ory/x/decoderx"
 
@@ -27,7 +30,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/x"
 )
 
 var (
@@ -37,12 +39,12 @@ var (
 )
 
 type registrationStrategyDependencies interface {
-	x.LoggingProvider
-	x.WriterProvider
+	logrusx.Provider
+	httpx.WriterProvider
 	nosurfx.CSRFTokenGeneratorProvider
 	nosurfx.CSRFProvider
-	x.HTTPClientProvider
-	x.TracingProvider
+	httpx.ClientProvider
+	otelx.Provider
 	jsonnetsecure.VMProvider
 	config.Provider
 	continuity.ManagementProvider

@@ -22,10 +22,10 @@ import (
 	gomigrations "github.com/ory/kratos/persistence/sql/migrations/go"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/x"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/fsx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/networkx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/popx"
@@ -38,10 +38,10 @@ var Migrations embed.FS
 
 type (
 	persisterDependencies interface {
-		x.LoggingProvider
+		logrusx.Provider
 		config.Provider
 		contextx.Provider
-		x.TracingProvider
+		otelx.Provider
 		schema.IdentitySchemaProvider
 		identity.ValidationProvider
 	}

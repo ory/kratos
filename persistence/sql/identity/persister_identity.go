@@ -4,6 +4,7 @@
 package identity
 
 import (
+	"cmp"
 	"context"
 	"database/sql"
 	"encoding/base64"
@@ -34,6 +35,7 @@ import (
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/crdbx"
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/pointerx"
@@ -50,10 +52,10 @@ var (
 type dependencies interface {
 	schema.IdentitySchemaProvider
 	identity.ValidationProvider
-	x.LoggingProvider
+	logrusx.Provider
 	config.Provider
 	contextx.Provider
-	x.TracingProvider
+	otelx.Provider
 }
 
 type IdentityPersister struct {
@@ -543,7 +545,7 @@ func (p *IdentityPersister) normalizeVerifiableAddresses(ctx context.Context, id
 		v.IdentityID = id.ID
 		v.NID = p.NetworkID(ctx)
 		v.Value = stringToLowerTrim(v.Value)
-		v.Via = x.Coalesce(v.Via, identity.AddressTypeEmail)
+		v.Via = cmp.Or(v.Via, identity.AddressTypeEmail)
 		if len(v.Status) == 0 {
 			if v.Verified {
 				v.Status = identity.VerifiableAddressStatusCompleted
@@ -569,7 +571,7 @@ func (p *IdentityPersister) normalizeRecoveryAddresses(ctx context.Context, id *
 		id.RecoveryAddresses[k].IdentityID = id.ID
 		id.RecoveryAddresses[k].NID = p.NetworkID(ctx)
 		id.RecoveryAddresses[k].Value = stringToLowerTrim(id.RecoveryAddresses[k].Value)
-		id.RecoveryAddresses[k].Via = x.Coalesce(id.RecoveryAddresses[k].Via, identity.AddressTypeEmail)
+		id.RecoveryAddresses[k].Via = cmp.Or(id.RecoveryAddresses[k].Via, identity.AddressTypeEmail)
 	}
 }
 

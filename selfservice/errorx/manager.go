@@ -12,6 +12,8 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/urlx"
 
 	"github.com/ory/kratos/x"
@@ -20,8 +22,8 @@ import (
 type (
 	managerDependencies interface {
 		PersistenceProvider
-		x.LoggingProvider
-		x.WriterProvider
+		logrusx.Provider
+		httpx.WriterProvider
 		nosurfx.CSRFTokenGeneratorProvider
 		config.Provider
 	}

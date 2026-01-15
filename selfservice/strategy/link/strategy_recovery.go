@@ -197,7 +197,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		events.NewRecoveryInitiatedByAdmin(ctx, req.ID, id.ID, req.Type.String(), "link"),
 	)
 
-	s.d.Audit().
+	s.d.Logger().
 		WithField("identity_id", id.ID).
 		WithSensitiveField("recovery_link_token", token).
 		Info("A recovery link has been created.")

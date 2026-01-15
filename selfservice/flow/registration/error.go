@@ -9,6 +9,8 @@ import (
 	"github.com/gofrs/uuid"
 	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel/trace"
@@ -40,9 +42,9 @@ var (
 type (
 	errorHandlerDependencies interface {
 		errorx.ManagementProvider
-		x.WriterProvider
-		x.LoggingProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		logrusx.Provider
+		otelx.Provider
 		config.Provider
 		hydra.Provider
 
@@ -100,7 +102,7 @@ func (s *ErrorHandler) WriteFlowError(
 		err = schema.NewDuplicateCredentialsError(dup)
 	}
 
-	logger := s.d.Audit().
+	logger := s.d.Logger().
 		WithError(err).
 		WithRequest(r).
 		WithField("registration_flow", f.ToLoggerField())

@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/httpx"
 
 	"github.com/gofrs/uuid"
 
@@ -56,7 +57,7 @@ type (
 		PoolProvider
 		PrivilegedPoolProvider
 		ManagementProvider
-		x.WriterProvider
+		httpx.WriterProvider
 		config.Provider
 		nosurfx.CSRFProvider
 		cipher.Provider

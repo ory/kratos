@@ -320,15 +320,15 @@ func TestBuildRequest(t *testing.T) {
 }
 
 type testDependencyProvider struct {
-	x.SimpleLoggerWithClient
+	x.BasicRegistry
 	*jsonnetsecure.TestProvider
 }
 
 func newTestDependencyProvider(t *testing.T) *testDependencyProvider {
 	return &testDependencyProvider{
-		SimpleLoggerWithClient: x.SimpleLoggerWithClient{
+		BasicRegistry: x.BasicRegistry{
 			L: logrusx.New("kratos", "test"),
-			T: otelx.NewNoop(nil, nil),
+			T: otelx.NewNoop(),
 		},
 		TestProvider: jsonnetsecure.NewTestProvider(t),
 	}

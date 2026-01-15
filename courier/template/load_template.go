@@ -13,8 +13,8 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/fetcher"
+	"github.com/ory/x/httpx"
 
 	"github.com/Masterminds/sprig/v3"
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -31,7 +31,7 @@ type Template interface {
 }
 
 type templateDependencies interface {
-	x.HTTPClientProvider
+	httpx.ClientProvider
 }
 
 func loadBuiltInTemplate(filesystem fs.FS, name string, html bool) (Template, error) {

@@ -27,6 +27,8 @@ import (
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
@@ -49,9 +51,9 @@ func ContinuityKey(id string) string {
 type (
 	handlerDependencies interface {
 		nosurfx.CSRFProvider
-		x.WriterProvider
-		x.LoggingProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		logrusx.Provider
+		otelx.Provider
 
 		config.Provider
 

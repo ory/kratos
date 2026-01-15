@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
@@ -39,8 +40,8 @@ type (
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
 		identity.PrivilegedPoolProvider
-		x.WriterProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		otelx.Provider
 	}
 	AddressVerifier struct {
 		r addressVerifierDependencies

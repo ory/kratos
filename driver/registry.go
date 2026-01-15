@@ -9,6 +9,8 @@ import (
 
 	"github.com/gorilla/sessions"
 
+	"github.com/ory/x/httpx"
+
 	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/courier"
@@ -70,9 +72,9 @@ type Registry interface {
 	SetContextualizer(ctxer contextx.Contextualizer)
 
 	nosurfx.CSRFProvider
-	x.WriterProvider
-	x.LoggingProvider
-	x.HTTPClientProvider
+	httpx.WriterProvider
+	logrusx.Provider
+	httpx.ClientProvider
 	jsonnetsecure.VMProvider
 
 	continuity.ManagementProvider
@@ -159,7 +161,7 @@ func NewRegistryFromDSN(ctx context.Context, c *config.Config, l *logrusx.Logger
 	tracer, err := otelx.New("Ory Kratos", l, c.Tracing(ctx))
 	if err != nil {
 		l.WithError(err).Fatalf("failed to initialize tracer")
-		tracer = otelx.NewNoop(l, c.Tracing(ctx))
+		tracer = otelx.NewNoop()
 	}
 	reg.SetTracer(tracer)
 	reg.SetLogger(l)

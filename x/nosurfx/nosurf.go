@@ -4,12 +4,14 @@
 package nosurfx
 
 import (
+	"cmp"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"net/http"
 
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 
 	"github.com/ory/kratos/text"
 
@@ -20,7 +22,6 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/randx"
-	"github.com/ory/x/stringsx"
 )
 
 var (
@@ -113,17 +114,14 @@ func (f *FakeCSRFHandler) ExemptPath(s string) {
 func (f *FakeCSRFHandler) IgnorePath(s string) {
 }
 
-func (f *FakeCSRFHandler) IgnoreGlob(s string) {
-}
+func (f *FakeCSRFHandler) IgnoreGlob(s string) {}
 
-func (f *FakeCSRFHandler) IgnoreGlobs(s ...string) {
-}
+func (f *FakeCSRFHandler) IgnoreGlobs(s ...string) {}
 
-func (f *FakeCSRFHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-}
+func (f *FakeCSRFHandler) ServeHTTP(_ http.ResponseWriter, _ *http.Request) {}
 
-func (f *FakeCSRFHandler) RegenerateToken(w http.ResponseWriter, r *http.Request) string {
-	return stringsx.Coalesce(f.name, FakeCSRFToken)
+func (f *FakeCSRFHandler) RegenerateToken(_ http.ResponseWriter, _ *http.Request) string {
+	return cmp.Or(f.name, FakeCSRFToken)
 }
 
 type CSRFProvider interface {
@@ -204,8 +202,8 @@ func CSRFErrorReason(r *http.Request, reg interface {
 
 func CSRFFailureHandler(reg interface {
 	config.Provider
-	x.LoggingProvider
-	x.WriterProvider
+	logrusx.Provider
+	httpx.WriterProvider
 }) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := CSRFErrorReason(r, reg)
@@ -227,8 +225,8 @@ func NewCSRFHandler(
 	router http.Handler,
 	reg interface {
 		config.Provider
-		x.LoggingProvider
-		x.WriterProvider
+		logrusx.Provider
+		httpx.WriterProvider
 	}) *nosurf.CSRFHandler {
 	n := nosurf.New(router)
 
@@ -240,8 +238,8 @@ func NewCSRFHandler(
 func NewTestCSRFHandler(router http.Handler, reg interface {
 	WithCSRFHandler(handler nosurf.Handler)
 	WithCSRFTokenGenerator(CSRFToken)
-	x.WriterProvider
-	x.LoggingProvider
+	httpx.WriterProvider
+	logrusx.Provider
 	config.Provider
 }) *nosurf.CSRFHandler {
 	n := NewCSRFHandler(router, reg)

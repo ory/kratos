@@ -133,7 +133,7 @@ func prepareTraits(username, password string) identity.Traits {
 func TestHandleHookError(t *testing.T) {
 	r := &http.Request{URL: &url.URL{RawQuery: ""}}
 	logger := logrusx.New("kratos", "test", logrusx.ForceLevel(logrus.FatalLevel))
-	l := &x.SimpleLoggerWithClient{L: logger, C: httpx.NewResilientClient(), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})}
+	l := &x.BasicRegistry{L: logger, C: httpx.NewResilientClient(), T: otelx.NewNoop()}
 	csrf := testCSRFTokenGenerator{}
 	f := newTestFlow(r, TypeBrowser)
 	tr := prepareTraits("foo", "bar")

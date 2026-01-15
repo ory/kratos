@@ -228,7 +228,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		events.NewRecoveryInitiatedByAdmin(ctx, recoveryFlow.ID, id.ID, flowType.String(), "code"),
 	)
 
-	s.deps.Audit().
+	s.deps.Logger().
 		WithField("identity_id", id.ID).
 		WithSensitiveField("recovery_code", rawCode).
 		Info("A recovery code has been created.")

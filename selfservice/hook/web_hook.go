@@ -39,7 +39,9 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/reqlog"
 )
@@ -71,9 +73,9 @@ var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 
 type (
 	webHookDependencies interface {
-		x.LoggingProvider
-		x.HTTPClientProvider
-		x.TracingProvider
+		logrusx.Provider
+		httpx.ClientProvider
+		otelx.Provider
 		jsonnetsecure.VMProvider
 		config.Provider
 	}

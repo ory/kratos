@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 
 	"github.com/ory/herodot"
@@ -56,7 +57,7 @@ func NewRedirTS(t *testing.T, body string, conf *config.Config) *httptest.Server
 }
 
 func NewRedirSessionEchoTS(t *testing.T, reg interface {
-	x.WriterProvider
+	httpx.WriterProvider
 	session.ManagementProvider
 	config.Provider
 },
@@ -73,7 +74,7 @@ func NewRedirSessionEchoTS(t *testing.T, reg interface {
 }
 
 func NewRedirNoSessionTS(t *testing.T, reg interface {
-	x.WriterProvider
+	httpx.WriterProvider
 	session.ManagementProvider
 	config.Provider
 },

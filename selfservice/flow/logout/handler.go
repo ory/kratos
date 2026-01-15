@@ -10,6 +10,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/httpx"
 
 	"go.opentelemetry.io/otel/trace"
 
@@ -37,7 +38,7 @@ const (
 
 type (
 	handlerDependencies interface {
-		x.WriterProvider
+		httpx.WriterProvider
 		nosurfx.CSRFProvider
 		session.ManagementProvider
 		session.PersistenceProvider

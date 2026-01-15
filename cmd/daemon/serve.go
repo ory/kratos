@@ -86,7 +86,6 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 		cors.New(cfg).ServeHTTP(w, req, next)
 	})
 
-	n.UseFunc(x.CleanPath) // Prevent double slashes from breaking CSRF.
 	r.WithCSRFHandler(csrf)
 	n.UseHandler(r.CSRFHandler())
 

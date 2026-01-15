@@ -11,6 +11,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
+
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/continuity"
@@ -55,7 +58,7 @@ func (c UpdateContext) GetSessionIdentity() *identity.Identity {
 }
 
 func PrepareUpdate(d interface {
-	x.LoggingProvider
+	logrusx.Provider
 	continuity.ManagementProvider
 }, w http.ResponseWriter, r *http.Request, f *Flow, ss *session.Session, name string, payload UpdatePayload) (*UpdateContext, error) {
 	payload.SetFlowID(f.ID)
@@ -100,7 +103,7 @@ func GetFlowID(r *http.Request) (uuid.UUID, error) {
 
 func OnUnauthenticated(reg interface {
 	config.Provider
-	x.WriterProvider
+	httpx.WriterProvider
 }) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handler := session.RedirectOnUnauthenticated(reg.Config().SelfServiceFlowLoginUI(r.Context()).String())

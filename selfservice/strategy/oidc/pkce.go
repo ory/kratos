@@ -12,12 +12,13 @@ import (
 	"golang.org/x/oauth2"
 
 	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 )
 
 type pkceDependencies interface {
-	x.LoggingProvider
-	x.HTTPClientProvider
+	logrusx.Provider
+	httpx.ClientProvider
 }
 
 func PKCEChallenge(s *oidcv1.State) []oauth2.AuthCodeOption {

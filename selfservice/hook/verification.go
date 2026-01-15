@@ -10,6 +10,7 @@ import (
 	"github.com/tidwall/sjson"
 	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx/semconv"
 
 	"github.com/gofrs/uuid"
@@ -24,7 +25,6 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/otelx"
 )
@@ -43,8 +43,8 @@ type (
 		verification.StrategyProvider
 		verification.FlowPersistenceProvider
 		identity.PrivilegedPoolProvider
-		x.WriterProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		otelx.Provider
 	}
 	Verifier struct {
 		r verifierDependencies

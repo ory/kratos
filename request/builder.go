@@ -20,9 +20,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/fetcher"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -37,9 +38,9 @@ const (
 
 type (
 	Dependencies interface {
-		x.LoggingProvider
-		x.TracingProvider
-		x.HTTPClientProvider
+		logrusx.Provider
+		otelx.Provider
+		httpx.ClientProvider
 		jsonnetsecure.VMProvider
 	}
 	Builder struct {

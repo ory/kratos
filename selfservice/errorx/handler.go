@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringsx"
 )
 
@@ -23,7 +24,7 @@ var stub500, _ = json.Marshal(herodot.ErrInternalServerError.WithReasonf("This i
 
 type (
 	handlerDependencies interface {
-		x.WriterProvider
+		httpx.WriterProvider
 		PersistenceProvider
 		config.Provider
 	}

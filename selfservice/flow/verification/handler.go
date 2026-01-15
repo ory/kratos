@@ -23,6 +23,8 @@ import (
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
 )
@@ -49,9 +51,9 @@ type (
 		session.ManagementProvider
 
 		nosurfx.CSRFTokenGeneratorProvider
-		x.WriterProvider
+		httpx.WriterProvider
 		nosurfx.CSRFProvider
-		x.LoggingProvider
+		logrusx.Provider
 
 		FlowPersistenceProvider
 		ErrorHandlerProvider

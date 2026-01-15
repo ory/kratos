@@ -281,7 +281,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
 		// the user is sending a method that is not oidc, but the payload includes a provider
-		s.d.Audit().
+		s.d.Logger().
 			WithRequest(r).
 			WithField("provider", p.Provider).
 			WithField("method", p.Method).

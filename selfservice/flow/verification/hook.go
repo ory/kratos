@@ -9,6 +9,8 @@ import (
 	"net/http"
 
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 
 	"go.opentelemetry.io/otel/trace"
 
@@ -19,7 +21,6 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 )
 
 type (
@@ -63,8 +64,8 @@ type (
 		session.PersistenceProvider
 		HooksProvider
 		nosurfx.CSRFTokenGeneratorProvider
-		x.LoggingProvider
-		x.WriterProvider
+		logrusx.Provider
+		httpx.WriterProvider
 	}
 
 	HookExecutor struct {

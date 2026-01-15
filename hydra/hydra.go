@@ -17,13 +17,12 @@ import (
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/session"
-	"github.com/ory/kratos/x"
 )
 
 type (
 	hydraDependencies interface {
 		config.Provider
-		x.HTTPClientProvider
+		httpx.ClientProvider
 	}
 	Provider interface {
 		Hydra() Hydra

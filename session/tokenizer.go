@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/fetcher"
+	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/jwksx"
 	"github.com/ory/x/otelx"
@@ -28,8 +29,8 @@ import (
 type (
 	tokenizerDependencies interface {
 		jsonnetsecure.VMProvider
-		x.TracingProvider
-		x.HTTPClientProvider
+		otelx.Provider
+		httpx.ClientProvider
 		config.Provider
 		x.JWKSFetchProvider
 	}

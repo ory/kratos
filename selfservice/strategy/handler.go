@@ -8,14 +8,14 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
 )
 
 const EndpointDisabledMessage = "This endpoint was disabled by system administrator. Please check your url or contact the system administrator to enable it."
 
 type disabledChecker interface {
 	config.Provider
-	x.WriterProvider
+	httpx.WriterProvider
 }
 
 func disabledWriter(c disabledChecker, enabled bool, wrap http.HandlerFunc, w http.ResponseWriter, r *http.Request) {

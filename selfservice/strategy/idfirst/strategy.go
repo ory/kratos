@@ -13,17 +13,19 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/decoderx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
 )
 
 type dependencies interface {
-	x.LoggingProvider
-	x.WriterProvider
+	logrusx.Provider
+	httpx.WriterProvider
 	nosurfx.CSRFTokenGeneratorProvider
 	nosurfx.CSRFProvider
-	x.TracingProvider
+	otelx.Provider
 
 	config.Provider
 

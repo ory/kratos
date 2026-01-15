@@ -235,7 +235,7 @@ func (m *RegistryDefault) HTTPMiddlewares() []negroni.Handler {
 
 func NewRegistryDefault() *RegistryDefault {
 	return &RegistryDefault{
-		trc: otelx.NewNoop(nil, new(otelx.Config)),
+		trc: otelx.NewNoop(),
 	}
 }
 
@@ -567,7 +567,7 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 
 func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
 	if m.trc == nil {
-		return otelx.NewNoop(m.l, m.Config().Tracing(ctx))
+		return otelx.NewNoop()
 	}
 	return m.trc
 }

@@ -12,15 +12,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/urfave/negroni"
 )
 
 func TestCleanPath(t *testing.T) {
-	n := negroni.New(CleanPath)
-	n.UseHandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r := http.NewServeMux()
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(r.URL.String()))
 	})
-	ts := httptest.NewServer(n)
+	ts := httptest.NewServer(r)
 	defer ts.Close()
 
 	for k, tc := range [][]string{

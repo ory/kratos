@@ -12,6 +12,8 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel/trace"
@@ -70,9 +72,9 @@ type (
 		FlowPersistenceProvider
 
 		nosurfx.CSRFTokenGeneratorProvider
-		x.LoggingProvider
-		x.WriterProvider
-		x.TracingProvider
+		logrusx.Provider
+		httpx.WriterProvider
+		otelx.Provider
 	}
 	HookExecutor struct {
 		d executorDependencies
@@ -234,7 +236,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 		}
 		return err
 	}
-	e.d.Audit().
+	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Debug("An identity's settings have been updated.")

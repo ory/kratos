@@ -24,6 +24,8 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
@@ -85,10 +87,10 @@ type (
 		FlowPersistenceProvider
 		hydra.Provider
 		nosurfx.CSRFTokenGeneratorProvider
-		x.HTTPClientProvider
-		x.LoggingProvider
-		x.WriterProvider
-		x.TracingProvider
+		httpx.ClientProvider
+		logrusx.Provider
+		httpx.WriterProvider
+		otelx.Provider
 		sessiontokenexchange.PersistenceProvider
 	}
 	HookExecutor struct {
@@ -215,7 +217,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		registrationFlow.AddContinueWith(flow.NewContinueWithRedirectBrowserTo(returnTo.String()))
 	}
 
-	e.d.Audit().
+	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")

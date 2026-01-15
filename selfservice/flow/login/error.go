@@ -9,6 +9,8 @@ import (
 	"github.com/gofrs/uuid"
 	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 
 	"go.opentelemetry.io/otel/trace"
@@ -46,9 +48,9 @@ var (
 type (
 	errorHandlerDependencies interface {
 		errorx.ManagementProvider
-		x.WriterProvider
-		x.LoggingProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		logrusx.Provider
+		otelx.Provider
 		config.Provider
 		sessiontokenexchange.PersistenceProvider
 		hydra.Provider
@@ -93,7 +95,7 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
-	logger := s.d.Audit().
+	logger := s.d.Logger().
 		WithError(err).
 		WithRequest(r).
 		WithField("login_flow", f.ToLoggerField())

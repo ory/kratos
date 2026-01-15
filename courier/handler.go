@@ -11,10 +11,11 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 )
 
@@ -26,8 +27,8 @@ const (
 
 type (
 	handlerDependencies interface {
-		x.WriterProvider
-		x.LoggingProvider
+		httpx.WriterProvider
+		logrusx.Provider
 		nosurfx.CSRFProvider
 		PersistenceProvider
 		config.Provider

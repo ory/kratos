@@ -21,7 +21,7 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
@@ -34,11 +34,11 @@ type (
 		config.Provider
 		PoolProvider
 		PrivilegedPoolProvider
-		x.TracingProvider
+		otelx.Provider
 		courier.Provider
 		ValidationProvider
 		ActiveCredentialsCounterStrategyProvider
-		x.LoggingProvider
+		logrusx.Provider
 	}
 	ManagementProvider interface {
 		IdentityManager() *Manager

@@ -7,24 +7,26 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/x/jsonnetsecure"
-
 	"github.com/cenkalti/backoff"
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/jsonnetsecure"
+	"github.com/ory/x/logrusx"
+	"github.com/ory/x/otelx"
+
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/x"
 )
 
 type (
 	Dependencies interface {
 		PersistenceProvider
-		x.TracingProvider
-		x.LoggingProvider
+		otelx.Provider
+		logrusx.Provider
 		ConfigProvider
-		x.HTTPClientProvider
+		httpx.ClientProvider
 		jsonnetsecure.VMProvider
 	}
 

@@ -5,10 +5,10 @@ package template
 
 import (
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
 )
 
 type Dependencies interface {
 	CourierConfig() config.CourierConfigs
-	x.HTTPClientProvider
+	httpx.ClientProvider
 }

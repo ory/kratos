@@ -20,6 +20,8 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 )
 
@@ -31,10 +33,10 @@ var (
 
 type (
 	showVerificationUIDependencies interface {
-		x.WriterProvider
+		httpx.WriterProvider
 		config.Provider
-		x.TracingProvider
-		x.LoggingProvider
+		otelx.Provider
+		logrusx.Provider
 	}
 
 	ShowVerfificationUIProvider interface {

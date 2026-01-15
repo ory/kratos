@@ -25,19 +25,21 @@ import (
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/migrationpagination"
 )
 
 type (
 	handlerDependencies interface {
-		x.WriterProvider
-		x.LoggingProvider
+		httpx.WriterProvider
+		logrusx.Provider
 		IdentitySchemaProvider
 		nosurfx.CSRFProvider
 		config.Provider
-		x.TracingProvider
-		x.HTTPClientProvider
+		otelx.Provider
+		httpx.ClientProvider
 	}
 	Handler struct {
 		r handlerDependencies

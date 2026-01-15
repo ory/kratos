@@ -16,8 +16,8 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
-	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/swagger"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/urlx"
 
 	"github.com/gofrs/uuid"
@@ -189,7 +189,7 @@ func NewBrowserLocationChangeRequiredError(redirectTo string) *BrowserLocationCh
 	}
 }
 
-func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits identity.Traits, group node.UiNodeGroup, flowError error, logger x.LoggingProvider, csrf nosurfx.CSRFTokenGeneratorProvider) error {
+func HandleHookError(_ http.ResponseWriter, r *http.Request, f Flow, traits identity.Traits, group node.UiNodeGroup, flowError error, logger logrusx.Provider, csrf nosurfx.CSRFTokenGeneratorProvider) error {
 	if f != nil {
 		if traits != nil {
 			cont, err := container.NewFromStruct("", group, traits, "traits")

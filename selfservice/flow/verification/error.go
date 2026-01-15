@@ -10,6 +10,8 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 
 	"github.com/gofrs/uuid"
@@ -38,9 +40,9 @@ var ErrHookAbortFlow = errors.New("aborted verification hook execution")
 type (
 	errorHandlerDependencies interface {
 		errorx.ManagementProvider
-		x.WriterProvider
-		x.LoggingProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		logrusx.Provider
+		otelx.Provider
 		nosurfx.CSRFProvider
 		nosurfx.CSRFTokenGeneratorProvider
 		config.Provider
@@ -75,7 +77,7 @@ func (s *ErrorHandler) WriteFlowError(
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
-	logger := s.d.Audit().
+	logger := s.d.Logger().
 		WithError(err).
 		WithRequest(r).
 		WithField("verification_flow", f.ToLoggerField())

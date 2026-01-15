@@ -10,10 +10,8 @@ import (
 	"net/url"
 
 	"github.com/golang/gddo/httputil"
-	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/herodot"
-	"github.com/ory/x/httpx"
 )
 
 type ctxKey struct{}
@@ -117,8 +115,4 @@ func AcceptsJSON(r *http.Request) bool {
 		"text/html",
 		"application/json",
 	}, "text/html") == "application/json"
-}
-
-type HTTPClientProvider interface {
-	HTTPClient(context.Context, ...httpx.ResilientOptions) *retryablehttp.Client
 }

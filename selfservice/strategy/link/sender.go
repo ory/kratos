@@ -16,6 +16,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/urlx"
 )
@@ -28,13 +30,13 @@ type (
 		identity.PoolProvider
 		identity.ManagementProvider
 		identity.PrivilegedPoolProvider
-		x.LoggingProvider
+		logrusx.Provider
 		config.Provider
 
 		VerificationTokenPersistenceProvider
 		RecoveryTokenPersistenceProvider
 
-		x.HTTPClientProvider
+		httpx.ClientProvider
 	}
 	SenderProvider interface {
 		LinkSender() *Sender
@@ -65,7 +67,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via, to
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, via, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		notifyUnknownRecipients := s.r.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
-		s.r.Audit().
+		s.r.Logger().
 			WithField("via", via).
 			WithField("strategy", "link").
 			WithSensitiveField("email_address", address).
@@ -123,7 +125,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 	address, err := s.r.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
 	if errors.Is(err, sqlcon.ErrNoRows) {
 		notifyUnknownRecipients := s.r.Config().SelfServiceFlowVerificationNotifyUnknownRecipients(ctx)
-		s.r.Audit().
+		s.r.Logger().
 			WithField("via", via).
 			WithField("strategy", "link").
 			WithSensitiveField("email_address", to).
@@ -167,7 +169,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 }
 
 func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *identity.Identity, address *identity.RecoveryAddress, token *RecoveryToken) error {
-	s.r.Audit().
+	s.r.Logger().
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
 		WithField("recovery_link_id", token.ID).
@@ -205,7 +207,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 }
 
 func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Flow, i *identity.Identity, address *identity.VerifiableAddress, token *VerificationToken) error {
-	s.r.Audit().
+	s.r.Logger().
 		WithField("via", address.Via).
 		WithField("identity_id", address.IdentityID).
 		WithField("verification_link_id", token.ID).

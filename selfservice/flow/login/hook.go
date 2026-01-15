@@ -27,6 +27,8 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 )
 
@@ -54,9 +56,9 @@ type (
 		session.ManagementProvider
 		session.PersistenceProvider
 		nosurfx.CSRFTokenGeneratorProvider
-		x.WriterProvider
-		x.LoggingProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		logrusx.Provider
+		otelx.Provider
 		sessiontokenexchange.PersistenceProvider
 		HandlerProvider
 
@@ -218,7 +220,7 @@ func (e *HookExecutor) PostLoginHook(
 		if err := e.d.SessionPersister().UpsertSession(ctx, s); err != nil {
 			return errors.WithStack(err)
 		}
-		e.d.Audit().
+		e.d.Logger().
 			WithRequest(r).
 			WithField("session_id", s.ID).
 			WithField("identity_id", i.ID).
@@ -261,7 +263,7 @@ func (e *HookExecutor) PostLoginHook(
 		return errors.WithStack(err)
 	}
 
-	e.d.Audit().
+	e.d.Logger().
 		WithRequest(r).
 		WithField("identity_id", i.ID).
 		WithField("session_id", s.ID).

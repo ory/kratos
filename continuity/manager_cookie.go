@@ -33,7 +33,7 @@ type (
 		PersistenceProvider
 		x.CookieProvider
 		session.ManagementProvider
-		x.TracingProvider
+		otelx.Provider
 	}
 	ManagerCookie struct {
 		d managerCookieDependencies

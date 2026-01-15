@@ -15,6 +15,8 @@ import (
 
 	"github.com/ory/kratos/x/events"
 
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
 
@@ -40,8 +42,8 @@ var (
 type (
 	errorHandlerDependencies interface {
 		errorx.ManagementProvider
-		x.WriterProvider
-		x.LoggingProvider
+		httpx.WriterProvider
+		logrusx.Provider
 		nosurfx.CSRFTokenGeneratorProvider
 		config.Provider
 		StrategyProvider
@@ -69,7 +71,7 @@ func (s *ErrorHandler) WriteFlowError(
 	group node.UiNodeGroup,
 	recoveryErr error,
 ) {
-	logger := s.d.Audit().
+	logger := s.d.Logger().
 		WithError(recoveryErr).
 		WithRequest(r).
 		WithField("recovery_flow", f.ToLoggerField())

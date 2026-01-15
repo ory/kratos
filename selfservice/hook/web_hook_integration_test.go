@@ -88,11 +88,11 @@ func TestWebHooks(t *testing.T) {
 	})
 
 	whDeps := struct {
-		x.SimpleLoggerWithClient
+		x.BasicRegistry
 		*jsonnetsecure.TestProvider
 		config.Provider
 	}{
-		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(ctx), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		x.BasicRegistry{L: logger, C: reg.HTTPClient(ctx), T: otelx.NewNoop()},
 		jsonnetsecure.NewTestProvider(t),
 		reg,
 	}
@@ -1048,11 +1048,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
 	logger := logrusx.New("kratos", "test")
 	whDeps := struct {
-		x.SimpleLoggerWithClient
+		x.BasicRegistry
 		*jsonnetsecure.TestProvider
 		config.Provider
 	}{
-		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		x.BasicRegistry{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop()},
 		jsonnetsecure.NewTestProvider(t),
 		reg,
 	}
@@ -1118,11 +1118,11 @@ func TestAsyncWebhook(t *testing.T) {
 	logHook := new(test.Hook)
 	logger.Logger.Hooks.Add(logHook)
 	whDeps := struct {
-		x.SimpleLoggerWithClient
+		x.BasicRegistry
 		*jsonnetsecure.TestProvider
 		config.Provider
 	}{
-		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		x.BasicRegistry{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop()},
 		jsonnetsecure.NewTestProvider(t),
 		reg,
 	}
@@ -1199,11 +1199,11 @@ func TestWebhookEvents(t *testing.T) {
 	_, reg := internal.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 	whDeps := struct {
-		x.SimpleLoggerWithClient
+		x.BasicRegistry
 		*jsonnetsecure.TestProvider
 		config.Provider
 	}{
-		x.SimpleLoggerWithClient{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop(logger, &otelx.Config{ServiceName: "kratos"})},
+		x.BasicRegistry{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop()},
 		jsonnetsecure.NewTestProvider(t),
 		reg,
 	}

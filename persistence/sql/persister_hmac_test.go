@@ -47,7 +47,7 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 }
 
 func (l *logRegistryOnly) Tracer(context.Context) *otelx.Tracer {
-	return otelx.NewNoop(l.l, new(otelx.Config))
+	return otelx.NewNoop()
 }
 
 func (l *logRegistryOnly) IdentityTraitsSchemas(context.Context) (schema.IdentitySchemaList, error) {

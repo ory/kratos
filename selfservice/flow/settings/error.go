@@ -27,6 +27,8 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/swagger"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/urlx"
 )
@@ -37,9 +39,9 @@ type (
 	errorHandlerDependencies interface {
 		config.Provider
 		errorx.ManagementProvider
-		x.WriterProvider
-		x.LoggingProvider
-		x.TracingProvider
+		httpx.WriterProvider
+		logrusx.Provider
+		otelx.Provider
 
 		HandlerProvider
 		FlowPersistenceProvider
@@ -151,7 +153,7 @@ func (s *ErrorHandler) WriteFlowError(
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
-	logger := s.d.Audit().
+	logger := s.d.Logger().
 		WithError(err).
 		WithRequest(r).
 		WithField("settings_flow", f.ToLoggerField())

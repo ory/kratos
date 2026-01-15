@@ -30,6 +30,8 @@ import (
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/httprouterx"
+	"github.com/ory/x/httpx"
+	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -51,7 +53,7 @@ type (
 		hydra.Provider
 		session.HandlerProvider
 		session.ManagementProvider
-		x.WriterProvider
+		httpx.WriterProvider
 		nosurfx.CSRFTokenGeneratorProvider
 		nosurfx.CSRFProvider
 		StrategyProvider
@@ -59,7 +61,7 @@ type (
 		FlowPersistenceProvider
 		ErrorHandlerProvider
 		sessiontokenexchange.PersistenceProvider
-		x.LoggingProvider
+		logrusx.Provider
 	}
 	HandlerProvider interface {
 		RegistrationHandler() *Handler

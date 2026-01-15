@@ -11,6 +11,7 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
+	"github.com/ory/x/logrusx"
 
 	"go.opentelemetry.io/otel/attribute"
 
@@ -52,9 +53,9 @@ type (
 		identity.PrivilegedPoolProvider
 		identity.ManagementProvider
 		x.CookieProvider
-		x.LoggingProvider
+		logrusx.Provider
 		nosurfx.CSRFProvider
-		x.TracingProvider
+		otelx.Provider
 		x.TransactionPersistenceProvider
 		PersistenceProvider
 		sessiontokenexchange.PersistenceProvider
