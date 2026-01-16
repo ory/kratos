@@ -45,7 +45,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
-	"github.com/ory/x/decoderx"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonnetsecure"
@@ -147,7 +146,6 @@ const (
 type Strategy struct {
 	d                           Dependencies
 	validator                   *schema.Validator
-	dec                         *decoderx.HTTP
 	credType                    identity.CredentialsType
 	handleUnknownProviderError  func(err error) error
 	handleMethodNotAllowedError func(err error) error

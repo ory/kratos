@@ -146,7 +146,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 	ctx := r.Context()
 
 	var p createRecoveryLinkForIdentityBody
-	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
+	if err := decoderx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -540,7 +540,7 @@ func (s *Strategy) decodeRecovery(r *http.Request) (*recoverySubmitPayload, erro
 		return nil, errors.WithStack(err)
 	}
 
-	if err := s.dx.Decode(r, &body, compiler,
+	if err := decoderx.Decode(r, &body, compiler,
 		decoderx.HTTPDecoderUseQueryAndBody(),
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderAllowedMethods("POST", "GET"),

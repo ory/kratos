@@ -89,7 +89,7 @@ func (s *Strategy) handleRegistrationError(_ http.ResponseWriter, r *http.Reques
 
 func (s *Strategy) decode(r *http.Request, ds *url.URL) (*updateRegistrationFlowWithPasskeyMethod, error) {
 	var p updateRegistrationFlowWithPasskeyMethod
-	err := registration.DecodeBody(&p, r, s.hd, s.d.Config(), registrationSchema, ds)
+	err := registration.DecodeBody(&p, r, registrationSchema, ds)
 	return &p, err
 }
 

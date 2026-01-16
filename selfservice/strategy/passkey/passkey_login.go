@@ -157,7 +157,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	var p updateLoginFlowWithPasskeyMethod
-	if err := s.hd.Decode(r, &p,
+	if err := decoderx.Decode(r, &p,
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),

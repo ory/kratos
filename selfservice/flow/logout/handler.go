@@ -37,7 +37,7 @@ const (
 )
 
 type (
-	handlerDependencies interface {
+	dependencies interface {
 		httpx.WriterProvider
 		nosurfx.CSRFProvider
 		session.ManagementProvider
@@ -48,18 +48,10 @@ type (
 	HandlerProvider interface {
 		LogoutHandler() *Handler
 	}
-	Handler struct {
-		d  handlerDependencies
-		dx *decoderx.HTTP
-	}
+	Handler struct{ d dependencies }
 )
 
-func NewHandler(d handlerDependencies) *Handler {
-	return &Handler{
-		d:  d,
-		dx: decoderx.NewHTTP(),
-	}
-}
+func NewHandler(d dependencies) *Handler { return &Handler{d: d} }
 
 func (h *Handler) RegisterPublicRoutes(router *httprouterx.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteAPIFlow)
@@ -234,7 +226,7 @@ type performNativeLogoutBody struct {
 //	  default: errorGeneric
 func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request) {
 	var p performNativeLogoutBody
-	if err := h.dx.Decode(r, &p,
+	if err := decoderx.Decode(r, &p,
 		decoderx.HTTPJSONDecoder(),
 		decoderx.HTTPDecoderAllowedMethods("DELETE")); err != nil {
 		h.d.Writer().WriteError(w, r, err)

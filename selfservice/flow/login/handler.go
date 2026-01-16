@@ -30,7 +30,6 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
-	"github.com/ory/x/decoderx"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
@@ -51,7 +50,7 @@ const (
 )
 
 type (
-	handlerDependencies interface {
+	dependencies interface {
 		HookExecutorProvider
 		FlowPersistenceProvider
 		errorx.ManagementProvider
@@ -71,13 +70,10 @@ type (
 	HandlerProvider interface {
 		LoginHandler() *Handler
 	}
-	Handler struct {
-		d  handlerDependencies
-		hd *decoderx.HTTP
-	}
+	Handler struct{ d dependencies }
 )
 
-func NewHandler(d handlerDependencies) *Handler { return &Handler{d: d, hd: decoderx.NewHTTP()} }
+func NewHandler(d dependencies) *Handler { return &Handler{d: d} }
 
 func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)

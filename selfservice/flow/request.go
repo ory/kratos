@@ -78,8 +78,6 @@ func EnsureCSRF(
 	return nil
 }
 
-var dec = decoderx.NewHTTP()
-
 func MethodEnabledAndAllowedFromRequest(r *http.Request, flow FlowName, expected string, d interface {
 	config.Provider
 },
@@ -93,7 +91,7 @@ func MethodEnabledAndAllowedFromRequest(r *http.Request, flow FlowName, expected
 		return errors.WithStack(err)
 	}
 
-	if err := dec.Decode(r, &method, compiler,
+	if err := decoderx.Decode(r, &method, compiler,
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderAllowedMethods("POST", "PUT", "PATCH", "GET"),
 		decoderx.HTTPDecoderSetValidatePayloads(false),

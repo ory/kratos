@@ -73,7 +73,7 @@ func (s *Strategy) decoderSettings(ctx context.Context, p *updateSettingsFlowWit
 		return errors.WithStack(err)
 	}
 
-	if err := s.dec.Decode(r, &p, compiler,
+	if err := decoderx.Decode(r, &p, compiler,
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderUseQueryAndBody(),
 		decoderx.HTTPDecoderSetValidatePayloads(false),

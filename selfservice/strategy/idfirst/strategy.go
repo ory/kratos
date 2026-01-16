@@ -6,15 +6,12 @@ package idfirst
 import (
 	"context"
 
-	"github.com/go-playground/validator/v10"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/nosurfx"
-	"github.com/ory/x/decoderx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
@@ -34,19 +31,9 @@ type dependencies interface {
 	login.FlowPersistenceProvider
 }
 
-type Strategy struct {
-	d  dependencies
-	v  *validator.Validate
-	hd *decoderx.HTTP
-}
+type Strategy struct{ d dependencies }
 
-func NewStrategy(d dependencies) *Strategy {
-	return &Strategy{
-		d:  d,
-		v:  validator.New(),
-		hd: decoderx.NewHTTP(),
-	}
-}
+func NewStrategy(d dependencies) *Strategy { return &Strategy{d: d} }
 
 func (s *Strategy) ID() identity.CredentialsType {
 	return identity.CredentialsType(node.IdentifierFirstGroup)

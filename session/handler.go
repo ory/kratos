@@ -31,8 +31,6 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
-	"github.com/ory/x/decoderx"
-
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/config"
@@ -54,20 +52,10 @@ type (
 	HandlerProvider interface {
 		SessionHandler() *Handler
 	}
-	Handler struct {
-		r  handlerDependencies
-		dx *decoderx.HTTP
-	}
+	Handler struct{ r handlerDependencies }
 )
 
-func NewHandler(
-	r handlerDependencies,
-) *Handler {
-	return &Handler{
-		r:  r,
-		dx: decoderx.NewHTTP(),
-	}
-}
+func NewHandler(r handlerDependencies) *Handler { return &Handler{r: r} }
 
 const (
 	RouteCollection                  = "/sessions"

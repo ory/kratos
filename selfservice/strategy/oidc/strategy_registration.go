@@ -146,7 +146,7 @@ func (s *Strategy) newLinkDecoder(ctx context.Context, p interface{}, r *http.Re
 		return errors.WithStack(err)
 	}
 
-	if err := s.dec.Decode(r, &p, compiler,
+	if err := decoderx.Decode(r, &p, compiler,
 		decoderx.HTTPKeepRequestBody(true),
 		decoderx.HTTPDecoderSetValidatePayloads(false),
 		decoderx.HTTPDecoderUseQueryAndBody(),

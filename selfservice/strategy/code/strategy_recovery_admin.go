@@ -139,7 +139,7 @@ type recoveryCodeForIdentity struct {
 //	  default: errorGeneric
 func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.Request) {
 	var p createRecoveryCodeForIdentityBody
-	if err := s.dx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
+	if err := decoderx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return
 	}

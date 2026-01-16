@@ -62,7 +62,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	var p updateLoginFlowWithPasswordMethod
-	if err := s.hd.Decode(r, &p,
+	if err := decoderx.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {

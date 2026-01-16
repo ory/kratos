@@ -182,7 +182,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	}
 
 	var p updateRegistrationFlowWithCodeMethod
-	if err := registration.DecodeBody(&p, r, s.dx, s.deps.Config(), registrationSchema, ds); err != nil {
+	if err := registration.DecodeBody(&p, r, registrationSchema, ds); err != nil {
 		return s.HandleRegistrationError(ctx, r, f, &p, err)
 	}
 

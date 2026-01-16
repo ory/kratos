@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/ory/kratos/ui/node"
@@ -27,12 +28,11 @@ import (
 )
 
 var (
-	decoder             = decoderx.NewHTTP()
-	_       ErrorParser = new(Container)
-	_       ValueSetter = new(Container)
-	_       Resetter    = new(Container)
-	_       CSRFSetter  = new(Container)
-	_       NodeGetter  = new(Container)
+	_ ErrorParser = (*Container)(nil)
+	_ ValueSetter = (*Container)(nil)
+	_ Resetter    = (*Container)(nil)
+	_ CSRFSetter  = (*Container)(nil)
+	_ NodeGetter  = (*Container)(nil)
 )
 
 // Container represents a HTML Form. The container can work with both HTTP Form and JSON requests
@@ -74,7 +74,7 @@ func New(action string) *Container {
 func NewFromHTTPRequest(r *http.Request, group node.UiNodeGroup, action string, compiler decoderx.HTTPDecoderOption) (*Container, error) {
 	c := New(action)
 	raw := json.RawMessage(`{}`)
-	if err := decoder.Decode(r, &raw, compiler); err != nil {
+	if err := decoderx.Decode(r, &raw, compiler); err != nil {
 		if err := c.ParseError(group, err); err != nil {
 			return nil, err
 		}
@@ -146,7 +146,7 @@ func (c *Container) SortNodes(ctx context.Context, opts ...node.SortOption) erro
 func (c *Container) ResetMessages(exclude ...string) {
 	c.Messages = nil
 	for k, n := range c.Nodes {
-		if !stringslice.Has(exclude, n.ID()) {
+		if !slices.Contains(exclude, n.ID()) {
 			n.Messages = nil
 		}
 		c.Nodes[k] = n

@@ -99,7 +99,7 @@ func (s *Strategy) Login(_ http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	var p updateLoginFlowWithLookupSecretMethod
-	if err := s.hd.Decode(r, &p,
+	if err := decoderx.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {

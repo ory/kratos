@@ -57,7 +57,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	}
 
 	var p UpdateLoginFlowWithIdentifierFirstMethod
-	if err := s.hd.Decode(r, &p,
+	if err := decoderx.Decode(r, &p,
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(LoginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {

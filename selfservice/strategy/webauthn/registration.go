@@ -90,7 +90,7 @@ func (s *Strategy) handleRegistrationError(r *http.Request, f *registration.Flow
 }
 
 func (s *Strategy) decode(p *updateRegistrationFlowWithWebAuthnMethod, r *http.Request, ds *url.URL) error {
-	return registration.DecodeBody(p, r, s.hd, s.d.Config(), registrationSchema, ds)
+	return registration.DecodeBody(p, r, registrationSchema, ds)
 }
 
 func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {

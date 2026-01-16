@@ -10,7 +10,6 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/ui/node"
@@ -18,8 +17,6 @@ import (
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
-
-	"github.com/ory/x/decoderx"
 
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver/config"
@@ -33,12 +30,12 @@ import (
 )
 
 var (
-	_ login.Strategy                    = new(Strategy)
-	_ registration.Strategy             = new(Strategy)
-	_ identity.ActiveCredentialsCounter = new(Strategy)
+	_ login.Strategy                    = (*Strategy)(nil)
+	_ registration.Strategy             = (*Strategy)(nil)
+	_ identity.ActiveCredentialsCounter = (*Strategy)(nil)
 )
 
-type registrationStrategyDependencies interface {
+type dependencies interface {
 	logrusx.Provider
 	httpx.WriterProvider
 	nosurfx.CSRFTokenGeneratorProvider
@@ -78,19 +75,9 @@ type registrationStrategyDependencies interface {
 	session.ManagementProvider
 }
 
-type Strategy struct {
-	d  registrationStrategyDependencies
-	v  *validator.Validate
-	hd *decoderx.HTTP
-}
+type Strategy struct{ d dependencies }
 
-func NewStrategy(d registrationStrategyDependencies) *Strategy {
-	return &Strategy{
-		d:  d,
-		v:  validator.New(),
-		hd: decoderx.NewHTTP(),
-	}
-}
+func NewStrategy(d dependencies) *Strategy { return &Strategy{d: d} }
 
 func (s *Strategy) CountActiveFirstFactorCredentials(ctx context.Context, cc map[identity.CredentialsType]identity.Credentials) (count int, err error) {
 	for _, c := range cc {
