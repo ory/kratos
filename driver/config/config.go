@@ -492,6 +492,10 @@ func (p *Config) validateIdentitySchemas(ctx context.Context) error {
 	return nil
 }
 
+func (p *Config) View(ctx context.Context) ([]byte, error) {
+	return p.GetProvider(ctx).View()
+}
+
 func (p *Config) formatJsonErrors(schema []byte, err error) {
 	_, _ = fmt.Fprintln(p.stdOutOrErr, "")
 	jsonschemax.FormatValidationErrorForCLI(p.stdOutOrErr, schema, err)
