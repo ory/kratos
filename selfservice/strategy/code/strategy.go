@@ -10,8 +10,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/ory/kratos/hydra"
+	"github.com/ory/kratos/x/nosurfx"
+
 	"github.com/samber/lo"
+
+	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/herodot"
@@ -33,7 +37,6 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
-	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
@@ -108,6 +111,8 @@ type (
 		sessiontokenexchange.PersistenceProvider
 
 		continuity.ManagementProvider
+
+		hydra.Provider
 	}
 
 	Strategy struct{ deps dependencies }

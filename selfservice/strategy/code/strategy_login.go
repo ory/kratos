@@ -513,6 +513,14 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 		return err
 	}
 
+	if f.OAuth2LoginChallenge != "" {
+		hlr, err := s.deps.Hydra().GetLoginRequest(ctx, string(f.OAuth2LoginChallenge))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		f.HydraLoginRequest = hlr
+	}
+
 	if x.IsJSONRequest(r) {
 		if successResponse {
 			s.deps.Writer().WriteCode(w, r, http.StatusOK, f)

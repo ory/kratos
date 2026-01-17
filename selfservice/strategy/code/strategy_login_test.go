@@ -19,22 +19,26 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	oryClient "github.com/ory/kratos/internal/httpclient"
 	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/selfservice/strategy/totp"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/snapshotx"
@@ -1493,5 +1497,70 @@ func TestFormHydration(t *testing.T) {
 		r, f := newFlow(t.Context(), t)
 		require.NoError(t, fhAAL1.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
+	})
+}
+
+func TestCodeLoginWithLoginChallenge(t *testing.T) {
+	t.Parallel()
+
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+			"enabled":              true,
+			"passwordless_enabled": true,
+		}),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
+	)
+	reg.SetHydra(hydra.NewFake())
+	reg.WithCSRFTokenGenerator(nosurfx.FakeCSRFTokenGenerator)
+	s := code.NewStrategy(reg)
+
+	loginChallenge := hydra.FakeValidLoginChallenge
+
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *login.Flow) {
+		t.Helper()
+		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
+		r = r.WithContext(ctx)
+		f, err := login.NewFlow(reg.Config(), time.Minute, nosurfx.FakeCSRFToken, r, flow.TypeBrowser)
+		require.NoError(t, err)
+		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(ctx, f))
+		return r, f
+	}
+
+	t.Run("case=fetches login challenge on code input state", func(t *testing.T) {
+		_, f := newFlow(t.Context(), t)
+		f.OAuth2LoginChallenge = sqlxx.NullString(loginChallenge)
+		i := createIdentity(t.Context(), t, reg, false, false)
+		email := gjson.Get(i.Traits.String(), "email").String()
+
+		body := gjson.Parse(`{
+			"method": "code",
+			"identifier": "` + email + `",
+			"csrf_token": "` + f.CSRFToken + `"
+		}`)
+		r := httptest.NewRequest("POST", "/self-service/login/browser", strings.NewReader(body.Raw))
+		r.Header.Add("Content-Type", "application/json")
+
+		_, err := s.Login(httptest.NewRecorder(), r, f, nil)
+		require.ErrorIs(t, err, flow.ErrCompletedByStrategy)
+		require.NotNil(t, f.HydraLoginRequest)
+	})
+
+	t.Run("case=returns error if login challenge is invalid", func(t *testing.T) {
+		_, f := newFlow(t.Context(), t)
+		f.OAuth2LoginChallenge = sqlxx.NullString(hydra.FakeInvalidLoginChallenge)
+		i := createIdentity(t.Context(), t, reg, false, false)
+		email := gjson.Get(i.Traits.String(), "email").String()
+
+		body := gjson.Parse(`{
+			"method": "code",
+			"identifier": "` + email + `",
+			"csrf_token": "` + f.CSRFToken + `"
+		}`)
+		r := httptest.NewRequest("POST", "/self-service/login/browser", strings.NewReader(body.Raw))
+		r.Header.Add("Content-Type", "application/json")
+
+		_, err := s.Login(httptest.NewRecorder(), r, f, nil)
+		require.ErrorIs(t, err, herodot.ErrBadRequest)
+		require.Nil(t, f.HydraLoginRequest)
 	})
 }

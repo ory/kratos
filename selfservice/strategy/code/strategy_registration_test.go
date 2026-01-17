@@ -22,10 +22,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/internal"
 	oryClient "github.com/ory/kratos/internal/httpclient"
@@ -34,6 +37,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/snapshotx"
@@ -817,5 +821,71 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 			assertx.EqualAsJSON(t, snapshots[0], snapshots[2])
 			assertx.EqualAsJSON(t, snapshots[1], snapshots[3])
 		})
+	})
+}
+
+func TestCodeRegistrationWithLoginChallenge(t *testing.T) {
+	t.Parallel()
+
+	_, reg := internal.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+			"enabled":              true,
+			"passwordless_enabled": true,
+		}),
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
+	)
+	reg.SetHydra(hydra.NewFake())
+	reg.WithCSRFTokenGenerator(nosurfx.FakeCSRFTokenGenerator)
+	s := code.NewStrategy(reg)
+
+	loginChallenge := hydra.FakeValidLoginChallenge
+
+	newFlow := func(ctx context.Context, t *testing.T) (*http.Request, *registration.Flow) {
+		t.Helper()
+		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
+		r = r.WithContext(ctx)
+		f, err := registration.NewFlow(reg.Config(), time.Minute, nosurfx.FakeCSRFToken, r, flow.TypeBrowser)
+		require.NoError(t, err)
+		require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(ctx, f))
+		return r, f
+	}
+
+	t.Run("case=fetches login challenge on code input state", func(t *testing.T) {
+		_, f := newFlow(t.Context(), t)
+		f.OAuth2LoginChallenge = sqlxx.NullString(loginChallenge)
+		i := identity.NewIdentity(f.IdentitySchema.ID(t.Context(), reg.Config()))
+		email := testhelpers.RandomEmail()
+
+		body := gjson.Parse(`{
+			"method": "code",
+			"traits.email": "` + email + `",
+			"csrf_token": "` + f.CSRFToken + `"
+		}`)
+		r := httptest.NewRequest("POST", "/self-service/registration/browser", strings.NewReader(body.Raw))
+		r.Header.Add("Content-Type", "application/json")
+
+		err := s.Register(httptest.NewRecorder(), r, f, i)
+		require.ErrorIs(t, err, flow.ErrCompletedByStrategy)
+		require.NotNil(t, f.HydraLoginRequest)
+	})
+
+	t.Run("case=returns error if login challenge is invalid", func(t *testing.T) {
+		_, f := newFlow(t.Context(), t)
+		f.OAuth2LoginChallenge = sqlxx.NullString(hydra.FakeInvalidLoginChallenge)
+		i := identity.NewIdentity(f.IdentitySchema.ID(t.Context(), reg.Config()))
+
+		email := testhelpers.RandomEmail()
+
+		body := gjson.Parse(`{
+			"method": "code",
+			"traits.email": "` + email + `",
+			"csrf_token": "` + f.CSRFToken + `"
+		}`)
+		r := httptest.NewRequest("POST", "/self-service/registration/browser", strings.NewReader(body.Raw))
+		r.Header.Add("Content-Type", "application/json")
+
+		err := s.Register(httptest.NewRecorder(), r, f, i)
+		require.ErrorIs(t, err, herodot.ErrBadRequest)
+		require.Nil(t, f.HydraLoginRequest)
 	})
 }
