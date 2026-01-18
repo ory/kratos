@@ -274,6 +274,9 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 	}
 
 	opts = append(opts, login.WithInternalContext(rf.InternalContext), login.WithIsAccountLinking())
+	if rf.OAuth2LoginChallenge != "" {
+		opts = append(opts, login.WithLoginChallenge(rf.OAuth2LoginChallenge.String()))
+	}
 
 	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, rf.Type, opts...)
 	if err != nil {
