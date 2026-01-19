@@ -32,7 +32,6 @@ require (
 	github.com/go-crypt/crypt v0.2.25
 	github.com/go-faker/faker/v4 v4.4.2
 	github.com/go-openapi/strfmt v0.23.0
-	github.com/go-playground/validator/v10 v10.22.1
 	github.com/go-webauthn/webauthn v0.11.2
 	github.com/gobuffalo/httptest v1.5.2
 	github.com/gofrs/uuid v4.4.0+incompatible
@@ -49,7 +48,7 @@ require (
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/julienschmidt/httprouter v1.3.1-0.20240130105656-484018016424
+	github.com/julienschmidt/httprouter v1.3.1-0.20240130105656-484018016424 // indirect
 	github.com/knadh/koanf/parsers/json v0.1.0
 	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7 // indirect
 	github.com/lestrrat-go/jwx/v2 v2.1.1
@@ -96,7 +95,14 @@ require (
 	google.golang.org/grpc v1.74.2
 )
 
-require github.com/cenkalti/backoff v2.2.1+incompatible
+require (
+	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/gorilla/pat v1.0.2
+	github.com/ian-kent/go-log v0.0.0-20160113211217-5731446c36ab
+	github.com/mailhog/MailHog-Server v1.0.1
+	github.com/mailhog/data v1.0.1
+	github.com/mailhog/storage v1.0.1
+)
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -128,10 +134,8 @@ require (
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
-	github.com/gorilla/pat v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/ian-kent/envconf v0.0.0-20141026121121-c19809918c02 // indirect
-	github.com/ian-kent/go-log v0.0.0-20160113211217-5731446c36ab // indirect
 	github.com/ian-kent/goose v0.0.0-20141221090059-c3541ea826ad // indirect
 	github.com/ian-kent/linkio v0.0.0-20170807205755-97566b872887 // indirect
 	github.com/jackc/pgx/v5 v5.7.5 // indirect
@@ -141,13 +145,10 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mailhog/MailHog v1.0.1 // indirect
-	github.com/mailhog/MailHog-Server v1.0.1 // indirect
 	github.com/mailhog/MailHog-UI v1.0.1 // indirect
-	github.com/mailhog/data v1.0.1 // indirect
 	github.com/mailhog/http v1.0.1 // indirect
 	github.com/mailhog/mhsendmail v0.2.0 // indirect
 	github.com/mailhog/smtp v1.0.1 // indirect
-	github.com/mailhog/storage v1.0.1 // indirect
 	github.com/mikefarah/yq/v4 v4.45.1 // indirect
 	github.com/moby/sys/sequential v0.6.0 // indirect
 	github.com/moby/sys/user v0.4.0 // indirect
@@ -209,7 +210,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-crypt/x v0.2.18 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
@@ -218,8 +218,6 @@ require (
 	github.com/go-openapi/errors v0.22.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.2 // indirect
 	github.com/go-openapi/swag v0.23.1 // indirect
-	github.com/go-playground/locales v0.14.1 // indirect
-	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
 	github.com/go-webauthn/x v0.1.14 // indirect
 	github.com/gobuffalo/envy v1.10.2 // indirect
@@ -264,7 +262,6 @@ require (
 	github.com/knadh/koanf/parsers/yaml v0.1.0 // indirect
 	github.com/knadh/koanf/providers/posflag v0.1.0 // indirect
 	github.com/knadh/koanf/v2 v2.2.2 // indirect
-	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
