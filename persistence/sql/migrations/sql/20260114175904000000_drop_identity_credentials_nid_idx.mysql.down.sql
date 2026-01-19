@@ -1,0 +1,2 @@
+-- CREATE INDEX identity_credentials_nid_idx ON identity_credentials (nid);
+-- didn't actually drop it in the up migration because "needed in a foreign key constraint"
