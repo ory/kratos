@@ -430,3 +430,50 @@ func TestNodes_FindAll(t *testing.T) {
 		assert.Empty(t, got)
 	})
 }
+
+func TestNodes_RemoveGroup(t *testing.T) {
+	nodes := node.Nodes{
+		&node.Node{Type: node.Input, Group: node.DefaultGroup, Attributes: &node.InputAttributes{Name: "default"}},
+		&node.Node{Type: node.Input, Group: node.CaptchaGroup, Attributes: &node.InputAttributes{Name: "captcha1"}},
+		&node.Node{Type: node.Input, Group: node.IdentifierFirstGroup, Attributes: &node.InputAttributes{Name: "idfirst"}},
+		&node.Node{Type: node.Input, Group: node.CaptchaGroup, Attributes: &node.InputAttributes{Name: "captcha2"}},
+		&node.Node{Type: node.Input, Group: node.PasswordGroup, Attributes: &node.InputAttributes{Name: "password"}},
+		nil,
+	}
+
+	t.Run("removes single node", func(t *testing.T) {
+		n := append(node.Nodes(nil), nodes...)
+		n.RemoveGroup(node.IdentifierFirstGroup)
+		assert.Equal(t, node.Nodes{nodes[0], nodes[1], nodes[3], nodes[4]}, n)
+	})
+
+	t.Run("removes multiple nodes", func(t *testing.T) {
+		n := append(node.Nodes(nil), nodes...)
+		n.RemoveGroup(node.CaptchaGroup)
+		assert.Equal(t, node.Nodes{nodes[0], nodes[2], nodes[4]}, n)
+	})
+
+	t.Run("removes no nodes", func(t *testing.T) {
+		n := append(node.Nodes(nil), nodes...)
+		n.RemoveGroup(node.PasskeyGroup)
+		assert.Equal(t, nodes[:5], n)
+	})
+
+	t.Run("removes multiple groups", func(t *testing.T) {
+		n := append(node.Nodes(nil), nodes...)
+		n.RemoveGroups(node.CaptchaGroup, node.PasswordGroup)
+		assert.Equal(t, node.Nodes{nodes[0], nodes[2]}, n)
+	})
+
+	t.Run("removes multiple groups empty", func(t *testing.T) {
+		n := append(node.Nodes(nil), nodes...)
+		n.RemoveGroups()
+		assert.Equal(t, nodes, n)
+	})
+
+	t.Run("removes multiple groups no matching", func(t *testing.T) {
+		n := append(node.Nodes(nil), nodes...)
+		n.RemoveGroups(node.PasskeyGroup)
+		assert.Equal(t, nodes[:5], n)
+	})
+}

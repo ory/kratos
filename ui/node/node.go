@@ -337,6 +337,32 @@ func (n *Nodes) Remove(ids ...string) {
 	*n = r
 }
 
+// RemoveGroup removes all nodes belonging to a specific group.
+func (n *Nodes) RemoveGroup(group UiNodeGroup) {
+	if n == nil {
+		return
+	}
+
+	var r Nodes
+	for k, v := range *n {
+		if (*n)[k] != nil && string((*n)[k].Group) != string(group) {
+			r = append(r, v)
+		}
+	}
+	*n = r
+}
+
+// RemoveGroup removes all nodes belonging to a set of groups.
+func (n *Nodes) RemoveGroups(group ...UiNodeGroup) {
+	if n == nil {
+		return
+	}
+
+	for _, g := range group {
+		n.RemoveGroup(g)
+	}
+}
+
 // Upsert updates or appends a node.
 func (n *Nodes) Upsert(node *Node) {
 	if n == nil {
