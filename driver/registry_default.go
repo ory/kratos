@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -85,7 +86,6 @@ type RegistryDefault struct {
 	trc            *otelx.Tracer
 	writer         herodot.Writer
 	healthxHandler *healthx.Handler
-	metricsHandler *prometheusx.Handler
 
 	persister       persistence.Persister
 	migrationStatus popx.MigrationStatuses
@@ -109,12 +109,12 @@ type RegistryDefault struct {
 
 	sessionHandler   *session.Handler
 	sessionManager   session.Manager
-	sessionTokenizer *session.Tokenizer
+	sessionTokenizer initOnce[*session.Tokenizer]
 
-	passwordHasher    hash.Hasher
-	passwordValidator password.Validator
+	passwordHasher    initOnce[hash.Hasher]
+	passwordValidator initOnce[password.Validator]
 
-	crypter cipher.Cipher
+	crypter initOnce[cipher.Cipher]
 
 	errorHandler *errorx.Handler
 	errorManager *errorx.Manager
@@ -149,20 +149,19 @@ type RegistryDefault struct {
 	selfserviceStrategies            []any
 	replacementSelfserviceStrategies []NewStrategy
 
-	hydra hydra.Hydra
+	hydra initOnce[hydra.Hydra]
 
 	csrfTokenGenerator nosurfx.CSRFToken
 
-	jsonnetVMProvider jsonnetsecure.VMProvider
+	jsonnetVMProvider initOnce[jsonnetsecure.VMProvider]
 	jsonnetPool       jsonnetsecure.Pool
-	jwkFetcher        *jwksx.FetcherNext
+	jwkFetcher        initOnce[*jwksx.FetcherNext]
 }
 
 func (m *RegistryDefault) JsonnetVM(ctx context.Context) (jsonnetsecure.VM, error) {
-	if m.jsonnetVMProvider == nil {
-		m.jsonnetVMProvider = &jsonnetsecure.DefaultProvider{Subcommand: "jsonnet", Pool: m.jsonnetPool}
-	}
-	return m.jsonnetVMProvider.JsonnetVM(ctx)
+	return m.jsonnetVMProvider.Get(func() jsonnetsecure.VMProvider {
+		return &jsonnetsecure.DefaultProvider{Subcommand: "jsonnet", Pool: m.jsonnetPool}
+	}).JsonnetVM(ctx)
 }
 
 func (m *RegistryDefault) Audit() *logrusx.Logger {
@@ -218,7 +217,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *httpr
 
 	m.HealthHandler(ctx).SetHealthRoutes(router, true)
 	m.HealthHandler(ctx).SetVersionRoutes(router)
-	m.MetricsHandler().SetMuxRoutes(router)
+	prometheusx.SetMuxRoutes(router)
 	config.RegisterConfigHashRoute(m, router)
 
 	for _, s := range m.selfServiceStrategies() {
@@ -234,9 +233,12 @@ func (m *RegistryDefault) HTTPMiddlewares() []negroni.Handler {
 }
 
 func NewRegistryDefault() *RegistryDefault {
-	return &RegistryDefault{
+	r := &RegistryDefault{
 		trc: otelx.NewNoop(),
 	}
+	r.initCheapMembers()
+
+	return r
 }
 
 func (m *RegistryDefault) SetLogger(l *logrusx.Logger) {
@@ -244,7 +246,7 @@ func (m *RegistryDefault) SetLogger(l *logrusx.Logger) {
 }
 
 func (m *RegistryDefault) SetJSONNetVMProvider(p jsonnetsecure.VMProvider) {
-	m.jsonnetVMProvider = p
+	m.jsonnetVMProvider.Set(p)
 }
 
 func (m *RegistryDefault) LogoutHandler() *logout.Handler {
@@ -282,14 +284,6 @@ func (m *RegistryDefault) HealthHandler(_ context.Context) *healthx.Handler {
 	}
 
 	return m.healthxHandler
-}
-
-func (m *RegistryDefault) MetricsHandler() *prometheusx.Handler {
-	if m.metricsHandler == nil {
-		m.metricsHandler = prometheusx.NewHandler(m.Writer(), config.Version)
-	}
-
-	return m.metricsHandler
 }
 
 func (m *RegistryDefault) WithCSRFHandler(c nosurf.Handler) {
@@ -418,9 +412,6 @@ func (m *RegistryDefault) ActiveCredentialsCounterStrategies(_ context.Context) 
 }
 
 func (m *RegistryDefault) IdentityValidator() *identity.Validator {
-	if m.identityValidator == nil {
-		m.identityValidator = identity.NewValidator(m)
-	}
 	return m.identityValidator
 }
 
@@ -482,40 +473,37 @@ func (m *RegistryDefault) SessionHandler() *session.Handler {
 }
 
 func (m *RegistryDefault) Cipher(ctx context.Context) cipher.Cipher {
-	if m.crypter == nil {
+	return m.crypter.Get(func() cipher.Cipher {
 		switch m.c.CipherAlgorithm(ctx) {
 		case "xchacha20-poly1305":
-			m.crypter = cipher.NewCryptChaCha20(m.Config())
+			return cipher.NewCryptChaCha20(m.Config())
 		case "aes":
-			m.crypter = cipher.NewCryptAES(m.Config())
+			return cipher.NewCryptAES(m.Config())
 		default:
-			m.crypter = cipher.NewNoop()
 			m.l.Logger.Warning("No encryption configuration found. The default algorithm (noop) will be used, resulting in sensitive data being stored in plaintext")
+			return cipher.NewNoop()
 		}
-	}
-	return m.crypter
+	})
 }
 
 func (m *RegistryDefault) Hasher(ctx context.Context) hash.Hasher {
-	if m.passwordHasher == nil {
+	return m.passwordHasher.Get(func() hash.Hasher {
 		if m.c.HasherPasswordHashingAlgorithm(ctx) == "bcrypt" {
-			m.passwordHasher = hash.NewHasherBcrypt(m)
-		} else {
-			m.passwordHasher = hash.NewHasherArgon2(m)
+			return hash.NewHasherBcrypt(m)
 		}
-	}
-	return m.passwordHasher
+		return hash.NewHasherArgon2(m)
+	})
 }
 
 func (m *RegistryDefault) PasswordValidator() password.Validator {
-	if m.passwordValidator == nil {
-		var err error
-		m.passwordValidator, err = password.NewDefaultPasswordValidatorStrategy(m)
+	m.passwordValidator.Get(func() password.Validator {
+		val, err := password.NewDefaultPasswordValidatorStrategy(m)
 		if err != nil {
 			m.Logger().WithError(err).Fatal("could not initialize DefaultPasswordValidator")
 		}
-	}
-	return m.passwordValidator
+		return val
+	})
+	return m.passwordValidator.value
 }
 
 func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
@@ -565,7 +553,7 @@ func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.
 	return cs
 }
 
-func (m *RegistryDefault) Tracer(ctx context.Context) *otelx.Tracer {
+func (m *RegistryDefault) Tracer(context.Context) *otelx.Tracer {
 	if m.trc == nil {
 		return otelx.NewNoop()
 	}
@@ -577,27 +565,20 @@ func (m *RegistryDefault) SetTracer(t *otelx.Tracer) {
 }
 
 func (m *RegistryDefault) SessionManager() session.Manager {
-	if m.sessionManager == nil {
-		m.sessionManager = session.NewManagerHTTP(m)
-	}
 	return m.sessionManager
 }
 
 func (m *RegistryDefault) Hydra() hydra.Hydra {
-	if m.hydra == nil {
-		m.hydra = hydra.NewDefaultHydra(m)
-	}
-	return m.hydra
+	return m.hydra.Get(func() hydra.Hydra {
+		return hydra.NewDefaultHydra(m)
+	})
 }
 
 func (m *RegistryDefault) SetHydra(h hydra.Hydra) {
-	m.hydra = h
+	m.hydra.Set(h)
 }
 
 func (m *RegistryDefault) SelfServiceErrorManager() *errorx.Manager {
-	if m.errorManager == nil {
-		m.errorManager = errorx.NewManager(m)
-	}
 	return m.errorManager
 }
 
@@ -722,6 +703,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			return errors.WithStack(err)
 		}
 	}
+
 	return nil
 }
 
@@ -734,81 +716,33 @@ func (m *RegistryDefault) Courier(ctx context.Context) (courier.Courier, error) 
 }
 
 func (m *RegistryDefault) ContinuityManager() continuity.Manager {
-	if m.continuityManager == nil {
-		m.continuityManager = continuity.NewManagerCookie(m)
-	}
 	return m.continuityManager
 }
 
-func (m *RegistryDefault) ContinuityPersister() continuity.Persister {
-	return m.persister
-}
-
-func (m *RegistryDefault) IdentityPool() identity.Pool {
-	return m.persister
-}
-
-func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool {
-	return m.persister
-}
-
-func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister {
-	return m.persister
-}
-
-func (m *RegistryDefault) RecoveryFlowPersister() recovery.FlowPersister {
-	return m.persister
-}
-
-func (m *RegistryDefault) LoginFlowPersister() login.FlowPersister {
-	return m.persister
-}
-
-func (m *RegistryDefault) SettingsFlowPersister() settings.FlowPersister {
-	return m.persister
-}
-
-func (m *RegistryDefault) SelfServiceErrorPersister() errorx.Persister {
-	return m.persister
-}
-
-func (m *RegistryDefault) SessionPersister() session.Persister {
-	return m.persister
-}
-
-func (m *RegistryDefault) CourierPersister() courier.Persister {
-	return m.persister
-}
-
-func (m *RegistryDefault) RecoveryTokenPersister() link.RecoveryTokenPersister {
-	return m.Persister()
-}
-
-func (m *RegistryDefault) RecoveryCodePersister() code.RecoveryCodePersister {
-	return m.Persister()
-}
-
+func (m *RegistryDefault) Persister() persistence.Persister                      { return m.persister }
+func (m *RegistryDefault) ContinuityPersister() continuity.Persister             { return m.persister }
+func (m *RegistryDefault) IdentityPool() identity.Pool                           { return m.persister }
+func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool       { return m.persister }
+func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister { return m.persister }
+func (m *RegistryDefault) RecoveryFlowPersister() recovery.FlowPersister         { return m.persister }
+func (m *RegistryDefault) LoginFlowPersister() login.FlowPersister               { return m.persister }
+func (m *RegistryDefault) SettingsFlowPersister() settings.FlowPersister         { return m.persister }
+func (m *RegistryDefault) SelfServiceErrorPersister() errorx.Persister           { return m.persister }
+func (m *RegistryDefault) SessionPersister() session.Persister                   { return m.persister }
+func (m *RegistryDefault) CourierPersister() courier.Persister                   { return m.persister }
+func (m *RegistryDefault) RecoveryTokenPersister() link.RecoveryTokenPersister   { return m.persister }
+func (m *RegistryDefault) RecoveryCodePersister() code.RecoveryCodePersister     { return m.persister }
+func (m *RegistryDefault) LoginCodePersister() code.LoginCodePersister           { return m.persister }
 func (m *RegistryDefault) VerificationTokenPersister() link.VerificationTokenPersister {
-	return m.Persister()
+	return m.persister
 }
-
 func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersister {
-	return m.Persister()
+	return m.persister
 }
-
 func (m *RegistryDefault) RegistrationCodePersister() code.RegistrationCodePersister {
-	return m.Persister()
+	return m.persister
 }
-
-func (m *RegistryDefault) LoginCodePersister() code.LoginCodePersister {
-	return m.Persister()
-}
-
 func (m *RegistryDefault) TransactionalPersisterProvider() x.TransactionalPersister {
-	return m.Persister()
-}
-
-func (m *RegistryDefault) Persister() persistence.Persister {
 	return m.persister
 }
 
@@ -832,9 +766,6 @@ func (m *RegistryDefault) GenerateCSRFToken(r *http.Request) string {
 }
 
 func (m *RegistryDefault) IdentityManager() *identity.Manager {
-	if m.identityManager == nil {
-		m.identityManager = identity.NewManager(m)
-	}
 	return m.identityManager
 }
 
@@ -869,8 +800,8 @@ func (m *RegistryDefault) Contextualizer() contextx.Contextualizer {
 }
 
 func (m *RegistryDefault) JWKSFetcher() *jwksx.FetcherNext {
-	if m.jwkFetcher == nil {
-		maxItems := int64(10000000)
+	return m.jwkFetcher.Get(func() *jwksx.FetcherNext {
+		maxItems := int64(10_000_000)
 		cache, _ := ristretto.NewCache(&ristretto.Config[[]byte, jwk.Set]{
 			NumCounters:        maxItems * 10,
 			MaxCost:            maxItems,
@@ -881,17 +812,12 @@ func (m *RegistryDefault) JWKSFetcher() *jwksx.FetcherNext {
 				return 1
 			},
 		})
-
-		m.jwkFetcher = jwksx.NewFetcherNext(cache)
-	}
-	return m.jwkFetcher
+		return jwksx.NewFetcherNext(cache)
+	})
 }
 
 func (m *RegistryDefault) SessionTokenizer() *session.Tokenizer {
-	if m.sessionTokenizer == nil {
-		m.sessionTokenizer = session.NewTokenizer(m)
-	}
-	return m.sessionTokenizer
+	return m.sessionTokenizer.Get(func() *session.Tokenizer { return session.NewTokenizer(m) })
 }
 
 func (m *RegistryDefault) ExtraHandlers() []x.Handler {
@@ -901,4 +827,34 @@ func (m *RegistryDefault) ExtraHandlers() []x.Handler {
 		}
 	}
 	return m.extraHandlers
+}
+
+// initCheapMembers initializes members that are cheap to initialize.
+func (m *RegistryDefault) initCheapMembers() {
+	m.identityValidator = identity.NewValidator(m)
+	m.identityManager = identity.NewManager(m)
+	m.sessionManager = session.NewManagerHTTP(m)
+	m.errorManager = errorx.NewManager(m)
+	m.continuityManager = continuity.NewManagerCookie(m)
+}
+
+type initOnce[T any] struct {
+	value T
+	init  sync.Once
+}
+
+// Set sets the value of the initOnce, marking it as initialized.
+func (o *initOnce[T]) Set(val T) {
+	// We need to both set the value and run the init function to mark the value as
+	// initialized.
+	o.init.Do(func() { o.value = val })
+	o.value = val
+}
+
+// Get returns the value of the initOnce, initializing it with newT if it has not
+// been initialized yet. `newT` is only called once, even if Get is called
+// concurrently from multiple goroutines or with different `newT` functions.
+func (o *initOnce[T]) Get(newT func() T) T {
+	o.init.Do(func() { o.value = newT() })
+	return o.value
 }

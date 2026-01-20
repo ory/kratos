@@ -167,7 +167,7 @@ type Credentials struct {
 	Type                     CredentialsType `json:"type" db:"-"`
 	IdentityCredentialTypeID uuid.UUID       `json:"-" db:"identity_credential_type_id"`
 
-	// Identifiers represents a list of unique identifiers this credential type matches.
+	// Identifiers represent a list of unique identifiers this credential type matches.
 	Identifiers []string `json:"identifiers" db:"-"`
 
 	// Config contains the concrete credential payload. This might contain the bcrypt-hashed password, the email

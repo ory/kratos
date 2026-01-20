@@ -1907,13 +1907,15 @@ func TestHandler(t *testing.T) {
 
 		t.Run("include_credential=saml should not include SAML credentials config", func(t *testing.T) {
 			res := get(t, adminTS, "/identities?include_credential=saml", http.StatusOK)
-			assert.Empty(t, res.Get("0.credentials.saml.config"), "SAML config should not be included: %s", res.Raw)
+			t.Log("Result:", res)
+			assert.Empty(t, res.Get("0.credentials.saml.config"), "SAML config should not be included")
 		})
 		t.Run("include_credential=totp should not include OIDC credentials config", func(t *testing.T) {
 			res := get(t, adminTS, "/identities?include_credential=totp", http.StatusOK)
+			t.Log("Result:", res)
 			for _, id := range res.Array() {
-				assert.False(t, id.Get("credentials.oidc.config").Exists(), "OIDC config should not be included: %s", res.Raw)
-				assert.False(t, id.Get("credentials.saml.config").Exists(), "SAML config should not be included: %s", res.Raw)
+				assert.False(t, id.Get("credentials.oidc.config").Exists(), "OIDC config should not be included")
+				assert.False(t, id.Get("credentials.saml.config").Exists(), "SAML config should not be included")
 			}
 		})
 	})

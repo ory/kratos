@@ -43,7 +43,6 @@ import (
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/popx"
-	prometheus "github.com/ory/x/prometheusx"
 	"github.com/ory/x/servicelocatorx"
 )
 
@@ -56,7 +55,6 @@ type Registry interface {
 	WithCSRFHandler(c nosurf.Handler)
 	WithCSRFTokenGenerator(cg nosurfx.CSRFToken)
 
-	MetricsHandler() *prometheus.Handler
 	HealthHandler(ctx context.Context) *healthx.Handler
 	CookieManager(ctx context.Context) sessions.StoreExact
 	ContinuityCookieManager(ctx context.Context) sessions.StoreExact
