@@ -4470,7 +4470,7 @@
           "format": "date-time"
         },
         "identifiers": {
-          "description": "Identifiers represents a list of unique identifiers this credential type matches.",
+          "description": "Identifiers represent a list of unique identifiers this credential type matches.",
           "type": "array",
           "items": {
             "type": "string"

@@ -1111,7 +1111,7 @@
             "type": "string"
           },
           "identifiers": {
-            "description": "Identifiers represents a list of unique identifiers this credential type matches.",
+            "description": "Identifiers represent a list of unique identifiers this credential type matches.",
             "items": {
               "type": "string"
             },
