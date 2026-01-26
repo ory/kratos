@@ -13,9 +13,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
-	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/text"
 
