@@ -2285,6 +2285,12 @@
           "type": "boolean",
           "default": false,
           "description": "Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
+        },
+        "use_external_id": {
+          "title": "Use external_id as subject",
+          "type": "boolean",
+          "default": false,
+          "description": "If set, the external_id of the identity will be used as the subject in the OAuth2 login request. If no external_id is set, the identity ID will be used."
         }
       },
       "additionalProperties": false
