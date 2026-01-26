@@ -234,7 +234,8 @@ func (m *RegistryDefault) HTTPMiddlewares() []negroni.Handler {
 
 func NewRegistryDefault() *RegistryDefault {
 	r := &RegistryDefault{
-		trc: otelx.NewNoop(),
+		trc:       otelx.NewNoop(),
+		slOptions: &servicelocatorx.Options{},
 	}
 	r.initCheapMembers()
 

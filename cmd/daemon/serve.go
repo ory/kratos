@@ -50,7 +50,7 @@ func init() {
 	graceful.DefaultShutdownTimeout = 120 * time.Second
 }
 
-var prometheusManager = prometheusx.NewMetricsManagerWithPrefix("kratos", prometheusx.HTTPMetrics, config.Version, config.Commit, config.Date)
+var httpMetrics = prometheusx.NewHTTPMetrics("kratos", prometheusx.HTTPPrefix, config.Version, config.Commit, config.Date)
 
 func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Command) (func() error, error) {
 	cfg := r.Config().ServePublic(ctx)
@@ -73,7 +73,7 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	n.UseFunc(httprouterx.NoCacheNegroni)
 	n.Use(sqa(ctx, cmd, r))
 
-	router := httprouterx.NewRouterPublic(prometheusManager)
+	router := httprouterx.NewRouterPublic(httpMetrics)
 	csrf := nosurfx.NewCSRFHandler(otelx.SpanNameRecorderMiddleware(router), r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
@@ -170,7 +170,7 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
 
-	router := httprouterx.NewRouterAdminWithPrefix(prometheusManager)
+	router := httprouterx.NewRouterAdminWithPrefix(httpMetrics)
 	r.RegisterAdminRoutes(ctx, router)
 
 	n.UseHandler(router)
