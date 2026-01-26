@@ -174,11 +174,12 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 		skipIfNotEnabled(t, flows, "browser")
 
 		browserClient := testhelpers.NewClientWithCookies(t)
+		browserClient.Jar.SetCookies(nosurfx.WithFakeCSRFCookie(t, reg, publicTS.URL))
 		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, false, false, false)
 
 		actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch,
 			json.RawMessage(actual), "%s", actual)
 	})
 
@@ -186,11 +187,12 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 		skipIfNotEnabled(t, flows, "spa")
 
 		browserClient := testhelpers.NewClientWithCookies(t)
+		browserClient.Jar.SetCookies(nosurfx.WithFakeCSRFCookie(t, reg, publicTS.URL))
 		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, browserClient, publicTS, true, false, false)
 
 		actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, values.Encode())
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch,
 			json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 	})
 

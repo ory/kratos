@@ -281,6 +281,7 @@ func LoginMakeRequestCtx(
 	req := NewPostRequest(t, isAPI, f.Ui.Action, bytes.NewBufferString(values))
 	if isSPA && !isAPI {
 		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Sec-Fetch-Mode", "cors")
 	}
 	for _, o := range opt {
 		o(req)

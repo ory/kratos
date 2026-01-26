@@ -216,21 +216,23 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("case=should fail because of missing CSRF token/type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
+			browserClient.Jar.SetCookies(nosurfx.WithFakeCSRFCookie(t, reg, publicTS.URL))
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch,
 				json.RawMessage(actual), "%s", actual)
 		})
 
 		t.Run("case=should fail because of missing CSRF token/type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
+			browserClient.Jar.SetCookies(nosurfx.WithFakeCSRFCookie(t, reg, publicTS.URL))
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFToken,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch,
 				json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 		})
 

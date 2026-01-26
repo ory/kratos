@@ -225,6 +225,9 @@ func SettingsMakeRequest(
 	if isSPA || isAPI {
 		req.Header.Set("Accept", "application/json")
 	}
+	if isSPA {
+		req.Header.Set("Sec-Fetch-Mode", "cors")
+	}
 
 	res, err := hc.Do(req)
 	require.NoError(t, err, "action: %s", f.Ui.Action)

@@ -138,6 +138,7 @@ func RegistrationMakeRequestCtx(
 	req := NewPostRequest(t, isAPI, f.Ui.Action, bytes.NewBufferString(values))
 	if isSPA {
 		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Sec-Fetch-Mode", "cors")
 	}
 	req = req.WithContext(ctx)
 
