@@ -39,7 +39,9 @@ echo "✅ Database is ready!"
 # Show migration status before running migrations
 echo ""
 echo "📋 Current migration status:"
-kratos migrate sql status -e || true
+if ! kratos migrate sql status -e 2>&1; then
+    echo "⚠️  Note: Migration status check failed (this is expected for a new database)"
+fi
 
 # Run migrations
 echo ""
