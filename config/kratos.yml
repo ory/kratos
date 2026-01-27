@@ -1,6 +1,6 @@
 version: v0.13.0
 
-dsn: ${DATABASE_URL}
+dsn: env://DSN
 
 serve:
   public:

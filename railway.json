@@ -1,0 +1,88 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "startCommand": "/entrypoint.sh",
+    "healthcheckPath": "/health/ready",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  },
+  "services": [
+    {
+      "name": "kratos",
+      "icon": "https://raw.githubusercontent.com/ory/meta/master/static/logos/logo-kratos.png",
+      "domains": [
+        {
+          "name": "kratos",
+          "port": 4433
+        }
+      ],
+      "ports": [
+        {
+          "name": "public",
+          "port": 4433,
+          "protocol": "HTTP"
+        },
+        {
+          "name": "admin",
+          "port": 4434,
+          "protocol": "HTTP"
+        }
+      ],
+      "variables": {
+        "COOKIE_SECRET": {
+          "description": "Secret for encrypting cookies (generate with: openssl rand -hex 32)",
+          "generator": {
+            "type": "secret",
+            "length": 64
+          }
+        },
+        "CIPHER_SECRET": {
+          "description": "Secret for encrypting sensitive data (generate with: openssl rand -hex 32)",
+          "generator": {
+            "type": "secret",
+            "length": 64
+          }
+        },
+        "RAILWAY_STATIC_URL": {
+          "description": "Your Railway public URL (automatically provided by Railway)"
+        }
+      },
+      "serviceReferences": [
+        {
+          "name": "postgres",
+          "type": "database"
+        }
+      ]
+    }
+  ],
+  "databases": [
+    {
+      "name": "postgres",
+      "type": "postgresql",
+      "plan": "starter",
+      "variables": {
+        "POSTGRES_HOST": {
+          "description": "PostgreSQL host (automatically provided)"
+        },
+        "POSTGRES_PORT": {
+          "description": "PostgreSQL port (automatically provided)"
+        },
+        "POSTGRES_USER": {
+          "description": "PostgreSQL user (automatically provided)"
+        },
+        "POSTGRES_PASSWORD": {
+          "description": "PostgreSQL password (automatically provided)"
+        },
+        "POSTGRES_DATABASE": {
+          "description": "PostgreSQL database name (automatically provided)"
+        }
+      }
+    }
+  ]
+}
