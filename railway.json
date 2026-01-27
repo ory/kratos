@@ -8,7 +8,7 @@
     "numReplicas": 1,
     "startCommand": "/entrypoint.sh",
     "healthcheckPath": "/health/ready",
-    "healthcheckTimeout": 100,
+    "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   },
