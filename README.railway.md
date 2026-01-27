@@ -81,9 +81,11 @@ The entrypoint script automatically constructs the database DSN from the Postgre
 
 Once deployed, you'll have access to:
 
-- **Public API**: `https://${RAILWAY_STATIC_URL}:4433` (main API for client applications)
-- **Admin API**: `https://${RAILWAY_STATIC_URL}:4434` (internal admin operations)
+- **Public API**: `https://${RAILWAY_STATIC_URL}` (Railway maps your domain to port 4433 internally)
+- **Admin API**: Internal only, accessible at `http://localhost:4434` or between Railway services
 - **Health Check**: `https://${RAILWAY_STATIC_URL}/health/ready`
+
+Note: Railway automatically handles port mapping. The public API is accessible via your Railway domain, while the admin API is typically kept internal for security.
 
 ## Configuration
 
@@ -132,7 +134,7 @@ All self-service flows are pre-configured:
 
 The entrypoint script (`entrypoint.sh`) handles database migrations automatically:
 
-1. **Waits for PostgreSQL**: Retries connection up to 30 times (60 seconds total)
+1. **Waits for PostgreSQL**: Retries connection up to 30 times (approximately 60+ seconds total with 2-second intervals)
 2. **Shows current status**: Displays migration status before running
 3. **Runs migrations**: Executes `kratos migrate sql up -e --yes`
 4. **Confirms success**: Shows migration status after completion
