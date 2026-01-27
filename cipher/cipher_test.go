@@ -73,6 +73,25 @@ func TestCipher(t *testing.T) {
 				_, err = c.Decrypt(contextx.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{""}), "not-empty")
 				require.Error(t, err)
 			})
+
+			t.Run("case=short_ciphertext", func(t *testing.T) {
+				t.Parallel()
+
+				// XChaCha20-Poly1305 has 24-byte nonce, hex encoded is 48 chars
+				// A valid ciphertext needs at least 24 bytes (nonce) + 16 bytes (tag) = 40 bytes minimum
+				// Hex encoded minimum is 80 chars
+				// This tests that we don't get panic on short ciphertext
+
+				// 24 hex chars is only 12 bytes - less than nonce size (24 bytes)
+				shortCiphertext := "00112233445566778899aabbccddeeff"
+				_, err := c.Decrypt(ctx, shortCiphertext)
+				require.Error(t, err)
+
+				// 64 hex chars is 32 bytes - still less than nonce(24)+tag(16)=40
+				mediumCiphertext := "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
+				_, err = c.Decrypt(ctx, mediumCiphertext)
+				require.Error(t, err)
+			})
 		})
 	}
 
