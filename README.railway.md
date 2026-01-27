@@ -92,7 +92,7 @@ Once deployed, you'll have access to:
 The entrypoint script automatically constructs the PostgreSQL DSN from Railway's environment variables:
 
 ```bash
-postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable
+postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=require
 ```
 
 If you prefer to use a custom `DATABASE_URL`, the script will use that instead.
