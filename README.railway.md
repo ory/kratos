@@ -6,7 +6,9 @@ This guide helps you deploy Ory Kratos identity and user management system on Ra
 
 Deploy Ory Kratos to Railway with one click:
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/kratos)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new)
+
+> **Note**: Once you've set up your deployment, you can create a Railway template to enable one-click deployment for others. The template button will link to your published Railway template.
 
 This will automatically:
 - 🚀 Deploy the Kratos service
