@@ -3,16 +3,18 @@
 </h1>
 
 <h4 align="center">
-  <a href="https://www.ory.sh/chat">Chat</a> ·
+  <a href="https://www.ory.com/chat">Chat</a> ·
   <a href="https://github.com/ory/kratos/discussions">Discussions</a> ·
-  <a href="https://www.ory.sh/l/sign-up-newsletter">Newsletter</a> ·
-  <a href="https://www.ory.sh/docs/">Docs</a> ·
+  <a href="https://www.ory.com/l/sign-up-newsletter">Newsletter</a> ·
+  <a href="https://www.ory.com/docs/">Docs</a> ·
   <a href="https://console.ory.sh/">Try Ory Network</a> ·
-  <a href="https://www.ory.sh/jobs/">Jobs</a>
+  <a href="https://www.ory.com/jobs/">Jobs</a>
 </h4>
 
-Ory Kratos is an API first identity and user management system for cloud native applications. It centralizes login, registration, recovery, verification, and profile management flows so your services consume them instead of reimplementing them.
----
+Ory Kratos is an API first identity and user management system for cloud native
+applications. It centralizes login, registration, recovery, verification, and
+profile management flows so your services consume them instead of reimplementing
+them.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -32,7 +34,9 @@ Ory Kratos is an API first identity and user management system for cloud native 
 
 ## What is Ory Kratos?
 
-Ory Kratos is an API first identity and user management system that follows [cloud architecture best practices](https://www.ory.sh/docs/ecosystem/software-architecture-philosophy). It focuses on core identity workflows that almost every application needs:
+Ory Kratos is an API first identity and user management system that follows
+[cloud architecture best practices](https://www.ory.com/docs/ecosystem/software-architecture-philosophy).
+It focuses on core identity workflows that almost every application needs:
 
 - Self service login and registration
 - Account verification and recovery
@@ -41,7 +45,9 @@ Ory Kratos is an API first identity and user management system that follows [clo
 - Identity schemas and traits
 - Admin APIs for lifecycle management
 
-We recommend starting with the [Ory Kratos introduction docs](https://www.ory.sh/kratos/docs/) to learn more about its architecture, feature set, and how it compares to other systems.
+We recommend starting with the
+[Ory Kratos introduction docs](https://www.ory.com/kratos/docs/) to learn more
+about its architecture, feature set, and how it compares to other systems.
 
 ### Why Ory Kratos
 
@@ -50,69 +56,104 @@ Ory Kratos is designed to:
 - Remove identity logic from your application code and expose it over HTTP APIs
 - Work well with any UI framework through browser based and native app flows
 - Scale to large numbers of identities and devices
-- Integrate with the rest of the Ory stack for OAuth2, OpenID Connect, and access control
-- Fit into modern cloud native environments such as Kubernetes and managed platforms
--
+- Integrate with the rest of the Ory stack for OAuth2, OpenID Connect, and
+  access control
+- Fit into modern cloud native environments such as Kubernetes and managed
+  platforms
+
 ## Migrating from Auth0, Okta, and similar providers
 
-If you are migrating from Auth0, Okta, or another identity provider that uses OAuth2 / OpenID Connect based login, consider using **Ory Hydra + Ory Kratos** together:
+If you are migrating from Auth0, Okta, or another identity provider that uses
+OAuth2 / OpenID Connect based login, consider using **Ory Hydra + Ory Kratos**
+together:
 
-- **Ory Hydra** acts as the OAuth2 and OpenID Connect provider and can replace most authorization server and token issuing capabilities of your existing IdP.
-- **Ory Kratos** provides identity, credentials, and user-facing flows (login, registration, recovery, verification, profile management).
+- **Ory Hydra** acts as the OAuth2 and OpenID Connect provider and can replace
+  most authorization server and token issuing capabilities of your existing IdP.
+- **Ory Kratos** provides identity, credentials, and user-facing flows (login,
+  registration, recovery, verification, profile management).
 
-This combination is often a drop-in replacement for OAuth2 and OpenID Connect capabilities at the protocol level. In practice, you update client configuration and endpoints to point to Hydra, migrate identities into Kratos, and keep your applications speaking the same OAuth2 / OIDC protocols they already use.
+This combination is often a drop-in replacement for OAuth2 and OpenID Connect
+capabilities at the protocol level. In practice, you update client configuration
+and endpoints to point to Hydra, migrate identities into Kratos, and keep your
+applications speaking the same OAuth2 / OIDC protocols they already use.
 
 ## Deployment options
 
 You can run Ory Kratos in two main ways:
 
 - As a managed service on the Ory Network
-- As a self hosted service under your own control, with or without the Ory Enterprise License
+- As a self hosted service under your own control, with or without the Ory
+  Enterprise License
 
 ### Use Ory Kratos on the Ory Network
 
-The [Ory Network](https://www.ory.sh/cloud) is the fastest way to use Ory services in production. **Ory Identities** is powered by the open source Ory Kratos server and is API compatible.
+The [Ory Network](https://www.ory.com/cloud) is the fastest way to use Ory
+services in production. **Ory Identities** is powered by the open source Ory
+Kratos server and is API compatible.
 
 The Ory Network provides:
 
-- Identity and credential management that scales to billions of users and devices
-- Registration, login, and account management flows for passkeys, biometrics, social login, SSO, and multi factor authentication
+- Identity and credential management that scales to billions of users and
+  devices
+- Registration, login, and account management flows for passkeys, biometrics,
+  social login, SSO, and multi factor authentication
 - Prebuilt login, registration, and account management pages and components
-- OAuth2 and OpenID Connect for single sign on, API access, and machine to machine authorization
-- Low latency permission checks based on the Zanzibar model with the Ory Permission Language
+- OAuth2 and OpenID Connect for single sign on, API access, and machine to
+  machine authorization
+- Low latency permission checks based on the Zanzibar model with the Ory
+  Permission Language
 - GDPR friendly storage with data locality and compliance in mind
 - Web based Ory Console and Ory CLI for administration and operations
 - Cloud native APIs compatible with the open source servers
-- Fair, usage based [pricing](https://www.ory.sh/pricing)
+- Fair, usage based [pricing](https://www.ory.com/pricing)
 
-Sign up for a [free developer account](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme) to get started.
+Sign up for a
+[free developer account](https://console.ory.sh/registration?utm_source=github&utm_medium=banner&utm_campaign=kratos-readme)
+to get started.
 
 ### Self-host Ory Kratos
 
-You can run Ory Kratos yourself for full control over infrastructure, deployment, and customization.
+You can run Ory Kratos yourself for full control over infrastructure,
+deployment, and customization.
 
-The [install guide](https://www.ory.sh/kratos/docs/install) explains how to:
+The [install guide](https://www.ory.com/kratos/docs/install) explains how to:
 
-* Install Kratos on Linux, macOS, Windows, and Docker
-* Configure databases such as PostgreSQL, MySQL, and CockroachDB
-* Deploy to Kubernetes and other orchestration systems
-* Build Kratos from source
+- Install Kratos on Linux, macOS, Windows, and Docker
+- Configure databases such as PostgreSQL, MySQL, and CockroachDB
+- Deploy to Kubernetes and other orchestration systems
+- Build Kratos from source
 
-This guide uses the open source distribution to get you started without license requirements. It is a great fit for individuals, researchers, hackers, and companies that want to experiment, prototype, or run unimportant workloads without SLAs. You get the full core engine, and you are free to inspect, extend, and build it from source.
+This guide uses the open source distribution to get you started without license
+requirements. It is a great fit for individuals, researchers, hackers, and
+companies that want to experiment, prototype, or run unimportant workloads
+without SLAs. You get the full core engine, and you are free to inspect, extend,
+and build it from source.
 
-If you run Kratos as part of a business-critical system, for example login and account recovery for all your users, you should use a commercial agreement to reduce operational and security risk. The **Ory Enterprise License (OEL)** layers on top of self-hosted Kratos and provides:
+If you run Kratos as part of a business-critical system, for example login and
+account recovery for all your users, you should use a commercial agreement to
+reduce operational and security risk. The **Ory Enterprise License (OEL)**
+layers on top of self-hosted Kratos and provides:
 
-* Additional enterprise features that are not available in the open source version such as SCIM, SAML, organization login ("SSO"), CAPTCHAs and more
-* Regular security releases, including CVE patches, with service level agreements
-* Support for advanced scaling, multi-tenancy, and complex deployments
-* Premium support options with SLAs, direct access to engineers, and onboarding help
-* Access to a private Docker registry with frequent and vetted, up-to-date enterprise builds
+- Additional enterprise features that are not available in the open source
+  version such as SCIM, SAML, organization login ("SSO"), CAPTCHAs and more
+- Regular security releases, including CVE patches, with service level
+  agreements
+- Support for advanced scaling, multi-tenancy, and complex deployments
+- Premium support options with SLAs, direct access to engineers, and onboarding
+  help
+- Access to a private Docker registry with frequent and vetted, up-to-date
+  enterprise builds
 
-For guaranteed CVE fixes, current enterprise builds, advanced features, and support in production, you need a valid [Ory Enterprise License](https://www.ory.com/ory-enterprise-license) and access to the Ory Enterprise Docker registry. To learn more, [contact the Ory team](https://www.ory.sh/contact/).
+For guaranteed CVE fixes, current enterprise builds, advanced features, and
+support in production, you need a valid
+[Ory Enterprise License](https://www.ory.com/ory-enterprise-license) and access
+to the Ory Enterprise Docker registry. To learn more,
+[contact the Ory team](https://www.ory.com/contact/).
 
 ## Quickstart
 
-Install the [Ory CLI](https://www.ory.sh/docs/guides/cli/installation) and create a new project to try Ory Identities.
+Install the [Ory CLI](https://www.ory.com/docs/guides/cli/installation) and
+create a new project to try Ory Identities.
 
 ```bash
 # Install the Ory CLI if you do not have it yet:
@@ -141,7 +182,7 @@ this would have been possible without each and everyone of you!
 The following list represents companies that have accompanied us along the way
 and that have made outstanding contributions to our ecosystem. _If you think
 that your company deserves a spot here, reach out to
-<a href="mailto:office@ory.sh">office@ory.sh</a> now_!
+<a href="mailto:office@ory.com">office@ory.com</a> now_!
 
 <table>
     <thead>
@@ -162,7 +203,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://openai.com/">openai.com</a></td>
-            <td><a href="https://www.ory.sh/case-studies/openai">OpenAI Case Study</a></td>
+            <td><a href="https://www.ory.com/case-studies/openai">OpenAI Case Study</a></td>
         </tr>
         <tr>
             <td>Fandom</td>
@@ -173,7 +214,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://www.fandom.com/">fandom.com</a></td>
-            <td><a href="https://www.ory.sh/case-studies/fandom">Fandom Case Study</a></td>
+            <td><a href="https://www.ory.com/case-studies/fandom">Fandom Case Study</a></td>
         </tr>
         <tr>
             <td>Lumin</td>
@@ -184,7 +225,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://www.luminpdf.com/">luminpdf.com</a></td>
-            <td><a href="https://www.ory.sh/case-studies/lumin">Lumin Case Study</a></td>
+            <td><a href="https://www.ory.com/case-studies/lumin">Lumin Case Study</a></td>
         </tr>
         <tr>
             <td>Sencrop</td>
@@ -195,7 +236,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://sencrop.com/">sencrop.com</a></td>
-            <td><a href="https://www.ory.sh/case-studies/sencrop">Sencrop Case Study</a></td>
+            <td><a href="https://www.ory.com/case-studies/sencrop">Sencrop Case Study</a></td>
         </tr>
         <tr>
             <td>OSINT Industries</td>
@@ -206,7 +247,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://www.osint.industries/">osint.industries</a></td>
-            <td><a href="https://www.ory.sh/case-studies/osint">OSINT Industries Case Study</a></td>
+            <td><a href="https://www.ory.com/case-studies/osint">OSINT Industries Case Study</a></td>
         </tr>
         <tr>
             <td>HGV</td>
@@ -217,7 +258,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://www.hgv.it/">hgv.it</a></td>
-            <td><a href="https://www.ory.sh/case-studies/hgv">HGV Case Study</a></td>
+            <td><a href="https://www.ory.com/case-studies/hgv">HGV Case Study</a></td>
         </tr>
         <tr>
             <td>Maxroll</td>
@@ -228,7 +269,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://maxroll.gg/">maxroll.gg</a></td>
-            <td><a href="https://www.ory.sh/case-studies/maxroll">Maxroll Case Study</a></td>
+            <td><a href="https://www.ory.com/case-studies/maxroll">Maxroll Case Study</a></td>
         </tr>
         <tr>
             <td>Zezam</td>
@@ -239,7 +280,7 @@ that your company deserves a spot here, reach out to
                 </picture>
             </td>
             <td><a href="https://www.zezam.io/">zezam.io</a></td>
-            <td><a href="https://www.ory.sh/case-studies/zezam">Zezam Case Study</a></td>
+            <td><a href="https://www.ory.com/case-studies/zezam">Zezam Case Study</a></td>
         </tr>
         <tr>
             <td>T.RowePrice</td>
