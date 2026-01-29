@@ -22,6 +22,11 @@ var ErrFakeAcceptLoginRequestFailed = errors.New("failed to accept login request
 type FakeHydra struct {
 	Skip       bool
 	RequestURL string
+	params     []AcceptLoginRequestParams
+}
+
+func (h *FakeHydra) Params() []AcceptLoginRequestParams {
+	return h.params
 }
 
 var _ Hydra = &FakeHydra{}
@@ -33,6 +38,7 @@ func NewFake() *FakeHydra {
 }
 
 func (h *FakeHydra) AcceptLoginRequest(_ context.Context, params AcceptLoginRequestParams) (string, error) {
+	h.params = append(h.params, params)
 	if params.SessionID == "" {
 		return "", errors.New("session id must not be empty")
 	}

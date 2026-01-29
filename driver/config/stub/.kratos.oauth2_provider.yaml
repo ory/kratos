@@ -3,3 +3,4 @@ oauth2_provider:
   headers:
     Authorization: Basic
   override_return_to: true
+  use_external_id: true
