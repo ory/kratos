@@ -730,8 +730,8 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 						} else {
 							require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
 						}
-						require.Equal(t, int64(4000001), gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).messages.0.id").Int(), "%s", body)
-						require.Equal(t, "\"invalidemail\" is not valid \"email\"", gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).messages.0.text").String(), "%s", body)
+						require.Equal(t, int64(4000040), gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).messages.0.id").Int(), "%s", body)
+						require.Equal(t, "Enter a valid email address", gjson.Get(body, "ui.nodes.#(attributes.name==traits.email).messages.0.text").String(), "%s", body)
 					})
 				})
 			})

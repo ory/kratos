@@ -138,7 +138,7 @@ describe("Registration failures with email profile", () => {
 
           cy.submitPasswordForm()
           cy.get(
-            '*[data-testid="ui/message/4000001"], *[data-testid="ui/message/4000002"]',
+            '*[data-testid="ui/message/4000040"], *[data-testid="ui/message/4000002"]',
           ).should("exist")
         })
 

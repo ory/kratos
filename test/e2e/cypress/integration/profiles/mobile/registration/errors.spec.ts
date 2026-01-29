@@ -71,7 +71,7 @@ context("Mobile Profile", () => {
         cy.get('div[data-testid="submit-form"]').click()
         cy.get('*[data-testid="field/traits.email"]').should(
           "contain.text",
-          'valid "email"',
+          "Enter a valid email address",
         )
       })
 

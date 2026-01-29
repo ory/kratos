@@ -44,7 +44,7 @@ func newFormRequest(t *testing.T, values url.Values) *http.Request {
 }
 
 func TestContainer(t *testing.T) {
-	var ctx = context.Background()
+	ctx := context.Background()
 	t.Run("method=NewFromJSON", func(t *testing.T) {
 		for k, tc := range []struct {
 			r      string
@@ -224,6 +224,11 @@ func TestContainer(t *testing.T) {
 				&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "foo.bar.baz", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}, Meta: new(node.Meta)},
 			}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: ""}, expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}}},
+			{err: &jsonschema.ValidationError{Message: `"asd" is not valid "email"`, InstancePtr: "", SchemaPtr: "#/email/format"}, expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewErrorValidationEmail("asd")}}},
+			{err: &jsonschema.ValidationError{Message: `"asd" is not valid "tel"`, InstancePtr: "", SchemaPtr: "#/phone/format"}, expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewErrorValidationPhone("asd")}}},
+			{err: &jsonschema.ValidationError{Message: `"asd" is not valid "unknown-format"`, InstancePtr: "", SchemaPtr: "#/unknown/format"}, expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric(`"asd" is not valid "unknown-format"`)}}},
+			// Malformed format error message
+			{err: &jsonschema.ValidationError{Message: `"asd" is not valid "unknown-format`, InstancePtr: "", SchemaPtr: "#/unknown/format"}, expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric(`"asd" is not valid "unknown-format`)}}},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				for _, in := range []error{tc.err, errors.WithStack(tc.err)} {

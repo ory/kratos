@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -215,6 +216,8 @@ func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 	return err
 }
 
+var formatErrorMatcher = regexp.MustCompile(`"([^"]+)"\s+is not valid\s+"([^"]+)"`)
+
 func translateValidationError(err *jsonschema.ValidationError) *text.Message {
 	segments := strings.Split(err.SchemaPtr, "/")
 	switch segments[len(segments)-1] {
@@ -271,6 +274,23 @@ func translateValidationError(err *jsonschema.ValidationError) *text.Message {
 			return text.NewErrorValidationConst(expectedValue)
 		}
 		return text.NewErrorValidationConstGeneric()
+	case "format":
+		m := formatErrorMatcher.FindStringSubmatch(err.Message)
+		if len(m) != 3 {
+			return text.NewValidationErrorGeneric(err.Message)
+		}
+
+		value := m[1]
+		format := m[2]
+
+		switch format {
+		case "email":
+			return text.NewErrorValidationEmail(value)
+		case "tel":
+			return text.NewErrorValidationPhone(value)
+		default:
+			return text.NewValidationErrorGeneric(err.Message)
+		}
 	default:
 		return text.NewValidationErrorGeneric(err.Message)
 	}

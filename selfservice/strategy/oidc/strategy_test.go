@@ -421,7 +421,7 @@ func TestStrategy(t *testing.T) {
 		res, body := makeRequest(t, "valid", action, url.Values{})
 
 		require.Contains(t, res.Request.URL.String(), uiTS.URL, "%s", body)
-		assert.Contains(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject).messages.0.text").String(), "is not valid", "%s\n%s", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject)").Raw, body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject).messages.0.text").String(), "Enter a valid email address", "%s\n%s", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.subject)").Raw, body)
 	})
 
 	t.Run("case=cannot register multiple accounts with the same OIDC account", func(t *testing.T) {

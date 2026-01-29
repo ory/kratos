@@ -160,6 +160,8 @@ const (
 	ErrorValidationAccountNotFound
 	ErrorValidationCaptchaError
 	ErrorValidationPasswordNewSameAsOld
+	ErrorValidationEmail
+	ErrorValidationPhone
 )
 
 const (

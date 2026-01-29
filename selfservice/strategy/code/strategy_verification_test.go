@@ -167,7 +167,7 @@ func TestVerification(t *testing.T) {
 	t.Run("description=should require a valid email to be sent", func(t *testing.T) {
 		check := func(t *testing.T, actual string, value string) {
 			assert.EqualValues(t, string(node.CodeGroup), gjson.Get(actual, "active").String(), "%s", actual)
-			assert.EqualValues(t, fmt.Sprintf("%q is not valid \"email\"", value),
+			assert.EqualValues(t, "Enter a valid email address",
 				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
 				"%s", actual)
 		}

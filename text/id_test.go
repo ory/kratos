@@ -74,4 +74,7 @@ func TestIDs(t *testing.T) {
 
 	assert.Equal(t, 1070015, int(InfoNodeLabelCaptcha))
 	assert.Equal(t, 4000038, int(ErrorValidationCaptchaError))
+
+	assert.Equal(t, 4000040, int(ErrorValidationEmail))
+	assert.Equal(t, 4000041, int(ErrorValidationPhone))
 }

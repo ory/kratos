@@ -510,9 +510,8 @@ func TestRecovery(t *testing.T) {
 					})
 					activeMethod := gjson.Get(responseJSON, "active").String()
 					assert.EqualValues(t, node.CodeGroup, activeMethod, "expected method to be %s got %s", node.CodeGroup, activeMethod)
-					expectedMessage := fmt.Sprintf("%q is not valid \"email\"", email)
 					actualMessage := gjson.Get(responseJSON, "ui.nodes.#(attributes.name==email).messages.0.text").String()
-					assert.EqualValues(t, expectedMessage, actualMessage, "%s", responseJSON)
+					assert.EqualValues(t, "Enter a valid email address", actualMessage, "%s", responseJSON)
 				})
 			}
 		}
@@ -1354,9 +1353,8 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					})
 					activeMethod := gjson.Get(responseJSON, "active").String()
 					assert.EqualValues(t, node.CodeGroup, activeMethod, "expected method to be %s got %s", node.CodeGroup, activeMethod)
-					expectedMessage := fmt.Sprintf("%q is not valid \"email\"", email)
 					actualMessage := gjson.Get(responseJSON, "ui.nodes.#(attributes.name==email).messages.0.text").String()
-					assert.EqualValues(t, expectedMessage, actualMessage, "%s", responseJSON)
+					assert.EqualValues(t, "Enter a valid email address", actualMessage, "%s", responseJSON)
 				}
 			})
 		}

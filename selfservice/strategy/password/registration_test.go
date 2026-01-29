@@ -800,8 +800,8 @@ func TestRegistration(t *testing.T) {
 						require.EqualValues(t, http.StatusBadRequest, resp.StatusCode)
 					}
 
-					assert.EqualValuesf(t, 4000001, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.email).messages.0.id").Int(), "%s", actual)
-					assert.Equalf(t, `"invalidemail" is not valid "email"`, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.email).messages.0.text").String(), "%s", actual)
+					assert.EqualValuesf(t, 4000040, gjson.Get(actual, "ui.nodes.#(attributes.name==traits.email).messages.0.id").Int(), "%s", actual)
+					assert.Equalf(t, "Enter a valid email address", gjson.Get(actual, "ui.nodes.#(attributes.name==traits.email).messages.0.text").String(), "%s", actual)
 				})
 			}
 
