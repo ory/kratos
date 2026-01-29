@@ -491,10 +491,6 @@ func parseWebhookResponse(resp *http.Response, id *identity.Identity) (err error
 			id.VerifiableAddresses = hookResponse.Identity.VerifiableAddresses
 		}
 
-		if len(hookResponse.Identity.VerifiableAddresses) > 0 {
-			id.VerifiableAddresses = hookResponse.Identity.VerifiableAddresses
-		}
-
 		if len(hookResponse.Identity.RecoveryAddresses) > 0 {
 			id.RecoveryAddresses = hookResponse.Identity.RecoveryAddresses
 		}
