@@ -4,7 +4,7 @@
     "password": {
       "type": "password",
       "identifiers": [
-        "foo-dupe@ory.sh",
+        "foo2@ory.sh",
         "foo@ory.sh"
       ],
       "config": {
