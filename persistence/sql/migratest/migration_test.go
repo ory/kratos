@@ -127,11 +127,15 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		c, l,
 		popx.WithGoMigrations(gomigrations.All),
 		popx.WithTestdata(t, os.DirFS("./testdata")),
-		popx.WithDumpMigrations(),
 	)
 	require.NoError(t, err)
-	require.NoError(t, tm.Up(ctx))
-	// t.Skip() // uncomment to get the current state of the database after the migrations have run
+
+	err = tm.Up(ctx) // for easy breakpointing
+	// _ = tm.DumpMigrationSchema(ctx) // uncomment to get the current state of the database after migrations have run
+	if !assert.NoError(t, err) {
+		assert.NoError(t, tm.DumpMigrationSchema(ctx))
+		t.FailNow()
+	}
 
 	t.Run("suite=fixtures", func(t *testing.T) {
 		t.Cleanup(func() {
@@ -477,5 +481,8 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 	})
 
 	err = tm.Down(ctx, -1) // for easy breakpointing
-	require.NoError(t, err)
+	if !assert.NoError(t, err) {
+		assert.NoError(t, tm.DumpMigrationSchema(ctx))
+		t.FailNow()
+	}
 }
