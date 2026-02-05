@@ -48,6 +48,12 @@ var jsonnetCache, _ = ristretto.NewCache(&ristretto.Config[[]byte, []byte]{
 
 type MetadataType string
 
+type OIDCProviderData struct {
+	Provider string                                   `json:"provider"`
+	Tokens   *identity.CredentialsOIDCEncryptedTokens `json:"tokens"`
+	Claims   Claims                                   `json:"claims"`
+}
+
 type VerifiedAddress struct {
 	Value string `json:"value"`
 	Via   string `json:"via"`
@@ -58,6 +64,8 @@ const (
 
 	PublicMetadata MetadataType = "identity.metadata_public"
 	AdminMetadata  MetadataType = "identity.metadata_admin"
+
+	InternalContextKeyProviderData = "provider_data"
 )
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
@@ -228,6 +236,27 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
+	providerDataKey := flow.PrefixInternalContextKey(s.ID(), InternalContextKeyProviderData)
+	if oidcProviderData := gjson.GetBytes(f.InternalContext, providerDataKey); oidcProviderData.IsObject() {
+		var providerData OIDCProviderData
+		if err = json.Unmarshal([]byte(oidcProviderData.Raw), &providerData); err != nil {
+			return s.HandleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected OIDC provider data in internal context to be an object but got: %s", err)))
+		}
+		if pid != providerData.Provider {
+			return s.HandleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected OIDC provider data in internal context to have matching provider but got: %s", providerData.Provider)))
+		}
+		container := &AuthCodeContainer{
+			FlowID:           f.ID.String(),
+			Traits:           p.Traits,
+			TransientPayload: f.TransientPayload,
+		}
+		_, err = s.processRegistration(ctx, w, r, f, providerData.Tokens, &providerData.Claims, provider, container)
+		if err != nil {
+			return s.HandleError(ctx, w, r, f, pid, container.Traits, err)
+		}
+		return errors.WithStack(flow.ErrCompletedByStrategy)
+	}
+
 	state, pkce, err := s.GenerateState(ctx, provider, f)
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
@@ -337,6 +366,13 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 	}
 
+	providerDataKey := flow.PrefixInternalContextKey(s.ID(), InternalContextKeyProviderData)
+	if hasOIDCProviderData := gjson.GetBytes(rf.InternalContext, providerDataKey).IsObject(); !hasOIDCProviderData {
+		if internalContext, err := sjson.SetBytes(rf.InternalContext, providerDataKey, &OIDCProviderData{Provider: provider.Config().ID, Tokens: token, Claims: *claims}); err == nil {
+			rf.InternalContext = internalContext
+		}
+	}
+
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
@@ -362,6 +398,10 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	i.SetCredentials(s.ID(), *creds)
 	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
 		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+	}
+
+	if internalContext, err := sjson.DeleteBytes(rf.InternalContext, providerDataKey); err == nil {
+		rf.InternalContext = internalContext
 	}
 
 	return nil, nil
