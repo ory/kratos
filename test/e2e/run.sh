@@ -53,12 +53,59 @@ for i in "$@"; do
 done
 
 cleanup() {
-    killall modd || true
-    killall webhook || true
-    killall hydra || true
-    killall hydra-login-consent || true
-    killall hydra-kratos-login-consent || true
-    docker kill kratos_test_hydra || true
+    # Temporarily disable exit on error for cleanup (services may not be running)
+    set +e
+
+    echo "=== E2E Cleanup ==="
+
+    # Step 1: Kill process supervisors FIRST (they respawn children)
+    echo "Killing process supervisors (modd, nodemon)..."
+    pkill -9 -f "modd" 2>/dev/null
+    pkill -9 -f "nodemon" 2>/dev/null
+    sleep 2
+
+    # Step 2: Kill Kratos and webhook (were managed by modd)
+    echo "Killing Kratos and webhook..."
+    pkill -9 -f "kratos serve" 2>/dev/null
+    pkill -9 -f "\.bin/kratos" 2>/dev/null
+    pkill -9 -f "\.bin/webhook" 2>/dev/null
+    killall kratos 2>/dev/null
+    killall webhook 2>/dev/null
+
+    # Step 3: Kill Node.js services
+    echo "Killing Node.js services..."
+    pkill -9 -f "node.*proxy" 2>/dev/null
+    pkill -9 -f "kratos-selfservice-ui-node" 2>/dev/null
+    pkill -9 -f "kratos-selfservice-ui-react-nextjs" 2>/dev/null
+    pkill -9 -f "expo" 2>/dev/null
+    pkill -9 -f "webpack.*19006" 2>/dev/null
+
+    # Step 4: Kill Hydra processes
+    echo "Killing Hydra processes..."
+    killall hydra 2>/dev/null
+    killall hydra-login-consent 2>/dev/null
+    killall hydra-kratos-login-consent 2>/dev/null
+    pkill -9 -f "hydra serve" 2>/dev/null
+
+    # Step 5: Kill any remaining processes on known ports
+    echo "Cleaning up any remaining port listeners..."
+    for port in 4433 4434 4444 4445 4446 4455 4456 4458 4744 4745 4746 19006; do
+        pid=$(lsof -ti:$port 2>/dev/null)
+        if [ -n "$pid" ]; then
+            echo "  Killing PID $pid on port $port"
+            kill -9 $pid 2>/dev/null
+        fi
+    done
+
+    # Step 6: Stop and remove Docker containers
+    echo "Stopping Docker containers..."
+    docker stop kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach mailslurper kratos_test_hydra 2>/dev/null
+    docker rm kratos_test_database_mysql kratos_test_database_postgres kratos_test_database_cockroach mailslurper kratos_test_hydra 2>/dev/null
+
+    echo "=== Cleanup Complete ==="
+
+    # Re-enable exit on error
+    set -e
 }
 
 prepare() {
