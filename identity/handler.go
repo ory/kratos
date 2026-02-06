@@ -735,7 +735,7 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 //
 // If the patch includes hashed passwords you can import up to 1,000 identities per request.
 //
-// If the patch includes at least one plaintext password you can import up to 200 identities per request.  
+// If the patch includes at least one plaintext password you can import up to 200 identities per request.
 //
 // Avoid importing large batches with plaintext passwords. They can cause timeouts as the passwords need to be hashed before they are stored.
 //
