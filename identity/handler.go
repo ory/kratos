@@ -728,14 +728,14 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 //
 // # Create multiple identities
 //
-// Creates multiple [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model).
+// Creates multiple [identities](https://www.ory.com/docs/kratos/concepts/identity-user-model).
 //
-// You can also use this endpoint to [import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities),
+// You can also use this endpoint to [import credentials](https://www.ory.com/docs/kratos/manage-identities/import-user-accounts-identities),
 // including passwords, social sign-in settings, and multi-factor authentication methods.
 //
-// You can import:
-// - Up to 1,000 identities per request
-// - Up to 200 identities per request if including plaintext passwords
+// If the patch includes hashed passwords you can import up to 1,000 identities per request.
+//
+// If the patch includes at least one plaintext password you can import up to 200 identities per request.  
 //
 // Avoid importing large batches with plaintext passwords. They can cause timeouts as the passwords need to be hashed before they are stored.
 //
