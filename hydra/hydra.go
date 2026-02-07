@@ -30,6 +30,7 @@ type (
 	AcceptLoginRequestParams struct {
 		LoginChallenge        string
 		IdentityID            string
+		ExternalID            string
 		SessionID             string
 		AuthenticationMethods session.AuthenticationMethods
 	}
@@ -93,7 +94,12 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, params AcceptLogi
 	remember := h.d.Config().SessionPersistentCookie(ctx)
 	rememberFor := int64(h.d.Config().SessionLifespan(ctx) / time.Second)
 
-	alr := hydraclientgo.NewAcceptOAuth2LoginRequest(params.IdentityID)
+	subject := params.IdentityID
+	if h.d.Config().OAuth2ProviderUseExternalID(ctx) && params.ExternalID != "" {
+		subject = params.ExternalID
+	}
+
+	alr := hydraclientgo.NewAcceptOAuth2LoginRequest(subject)
 	alr.IdentityProviderSessionId = &params.SessionID
 	alr.Remember = &remember
 	alr.RememberFor = &rememberFor
