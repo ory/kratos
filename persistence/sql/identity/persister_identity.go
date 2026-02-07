@@ -880,8 +880,6 @@ func QueryForCredentials(con *pop.Connection, where ...Where) (credentialsPerIde
 		"identity_credentials.updated_at",
 	).LeftJoin(identifiersTableNameWithIndexHint(con),
 		"identity_credential_identifiers.identity_credential_id = identity_credentials.id AND identity_credential_identifiers.nid = identity_credentials.nid",
-	).Order(
-		"identity_credential_identifiers.identifier ASC",
 	)
 	for _, w := range where {
 		q = q.Where("("+w.Condition+")", w.Args...)
