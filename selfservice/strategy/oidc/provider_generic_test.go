@@ -6,6 +6,9 @@ package oidc_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 
@@ -19,6 +22,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/contextx"
 )
 
 func makeOIDCClaims() json.RawMessage {
@@ -92,5 +96,72 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 			ID: x.NewUUID(),
 		}
 		assert.Contains(t, makeAuthCodeURL(t, r, reg), "claims="+url.QueryEscape(string(makeOIDCClaims())))
+	})
+}
+
+func TestProviderGenericOIDC_UseOIDCDiscoveryIssuer(t *testing.T) {
+	// Simulate an OIDC provider (like Azure AD B2C) where the issuer in the
+	// discovery document does not match the discovery URL.
+	mismatchedIssuer := "http://different-issuer.example.com"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = fmt.Fprintf(w, `{
+			"issuer": %q,
+			"authorization_endpoint": "http://%s/authorize",
+			"token_endpoint": "http://%s/token",
+			"jwks_uri": "http://%s/keys",
+			"id_token_signing_alg_values_supported": ["RS256"]
+		}`, mismatchedIssuer, r.Host, r.Host, r.Host)
+	}))
+	t.Cleanup(server.Close)
+
+	_, reg := internal.NewFastRegistryWithMocks(t)
+	ctx := contextx.WithConfigValue(context.Background(), config.ViperKeyPublicBaseURL, "https://ory.sh")
+
+	t.Run("case=fails when issuer does not match discovery URL", func(t *testing.T) {
+		p := oidc.NewProviderGenericOIDC(&oidc.Configuration{
+			Provider:               "generic",
+			ID:                     "test",
+			ClientID:               "client",
+			ClientSecret:           "secret",
+			IssuerURL:              server.URL,
+			UseOIDCDiscoveryIssuer: false,
+		}, reg)
+
+		_, err := p.(oidc.OAuth2Provider).OAuth2(ctx)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "Invalid configuration")
+	})
+
+	t.Run("case=succeeds when use_oidc_discovery_issuer is true", func(t *testing.T) {
+		p := oidc.NewProviderGenericOIDC(&oidc.Configuration{
+			Provider:               "generic",
+			ID:                     "test",
+			ClientID:               "client",
+			ClientSecret:           "secret",
+			IssuerURL:              server.URL,
+			UseOIDCDiscoveryIssuer: true,
+		}, reg)
+
+		c, err := p.(oidc.OAuth2Provider).OAuth2(ctx)
+		require.NoError(t, err)
+		assert.Contains(t, c.Endpoint.AuthURL, server.URL)
+	})
+
+	t.Run("case=uses discovered endpoints not config auth_url/token_url", func(t *testing.T) {
+		p := oidc.NewProviderGenericOIDC(&oidc.Configuration{
+			Provider:               "generic",
+			ID:                     "test",
+			ClientID:               "client",
+			ClientSecret:           "secret",
+			IssuerURL:              server.URL,
+			AuthURL:                "https://should-be-ignored.example.com/authorize",
+			TokenURL:               "https://should-be-ignored.example.com/token",
+			UseOIDCDiscoveryIssuer: true,
+		}, reg)
+
+		c, err := p.(oidc.OAuth2Provider).OAuth2(ctx)
+		require.NoError(t, err)
+		assert.NotContains(t, c.Endpoint.AuthURL, "should-be-ignored")
+		assert.Contains(t, c.Endpoint.AuthURL, server.URL)
 	})
 }

@@ -50,7 +50,11 @@ func (g *ProviderGenericOIDC) withHTTPClientContext(ctx context.Context) context
 
 func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, error) {
 	if g.p == nil {
-		p, err := gooidc.NewProvider(g.withHTTPClientContext(ctx), g.config.IssuerURL)
+		ctx = g.withHTTPClientContext(ctx)
+		if g.config.UseOIDCDiscoveryIssuer {
+			ctx = gooidc.InsecureIssuerURLContext(ctx, g.config.IssuerURL)
+		}
+		p, err := gooidc.NewProvider(ctx, g.config.IssuerURL)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}
