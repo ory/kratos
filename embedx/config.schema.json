@@ -594,6 +594,12 @@
           "description": "Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token",
           "type": "string",
           "examples": ["https://example.com"]
+        },
+        "use_oidc_discovery_issuer": {
+          "title": "Use OIDC Discovery Issuer",
+          "description": "If true, allows the OpenID Connect provider's issuer URL to differ from the discovery document URL. This is required for providers like Azure AD B2C where the issuer claim does not match the discovery endpoint. ID token issuer validation still occurs against the discovered issuer value.",
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false,
