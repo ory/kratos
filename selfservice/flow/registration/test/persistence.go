@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/x/sqlcon"
 

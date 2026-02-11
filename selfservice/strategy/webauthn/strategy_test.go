@@ -12,14 +12,14 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/webauthn"
 	"github.com/ory/kratos/session"
 	"github.com/ory/x/contextx"
 )
 
 func TestCompletedAuthenticationMethod(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	strategy := webauthn.NewStrategy(reg)
 
 	t.Run("default config", func(t *testing.T) {
@@ -39,7 +39,7 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	strategy := webauthn.NewStrategy(reg)
 
 	for k, tc := range []struct {

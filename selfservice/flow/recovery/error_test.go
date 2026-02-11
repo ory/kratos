@@ -20,8 +20,8 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -40,7 +40,7 @@ func TestHandleError(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(map[string]any{
 			config.ViperKeySelfServiceRecoveryEnabled: true,
 			config.ViperKeySelfServiceRecoveryUse:     "code",
@@ -188,7 +188,7 @@ func TestHandleError(t *testing.T) {
 			})
 
 			t.Run("case=fails if active strategy is disabled", func(t *testing.T) {
-				c, reg := internal.NewVeryFastRegistryWithoutDB(t)
+				c, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 				require.NoError(t, c.Set(context.Background(), "selfservice.methods.code.enabled", false))
 				require.NoError(t, c.Set(context.Background(), config.ViperKeySelfServiceRecoveryUse, "code"))
 				_, err := reg.GetActiveRecoveryStrategy(context.Background())
@@ -302,7 +302,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(map[string]any{
 			config.ViperKeyUseContinueWithTransitions: true,
 			config.ViperKeySelfServiceRecoveryEnabled: true,
@@ -459,7 +459,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 			})
 
 			t.Run("case=fails if active strategy is disabled", func(t *testing.T) {
-				c, reg := internal.NewVeryFastRegistryWithoutDB(t)
+				c, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 				require.NoError(t, c.Set(context.Background(), "selfservice.methods.code.enabled", false))
 				require.NoError(t, c.Set(context.Background(), config.ViperKeySelfServiceRecoveryUse, "code"))
 				_, err := reg.GetActiveRecoveryStrategy(context.Background())

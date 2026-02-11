@@ -30,10 +30,10 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/registrationhelpers"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	kratos "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/registrationhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -83,7 +83,7 @@ func createIdentity(ctx context.Context, reg *driver.RegistryDefault, t *testing
 func TestCompleteLogin(t *testing.T) {
 	t.Parallel()
 
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true),
 		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
 			"migration": "file://./stub/migration.schema.json",
@@ -1233,7 +1233,7 @@ func TestCompleteLogin(t *testing.T) {
 }
 
 func TestFormHydration(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true),
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/login.schema.json")),
 	)

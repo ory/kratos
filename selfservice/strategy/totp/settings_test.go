@@ -20,9 +20,9 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	kratos "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy/totp"
@@ -38,7 +38,7 @@ import (
 func TestCompleteSettings(t *testing.T) {
 	t.Parallel()
 
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
 		configx.WithValues(testhelpers.MethodEnableConfig("profile", false)),
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeTOTP, true)),

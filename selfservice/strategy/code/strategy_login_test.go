@@ -27,9 +27,9 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	oryClient "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	oryClient "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -96,7 +96,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeCodeAuth, true)),
 		configx.WithValues(map[string]any{
@@ -1236,7 +1236,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 func TestFormHydration(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 			"enabled":              true,
 			"passwordless_enabled": true,
@@ -1503,7 +1503,7 @@ func TestFormHydration(t *testing.T) {
 func TestCodeLoginWithLoginChallenge(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 			"enabled":              true,
 			"passwordless_enabled": true,

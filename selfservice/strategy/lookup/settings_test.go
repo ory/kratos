@@ -24,9 +24,9 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	kratos "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy/lookup"
@@ -92,7 +92,7 @@ func createIdentity(t *testing.T, reg driver.Registry) (*identity.Identity, []id
 
 func TestCompleteSettings(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
 		configx.WithValues(testhelpers.MethodEnableConfig("profile", false)),
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeLookup, true)),

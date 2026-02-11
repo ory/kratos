@@ -30,9 +30,9 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	oryClient "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	oryClient "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -54,7 +54,7 @@ type state struct {
 }
 
 func TestRegistrationCodeStrategyDisabled(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeCodeAuth, false)),
@@ -111,7 +111,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 	)
 
 	setup := func(ctx context.Context, t *testing.T, cfgOpts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault, *httptest.Server) {
-		conf, reg := internal.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
+		conf, reg := pkg.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
 			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/code.identity.schema.json")),
 			configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypePassword, false)),
 			configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeCodeAuth, true)),
@@ -742,7 +742,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 func TestPopulateRegistrationMethod(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/code.identity.schema.json")),
 		configx.WithValue(fmt.Sprintf("%s.%s.passwordless_enabled", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeCodeAuth), true),
 	)
@@ -827,7 +827,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 func TestCodeRegistrationWithLoginChallenge(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
 			"enabled":              true,
 			"passwordless_enabled": true,

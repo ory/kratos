@@ -17,7 +17,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/x/contextx"
 )
@@ -34,7 +34,7 @@ func generateRandomConfig(t *testing.T) (identity.CredentialsPassword, []byte) {
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	strategy := password.NewStrategy(reg)
 
 	h1, err := hash.NewHasherBcrypt(reg).Generate(t.Context(), []byte("a password"))

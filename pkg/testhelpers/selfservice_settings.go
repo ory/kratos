@@ -22,7 +22,7 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	kratos "github.com/ory/kratos/internal/httpclient"
+	kratos "github.com/ory/kratos/pkg/httpclient"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/ioutilx"

@@ -21,10 +21,10 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/registrationhelpers"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	kratos "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/registrationhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -42,7 +42,7 @@ import (
 var flows = []string{"spa", "api", "browser"}
 
 func newRegistrationRegistry(t *testing.T, cfgOpts ...configx.OptionModifier) *driver.RegistryDefault {
-	_, reg := internal.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
+	_, reg := pkg.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
 		configx.WithValues(map[string]any{
 			config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypePassword) + ".enabled": true,
 			config.ViperKeySelfServiceRegistrationLoginHints:                                                       true,
@@ -870,7 +870,7 @@ func TestRegistration(t *testing.T) {
 	t.Run("method=PopulateSignUpMethod", func(t *testing.T) {
 		t.Parallel()
 
-		conf, reg := internal.NewFastRegistryWithMocks(t,
+		conf, reg := pkg.NewFastRegistryWithMocks(t,
 			configx.WithValues(map[string]any{
 				config.ViperKeyPublicBaseURL:                              "https://foo/",
 				config.ViperKeySelfServiceRegistrationEnableLegacyOneStep: true,
@@ -904,7 +904,7 @@ func TestRegistration(t *testing.T) {
 func TestPopulateRegistrationMethod(t *testing.T) {
 	t.Parallel()
 
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/identity.schema.json")),
 	)
 

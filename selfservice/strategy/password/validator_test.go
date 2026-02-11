@@ -22,7 +22,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/password"
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/configx"
@@ -40,7 +40,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	t.Run("default strategy", func(t *testing.T) {
 		t.Parallel()
 
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		s, err := password.NewDefaultPasswordValidatorStrategy(reg)
 		require.NoError(t, err)
 
@@ -93,7 +93,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	t.Run("failure cases", func(t *testing.T) {
 		t.Parallel()
 
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		s, err := password.NewDefaultPasswordValidatorStrategy(reg)
 		require.NoError(t, err)
 
@@ -139,7 +139,7 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		t.Parallel()
 
 		const maxBreaches = 5
-		_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordMaxBreaches, maxBreaches))
+		_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordMaxBreaches, maxBreaches))
 		s, err := password.NewDefaultPasswordValidatorStrategy(reg)
 		require.NoError(t, err)
 
@@ -271,7 +271,7 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 	testServerURL, err := url.Parse(testServer.URL)
 	require.NoError(t, err)
 
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host))
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host))
 	s, err := password.NewDefaultPasswordValidatorStrategy(reg)
 	require.NoError(t, err)
 
@@ -291,7 +291,7 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false))
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false))
 	s, err := password.NewDefaultPasswordValidatorStrategy(reg)
 	require.NoError(t, err)
 
@@ -308,7 +308,7 @@ func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 func TestChangeMinPasswordLength(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordMinLength, 10))
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordMinLength, 10))
 	s, err := password.NewDefaultPasswordValidatorStrategy(reg)
 	require.NoError(t, err)
 
@@ -324,7 +324,7 @@ func TestChangeMinPasswordLength(t *testing.T) {
 func TestChangeIdentifierSimilarityCheckEnabled(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	s, err := password.NewDefaultPasswordValidatorStrategy(reg)
 	require.NoError(t, err)
 

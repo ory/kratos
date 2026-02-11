@@ -19,8 +19,8 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/session"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
@@ -75,7 +75,7 @@ func setTokenizeConfigWitSubjectSource(ctx context.Context, templateID, keyFile,
 func TestTokenizer(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValue(config.ViperKeyPublicBaseURL, "http://localhost/"),
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
 	)

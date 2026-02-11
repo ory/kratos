@@ -31,7 +31,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/request"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
@@ -63,7 +63,7 @@ var transientPayload = json.RawMessage(`{
 
 func TestWebHooks(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 
 	conf.MustSet(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{
@@ -1043,7 +1043,7 @@ func TestWebHooks(t *testing.T) {
 func TestDisallowPrivateIPRanges(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	conf.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
 	logger := logrusx.New("kratos", "test")
@@ -1113,7 +1113,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 
 func TestAsyncWebhook(t *testing.T) {
 	t.Parallel()
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 	logHook := new(test.Hook)
 	logger.Logger.Hooks.Add(logHook)
@@ -1196,7 +1196,7 @@ func TestAsyncWebhook(t *testing.T) {
 
 func TestWebhookEvents(t *testing.T) {
 	t.Parallel()
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
 	whDeps := struct {
 		x.BasicRegistry

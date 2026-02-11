@@ -14,11 +14,11 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/courier/template/email"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 )
 
 func TestNewEmailTemplateFromMessage(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	ctx := context.Background()
 
 	for tmplType, expectedTmpl := range map[template.TemplateType]courier.EmailTemplate{

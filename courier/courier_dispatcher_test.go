@@ -14,8 +14,8 @@ import (
 	"github.com/ory/kratos/courier"
 	templates "github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/x/configx"
 )
 
@@ -31,7 +31,7 @@ func queueNewMessage(t *testing.T, c courier.Courier) uuid.UUID {
 }
 
 func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
-	_, reg := internal.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
+	_, reg := pkg.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
 		config.ViperKeyCourierMessageRetries: 5,
 		config.ViperKeyCourierSMTPURL:        "http://foo.url",
 	}))
@@ -56,7 +56,7 @@ func TestDispatchMessageWithInvalidSMTP(t *testing.T) {
 }
 
 func TestDispatchMessage(t *testing.T) {
-	_, reg := internal.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
+	_, reg := pkg.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
 		config.ViperKeyCourierMessageRetries: 5,
 		config.ViperKeyCourierSMTPURL:        "http://foo.url",
 	}))
@@ -79,7 +79,7 @@ func TestDispatchMessage(t *testing.T) {
 }
 
 func TestDispatchQueue(t *testing.T) {
-	_, reg := internal.NewRegistryDefaultWithDSN(t, "", configx.WithValue(config.ViperKeyCourierMessageRetries, 1))
+	_, reg := pkg.NewRegistryDefaultWithDSN(t, "", configx.WithValue(config.ViperKeyCourierMessageRetries, 1))
 
 	c, err := reg.Courier(t.Context())
 	require.NoError(t, err)

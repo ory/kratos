@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -26,7 +26,7 @@ import (
 
 func TestFlow(t *testing.T) {
 	ctx := context.Background()
-	conf := internal.NewConfigurationWithDefaults(t)
+	conf := pkg.NewConfigurationWithDefaults(t)
 
 	must := func(r *recovery.Flow, err error) *recovery.Flow {
 		require.NoError(t, err)
@@ -90,7 +90,7 @@ func TestFlowEncodeJSON(t *testing.T) {
 
 func TestFromOldFlow(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	conf, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 	r := http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}
 	t.Run("strategy=code", func(t *testing.T) {
 		for _, ft := range []flow.Type{

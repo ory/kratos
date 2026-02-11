@@ -11,7 +11,7 @@ COPY oryx/go.sum oryx/go.sum
 
 COPY go.mod go.mod
 COPY go.sum go.sum
-COPY internal/client-go/go.* internal/client-go/
+COPY pkg/client-go/go.* pkg/client-go/
 
 ENV GO111MODULE on
 ENV CGO_ENABLED 1

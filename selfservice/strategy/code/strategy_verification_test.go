@@ -27,8 +27,8 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -46,7 +46,7 @@ func TestVerification(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(defaultConfig))
+	conf, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(defaultConfig))
 
 	identityToVerify := &identity.Identity{
 		ID:       x.NewUUID(),

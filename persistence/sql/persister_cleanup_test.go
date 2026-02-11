@@ -11,13 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 )
 
 func TestPersister_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	ctx := context.Background()
 
@@ -34,7 +34,7 @@ func TestPersister_Cleanup(t *testing.T) {
 func TestPersister_Continuity_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	currentTime := time.Now()
 	ctx := context.Background()
@@ -52,7 +52,7 @@ func TestPersister_Continuity_Cleanup(t *testing.T) {
 func TestPersister_Login_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	currentTime := time.Now()
 	ctx := context.Background()
@@ -70,7 +70,7 @@ func TestPersister_Login_Cleanup(t *testing.T) {
 func TestPersister_Recovery_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	currentTime := time.Now()
 	ctx := context.Background()
@@ -88,7 +88,7 @@ func TestPersister_Recovery_Cleanup(t *testing.T) {
 func TestPersister_Registration_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	currentTime := time.Now()
 	ctx := context.Background()
@@ -106,7 +106,7 @@ func TestPersister_Registration_Cleanup(t *testing.T) {
 func TestPersister_Session_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	currentTime := time.Now()
 	ctx := context.Background()
@@ -124,7 +124,7 @@ func TestPersister_Session_Cleanup(t *testing.T) {
 func TestPersister_Settings_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	currentTime := time.Now()
 	ctx := context.Background()
@@ -142,7 +142,7 @@ func TestPersister_Settings_Cleanup(t *testing.T) {
 func TestPersister_Verification_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	currentTime := time.Now()
 	ctx := context.Background()
@@ -160,7 +160,7 @@ func TestPersister_Verification_Cleanup(t *testing.T) {
 func TestPersister_SessionTokenExchange_Cleanup(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 	currentTime := time.Now()
 	ctx := context.Background()

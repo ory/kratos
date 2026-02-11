@@ -18,8 +18,8 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
@@ -31,7 +31,7 @@ import (
 
 func TestTwoStepRegistration(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 
@@ -177,7 +177,7 @@ func TestTwoStepRegistration(t *testing.T) {
 
 func TestOneStepRegistration(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
@@ -249,7 +249,7 @@ func TestOneStepRegistration(t *testing.T) {
 
 func TestPopulateRegistrationMethod(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/identity.schema.json")
 
 	s, err := reg.AllRegistrationStrategies().Strategy(identity.CredentialsTypeProfile)

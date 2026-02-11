@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 )
 
 func TestProviderLinkedInV2_Discovery(t *testing.T) {
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	p := oidc.NewProviderLinkedInV2(&oidc.Configuration{
 		Provider:        "linkedin_v2",

@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 
 	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/ui/node"
@@ -21,7 +21,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
 )
@@ -32,7 +32,7 @@ func init() {
 
 func TestSessionDestroyer(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "http://localhost/")
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/stub.schema.json")

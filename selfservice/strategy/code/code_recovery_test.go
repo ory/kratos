@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -21,7 +21,7 @@ import (
 )
 
 func TestRecoveryCode(t *testing.T) {
-	conf := internal.NewConfigurationWithDefaults(t)
+	conf := pkg.NewConfigurationWithDefaults(t)
 
 	newCode := func(expiresIn time.Duration, f *recovery.Flow) *code.RecoveryCode {
 		return &code.RecoveryCode{

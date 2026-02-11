@@ -10922,7 +10922,7 @@ Configuraiton value `session.cookie_same_site` has moved to
 
   The `swagger:parameters <id>` definitions for `updateIdentity` and
   `createIdentity` where defined two times with the same ID. They had some old
-  definition swagger used. The `internal/httpclient` should now work again as
+  definition swagger used. The `pkg/httpclient` should now work again as
   expected.
 
 - Tell tls what the smtps server name is

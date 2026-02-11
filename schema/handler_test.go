@@ -21,7 +21,7 @@ import (
 	"github.com/ory/client-go"
 	_ "github.com/ory/jsonschema/v3/fileloader"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/httprouterx"
@@ -115,7 +115,7 @@ func TestHandler(t *testing.T) {
 		})
 	}
 
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
 		config.ViperKeyPublicBaseURL:           ts.URL,
 		config.ViperKeyDefaultIdentitySchemaID: "default",
 		config.ViperKeyIdentitySchemas:         configSchemas,

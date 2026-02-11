@@ -17,7 +17,7 @@ import (
 
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/x/configx"
 )
 
@@ -81,7 +81,7 @@ func TestQueueHTTPEmail(t *testing.T) {
 		"body": "file://./stub/request.config.mailer.jsonnet"
 	}`, srv.URL)
 
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
 		config.ViperKeyCourierDeliveryStrategy:  "http",
 		config.ViperKeyCourierHTTPRequestConfig: requestConfig,
 		config.ViperKeyCourierSMTPURL:           "http://foo.url",

@@ -29,8 +29,8 @@ import (
 	"github.com/ory/kratos/corpx"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	. "github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
@@ -56,7 +56,7 @@ func send(code int) http.HandlerFunc {
 func TestSessionWhoAmI(t *testing.T) {
 	t.Parallel()
 
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	ts, _, r, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 	ctx := context.Background()
 
@@ -352,7 +352,7 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	r := httprouterx.NewTestRouterPublic(t)
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
 
@@ -382,7 +382,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	r := httprouterx.NewTestRouterPublic(t)
 
 	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
@@ -438,7 +438,7 @@ func TestIsAuthenticated(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
 	r := httprouterx.NewTestRouterPublic(t)
 
@@ -492,7 +492,7 @@ func TestIsAuthenticated(t *testing.T) {
 func TestHandlerAdminSessionManagement(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")))
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")))
 	public, ts := testhelpers.NewKratosServer(t, reg)
 
 	t.Run("case=should return 202 after invalidating all sessions", func(t *testing.T) {
@@ -858,7 +858,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
 	)
 	ts, _, r, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
@@ -1045,7 +1045,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
 	)
 	publicServer, adminServer, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)

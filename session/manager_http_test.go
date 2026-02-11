@@ -18,8 +18,8 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
@@ -93,7 +93,7 @@ func TestManagerHTTP(t *testing.T) {
 	t.Run("case=regenerate csrf on principal change", func(t *testing.T) {
 		t.Parallel()
 
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		mock := new(mockCSRFHandler)
 		reg.WithCSRFHandler(mock)
 
@@ -104,7 +104,7 @@ func TestManagerHTTP(t *testing.T) {
 	t.Run("case=cookie settings", func(t *testing.T) {
 		t.Parallel()
 
-		_, reg := internal.NewFastRegistryWithMocks(t,
+		_, reg := pkg.NewFastRegistryWithMocks(t,
 			configx.WithValues(map[string]any{
 				"dev":                        false,
 				config.ViperKeyPublicBaseURL: "https://baseurl.com/base_url",
@@ -173,7 +173,7 @@ func TestManagerHTTP(t *testing.T) {
 
 		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 
-		_, reg := internal.NewFastRegistryWithMocks(t,
+		_, reg := pkg.NewFastRegistryWithMocks(t,
 			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
 		)
 
@@ -209,7 +209,7 @@ func TestManagerHTTP(t *testing.T) {
 
 		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 
-		_, reg := internal.NewFastRegistryWithMocks(t,
+		_, reg := pkg.NewFastRegistryWithMocks(t,
 			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
 		)
 
@@ -241,7 +241,7 @@ func TestManagerHTTP(t *testing.T) {
 	t.Run("suite=lifecycle", func(t *testing.T) {
 		t.Parallel()
 
-		conf, reg := internal.NewFastRegistryWithMocks(t,
+		conf, reg := pkg.NewFastRegistryWithMocks(t,
 			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/fake-session.schema.json")),
 		)
 
@@ -521,7 +521,7 @@ func TestManagerHTTP(t *testing.T) {
 func TestDoesSessionSatisfy(t *testing.T) {
 	t.Parallel()
 
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
 	)
 

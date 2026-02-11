@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/hash"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 )
 
 func mkpw(t *testing.T, length int) []byte {
@@ -26,7 +26,7 @@ func mkpw(t *testing.T, length int) []byte {
 func TestArgonHasher(t *testing.T) {
 	t.Parallel()
 	ctx := t.Context()
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 	h := hash.NewHasherArgon2(reg)
 	for _, pwLength := range []int{
 		8,
@@ -58,7 +58,7 @@ func TestBcryptHasherGeneratesErrorWhenPasswordIsLong(t *testing.T) {
 	t.Parallel()
 	ctx := t.Context()
 
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 	hasher := hash.NewHasherBcrypt(reg)
 
 	password := mkpw(t, 73)
@@ -71,7 +71,7 @@ func TestBcryptHasherGeneratesErrorWhenPasswordIsLong(t *testing.T) {
 func TestBcryptHasherGeneratesHash(t *testing.T) {
 	t.Parallel()
 	ctx := t.Context()
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 	hasher := hash.NewHasherBcrypt(reg)
 	for _, pwLength := range []int{
 		8,
@@ -108,7 +108,7 @@ func TestComparatorBcryptFailsWhenPasswordIsTooLong(t *testing.T) {
 func TestComparatorBcryptSuccess(t *testing.T) {
 	t.Parallel()
 	ctx := t.Context()
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 	hasher := hash.NewHasherBcrypt(reg)
 	for _, pwLength := range []int{
 		8,

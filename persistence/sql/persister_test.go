@@ -24,11 +24,11 @@ import (
 	"github.com/ory/kratos/driver/config"
 	ri "github.com/ory/kratos/identity"
 	identity "github.com/ory/kratos/identity/test"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/persistence/sql/batch"
 	sqltesthelpers "github.com/ory/kratos/persistence/sql/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
 	errorx "github.com/ory/kratos/selfservice/errorx/test"
 	lf "github.com/ory/kratos/selfservice/flow/login"
@@ -148,7 +148,7 @@ func createCleanDatabases(t testing.TB) map[string]string {
 
 			t.Logf("Connecting to %s: %s", name, dsn)
 
-			_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+			_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 			p := reg.Persister().(*sql.Persister)
 
 			t.Logf("Applying %s migrations", name)
@@ -193,7 +193,7 @@ func TestPersister(t *testing.T) {
 					go func() {
 						defer wg.Done()
 
-						_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+						_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 						_, ps := testhelpers.NewNetwork(t, ctx, reg.Persister())
 						id := ri.NewIdentity("")
 						id.SetCredentials(ri.CredentialsTypePassword, ri.Credentials{
@@ -212,7 +212,7 @@ func TestPersister(t *testing.T) {
 
 			t.Run("case=credential types exist", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword} {
 					require.NoError(t, p.(*sql.Persister).Connection(context.Background()).Where("name = ?", ct).First(&ri.CredentialsTypeTable{}))
@@ -221,31 +221,31 @@ func TestPersister(t *testing.T) {
 
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				identity.TestPool(ctx, p, reg.IdentityManager(), name)(t)
 			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				registration.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=errorx.TestPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				errorx.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=login.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				login.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=settings.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				settings.TestFlowPersister(ctx, p)(t)
 			})
@@ -254,57 +254,57 @@ func TestPersister(t *testing.T) {
 				if name != "sqlite" {
 					t.Parallel()
 				}
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				session.TestPersister(ctx, reg.Config(), p)(t)
 			})
 			t.Run("contract=sessiontokenexchange.TestPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				sessiontokenexchange.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				t.Parallel()
 
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				upsert, insert := sqltesthelpers.DefaultNetworkWrapper(p)
 				courier.TestPersister(ctx, upsert, insert)(t)
 			})
 			t.Run("contract=verification.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				verification.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=recovery.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				recovery.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=link.TestPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				link.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=code.TestPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				code.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=continuity.TestPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				continuity.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=batch.TestPersister", func(t *testing.T) {
 				t.Parallel()
-				_, reg := internal.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				batch.TestPersister(ctx, reg.Tracer(ctx), p)(t)
 			})
@@ -326,7 +326,7 @@ func getErr(args ...interface{}) error {
 func TestPersister_Transaction(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := reg.Persister()
 
 	t.Run("case=should not create identity because callback returned error", func(t *testing.T) {
@@ -374,7 +374,7 @@ func Benchmark_BatchCreateIdentities(b *testing.B) {
 	parallelRequests := []int{1, 4, 8, 16}
 
 	for name, dsn := range conns {
-		_, reg := internal.NewRegistryDefaultWithDSN(b, dsn)
+		_, reg := pkg.NewRegistryDefaultWithDSN(b, dsn)
 		b.Run(fmt.Sprintf("database=%s", name), func(b *testing.B) {
 			conf := reg.Config()
 			_, p := testhelpers.NewNetwork(b, ctx, reg.Persister())

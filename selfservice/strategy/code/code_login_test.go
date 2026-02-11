@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -22,7 +22,7 @@ import (
 func TestLoginCode(t *testing.T) {
 	t.Parallel()
 
-	conf := internal.NewConfigurationWithDefaults(t)
+	conf := pkg.NewConfigurationWithDefaults(t)
 
 	newCode := func(expiresIn time.Duration, f *login.Flow) *code.LoginCode {
 		return &code.LoginCode{

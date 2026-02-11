@@ -24,9 +24,9 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	kratos "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
@@ -48,7 +48,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Parallel()
 
 	normalPrivilegedSessionFor := 5 * time.Minute
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/settings.schema.json")),
 		configx.WithValues(map[string]any{
 			config.ViperKeySelfServiceBrowserDefaultReturnTo:                "https://www.ory.sh/kratos",
@@ -666,7 +666,7 @@ func TestSettingsStrategy(t *testing.T) {
 func TestPopulateSettingsMethod(t *testing.T) {
 	t.Parallel()
 	nCtx := func(t *testing.T, conf *oidc.ConfigurationCollection) (*driver.RegistryDefault, context.Context) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		ctx := context.Background()
 		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
 		ctx = contextx.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")

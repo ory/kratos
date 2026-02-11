@@ -15,7 +15,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/cipher"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 )
@@ -24,7 +24,7 @@ var goodSecret = []string{"secret-thirty-two-character-long"}
 
 func TestCipher(t *testing.T) {
 	ctx := context.Background()
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySecretsDefault, goodSecret))
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySecretsDefault, goodSecret))
 
 	ciphers := []cipher.Cipher{
 		cipher.NewCryptAES(reg.Config()),

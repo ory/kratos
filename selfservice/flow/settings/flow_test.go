@@ -20,7 +20,7 @@ import (
 
 	"github.com/ory/x/jsonx"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
@@ -48,7 +48,7 @@ func TestFakeFlow(t *testing.T) {
 
 func TestNewFlow(t *testing.T) {
 	ctx := context.Background()
-	conf := internal.NewConfigurationWithDefaults(t)
+	conf := pkg.NewConfigurationWithDefaults(t)
 
 	id := &identity.Identity{ID: x.NewUUID()}
 	t.Run("case=0", func(t *testing.T) {
@@ -88,7 +88,7 @@ func TestNewFlow(t *testing.T) {
 }
 
 func TestFlow(t *testing.T) {
-	conf := internal.NewConfigurationWithDefaults(t)
+	conf := pkg.NewConfigurationWithDefaults(t)
 
 	alice := x.NewUUID()
 	malice := x.NewUUID()

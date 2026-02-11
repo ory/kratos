@@ -17,7 +17,7 @@ import (
 
 	"github.com/ory/kratos/courier/template/sms"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/x/configx"
 )
 
@@ -74,7 +74,7 @@ func TestQueueSMS(t *testing.T) {
 		}
 	}`, srv.URL)
 
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
 		config.ViperKeyCourierChannels: fmt.Sprintf(`[{
 			"id": "sms",
 			"type": "http",
@@ -108,7 +108,7 @@ func TestQueueSMS(t *testing.T) {
 }
 
 func TestDisallowedInternalNetwork(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
 		config.ViperKeyCourierChannels: `[
 			{
 				"id": "sms",

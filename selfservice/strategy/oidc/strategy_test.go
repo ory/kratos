@@ -31,8 +31,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -65,7 +65,7 @@ func TestStrategy(t *testing.T) {
 		scope   []string
 	)
 
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(map[string]any{
 			config.ViperKeyIdentitySchemas: config.Schemas{
 				{ID: "default", URL: "file://./stub/registration.schema.json"},
@@ -1844,7 +1844,7 @@ func prettyJSON(t *testing.T, body []byte) string {
 }
 
 func TestCountActiveFirstFactorCredentials(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	strategy := oidc.NewStrategy(reg)
 
 	toJSON := func(c identity.CredentialsOIDC) []byte {
@@ -1940,7 +1940,7 @@ func TestCountActiveFirstFactorCredentials(t *testing.T) {
 }
 
 func TestDisabledEndpoint(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypeOIDC.String(), false)
 	ctx := context.Background()
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
@@ -1996,7 +1996,7 @@ func TestDisabledEndpoint(t *testing.T) {
 func TestPostEndpointRedirect(t *testing.T) {
 	t.Parallel()
 
-	conf, reg := internal.NewFastRegistryWithMocks(t,
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeOIDC, true)),
 	)
 

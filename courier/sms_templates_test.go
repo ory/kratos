@@ -14,7 +14,7 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/courier/template/sms"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 )
 
 func TestSMSTemplateType(t *testing.T) {
@@ -29,7 +29,7 @@ func TestSMSTemplateType(t *testing.T) {
 }
 
 func TestNewSMSTemplateFromMessage(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	ctx := context.Background()
 
 	for tmplType, expectedTmpl := range map[template.TemplateType]courier.SMSTemplate{

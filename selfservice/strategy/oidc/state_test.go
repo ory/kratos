@@ -12,14 +12,14 @@ import (
 
 	"github.com/ory/kratos/cipher"
 	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
 
 func TestGenerateState(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	_ = conf
 	strat := oidc.NewStrategy(reg)
 	ctx := context.Background()

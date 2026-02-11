@@ -27,7 +27,7 @@ import (
 	"github.com/ory/kratos/courier"
 	templates "github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/x"
 	gomail "github.com/ory/mail/v3"
 	"github.com/ory/x/configx"
@@ -37,7 +37,7 @@ func TestNewSMTPClientPreventLeak(t *testing.T) {
 	// Test for https://hackerone.com/reports/2384028
 
 	invalidURL := "sm<>t>p://f%oo::bar:baz@my-server:1234:122/"
-	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyCourierSMTPURL, invalidURL))
+	conf, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyCourierSMTPURL, invalidURL))
 
 	channels, err := conf.CourierChannels(t.Context())
 	require.NoError(t, err)
@@ -49,7 +49,7 @@ func TestNewSMTPClientPreventLeak(t *testing.T) {
 }
 
 func TestNewSMTP(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 
 	setupSMTPClient := func(stringURL string) *courier.SMTPClient {
 		conf.MustSet(t.Context(), config.ViperKeyCourierSMTPURL, stringURL)
@@ -104,7 +104,7 @@ func TestNewSMTP(t *testing.T) {
 func TestQueueEmail(t *testing.T) {
 	smtp, api := x.StartMailhog(t, true)
 
-	_, reg := internal.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
+	_, reg := pkg.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
 		config.ViperKeyCourierSMTPURL:                            smtp,
 		config.ViperKeyCourierSMTPFrom:                           "test-stub@ory.sh",
 		config.ViperKeyCourierSMTPFromName:                       "Bob",

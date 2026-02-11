@@ -6,11 +6,11 @@ package main
 import (
 	"testing"
 
-	ory "github.com/ory/kratos/internal/httpclient"
+	ory "github.com/ory/kratos/pkg/httpclient"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 
 	"github.com/ory/kratos/examples/go/pkg"
 

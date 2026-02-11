@@ -12,7 +12,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/amazon"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 )
 
@@ -43,7 +43,7 @@ func TestAmazonOidcClaims(t *testing.T) {
 	amazonAPI := httptest.NewServer(handler)
 	t.Cleanup(amazonAPI.Close)
 
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	p := oidc.NewProviderAmazon(&oidc.Configuration{}, reg).(*oidc.ProviderAmazon)
 	p.SetProfileURL(t, amazonAPI.URL+"/user/profile")
 

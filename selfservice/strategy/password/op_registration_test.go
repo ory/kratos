@@ -21,8 +21,8 @@ import (
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
@@ -32,7 +32,7 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true))
+	conf, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true))
 
 	kratosPublicTS, _ := testhelpers.NewKratosServer(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)

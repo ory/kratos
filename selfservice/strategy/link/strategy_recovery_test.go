@@ -25,9 +25,9 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	kratos "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/strategy/link"
@@ -68,7 +68,7 @@ func createIdentityToRecover(t *testing.T, reg *driver.RegistryDefault, email st
 
 func TestAdminStrategy(t *testing.T) {
 	ctx := t.Context()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
 
 	_ = testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
@@ -251,7 +251,7 @@ func TestAdminStrategy(t *testing.T) {
 
 func TestRecovery(t *testing.T) {
 	ctx := t.Context()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.enabled", false)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/default.schema.json")
@@ -894,7 +894,7 @@ func TestRecovery(t *testing.T) {
 
 func TestDisabledEndpoint(t *testing.T) {
 	ctx := t.Context()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	initViper(t, conf)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyLink)+".enabled", false)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(recovery.RecoveryStrategyCode)+".enabled", false)

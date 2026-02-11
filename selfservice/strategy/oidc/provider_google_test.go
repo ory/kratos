@@ -15,14 +15,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 )
 
 func TestProviderGoogle_Scope(t *testing.T) {
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	p := oidc.NewProviderGoogle(&oidc.Configuration{
 		Provider:        "google",
@@ -39,7 +39,7 @@ func TestProviderGoogle_Scope(t *testing.T) {
 }
 
 func TestProviderGoogle_AccessType(t *testing.T) {
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	p := oidc.NewProviderGoogle(&oidc.Configuration{
 		Provider:        "google",
@@ -79,7 +79,7 @@ func TestGoogleVerify(t *testing.T) {
 		}
 	}
 	createProvider := func(jwksUrl string) *oidc.ProviderGoogle {
-		_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+		_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 		p := oidc.NewProviderGoogle(&oidc.Configuration{
 			Provider:        "google",
 			ID:              "valid",
@@ -122,7 +122,7 @@ func TestGoogleVerify(t *testing.T) {
 	})
 
 	t.Run("case=succeedes with additional id token audience", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		google := oidc.NewProviderGoogle(&oidc.Configuration{
 			ClientID:                   "something.else.app",
 			AdditionalIDTokenAudiences: []string{"com.example.app"},

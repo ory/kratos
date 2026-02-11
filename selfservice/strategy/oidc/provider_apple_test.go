@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 )
 
@@ -69,7 +69,7 @@ func TestAppleVerify(t *testing.T) {
 		}
 	}
 	t.Run("case=successful verification", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		apple := oidc.NewProviderApple(&oidc.Configuration{
 			ClientID: "com.example.app",
 		}, reg).(*oidc.ProviderApple)
@@ -84,7 +84,7 @@ func TestAppleVerify(t *testing.T) {
 	})
 
 	t.Run("case=fails due to client_id mismatch", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		apple := oidc.NewProviderApple(&oidc.Configuration{
 			ClientID: "com.example.app",
 		}, reg).(*oidc.ProviderApple)
@@ -97,7 +97,7 @@ func TestAppleVerify(t *testing.T) {
 	})
 
 	t.Run("case=fails due to jwks mismatch", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		apple := oidc.NewProviderApple(&oidc.Configuration{
 			ClientID: "com.example.app",
 		}, reg).(*oidc.ProviderApple)
@@ -110,7 +110,7 @@ func TestAppleVerify(t *testing.T) {
 	})
 
 	t.Run("case=succeedes with additional id token audience", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		apple := oidc.NewProviderApple(&oidc.Configuration{
 			ClientID:                   "something.else.app",
 			AdditionalIDTokenAudiences: []string{"com.example.app"},

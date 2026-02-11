@@ -31,8 +31,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/ioutilx"
@@ -47,7 +47,7 @@ var ignoreDefault = []string{"id", "schema_url", "state_changed_at", "created_at
 func TestHandler(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
 			"default":         "file://./stub/identity.schema.json",
 			"customer":        "file://./stub/handler/customer.schema.json",
@@ -2310,7 +2310,7 @@ func TestHandler(t *testing.T) {
 
 	t.Run("case=should paginate all identities", func(t *testing.T) {
 		// Start new server
-		_, reg := internal.NewFastRegistryWithMocks(t,
+		_, reg := pkg.NewFastRegistryWithMocks(t,
 			configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
 				"default":         "file://./stub/identity.schema.json",
 				"customer":        "file://./stub/handler/customer.schema.json",

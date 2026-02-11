@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/code"
@@ -20,7 +20,7 @@ import (
 )
 
 func TestRegistrationCode(t *testing.T) {
-	conf := internal.NewConfigurationWithDefaults(t)
+	conf := pkg.NewConfigurationWithDefaults(t)
 	newCode := func(expiresIn time.Duration, f *registration.Flow) *code.RegistrationCode {
 		return &code.RegistrationCode{
 			ID:        x.NewUUID(),

@@ -17,12 +17,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 )
 
 func TestProviderLinkedin_Claims(t *testing.T) {
-	_, base := internal.NewFastRegistryWithMocks(t)
+	_, base := pkg.NewFastRegistryWithMocks(t)
 	reg := &mockRegistry{base, retryablehttp.NewClient()}
 	httpmock.ActivateNonDefault(reg.cl.HTTPClient)
 	t.Cleanup(httpmock.DeactivateAndReset)
@@ -133,7 +133,7 @@ func TestProviderLinkedin_Claims(t *testing.T) {
 }
 
 func TestProviderLinkedin_No_Picture(t *testing.T) {
-	_, base := internal.NewFastRegistryWithMocks(t)
+	_, base := pkg.NewFastRegistryWithMocks(t)
 	reg := &mockRegistry{base, retryablehttp.NewClient()}
 	httpmock.ActivateNonDefault(reg.cl.HTTPClient)
 	t.Cleanup(httpmock.DeactivateAndReset)

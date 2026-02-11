@@ -10,7 +10,7 @@ import (
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/courier/template/testhelpers"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 )
 
 func TestRecoverInvalid(t *testing.T) {
@@ -18,7 +18,7 @@ func TestRecoverInvalid(t *testing.T) {
 	t.Cleanup(cancel)
 
 	t.Run("test=with courier templates directory", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		tpl := email.NewRecoveryInvalid(reg, &email.RecoveryInvalidModel{})
 
 		testhelpers.TestRendered(t, ctx, tpl)

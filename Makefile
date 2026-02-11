@@ -51,7 +51,7 @@ lint: .bin/golangci-lint .bin/buf
 
 .PHONY: mocks
 mocks:
-	go tool mockgen -mock_names Manager=MockLoginExecutorDependencies -package internal -destination internal/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
+	go tool mockgen -mock_names Manager=MockLoginExecutorDependencies -package pkg -destination pkg/hook_login_executor_dependencies.go github.com/ory/kratos/selfservice loginExecutorDependencies
 
 .PHONY: proto
 proto: gen/oidc/v1/state.pb.go
@@ -112,31 +112,31 @@ sdk: .bin/ory node_modules
 			-p file://.schema/openapi/patches/common.yaml \
 			spec/swagger.json spec/api.json
 
-	rm -rf internal/httpclient
-	mkdir -p internal/httpclient/
+	rm -rf pkg/httpclient
+	mkdir -p pkg/httpclient/
 	npm run openapi-generator-cli -- generate -i "spec/api.json" \
 		-g go \
-		-o "internal/httpclient" \
+		-o "pkg/httpclient" \
 		--git-user-id ory \
 		--git-repo-id client-go \
 		--git-host github.com \
 		--api-name-suffix "API" \
 		-c .schema/openapi/gen.go.yml
 
-	(cd internal/httpclient; rm -rf go.mod go.sum test api docs)
+	(cd pkg/httpclient; rm -rf go.mod go.sum test api docs)
 
-	rm -rf internal/client-go
-	mkdir -p internal/client-go/
+	rm -rf pkg/client-go
+	mkdir -p pkg/client-go/
 	npm run openapi-generator-cli -- generate -i "spec/api.json" \
 		-g go \
-		-o "internal/client-go" \
+		-o "pkg/client-go" \
 		--git-user-id ory \
 		--git-repo-id client-go \
 		--git-host github.com \
 		--api-name-suffix "API" \
 		-c .schema/openapi/gen.go.yml
 
-	(cd internal/client-go; go mod edit -module github.com/ory/client-go go.mod; rm -rf test api docs; go mod tidy)
+	(cd pkg/client-go; go mod edit -module github.com/ory/client-go go.mod; rm -rf test api docs; go mod tidy)
 
 	make format
 
@@ -157,7 +157,7 @@ authors:  # updates the AUTHORS file
 # Formats the code
 .PHONY: format
 format: .bin/ory node_modules .bin/buf
-	.bin/ory dev headers copyright --exclude=gen --exclude=internal/httpclient --exclude=internal/client-go --exclude test/e2e/proxy/node_modules --exclude test/e2e/node_modules --exclude node_modules --exclude=oryx
+	.bin/ory dev headers copyright --exclude=gen --exclude=pkg/httpclient --exclude=pkg/client-go --exclude test/e2e/proxy/node_modules --exclude test/e2e/node_modules --exclude node_modules --exclude=oryx
 	go tool goimports -w -local github.com/ory .
 	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
 	npm exec -- prettier --write '.github'

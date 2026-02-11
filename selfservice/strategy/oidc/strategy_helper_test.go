@@ -110,7 +110,7 @@ func createClient(t *testing.T, remote string, redir []string) (id, secret strin
 			// and then be retried with the correct method. This is the only way
 			// to get the actual error message from the server, however.
 			//
-			// https://github.com/golang/oauth2/blob/5fd42413edb3b1699004a31b72e485e0e4ba1b13/internal/token.go#L227-L242
+			// https://github.com/golang/oauth2/blob/5fd42413edb3b1699004a31b72e485e0e4ba1b13/pkg/token.go#L227-L242
 			TokenEndpointAuthMethod: "client_secret_post",
 		}))
 

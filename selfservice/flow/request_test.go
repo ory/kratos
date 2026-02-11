@@ -18,14 +18,14 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestVerifyRequest(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, nosurfx.FakeCSRFTokenGenerator, "not_csrf_token"), nosurfx.ErrInvalidCSRFToken.Error())
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, nosurfx.FakeCSRFTokenGenerator, nosurfx.FakeCSRFToken), nil)
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""))
@@ -63,7 +63,7 @@ func TestVerifyRequest(t *testing.T) {
 
 func TestMethodEnabledAndAllowed(t *testing.T) {
 	ctx := context.Background()
-	conf, d := internal.NewFastRegistryWithMocks(t)
+	conf, d := pkg.NewFastRegistryWithMocks(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := flow.MethodEnabledAndAllowedFromRequest(r, flow.LoginFlow, "password", d); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

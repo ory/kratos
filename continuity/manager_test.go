@@ -20,8 +20,8 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
@@ -40,7 +40,7 @@ type persisterTestPayload struct {
 }
 
 func TestManager(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://../test/stub/identity/empty.schema.json")),
 	)
 

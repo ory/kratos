@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/httprouterx"
 )
@@ -27,7 +27,7 @@ func (c *configProvider) Config() *config.Config {
 
 func TestNewConfigHashHandler(t *testing.T) {
 	ctx := context.Background()
-	cfg := internal.NewConfigurationWithDefaults(t)
+	cfg := pkg.NewConfigurationWithDefaults(t)
 	router := httprouterx.NewTestRouterAdmin(t)
 	config.RegisterConfigHashRoute(&configProvider{cfg: cfg}, router)
 	ts := contextx.NewConfigurableTestServer(router)

@@ -14,8 +14,8 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/x/contextx"
 )
@@ -70,7 +70,7 @@ func TestMaskAddress(t *testing.T) {
 }
 
 func TestCountActiveCredentials(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	strategy := code.NewStrategy(reg)
 	ctx := context.Background()
 

@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/x/fetcher"
 
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -28,14 +28,14 @@ import (
 
 func TestLoadTextTemplate(t *testing.T) {
 	executeTextTemplate := func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		tp, err := template.LoadText(t.Context(), reg, os.DirFS(dir), name, pattern, model, "")
 		require.NoError(t, err)
 		return tp
 	}
 
 	executeHTMLTemplate := func(t *testing.T, dir, name, pattern string, model map[string]interface{}) string {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 		tp, err := template.LoadHTML(t.Context(), reg, os.DirFS(dir), name, pattern, model, "")
 		require.NoError(t, err)
 		return tp
@@ -61,7 +61,7 @@ func TestLoadTextTemplate(t *testing.T) {
 
 	t.Run("method=sprig should not support non-hermetic", func(t *testing.T) {
 		template.Cache, _ = lru.New[string, template.Template](16)
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 
 		nonhermetic := []string{"date", "date_in_zone", "date_modify", "now", "htmlDate", "htmlDateInZone", "dateInZone", "dateModify", "env", "expandenv", "getHostByName", "uuidv4", "randNumeric", "randAscii", "randAlpha", "randAlphaNum"}
 
@@ -93,7 +93,7 @@ func TestLoadTextTemplate(t *testing.T) {
 	})
 
 	t.Run("method=remote resource", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 
 		ctx, cancel := context.WithCancel(context.Background())
 		t.Cleanup(cancel)

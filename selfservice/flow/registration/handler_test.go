@@ -26,8 +26,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
@@ -46,7 +46,7 @@ func init() {
 
 func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	fakeHydra := hydra.NewFake()
 	reg.SetHydra(fakeHydra)
 
@@ -110,7 +110,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 
 func TestInitFlow(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
@@ -320,7 +320,7 @@ func TestInitFlow(t *testing.T) {
 
 func TestDisabledFlow(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, false)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
@@ -378,7 +378,7 @@ func TestDisabledFlow(t *testing.T) {
 
 func TestGetFlow(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, true)
 	returnToTS := testhelpers.NewRedirTS(t, "return_to", conf)
 
@@ -492,7 +492,7 @@ func TestOIDCStrategyOrder(t *testing.T) {
 	t.Logf("This test has been set up to validate the current incorrect `oidc` behaviour. When submitting the form, the `oidc` strategy is executed first, even if the method is set to `password`.")
 
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 
 	// reorder the strategies
 	reg.WithSelfserviceStrategies(t, []any{

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/link"
 
 	"github.com/stretchr/testify/assert"
@@ -22,7 +22,7 @@ import (
 )
 
 func TestVerificationToken(t *testing.T) {
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	conf, _ := pkg.NewFastRegistryWithMocks(t)
 
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 	t.Run("func=NewSelfServiceVerificationToken", func(t *testing.T) {

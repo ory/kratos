@@ -17,12 +17,12 @@ import (
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 )
 
 func setup(t *testing.T, newCmd func() *cobra.Command) (*driver.RegistryDefault, *cmdx.CommandExecuter) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	_, admin := testhelpers.NewKratosServerWithCSRF(t, reg)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stubs/identity.schema.json")
 	// setup command

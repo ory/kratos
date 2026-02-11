@@ -7,7 +7,7 @@ coverage:
         only_pulls: true
 ignore:
   - "test"
-  - "internal"
+  - "pkg"
   - "docs"
   - "proto"
   - "gen"

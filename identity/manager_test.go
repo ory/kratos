@@ -19,7 +19,7 @@ import (
 
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +27,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/x"
 )
 
@@ -35,7 +35,7 @@ import (
 var refreshAALStubs []byte
 
 func TestManager(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(map[string]interface{}{
 			config.ViperKeyCourierSMTPURL:                    "smtp://foo@bar@dev.null/",
 			config.ViperKeySelfServiceRegistrationLoginHints: true,
@@ -811,7 +811,7 @@ func TestManager(t *testing.T) {
 }
 
 func TestManagerNoDefaultNamedSchema(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
 		config.ViperKeyDefaultIdentitySchemaID: "user_v0",
 		config.ViperKeyIdentitySchemas: config.Schemas{
 			{ID: "user_v0", URL: "file://./stub/manager.schema.json"},

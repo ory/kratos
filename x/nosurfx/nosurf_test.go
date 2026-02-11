@@ -23,14 +23,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/nosurf"
 	"github.com/ory/x/randx"
 )
 
 func TestNosurfBaseCookieHandler(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	require.NoError(t, conf.Set(ctx, config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
 
 	cookie := nosurfx.NosurfBaseCookieHandler(reg)(httptest.NewRecorder(), httptest.NewRequest("GET", "https://foo/bar", nil))
@@ -61,7 +61,7 @@ func TestNosurfBaseCookieHandler(t *testing.T) {
 
 func TestNosurfBaseCookieHandlerAliasing(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 
 	require.NoError(t, conf.Set(ctx, config.ViperKeyPublicBaseURL, "http://foo.com/bar"))
 
@@ -78,7 +78,7 @@ func TestNosurfBaseCookieHandlerAliasing(t *testing.T) {
 }
 
 func TestNosurfBaseCookieErrorHandler(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 
 	h := nosurfx.CSRFFailureHandler(reg)
 	expectError := func(t *testing.T, err error, req *http.Request) {

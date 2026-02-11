@@ -15,7 +15,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/courier"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/ui/node"
 
 	"github.com/stretchr/testify/assert"
@@ -23,7 +23,7 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
@@ -81,7 +81,7 @@ func TestVerifier(t *testing.T) {
 				t.Run(fmt.Sprintf("legacy flag=%v", enabled), func(t *testing.T) {
 					t.Run("case=should send out emails for unverified addresses", func(t *testing.T) {
 						originalFlow := tc.originalFlow()
-						conf, reg := internal.NewFastRegistryWithMocks(t)
+						conf, reg := pkg.NewFastRegistryWithMocks(t)
 						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
 						conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 						conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
@@ -129,7 +129,7 @@ func TestVerifier(t *testing.T) {
 			t.Run("case should skip already verified addresses", func(t *testing.T) {
 				t.Parallel()
 				originalFlow := tc.originalFlow()
-				conf, reg := internal.NewFastRegistryWithMocks(t)
+				conf, reg := pkg.NewFastRegistryWithMocks(t)
 				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
 				conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 				conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
@@ -155,7 +155,7 @@ func TestVerifier(t *testing.T) {
 
 	t.Run("flow=login/case=does not run if aal is not 1", func(t *testing.T) {
 		t.Parallel()
-		_, reg := internal.NewFastRegistryWithMocks(t)
+		_, reg := pkg.NewFastRegistryWithMocks(t)
 
 		h := hook.NewVerifier(reg)
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
@@ -169,7 +169,7 @@ func TestVerifier(t *testing.T) {
 
 	t.Run("name=settings", func(t *testing.T) {
 		t.Parallel()
-		conf, reg := internal.NewFastRegistryWithMocks(t)
+		conf, reg := pkg.NewFastRegistryWithMocks(t)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
 		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")

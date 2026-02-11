@@ -18,7 +18,7 @@ import (
 
 	"github.com/ory/x/configx"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 )
 
 func TestMetricsRouterPaths(t *testing.T) {
@@ -28,7 +28,7 @@ func TestMetricsRouterPaths(t *testing.T) {
 	adminPort, publicPort := ports[0], ports[1]
 	cmd := &cobra.Command{}
 	cmd.Flags().Bool("sqa-opt-out", true, "")
-	_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
 		"serve.admin.port":  adminPort,
 		"serve.public.port": publicPort,
 	}))

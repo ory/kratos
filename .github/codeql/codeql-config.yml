@@ -5,4 +5,4 @@ queries:
 
 paths-ignore:
   - "/test/"
-  - "/internal/testhelpers"
+  - "/pkg/testhelpers"

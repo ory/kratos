@@ -24,8 +24,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -43,7 +43,7 @@ func TestLoginExecutor(t *testing.T) {
 		t.Run("strategy="+strategy.String(), func(t *testing.T) {
 			t.Parallel()
 
-			conf, reg := internal.NewFastRegistryWithMocks(t)
+			conf, reg := pkg.NewFastRegistryWithMocks(t)
 			reg.SetHydra(hydra.NewFake())
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
 			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToServer.URL)
@@ -479,7 +479,7 @@ func TestLoginExecutor(t *testing.T) {
 	}
 
 	t.Run("method=checkAAL", func(t *testing.T) {
-		_, reg := internal.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
+		_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]interface{}{
 			config.ViperKeyPublicBaseURL:                     returnToServer.URL,
 			config.ViperKeySelfServiceBrowserDefaultReturnTo: returnToServer.URL,
 		}), configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")))

@@ -31,8 +31,8 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
@@ -52,7 +52,7 @@ func withLoginChallenge(challenge string) func(*opts) {
 
 func TestHandleError(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	public, _ := testhelpers.NewKratosServer(t, reg)
 	reg.SetHydra(hydra.NewFake())
 

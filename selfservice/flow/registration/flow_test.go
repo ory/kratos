@@ -19,7 +19,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/x"
@@ -40,7 +40,7 @@ func TestFakeFlow(t *testing.T) {
 
 func TestNewFlow(t *testing.T) {
 	ctx := context.Background()
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	conf, _ := pkg.NewFastRegistryWithMocks(t)
 	t.Run("case=0", func(t *testing.T) {
 		r, err := registration.NewFlow(conf, 0, "csrf", &http.Request{
 			URL:  urlx.ParseOrPanic("/"),

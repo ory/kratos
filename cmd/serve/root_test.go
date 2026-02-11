@@ -6,7 +6,7 @@ package serve_test
 import (
 	"testing"
 
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 )
 
 func TestServe(t *testing.T) {

@@ -6,7 +6,7 @@ package main
 import (
 	"testing"
 
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 
 	"github.com/ory/kratos/examples/go/pkg"
 )

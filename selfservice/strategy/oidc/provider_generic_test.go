@@ -11,7 +11,7 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 
 	"github.com/stretchr/testify/assert"
@@ -52,7 +52,7 @@ func makeAuthCodeURL(t *testing.T, r *login.Flow, reg *driver.RegistryDefault) s
 
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://ory.sh")
 	t.Run("case=redirectURI is public base url", func(t *testing.T) {
 		r := &login.Flow{ID: x.NewUUID(), Refresh: true}

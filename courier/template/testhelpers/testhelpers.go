@@ -20,11 +20,11 @@ import (
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 )
 
 func SetupRemoteConfig(t *testing.T, ctx context.Context, plaintext string, html string, subject string) *driver.RegistryDefault {
-	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 	require.NoError(t, reg.Config().Set(ctx, config.ViperKeyCourierTemplatesRecoveryInvalidEmail, &config.CourierEmailTemplate{
 		Body: &config.CourierEmailBodyTemplate{
 			PlainText: plaintext,

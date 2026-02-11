@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/urlx"
 )
@@ -20,7 +20,7 @@ import (
 func TestRegistryDefault_IdentityTraitsSchemas(t *testing.T) {
 	ctx := context.Background()
 
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	defaultSchema := schema.Schema{
 		ID:     "default",
 		URL:    urlx.ParseOrPanic("file://default.schema.json"),

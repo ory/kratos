@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
@@ -31,7 +31,7 @@ func TestPKCESupport(t *testing.T) {
 	}))
 	t.Cleanup(notSupported.Close)
 
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	_ = conf
 	strat := oidc.NewStrategy(reg)
 

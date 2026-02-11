@@ -6,12 +6,12 @@ package identities
 import (
 	"fmt"
 
-	kratos "github.com/ory/kratos/internal/httpclient"
+	kratos "github.com/ory/kratos/pkg/httpclient"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/stringsx"
 
-	"github.com/ory/kratos/internal/clihelpers"
+	"github.com/ory/kratos/pkg/clihelpers"
 
 	"github.com/spf13/cobra"
 

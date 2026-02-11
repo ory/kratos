@@ -30,7 +30,7 @@ import (
 
 	"github.com/ory/x/jsonx"
 
-	kratos "github.com/ory/kratos/internal/httpclient"
+	kratos "github.com/ory/kratos/pkg/httpclient"
 
 	"github.com/ory/kratos/corpx"
 
@@ -40,8 +40,8 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/x"
@@ -71,7 +71,7 @@ func newIdentityWithPassword(email string) *identity.Identity {
 
 func TestStrategyTraits(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
@@ -625,7 +625,7 @@ func TestStrategyTraits(t *testing.T) {
 }
 
 func TestDisabledEndpoint(t *testing.T) {
-	conf, reg := internal.NewFastRegistryWithMocks(t)
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, false)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
@@ -653,7 +653,7 @@ func TestDisabledEndpoint(t *testing.T) {
 }
 
 func TestSortedForHydration(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 
 	// Get a reference to all registration strategies
 	allStrategies := []registration.Strategy{

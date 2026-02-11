@@ -24,9 +24,9 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	kratos "github.com/ory/kratos/internal/httpclient"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	kratos "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/ui/node"
@@ -36,7 +36,7 @@ import (
 )
 
 func newRegistrationRegistry(t *testing.T, cfgOpts ...configx.OptionModifier) *driver.RegistryDefault {
-	_, reg := internal.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
+	_, reg := pkg.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
 		configx.WithValues(map[string]any{
 			config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypePassword) + ".enabled": true,
 			config.ViperKeySelfServiceRegistrationEnableLegacyOneStep:                                              true,
@@ -48,7 +48,7 @@ func newRegistrationRegistry(t *testing.T, cfgOpts ...configx.OptionModifier) *d
 }
 
 func newLoginRegistry(t *testing.T, cfgOpts ...configx.OptionModifier) *driver.RegistryDefault {
-	_, reg := internal.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
+	_, reg := pkg.NewFastRegistryWithMocks(t, append([]configx.OptionModifier{
 		configx.WithValues(map[string]any{
 			config.ViperKeySelfServiceStrategyConfig + "." + string(identity.CredentialsTypePassword) + ".enabled": true,
 			config.ViperKeySelfServiceRegistrationLoginHints:                                                       true,

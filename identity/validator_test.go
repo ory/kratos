@@ -19,8 +19,8 @@ import (
 	"github.com/ory/jsonschema/v3/httploader"
 	"github.com/ory/kratos/driver/config"
 	. "github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/httpx"
 )
@@ -28,7 +28,7 @@ import (
 func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 	t.Parallel()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
 			"localhost":  "https://localhost/schema/whatever",
 			"privateRef": "file://stub/localhost-ref.schema.json",
@@ -106,7 +106,7 @@ func TestSchemaValidator(t *testing.T) {
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	_, reg := internal.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
 			"default":         ts.URL + "/schema/firstName",
 			"whatever":        ts.URL + "/schema/whatever",

@@ -13,12 +13,12 @@ import (
 	"github.com/ory/x/contextx"
 
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/totp"
 )
 
 func TestGenerator(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 
 	t.Run("no issuer set", func(t *testing.T) {
 		key, err := totp.NewKey(t.Context(), "foo", reg)

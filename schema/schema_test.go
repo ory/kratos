@@ -11,13 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/schema"
 	schematest "github.com/ory/kratos/schema/test"
 )
 
 func TestDefaultIdentityTraitsProvider(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	schematest.TestIdentitySchemaProvider(t, schema.NewDefaultIdentityTraitsProvider(reg))
 }
 

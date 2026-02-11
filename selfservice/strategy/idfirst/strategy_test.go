@@ -14,7 +14,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/idfirst"
 	"github.com/ory/kratos/ui/node"
 
@@ -24,7 +24,7 @@ import (
 )
 
 func TestCompletedAuthenticationMethod(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	s := idfirst.NewStrategy(reg)
 	ctx := context.Background()
 
@@ -34,7 +34,7 @@ func TestCompletedAuthenticationMethod(t *testing.T) {
 }
 
 func TestNodeGroup(t *testing.T) {
-	_, reg := internal.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	s := idfirst.NewStrategy(reg)
 
 	group := s.NodeGroup()

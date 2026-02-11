@@ -18,7 +18,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
@@ -37,7 +37,7 @@ func (s *mockRegistry) HTTPClient(ctx context.Context, opts ...httpx.ResilientOp
 }
 
 func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
-	conf, base := internal.NewFastRegistryWithMocks(t)
+	conf, base := pkg.NewFastRegistryWithMocks(t)
 	conf.MustSet(context.Background(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 	base.SetTracer(otelx.NewNoop())
 	reg := &mockRegistry{base, retryablehttp.NewClient()}

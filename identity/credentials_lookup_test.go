@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg/testhelpers"
 
 	"github.com/ory/x/sqlxx"
 )

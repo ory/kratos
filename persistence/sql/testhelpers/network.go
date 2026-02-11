@@ -10,8 +10,8 @@ import (
 	db "github.com/gofrs/uuid"
 
 	courier "github.com/ory/kratos/courier/test"
-	"github.com/ory/kratos/internal/testhelpers"
 	"github.com/ory/kratos/persistence"
+	"github.com/ory/kratos/pkg/testhelpers"
 )
 
 func DefaultNetworkWrapper(p persistence.Persister) (courier.NetworkWrapper, courier.NetworkWrapper) {

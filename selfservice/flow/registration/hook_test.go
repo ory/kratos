@@ -23,8 +23,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/internal"
-	"github.com/ory/kratos/internal/testhelpers"
+	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/hook"
@@ -41,7 +41,7 @@ func TestRegistrationExecutor(t *testing.T) {
 		t.Run("strategy="+strategy, func(t *testing.T) {
 			t.Parallel()
 
-			conf, reg := internal.NewFastRegistryWithMocks(t)
+			conf, reg := pkg.NewFastRegistryWithMocks(t)
 			reg.SetHydra(hydra.NewFake())
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
 			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToServer.URL)

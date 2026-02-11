@@ -21,7 +21,7 @@ import (
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/sqlxx"
 
-	"github.com/ory/kratos/internal"
+	"github.com/ory/kratos/pkg"
 
 	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
@@ -50,7 +50,7 @@ func TestFakeFlow(t *testing.T) {
 func TestNewFlow(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	conf, _ := internal.NewFastRegistryWithMocks(t)
+	conf, _ := pkg.NewFastRegistryWithMocks(t)
 
 	t.Run("type=aal", func(t *testing.T) {
 		r, err := login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "aal=aal2&refresh=true"}, Host: "ory.sh"}, flow.TypeBrowser)
