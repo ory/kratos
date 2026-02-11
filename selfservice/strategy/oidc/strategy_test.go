@@ -85,6 +85,7 @@ func TestStrategy(t *testing.T) {
 	routerP, routerA := httprouterx.NewTestRouterPublic(t), httprouterx.NewTestRouterAdminWithPrefix(t)
 	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerP, routerA)
 	invalid := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "invalid-issuer")
+	discoveryIssuer := newOIDCProvider(t, ts, remotePublic, remoteAdmin, "discovery-issuer")
 
 	orgID := uuidx.NewV4()
 	viperSetProviderConfig(
@@ -113,6 +114,17 @@ func TestStrategy(t *testing.T) {
 			// We replace this URL to cause an issuer validation mismatch.
 			IssuerURL: strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/",
 			Mapper:    "file://./stub/oidc.hydra.jsonnet",
+		},
+		oidc.Configuration{
+			Provider:     "generic",
+			ID:           "discovery-issuer",
+			ClientID:     discoveryIssuer.ClientID,
+			ClientSecret: discoveryIssuer.ClientSecret,
+			// Same issuer mismatch as invalid-issuer, but UseOIDCDiscoveryIssuer
+			// allows the provider to accept the discovered issuer.
+			IssuerURL:              strings.Replace(remotePublic, "localhost", "127.0.0.1", 1) + "/",
+			UseOIDCDiscoveryIssuer: true,
+			Mapper:                 "file://./stub/oidc.hydra.jsonnet",
 		},
 	)
 
@@ -339,6 +351,16 @@ func TestStrategy(t *testing.T) {
 				assertSystemErrorWithReason(t, res, body, http.StatusInternalServerError, "issuer did not match the issuer returned by provider")
 			})
 		}
+	})
+
+	t.Run("case=should pass with mismatched issuer when use_oidc_discovery_issuer is true", func(t *testing.T) {
+		subject = "discovery-issuer@ory.sh"
+		scope = []string{"openid"}
+
+		r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+		action := assertFormValues(t, r.ID, "discovery-issuer")
+		res, body := makeRequest(t, "discovery-issuer", action, url.Values{})
+		assertIdentity(t, res, body)
 	})
 
 	t.Run("case=should fail because flow does not exist", func(t *testing.T) {
