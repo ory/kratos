@@ -14,6 +14,14 @@ func NewErrorSystemGeneric(reason string) *Message {
 	}
 }
 
+func NewErrorSystemNoAuthenticationMethodsAvailable() *Message {
+	return &Message{
+		ID:   ErrorSystemNoAuthenticationMethodsAvailable,
+		Text: "No authentication methods are available. Please contact the system administrator.",
+		Type: Error,
+	}
+}
+
 func NewCaptchaContainerMessage() *Message {
 	return &Message{
 		ID:   InfoNodeLabelCaptcha,

@@ -211,6 +211,7 @@ const (
 )
 
 const (
-	ErrorSystem ID = 5000000 + iota
-	ErrorSystemGeneric
+	ErrorSystem                                 ID = 5000000 + iota // 5000000
+	ErrorSystemGeneric                                              // 5000001
+	ErrorSystemNoAuthenticationMethodsAvailable                     // 5000002
 )

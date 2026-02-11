@@ -63,6 +63,8 @@ func TestIDs(t *testing.T) {
 	assert.Equal(t, 4070001, int(ErrorValidationVerificationTokenInvalidOrAlreadyUsed))
 
 	assert.Equal(t, 5000000, int(ErrorSystem))
+	assert.Equal(t, 5000001, int(ErrorSystemGeneric))
+	assert.Equal(t, 5000002, int(ErrorSystemNoAuthenticationMethodsAvailable))
 
 	assert.Equal(t, 4060006, int(ErrorValidationRecoveryCodeInvalidOrAlreadyUsed))
 	assert.Equal(t, 4070006, int(ErrorValidationVerificationCodeInvalidOrAlreadyUsed))

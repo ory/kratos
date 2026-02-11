@@ -83,6 +83,7 @@ func init() {
 		"NewErrorValidationVerificationStateFailure":              text.NewErrorValidationVerificationStateFailure(),
 		"NewErrorValidationVerificationCodeInvalidOrAlreadyUsed":  text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(),
 		"NewErrorSystemGeneric":                                   text.NewErrorSystemGeneric("{reason}"),
+		"NewErrorSystemNoAuthenticationMethodsAvailable":          text.NewErrorSystemNoAuthenticationMethodsAvailable(),
 		"NewValidationErrorGeneric":                               text.NewValidationErrorGeneric("{reason}"),
 		"NewValidationErrorRequired":                              text.NewValidationErrorRequired("{property}"),
 		"NewErrorValidationMinLength":                             text.NewErrorValidationMinLength(5, 3),
@@ -194,6 +195,20 @@ func init() {
 }
 
 func main() {
+	if os.Args[1] == "elements" {
+		path, err := filepath.Abs(os.Args[2])
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "Unable to determine absolute path for elements generation: %+v", err)
+			os.Exit(1)
+		}
+
+		if err := generateElements(path); err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "Unable to generate locales for elements: %+v", err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	if err := clidoc.Generate(cmd.NewRootCmd(nil, nil), []string{filepath.Join(os.Args[2], "cli")}); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Unable to generate CLI docs: %+v", err)
 		os.Exit(1)
@@ -380,5 +395,22 @@ func validateAllMessages(path string) error {
 		}
 	}
 
+	return nil
+}
+
+func generateElements(messageFilePath string) error {
+	// If the file at messageFilePath does not exist, create it
+	f, err := os.OpenFile(messageFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) // #nosec
+	if err != nil {
+		return errors.Wrapf(err, "unable to open or create message file at %s", messageFilePath)
+	}
+	if err := f.Close(); err != nil {
+		return errors.Wrapf(err, "unable to close message file at %s", messageFilePath)
+	}
+
+	sortedMessages := sortMessages()
+	if err := writeMessagesJson(messageFilePath, sortedMessages); err != nil {
+		return errors.Wrapf(err, "unable to write messages json to %s", messageFilePath)
+	}
 	return nil
 }
