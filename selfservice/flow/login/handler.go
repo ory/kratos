@@ -423,6 +423,9 @@ type createNativeLoginFlow struct {
 //	  200: loginFlow
 //	  400: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createNativeLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.createNativeLoginFlow")
@@ -550,6 +553,9 @@ type createBrowserLoginFlow struct {
 //	  303: emptyResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.createBrowserLoginFlow")
@@ -705,6 +711,9 @@ type getLoginFlow struct {
 //	  404: errorGeneric
 //	  410: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.getLoginFlow")
@@ -847,6 +856,9 @@ type updateLoginFlowBody struct{}
 //	  410: errorGeneric
 //	  422: errorBrowserLocationChangeRequired
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.updateLoginFlow")

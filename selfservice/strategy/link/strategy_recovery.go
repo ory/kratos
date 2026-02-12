@@ -142,6 +142,9 @@ type recoveryLinkForIdentity struct {
 //	  400: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-high
 func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

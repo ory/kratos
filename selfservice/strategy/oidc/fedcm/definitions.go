@@ -70,6 +70,9 @@ type CreateFedcmFlowResponse struct {
 //	  200: createFedcmFlowResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-low
 
 type UpdateFedcmFlowBody struct {
 	// Token contains the result of `navigator.credentials.get`.
@@ -132,3 +135,6 @@ type updateFedcmFlow struct {
 //	  410: errorGeneric
 //	  422: errorBrowserLocationChangeRequired
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-high

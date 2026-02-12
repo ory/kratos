@@ -110,6 +110,9 @@ type ListCourierMessagesParameters struct {
 //	  200: listCourierMessages
 //	  400: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-high
 func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request) {
 	keys := h.r.Config().SecretsPagination(r.Context())
 	filter, paginator, err := parseMessagesFilter(r, keys)
@@ -190,6 +193,9 @@ type getCourierMessage struct {
 //		200: message
 //		400: errorGeneric
 //		default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-medium
 func (h *Handler) getCourierMessage(w http.ResponseWriter, r *http.Request) {
 	msgID, err := uuid.FromString(r.PathValue("msgID"))
 	if err != nil {

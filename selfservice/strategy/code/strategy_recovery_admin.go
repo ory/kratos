@@ -137,6 +137,9 @@ type recoveryCodeForIdentity struct {
 //	  400: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-high
 func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.Request) {
 	var p createRecoveryCodeForIdentityBody
 	if err := decoderx.Decode(r, &p, decoderx.HTTPJSONDecoder()); err != nil {

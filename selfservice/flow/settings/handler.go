@@ -219,6 +219,9 @@ type createNativeSettingsFlow struct {
 //		  200: settingsFlow
 //		  400: errorGeneric
 //		  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
@@ -303,6 +306,9 @@ type createBrowserSettingsFlow struct {
 //	  401: errorGeneric
 //	  403: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s, err := h.d.SessionManager().FetchFromRequestContext(ctx, r)
@@ -402,6 +408,9 @@ type getSettingsFlow struct {
 //	  404: errorGeneric
 //	  410: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
@@ -564,6 +573,9 @@ type updateSettingsFlowBody struct{}
 //	  410: errorGeneric
 //	  422: errorBrowserLocationChangeRequired
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error

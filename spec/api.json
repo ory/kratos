@@ -4094,7 +4094,8 @@
         "summary": "Get WebAuthn JavaScript",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "hydra-public-low"
       }
     },
     "/admin/courier/messages": {
@@ -4172,7 +4173,8 @@
         "summary": "List Messages",
         "tags": [
           "courier"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       }
     },
     "/admin/courier/messages/{id}": {
@@ -4230,7 +4232,8 @@
         "summary": "Get a Message",
         "tags": [
           "courier"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-medium"
       }
     },
     "/admin/identities": {
@@ -4365,7 +4368,8 @@
         "summary": "List Identities",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-medium"
       },
       "patch": {
         "description": "Creates multiple [identities](https://www.ory.com/docs/kratos/concepts/identity-user-model).\n\nYou can also use this endpoint to [import credentials](https://www.ory.com/docs/kratos/manage-identities/import-user-accounts-identities),\nincluding passwords, social sign-in settings, and multi-factor authentication methods.\n\nIf the patch includes hashed passwords you can import up to 1,000 identities per request.\n\nIf the patch includes at least one plaintext password you can import up to 200 identities per request.\n\nAvoid importing large batches with plaintext passwords. They can cause timeouts as the passwords need to be hashed before they are stored.\n\nIf at least one identity is imported successfully, the response status is 200 OK.\nIf all imports fail, the response is one of the following 4xx errors:\n400 Bad Request: The request payload is invalid or improperly formatted.\n409 Conflict: Duplicate identities or conflicting data were detected.\n\nIf you get a 504 Gateway Timeout:\nReduce the batch size\nAvoid duplicate identities\nPre-hash passwords with BCrypt\n\nIf the issue persists, contact support.",
@@ -4430,7 +4434,8 @@
         "summary": "Create multiple identities",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       },
       "post": {
         "description": "Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to\n[import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
@@ -4495,7 +4500,8 @@
         "summary": "Create an Identity",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       }
     },
     "/admin/identities/by/external/{externalID}": {
@@ -4577,7 +4583,8 @@
         "summary": "Get an Identity by its External ID",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-medium"
       }
     },
     "/admin/identities/{id}": {
@@ -4628,7 +4635,8 @@
         "summary": "Delete an Identity",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       },
       "get": {
         "description": "Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its ID. You can optionally\ninclude credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.",
@@ -4708,7 +4716,8 @@
         "summary": "Get an Identity",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "patch": {
         "description": "Partially updates an [identity's](https://www.ory.sh/docs/kratos/concepts/identity-user-model) field using [JSON Patch](https://jsonpatch.com/).\nThe fields `id`, `stateChangedAt` and `credentials` can not be updated using this method.",
@@ -4794,7 +4803,8 @@
         "summary": "Patch an Identity",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       },
       "put": {
         "description": "This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity\npayload, except credentials, is expected. For partial updates, use the [patchIdentity](https://www.ory.sh/docs/reference/api#tag/identity/operation/patchIdentity) operation.\n\nA credential can be provided via the `credentials` field in the request body.\nIf provided, the credentials will be imported and added to the existing credentials of the identity.",
@@ -4880,7 +4890,8 @@
         "summary": "Update an Identity",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       }
     },
     "/admin/identities/{id}/credentials/{type}": {
@@ -4962,7 +4973,8 @@
         "summary": "Delete a credential for a specific identity",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       }
     },
     "/admin/identities/{id}/sessions": {
@@ -5033,7 +5045,8 @@
         "summary": "Delete \u0026 Invalidate an Identity's Sessions",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       },
       "get": {
         "description": "This endpoint returns all sessions that belong to the given Identity.",
@@ -5143,7 +5156,8 @@
         "summary": "List an Identity's Sessions",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-medium"
       }
     },
     "/admin/recovery/code": {
@@ -5210,7 +5224,8 @@
         "summary": "Create a Recovery Code",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       }
     },
     "/admin/recovery/link": {
@@ -5286,7 +5301,8 @@
         "summary": "Create a Recovery Link",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       }
     },
     "/admin/sessions": {
@@ -5371,7 +5387,8 @@
         "summary": "List All Sessions",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-medium"
       }
     },
     "/admin/sessions/{id}": {
@@ -5432,7 +5449,8 @@
         "summary": "Deactivate a Session",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       },
       "get": {
         "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
@@ -5503,7 +5521,8 @@
         "summary": "Get Session",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/sessions/{id}/extend": {
@@ -5574,7 +5593,8 @@
         "summary": "Extend a Session",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       }
     },
     "/health/alive": {
@@ -5748,7 +5768,8 @@
         "summary": "Get all Identity Schemas",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-medium"
       }
     },
     "/schemas/{id}": {
@@ -5801,7 +5822,8 @@
         "summary": "Get Identity JSON Schema",
         "tags": [
           "identity"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-admin-medium"
       }
     },
     "/self-service/errors": {
@@ -5864,7 +5886,8 @@
         "summary": "Get User-Flow Errors",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/fed-cm/parameters": {
@@ -5906,7 +5929,8 @@
         "summary": "Get FedCM Parameters",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/fed-cm/token": {
@@ -5987,7 +6011,8 @@
         "summary": "Submit a FedCM token",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/login": {
@@ -6095,7 +6120,8 @@
         "summary": "Submit a Login Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/login/api": {
@@ -6203,7 +6229,8 @@
         "summary": "Create Login Flow for Native Apps",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/login/browser": {
@@ -6314,7 +6341,8 @@
         "summary": "Create Login Flow for Browsers",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/login/flows": {
@@ -6395,7 +6423,8 @@
         "summary": "Get Login Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/logout": {
@@ -6449,7 +6478,8 @@
         "summary": "Update Logout Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/logout/api": {
@@ -6495,7 +6525,8 @@
         "summary": "Perform Logout for Native Apps",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/logout/browser": {
@@ -6565,7 +6596,8 @@
         "summary": "Create a Logout URL for Browsers",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/recovery": {
@@ -6673,7 +6705,8 @@
         "summary": "Update Recovery Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/recovery/api": {
@@ -6715,7 +6748,8 @@
         "summary": "Create Recovery Flow for Native Apps",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/recovery/browser": {
@@ -6770,7 +6804,8 @@
         "summary": "Create Recovery Flow for Browsers",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/recovery/flows": {
@@ -6841,7 +6876,8 @@
         "summary": "Get Recovery Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/registration": {
@@ -6941,7 +6977,8 @@
         "summary": "Update Registration Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/registration/api": {
@@ -7017,7 +7054,8 @@
         "summary": "Create Registration Flow for Native Apps",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/registration/browser": {
@@ -7094,7 +7132,8 @@
         "summary": "Create Registration Flow for Browsers",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/registration/flows": {
@@ -7175,7 +7214,8 @@
         "summary": "Get Registration Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/settings": {
@@ -7308,7 +7348,8 @@
         "summary": "Complete Settings Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/settings/api": {
@@ -7360,7 +7401,8 @@
         "summary": "Create Settings Flow for Native Apps",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/settings/browser": {
@@ -7443,7 +7485,8 @@
         "summary": "Create Settings Flow for Browsers",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/settings/flows": {
@@ -7542,7 +7585,8 @@
         "summary": "Get Settings Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/verification": {
@@ -7640,7 +7684,8 @@
         "summary": "Complete Verification Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/verification/api": {
@@ -7692,7 +7737,8 @@
         "summary": "Create Verification Flow for Native Apps",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/verification/browser": {
@@ -7737,7 +7783,8 @@
         "summary": "Create Verification Flow for Browser Clients",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/self-service/verification/flows": {
@@ -7808,7 +7855,8 @@
         "summary": "Get Verification Flow",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/sessions": {
@@ -7878,7 +7926,8 @@
         "summary": "Disable my other sessions",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       },
       "get": {
         "description": "This endpoints returns all other active sessions that belong to the logged-in user.\nThe current session can be retrieved by calling the `/sessions/whoami` endpoint.",
@@ -7982,7 +8031,8 @@
         "summary": "Get My Active Sessions",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/sessions/token-exchange": {
@@ -8063,7 +8113,8 @@
         "summary": "Exchange Session Token",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-medium"
       }
     },
     "/sessions/whoami": {
@@ -8143,7 +8194,8 @@
         "summary": "Check Who the Current HTTP Session Belongs To",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/sessions/{id}": {
@@ -8215,7 +8267,8 @@
         "summary": "Disable one of my sessions",
         "tags": [
           "frontend"
-        ]
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/version": {

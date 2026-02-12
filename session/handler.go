@@ -207,6 +207,9 @@ type toSession struct {
 //	  401: errorGeneric
 //	  403: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 	ctx, span := h.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.Handler.whoami")
 	defer span.End()
@@ -302,6 +305,9 @@ type deleteIdentitySessions struct {
 //	  401: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-high
 func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request) {
 	iID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
@@ -381,6 +387,9 @@ type listSessionsResponse struct {
 //	  200: listSessions
 //	  400: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-medium
 func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request) {
 	activeRaw := r.URL.Query().Get("active")
 	activeBool, err := strconv.ParseBool(activeRaw)
@@ -465,6 +474,9 @@ type getSession struct {
 //	  200: session
 //	  400: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 	if r.PathValue("id") == "whoami" {
 		// for /admin/sessions/whoami redirect to the public route
@@ -534,6 +546,9 @@ type disableSession struct {
 //		400: errorGeneric
 //		401: errorGeneric
 //		default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-high
 func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request) {
 	sID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
@@ -600,6 +615,9 @@ type listIdentitySessionsResponse struct {
 //	  400: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-medium
 func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request) {
 	iID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
@@ -674,6 +692,9 @@ type disableMyOtherSessions struct {
 //	  400: errorGeneric
 //	  401: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) deleteMySessions(w http.ResponseWriter, r *http.Request) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -733,6 +754,9 @@ type disableMySession struct {
 //	  400: errorGeneric
 //	  401: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request) {
 	sid := r.PathValue("id")
 	if sid == "whoami" {
@@ -817,6 +841,9 @@ type listMySessionsResponse struct {
 //	  400: errorGeneric
 //	  401: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -912,6 +939,9 @@ type extendSession struct {
 //	  400: errorGeneric
 //	  404: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-admin-high
 func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
@@ -1045,6 +1075,9 @@ type CodeExchangeResponse struct {
 //	  404: errorGeneric
 //	  410: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) exchangeCode(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx          = r.Context()

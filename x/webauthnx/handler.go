@@ -42,6 +42,9 @@ type webAuthnJavaScript string
 //
 //	Responses:
 //	  200: webAuthnJavaScript
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: hydra-public-low
 func RegisterWebauthnRoute(r *httprouterx.RouterPublic) {
 	r.GET(ScriptURL, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")

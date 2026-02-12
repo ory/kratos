@@ -133,6 +133,9 @@ type createBrowserLogoutFlow struct {
 //	  400: errorGeneric
 //	  401: errorGeneric
 //	  500: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request) {
 	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -224,6 +227,9 @@ type performNativeLogoutBody struct {
 //	  204: emptyResponse
 //	  400: errorGeneric
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request) {
 	var p performNativeLogoutBody
 	if err := decoderx.Decode(r, &p,
@@ -315,6 +321,9 @@ type updateLogoutFlow struct {
 //	  303: emptyResponse
 //	  204: emptyResponse
 //	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request) {
 	expected := r.URL.Query().Get("token")
 	if len(expected) == 0 {
