@@ -138,6 +138,21 @@ type Configuration struct {
 	// NetIDTokenOriginHeader contains the orgin header to be used when exchanging a
 	// NetID FedCM token for an ID token.
 	NetIDTokenOriginHeader string `json:"net_id_token_origin_header"`
+
+	// UseOIDCDiscoveryIssuer allows the issuer returned by the OpenID Connect Discovery
+	// document to differ from the issuer_url used to fetch it. When set to true, the
+	// issuer from the discovery response is used for token validation instead of
+	// requiring it to exactly match the issuer_url.
+	//
+	// This is required for providers like Azure AD B2C where the discovery URL contains
+	// the policy name but the issuer in the discovery document and tokens does not.
+	//
+	// ID Token issuer validation still occurs — tokens are verified against the issuer
+	// value from the discovery document. Only the spec requirement that the discovery
+	// URL must equal the issuer (OIDC Discovery §4.3) is relaxed.
+	//
+	// Defaults to false.
+	UseOIDCDiscoveryIssuer bool `json:"use_oidc_discovery_issuer"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {
