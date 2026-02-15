@@ -6,6 +6,8 @@ package driver_test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -967,5 +969,55 @@ func TestGetActiveVerificationStrategy(t *testing.T) {
 				require.Equal(t, sID, s.VerificationStrategyID())
 			})
 		}
+	})
+}
+
+func TestContinuityCookieManager_Keys(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	_, reg := internal.NewVeryFastRegistryWithoutDB(t)
+
+	t.Run("supports key rotation", func(t *testing.T) {
+		t.Parallel()
+
+		secret := "secret-key-32-bytes-long-xxxxx"
+		secret2 := "another-32-bytes-secret-keyyyy"
+
+		// Step 1: Create registry with first secret and save a cookie
+		ctx1 := contextx.WithConfigValues(ctx, map[string]any{
+			config.ViperKeySecretsCookie: []string{secret},
+		})
+
+		store1 := reg.ContinuityCookieManager(ctx1)
+		require.NotNil(t, store1)
+
+		// Save a session cookie
+		r1 := &http.Request{Header: http.Header{}}
+		w1 := httptest.NewRecorder()
+		session1, err := store1.New(r1, "test_session")
+		require.NoError(t, err)
+		session1.Values["test_key"] = "test_value"
+		err = session1.Save(r1, w1)
+		require.NoError(t, err)
+
+		cookies := w1.Result().Cookies()
+		require.Len(t, cookies, 1)
+		cookie := cookies[0]
+
+		// Step 2: Create registry with two secrets (new + old for rotation)
+		ctx2 := contextx.WithConfigValues(context.Background(), map[string]any{
+			config.ViperKeySecretsCookie: []string{secret2, secret},
+		})
+		store2 := reg.ContinuityCookieManager(ctx2)
+		require.NotNil(t, store2)
+
+		// Step 3: Read the original cookie with the new registry
+		// This should work because the second secret matches the original
+		r2 := &http.Request{Header: http.Header{}}
+		r2.AddCookie(cookie)
+
+		session2, err := store2.Get(r2, "test_session")
+		require.NoError(t, err, "should be able to read cookie with rotated keys")
+		assert.Equal(t, "test_value", session2.Values["test_key"])
 	})
 }

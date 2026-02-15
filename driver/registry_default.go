@@ -547,7 +547,13 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact
 
 func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.StoreExact {
 	// To support hot reloading, this can not be instantiated only once.
-	cs := sessions.NewCookieStore(m.Config().SecretsSession(ctx)...)
+	var keys [][]byte
+	for _, k := range m.Config().SecretsSession(ctx) {
+		encrypt := sha256.Sum256(k)
+		keys = append(keys, k, encrypt[:])
+	}
+
+	cs := sessions.NewCookieStore(keys...)
 	cs.Options.Secure = m.Config().CookieSecure(ctx)
 	cs.Options.HttpOnly = true
 	cs.Options.SameSite = http.SameSiteLaxMode
