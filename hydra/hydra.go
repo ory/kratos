@@ -95,8 +95,16 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, params AcceptLogi
 	rememberFor := int64(h.d.Config().SessionLifespan(ctx) / time.Second)
 
 	subject := params.IdentityID
-	if h.d.Config().OAuth2ProviderUseExternalID(ctx) && params.ExternalID != "" {
+	switch h.d.Config().OAuth2ProviderSubjectSource(ctx) {
+	case "", "id":
+		subject = params.IdentityID
+	case "external_id":
+		if params.ExternalID == "" {
+			return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("The identity does not have an external ID set, but it is required for the OAuth2 provider subject."))
+		}
 		subject = params.ExternalID
+	default:
+		return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown OAuth2 provider subject source %q", h.d.Config().OAuth2ProviderSubjectSource(ctx)))
 	}
 
 	alr := hydraclientgo.NewAcceptOAuth2LoginRequest(subject)
