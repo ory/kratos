@@ -127,9 +127,9 @@ const (
 	ViperKeySelfServiceLoginRequestLifespan                  = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                            = "selfservice.flows.login.after"
 	ViperKeySelfServiceLoginBeforeHooks                      = "selfservice.flows.login.before.hooks"
-	ViperKeySelfServiceLoginThrottleMaxAttempts               = "selfservice.flows.login.throttle.max_attempts"
-	ViperKeySelfServiceLoginThrottleWindow                    = "selfservice.flows.login.throttle.window"
-	ViperKeySelfServiceLoginThrottleLockoutDuration           = "selfservice.flows.login.throttle.lockout_duration"
+	ViperKeySelfServiceLoginThrottleMaxAttempts              = "selfservice.flows.login.throttle.max_attempts"
+	ViperKeySelfServiceLoginThrottleWindow                   = "selfservice.flows.login.throttle.window"
+	ViperKeySelfServiceLoginThrottleLockoutDuration          = "selfservice.flows.login.throttle.lockout_duration"
 	ViperKeySelfServiceErrorUI                               = "selfservice.flows.error.ui_url"
 	ViperKeySelfServiceLogoutBrowserDefaultReturnTo          = "selfservice.flows.logout.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceSettingsURL                           = "selfservice.flows.settings.ui_url"
