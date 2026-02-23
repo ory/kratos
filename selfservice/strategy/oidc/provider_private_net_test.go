@@ -82,6 +82,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// Spotify uses a fixed token URL and does not use the issuer.
 		// VK uses a fixed token URL and does not use the issuer.
 		// Yandex uses a fixed token URL and does not use the issuer.
+		// UAE PASS uses fixed token URL and userinfo URL and does not use the issuer value.
 		// NetID uses a fixed token URL and does not use the issuer.
 		// X uses a fixed token URL and userinfoRL and does not use the issuer value.
 		// Line v2.1 uses a fixed token URL and does not use the issuer.
