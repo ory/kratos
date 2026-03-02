@@ -4,14 +4,20 @@
 package gomigrations
 
 import (
+	"embed"
 	"fmt"
 	"path/filepath"
 	"runtime"
 	"slices"
 )
 
-var All = slices.Concat(
-	backfillIdentityID,
+var (
+	All = slices.Concat(
+		backfillIdentityID,
+	)
+
+	//go:embed *.go
+	Src embed.FS
 )
 
 func path() string {
