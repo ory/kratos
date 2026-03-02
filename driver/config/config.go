@@ -127,6 +127,9 @@ const (
 	ViperKeySelfServiceLoginRequestLifespan                  = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                            = "selfservice.flows.login.after"
 	ViperKeySelfServiceLoginBeforeHooks                      = "selfservice.flows.login.before.hooks"
+	ViperKeySelfServiceLoginThrottleMaxAttempts              = "selfservice.flows.login.throttle.max_attempts"
+	ViperKeySelfServiceLoginThrottleWindow                   = "selfservice.flows.login.throttle.window"
+	ViperKeySelfServiceLoginThrottleLockoutDuration          = "selfservice.flows.login.throttle.lockout_duration"
 	ViperKeySelfServiceErrorUI                               = "selfservice.flows.error.ui_url"
 	ViperKeySelfServiceLogoutBrowserDefaultReturnTo          = "selfservice.flows.logout.after." + DefaultBrowserReturnURL
 	ViperKeySelfServiceSettingsURL                           = "selfservice.flows.settings.ui_url"
@@ -1037,6 +1040,24 @@ func (p *Config) SelfServiceBrowserAllowedReturnToDomains(ctx context.Context) (
 
 func (p *Config) SelfServiceFlowLoginRequestLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceLoginRequestLifespan, time.Hour)
+}
+
+// SelfServiceFlowLoginThrottleMaxAttempts returns the maximum number of
+// failed login attempts before temporary lockout.
+func (p *Config) SelfServiceFlowLoginThrottleMaxAttempts(ctx context.Context) int {
+	return p.GetProvider(ctx).IntF(ViperKeySelfServiceLoginThrottleMaxAttempts, 0)
+}
+
+// SelfServiceFlowLoginThrottleWindow returns the window in which
+// failed login attempts are counted.
+func (p *Config) SelfServiceFlowLoginThrottleWindow(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceLoginThrottleWindow, 5*time.Minute)
+}
+
+// SelfServiceFlowLoginThrottleLockoutDuration returns how long an identity
+// is locked out after exceeding the max attempts.
+func (p *Config) SelfServiceFlowLoginThrottleLockoutDuration(ctx context.Context) time.Duration {
+	return p.GetProvider(ctx).DurationF(ViperKeySelfServiceLoginThrottleLockoutDuration, 15*time.Minute)
 }
 
 func (p *Config) SelfServiceFlowSettingsFlowLifespan(ctx context.Context) time.Duration {

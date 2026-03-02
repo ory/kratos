@@ -4,6 +4,7 @@
 package login
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"time"
@@ -21,6 +22,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login/throttle"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
@@ -70,12 +72,32 @@ type (
 	HandlerProvider interface {
 		LoginHandler() *Handler
 	}
-	Handler struct{ d dependencies }
+	Handler struct {
+		d         dependencies
+		throttler *throttle.Limiter
+	}
 )
 
-func NewHandler(d dependencies) *Handler { return &Handler{d: d} }
+func NewHandler(d dependencies) *Handler {
+	return &Handler{d: d}
+}
+
+func (h *Handler) initThrottler(ctx context.Context) {
+	maxAttempts := h.d.Config().SelfServiceFlowLoginThrottleMaxAttempts(ctx)
+	if maxAttempts <= 0 {
+		return
+	}
+	h.throttler = throttle.NewLimiter(throttle.Config{
+		MaxAttempts:     maxAttempts,
+		ThrottleWindow:  h.d.Config().SelfServiceFlowLoginThrottleWindow(ctx),
+		LockoutDuration: h.d.Config().SelfServiceFlowLoginThrottleLockoutDuration(ctx),
+	})
+}
 
 func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
+	// Initialize login throttler if configured.
+	h.initThrottler(context.Background())
+
 	h.d.CSRFHandler().IgnorePath(RouteInitAPIFlow)
 	h.d.CSRFHandler().IgnorePath(RouteSubmitFlow)
 
@@ -932,8 +954,25 @@ continueLogin:
 		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
 		} else if err != nil {
+			// Record failed login attempt for throttling.
+			if h.throttler != nil {
+				if identityID := x.ExtractIdentityID(err); identityID != uuid.Nil {
+					if locked := h.throttler.RecordFailure(identityID); locked {
+						h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.ID(), group, errors.WithStack(ErrAccountLockedOut))
+						return
+					}
+				}
+			}
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.ID(), group, err)
 			return
+		}
+
+		// Check if identity is locked out before allowing login.
+		if h.throttler != nil {
+			if locked, _ := h.throttler.IsLockedOut(interim.ID); locked {
+				h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.ID(), group, errors.WithStack(ErrAccountLockedOut))
+				return
+			}
 		}
 
 		// What can happen is that we re-authenticate as another user. In this case, we need to use a completely fresh
@@ -952,6 +991,11 @@ continueLogin:
 	if i == nil {
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ct, node.DefaultGroup, errors.WithStack(schema.NewNoLoginStrategyResponsible()))
 		return
+	}
+
+	// Clear throttle state on successful login.
+	if h.throttler != nil {
+		h.throttler.RecordSuccess(i.ID)
 	}
 
 	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, group, f, i, sess, ""); err != nil {

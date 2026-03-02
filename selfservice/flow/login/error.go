@@ -43,6 +43,15 @@ var (
 
 	// ErrSessionRequiredForHigherAAL is returned when someone requests AAL2 or AAL3 even though no active session exists yet.
 	ErrSessionRequiredForHigherAAL = herodot.ErrUnauthorized.WithID(text.ErrIDSessionRequiredForHigherAAL).WithError("aal2 and aal3 can only be requested if a session exists already").WithReason("You can not requested a higher AAL (AAL2/AAL3) without an active session.")
+
+	// ErrAccountLockedOut is returned when an identity has been temporarily
+	// locked due to too many failed login attempts.
+	ErrAccountLockedOut = herodot.DefaultError{
+		StatusField: "Too Many Requests",
+		ErrorField:  "account temporarily locked",
+		ReasonField: "Too many failed login attempts. Please try again later.",
+		CodeField:   http.StatusTooManyRequests,
+	}
 )
 
 type (

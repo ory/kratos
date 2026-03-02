@@ -29,6 +29,16 @@ func (e *WithIdentityIDError) IdentityID() uuid.UUID {
 	return e.identityID
 }
 
+// ExtractIdentityID extracts an identity ID from an error if it was wrapped
+// with WrapWithIdentityIDError. Returns uuid.Nil if no identity ID is found.
+func ExtractIdentityID(err error) uuid.UUID {
+	var withID *WithIdentityIDError
+	if errors.As(err, &withID) {
+		return withID.IdentityID()
+	}
+	return uuid.Nil
+}
+
 func WrapWithIdentityIDError(err error, identityID uuid.UUID) error {
 	if err == nil {
 		return nil
