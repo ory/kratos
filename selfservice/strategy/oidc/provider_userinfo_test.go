@@ -333,6 +333,61 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 				Email:   "john.doe@example.com",
 			},
 		},
+		{
+			name:             "uaepass",
+			userInfoEndpoint: "https://stg-id.uaepass.ae/idshub/userinfo",
+			provider: oidc.NewProviderUAEPASS(&oidc.Configuration{
+				IssuerURL: "https://stg-id.uaepass.ae/idshub",
+				ID:        "uaepass",
+				Provider:  "uaepass",
+				ClientID:  "sandbox_stage",
+			}, reg),
+			useToken: token,
+			userInfoHandler: func(req *http.Request) (*http.Response, error) {
+				if head := req.Header.Get("Authorization"); len(head) == 0 {
+					resp, err := httpmock.NewJsonResponse(401, map[string]interface{}{"error": ""})
+					return resp, err
+				}
+
+				resp, err := httpmock.NewJsonResponse(200, map[string]interface{}{
+					"uuid":          "abc-123-uuid",
+					"sub":           "fallback-sub",
+					"email":         "john.doe@example.com",
+					"mobile":        "971555555555",
+					"userType":      "SOP3",
+					"firstnameEN":   "John",
+					"lastnameEN":    "Doe",
+					"fullnameEN":    "John Doe",
+					"gender":        "Male",
+					"nationalityEN": "United Arab Emirates",
+					"idn":           "784-1234-5678901-1",
+				})
+				return resp, err
+			},
+			expectedClaims: &oidc.Claims{
+				Issuer:      "https://id.uaepass.ae",
+				Subject:     "abc-123-uuid",
+				GivenName:   "John",
+				FamilyName:  "Doe",
+				Name:        "John Doe",
+				Email:       "john.doe@example.com",
+				Gender:      "Male",
+				PhoneNumber: "971555555555",
+				RawClaims: map[string]interface{}{
+					"uuid":          "abc-123-uuid",
+					"sub":           "fallback-sub",
+					"email":         "john.doe@example.com",
+					"mobile":        "971555555555",
+					"userType":      "SOP3",
+					"firstnameEN":   "John",
+					"lastnameEN":    "Doe",
+					"fullnameEN":    "John Doe",
+					"gender":        "Male",
+					"nationalityEN": "United Arab Emirates",
+					"idn":           "784-1234-5678901-1",
+				},
+			},
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			token := token

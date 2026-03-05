@@ -49,7 +49,6 @@ require (
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/knadh/koanf/parsers/json v0.1.0
-	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7 // indirect
 	github.com/lestrrat-go/jwx/v2 v2.1.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.7.1
