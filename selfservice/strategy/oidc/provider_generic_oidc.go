@@ -5,8 +5,13 @@ package oidc
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"slices"
+	"strings"
 	"time"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
@@ -50,13 +55,57 @@ func (g *ProviderGenericOIDC) withHTTPClientContext(ctx context.Context) context
 
 func (g *ProviderGenericOIDC) provider(ctx context.Context) (*gooidc.Provider, error) {
 	if g.p == nil {
-		p, err := gooidc.NewProvider(g.withHTTPClientContext(ctx), g.config.IssuerURL)
+		ctx = g.withHTTPClientContext(ctx)
+		if g.config.UseOIDCDiscoveryIssuer {
+			discoveredIssuer, err := discoverIssuer(ctx, g.config.IssuerURL)
+			if err != nil {
+				return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf(
+					"Unable to fetch OpenID Connect discovery document: %s", err))
+			}
+			ctx = gooidc.InsecureIssuerURLContext(ctx, discoveredIssuer)
+		}
+		p, err := gooidc.NewProvider(ctx, g.config.IssuerURL)
 		if err != nil {
 			return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 		}
 		g.p = p
 	}
 	return g.p, nil
+}
+
+// discoverIssuer fetches the OIDC discovery document and returns the issuer value.
+func discoverIssuer(ctx context.Context, issuerURL string) (string, error) {
+	wellKnown := strings.TrimSuffix(issuerURL, "/") + "/.well-known/openid-configuration"
+	req, err := http.NewRequestWithContext(ctx, "GET", wellKnown, nil)
+	if err != nil {
+		return "", err
+	}
+	client := http.DefaultClient
+	if c, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); ok && c != nil {
+		client = c
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("%s: %s", resp.Status, body)
+	}
+	var doc struct {
+		Issuer string `json:"issuer"`
+	}
+	if err := json.Unmarshal(body, &doc); err != nil {
+		return "", fmt.Errorf("failed to decode discovery document: %v", err)
+	}
+	if doc.Issuer == "" {
+		return "", fmt.Errorf("discovery document missing issuer field")
+	}
+	return doc.Issuer, nil
 }
 
 func (g *ProviderGenericOIDC) oauth2ConfigFromEndpoint(ctx context.Context, endpoint oauth2.Endpoint) *oauth2.Config {
