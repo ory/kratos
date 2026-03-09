@@ -63,6 +63,7 @@ const (
 	RouteCallback             = RouteBase + "/callback/{provider}"
 	RouteCallbackGeneric      = RouteBase + "/callback"
 	RouteOrganizationCallback = RouteBase + "/organization/{organization}/callback/{provider}"
+	RouteThirdPartyLoginInit  = RouteBase + "/third-party-login"
 )
 
 var (
@@ -217,6 +218,13 @@ func (s *Strategy) RegisterPublicRoutes(r *httprouterx.RouterPublic) {
 	// by the browser. So here we just redirect the request to the same location rewriting the
 	// form fields to query params. This second GET request should have the cookies attached.
 	r.POST(RouteCallback, s.redirectToGET)
+
+	// Third-party login initiation (OpenID Connect spec Section 4).
+	// CSRF is exempted because the request originates from an external party.
+	s.d.CSRFHandler().IgnorePath(RouteThirdPartyLoginInit)
+	wrappedThirdParty := strategy.IsDisabled(s.d, s.ID().String(), s.HandleThirdPartyLoginInit)
+	r.GET(RouteThirdPartyLoginInit, wrappedThirdParty)
+	r.POST(RouteThirdPartyLoginInit, wrappedThirdParty)
 }
 
 func (s *Strategy) RegisterAdminRoutes(*httprouterx.RouterAdmin) {}
