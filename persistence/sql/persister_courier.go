@@ -48,7 +48,10 @@ func (p *Persister) ListMessages(ctx context.Context, filter courier.ListCourier
 
 	opts = append(opts, keysetpagination.WithDefaultToken(courier.Message{}.DefaultPageToken()))
 	opts = append(opts, keysetpagination.WithDefaultSize(10))
-	paginator := keysetpagination.NewPaginator(opts...)
+	paginator, err := keysetpagination.NewPaginator(opts...)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	messages := make([]courier.Message, paginator.Size())
 	if err := q.Scope(keysetpagination.Paginate[courier.Message](paginator)).
