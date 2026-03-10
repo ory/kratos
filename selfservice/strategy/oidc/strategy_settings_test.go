@@ -34,6 +34,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/assertx"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
@@ -661,6 +662,184 @@ func TestSettingsStrategy(t *testing.T) {
 			})
 		})
 	})
+
+	t.Run("suite=api", func(t *testing.T) {
+		newAPIClient := func(t *testing.T, userData userDataFunc) (uuid.UUID, *http.Client) {
+			_, id := userData()
+			id.State = identity.StateActive
+			return id.ID, testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
+		}
+
+		nprAPISDK := func(t *testing.T, client *http.Client) *kratos.SettingsFlow {
+			return testhelpers.InitializeSettingsFlowViaAPI(t, client, publicTS)
+		}
+
+		t.Run("case=API flow populates link and unlink nodes", func(t *testing.T) {
+			for name, userData := range map[string]userDataFunc{
+				"password_only":     passwordIdentity,
+				"single_oidc":       singleOIDCIdentity,
+				"multi_oidc":        multiOIDCIdentity,
+				"multi_credentials": multiCredentialIdentity,
+			} {
+				t.Run("identity="+name, func(t *testing.T) {
+					_, client := newAPIClient(t, userData)
+					rs := nprAPISDK(t, client)
+					snapshotx.SnapshotT(t, rs.Ui.Nodes, snapshotx.ExceptPaths("0.attributes.value", "1.attributes.value"))
+				})
+			}
+		})
+
+		makeOIDCPayload := func(rs *kratos.SettingsFlow, key, provider string) string {
+			values := url.Values{
+				"csrf_token": {nosurfx.FakeCSRFToken},
+				key:          {provider},
+			}
+			return testhelpers.EncodeFormAsJSON(t, true, values)
+		}
+
+		t.Run("case=API flow link returns 422 BrowserLocationChangeRequired", func(t *testing.T) {
+			_, client := newAPIClient(t, multiOIDCIdentity)
+			provider := "google"
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "link", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, "%s", actual)
+			assert.NotEmpty(t, gjson.Get(actual, "redirect_browser_to").String(), "%s", actual)
+
+			var changeLocation flow.BrowserLocationChangeRequiredError
+			require.NoError(t, json.Unmarshal([]byte(actual), &changeLocation))
+			assert.Contains(t, changeLocation.RedirectBrowserTo, "oauth2/auth")
+		})
+
+		t.Run("case=API flow unlink succeeds", func(t *testing.T) {
+			email, id := multiOIDCIdentity()
+			id.State = identity.StateActive
+			client := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, id)
+			provider := "github"
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "unlink", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			require.Equal(t, http.StatusOK, res.StatusCode, "%s", actual)
+			assert.EqualValues(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
+
+			// id.ID is set by NewHTTPClientWithIdentitySessionToken after persistence
+			checkCredentials(t, false, id.ID, provider, email, false)
+			checkCredentials(t, true, id.ID, "ory", email, false)
+		})
+
+		t.Run("case=API flow unlink last connection fails", func(t *testing.T) {
+			_, client := newAPIClient(t, singleOIDCIdentity)
+			provider := "ory"
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "unlink", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			require.Equal(t, http.StatusBadRequest, res.StatusCode, "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(),
+				"can not unlink OpenID Connect connection because it is the last remaining first factor credential", "%s", actual)
+		})
+
+		t.Run("case=API flow unlink non-existing connection fails", func(t *testing.T) {
+			_, client := newAPIClient(t, multiOIDCIdentity)
+			provider := "i-do-not-exist"
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "unlink", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			require.Equal(t, http.StatusBadRequest, res.StatusCode, "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(),
+				"can not unlink non-existing OpenID Connect connection", "%s", actual)
+		})
+
+		t.Run("case=API flow unlink connection not yet linked fails", func(t *testing.T) {
+			_, client := newAPIClient(t, multiOIDCIdentity)
+			provider := "google"
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "unlink", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			require.Equal(t, http.StatusBadRequest, res.StatusCode, "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(),
+				"can not unlink non-existing OpenID Connect connection", "%s", actual)
+		})
+
+		t.Run("case=API flow link non-existing provider fails", func(t *testing.T) {
+			_, client := newAPIClient(t, singleOIDCIdentity)
+			provider := "i-do-not-exist"
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "link", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			require.Equal(t, http.StatusBadRequest, res.StatusCode, "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(),
+				"can not link unknown or already existing OpenID Connect connection", "%s", actual)
+		})
+
+		t.Run("case=API flow link already linked provider fails", func(t *testing.T) {
+			_, client := newAPIClient(t, multiOIDCIdentity)
+			provider := "github"
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "link", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			require.Equal(t, http.StatusBadRequest, res.StatusCode, "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "ui.messages.0.text").String(),
+				"can not link unknown or already existing OpenID Connect connection", "%s", actual)
+		})
+
+		t.Run("case=API flow privileged session requirement for unlink returns 403", func(t *testing.T) {
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Nanosecond)
+			t.Cleanup(func() {
+				conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, normalPrivilegedSessionFor)
+			})
+
+			_, client := newAPIClient(t, multiOIDCIdentity)
+			provider := "github"
+
+			// Ensure the privileged session window has expired.
+			time.Sleep(time.Millisecond)
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "unlink", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			assert.Equal(t, http.StatusForbidden, res.StatusCode, "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(),
+				publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
+			assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
+		})
+
+		t.Run("case=API flow privileged session requirement for link returns 403", func(t *testing.T) {
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Nanosecond)
+			t.Cleanup(func() {
+				conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, normalPrivilegedSessionFor)
+			})
+
+			_, client := newAPIClient(t, multiOIDCIdentity)
+			provider := "google"
+
+			// Ensure the privileged session window has expired.
+			time.Sleep(time.Millisecond)
+
+			rs := nprAPISDK(t, client)
+			payload := makeOIDCPayload(rs, "link", provider)
+
+			actual, res := testhelpers.SettingsMakeRequest(t, true, false, rs, client, payload)
+			assert.Equal(t, http.StatusForbidden, res.StatusCode, "%s", actual)
+			assert.Contains(t, gjson.Get(actual, "redirect_browser_to").String(),
+				publicTS.URL+"/self-service/login/browser?refresh=true&return_to=")
+			assertx.EqualAsJSONExcept(t, settings.NewFlowNeedsReAuth(), json.RawMessage(actual), []string{"redirect_browser_to"})
+		})
+	})
 }
 
 func TestPopulateSettingsMethod(t *testing.T) {
@@ -709,7 +888,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		{Provider: "generic", ID: "github"},
 	}
 
-	t.Run("case=should not populate non-browser flow", func(t *testing.T) {
+	t.Run("case=should populate API flow with link nodes", func(t *testing.T) {
 		t.Parallel()
 		reg, ctx := nCtx(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{{Provider: "generic", ID: "github"}}})
 		i := &identity.Identity{Traits: []byte(`{"subject":"foo@bar.com"}`)}
@@ -717,7 +896,11 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		f := &settings.Flow{Type: flow.TypeAPI, ID: x.NewUUID(), UI: container.New("")}
 		req := new(http.Request)
 		require.NoError(t, ns(t, reg, ctx).PopulateSettingsMethod(ctx, req, i, f))
-		require.Empty(t, f.UI.Nodes)
+		require.NotEmpty(t, f.UI.Nodes)
+		assert.EqualValues(t, node.Nodes{
+			node.NewCSRFNode(nosurfx.FakeCSRFToken),
+			oidc.NewLinkNode("github", "github"),
+		}, f.UI.Nodes)
 	})
 
 	for k, tc := range []struct {

@@ -22,7 +22,9 @@ context("Mobile Profile", () => {
       cy.get('input[data-testid="traits.email"]').type(email)
       cy.get('input[data-testid="password"]').type(password)
       cy.get('input[data-testid="traits.website"]').type(website)
-      cy.get('div[data-testid="submit-form"]').click()
+      cy.get(
+        'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+      ).click()
 
       cy.get('[data-testid="session-content"]').should("contain", email)
       cy.get('[data-testid="session-token"]').should("not.be.empty")
@@ -42,7 +44,9 @@ context("Mobile Profile", () => {
           cy.get('input[data-testid="traits.email"]').type(email)
           cy.get('input[data-testid="password"]').type(password)
           cy.get('input[data-testid="traits.website"]').type(website)
-          cy.get('div[data-testid="submit-form"]').click()
+          cy.get(
+            'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+          ).click()
 
           cy.get('[data-testid="session-content"]').should("contain", email)
           cy.get('[data-testid="session-token"]').should("not.be.empty")
@@ -58,7 +62,9 @@ context("Mobile Profile", () => {
       cy.get('input[data-testid="traits.email"]').type(email)
       cy.get('input[data-testid="password"]').type(password)
       cy.get('input[data-testid="traits.website"]').type(website)
-      cy.get('div[data-testid="submit-form"]').click()
+      cy.get(
+        'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+      ).click()
 
       cy.get('div[data-testid="field/code"] input').should("be.visible")
 

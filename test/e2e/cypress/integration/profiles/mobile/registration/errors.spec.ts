@@ -21,7 +21,9 @@ context("Mobile Profile", () => {
         cy.get('input[data-testid="traits.email"]').type(email)
         cy.get('input[data-testid="password"]').type("12345678")
         cy.get('input[data-testid="traits.website"]').type(website)
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
 
         cy.get('*[data-testid="field/password"]').should(
           "contain.text",
@@ -33,7 +35,9 @@ context("Mobile Profile", () => {
         cy.get('input[data-testid="traits.email"]').type(email)
         cy.get('input[data-testid="password"]').type(email)
         cy.get('input[data-testid="traits.website"]').type(website)
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
 
         cy.get('*[data-testid="field/password"]').should(
           "contain.text",
@@ -45,7 +49,9 @@ context("Mobile Profile", () => {
         cy.get('input[data-testid="traits.website"]').type(website)
         cy.get('input[data-testid="traits.email"]').type(email)
 
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
         cy.get('*[data-testid="field/password"]').should(
           "contain.text",
           "Property password is missing",
@@ -56,7 +62,9 @@ context("Mobile Profile", () => {
         cy.get('input[data-testid="traits.website"]').type("https://www.ory.sh")
         cy.get('input[data-testid="password"]').type(password)
 
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
         cy.get('*[data-testid="field/traits.email"]').should(
           "contain.text",
           "Property email is missing",
@@ -68,7 +76,9 @@ context("Mobile Profile", () => {
         cy.get('input[data-testid="traits.email"]').type("not-an-email")
         cy.get('input[data-testid="password"]').type(password)
 
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
         cy.get('*[data-testid="field/traits.email"]').should(
           "contain.text",
           "Enter a valid email address",
@@ -76,7 +86,9 @@ context("Mobile Profile", () => {
       })
 
       it("should show a missing indicator if no fields are set", () => {
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
         cy.get('*[data-testid="field/password"]').should(
           "contain.text",
           "Property password is missing",
@@ -87,7 +99,9 @@ context("Mobile Profile", () => {
         cy.get('input[data-testid="traits.website"]').type("http://s")
         cy.get('input[data-testid="traits.email"]').type(email)
 
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
         cy.get('*[data-testid="field/traits.website"]').should(
           "contain.text",
           "length must be >= 10",

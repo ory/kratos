@@ -18,7 +18,9 @@ context("Mobile Profile", () => {
       it("should show an error when the identifier is missing", () => {
         cy.get('input[data-testid="password"]').type(gen.password())
 
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
 
         cy.get('*[data-testid="field/identifier"]').should(
           "contain.text",
@@ -37,7 +39,9 @@ context("Mobile Profile", () => {
           .type(email)
           .should("have.value", email)
 
-        cy.get('div[data-testid="submit-form"]').click()
+        cy.get(
+          'div[data-testid="field/method/password"] div[data-testid="submit-form"]',
+        ).click()
 
         cy.get('*[data-testid="field/password"]').should(
           "contain.text",
@@ -48,7 +52,9 @@ context("Mobile Profile", () => {
       it("should show fail to sign in", () => {
         cy.get('input[data-testid="identifier"]').type(gen.email())
         cy.get('input[data-testid="password"]').type(gen.password())
-        cy.get('*[data-testid="submit-form"]').click()
+        cy.get(
+          '*[data-testid="field/method/password"] *[data-testid="submit-form"]',
+        ).click()
         cy.get('*[data-testid="form-messages"]').should(
           "contain.text",
           "credentials are invalid",

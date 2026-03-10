@@ -14,6 +14,9 @@ selfservice:
         password:
           hooks:
             - hook: session
+        oidc:
+          hooks:
+            - hook: session
     recovery:
       enabled: true
 
@@ -33,6 +36,35 @@ selfservice:
           id: localhost
           origin: http://localhost:4455
           display_name: Ory
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: hydra
+            label: Ory
+            provider: generic
+            client_id: ${OIDC_HYDRA_CLIENT_ID}
+            client_secret: ${OIDC_HYDRA_CLIENT_SECRET}
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          - id: google
+            provider: generic
+            client_id: ${OIDC_GOOGLE_CLIENT_ID}
+            client_secret: ${OIDC_GOOGLE_CLIENT_SECRET}
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
+          - id: github
+            provider: generic
+            client_id: ${OIDC_GITHUB_CLIENT_ID}
+            client_secret: ${OIDC_GITHUB_CLIENT_SECRET}
+            issuer_url: http://localhost:4444/
+            scope:
+              - offline
+            mapper_url: file://test/e2e/profiles/oidc/hydra.jsonnet
 
 identity:
   schemas:
