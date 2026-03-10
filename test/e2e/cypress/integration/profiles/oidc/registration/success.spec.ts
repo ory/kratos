@@ -94,7 +94,56 @@ context("Social Sign Up Successes", () => {
         cy.triggerOidc(app)
 
         cy.location("pathname").should((loc) => {
-          expect(loc).to.be.oneOf(["/welcome", "/", "/sessions"])
+          expect(loc).to.be.oneOf([
+            "/welcome",
+            "/",
+            "/sessions",
+            "/verification",
+          ])
+        })
+
+        cy.getSession().should((session) => {
+          shouldSession(email)(session)
+          expect(session.identity.traits.consent).to.equal(true)
+        })
+      })
+
+      it("should redirect to oidc provider only once", () => {
+        const email = gen.email()
+
+        cy.registerOidc({
+          app,
+          email,
+          expectSession: false,
+          route: registration,
+        })
+
+        cy.get(appPrefix(app) + '[name="traits.email"]').should(
+          "have.value",
+          email,
+        )
+
+        cy.get('[name="traits.consent"][type="checkbox"]')
+          .siblings("label")
+          .click()
+        cy.get('[name="traits.newsletter"][type="checkbox"]')
+          .siblings("label")
+          .click()
+        cy.get('[name="traits.website"]').type(website)
+
+        cy.intercept("GET", "http://*/oauth2/auth*").as("additionalRedirect")
+
+        cy.triggerOidc(app)
+
+        cy.get("@additionalRedirect").should("not.exist")
+
+        cy.location("pathname").should((loc) => {
+          expect(loc).to.be.oneOf([
+            "/welcome",
+            "/",
+            "/sessions",
+            "/verification",
+          ])
         })
 
         cy.getSession().should((session) => {
