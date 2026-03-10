@@ -31,6 +31,10 @@
           "description": "The prompt specifies whether the Authorization Server prompts the End-User for reauthentication and consent (for example, select_account).",
           "type": "string"
         },
+        "acr_values": {
+          "description": "The `acr_values` parameter specifies the Authentication Context Class Reference values for the authorization request.",
+          "type": "string"
+        },
         "additionalProperties": false
       }
     },

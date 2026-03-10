@@ -137,6 +137,7 @@ func UpstreamParameters(upstreamParameters map[string]string) []oauth2.AuthCodeO
 		"hd":         {},
 		"prompt":     {},
 		"auth_type":  {},
+		"acr_values": {},
 	}
 
 	var params []oauth2.AuthCodeOption

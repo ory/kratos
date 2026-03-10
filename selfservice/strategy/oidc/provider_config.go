@@ -40,6 +40,7 @@ type Configuration struct {
 	// - linkedin
 	// - patreon
 	// - amazon
+	// - uaepass
 	Provider string `json:"provider"`
 
 	// Label represents an optional label which can be used in the UI generation.
@@ -191,6 +192,7 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"jackson":     NewProviderJackson,
 	"fedcm-test":  NewProviderTestFedcm,
 	"amazon":      NewProviderAmazon,
+	"uaepass":     NewProviderUAEPass,
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {

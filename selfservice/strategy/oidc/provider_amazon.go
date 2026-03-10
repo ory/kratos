@@ -103,7 +103,7 @@ func (p *ProviderAmazon) Claims(ctx context.Context, exchange *oauth2.Token, que
 	ctx, span := p.reg.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.ProviderAmazon.Claims")
 	defer otelx.End(span, &err)
 
-	_, client := httpx.SetOAuth2(ctx, p.reg.HTTPClient(ctx), p.oauth2(ctx), exchange)
+	ctx, client := httpx.SetOAuth2(ctx, p.reg.HTTPClient(ctx), p.oauth2(ctx), exchange)
 
 	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, p.amazonProfileURL, nil)
 	if err != nil {

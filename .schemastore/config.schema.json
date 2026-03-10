@@ -463,7 +463,8 @@
             "lark",
             "x",
             "fedcm-test",
-            "amazon"
+            "amazon",
+            "uaepass"
           ],
           "examples": ["google"]
         },

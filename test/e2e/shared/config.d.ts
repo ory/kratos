@@ -266,6 +266,7 @@ export type Provider =
   | "lark"
   | "x"
   | "fedcm-test"
+  | "uaepass"
 export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
   string
 /**

@@ -85,6 +85,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// NetID uses a fixed token URL and does not use the issuer.
 		// X uses a fixed token URL and userinfoRL and does not use the issuer value.
 		// Line v2.1 uses a fixed token URL and does not use the issuer.
+		// UAE PASS uses fixed token URL and userinfo URL and does not use the issuer value.
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			p := tc.p(tc.c)

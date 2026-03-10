@@ -54,6 +54,12 @@ func (t *TestProvider) Verify(_ context.Context, token string) (*Claims, error) 
 	return &c, nil
 }
 
+// SetUserInfoURL allows overriding the userinfo URL for testing purposes.
+func (p *ProviderUAEPass) SetUserInfoURL(t *testing.T, url string) {
+	t.Helper()
+	p.userinfoURL = url
+}
+
 func TestLocale(t *testing.T) {
 	// test json unmarshal
 	for _, tc := range []struct {
