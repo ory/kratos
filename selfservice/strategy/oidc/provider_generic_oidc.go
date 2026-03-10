@@ -117,16 +117,64 @@ func (g *ProviderGenericOIDC) verifyAndDecodeClaimsWithProvider(ctx context.Cont
 	return &claims, nil
 }
 
+// providerIDPayPal is the provider id for which we allow skipping id_token when missing (UserInfo only).
+// Only this provider may ignore id_token; all others still require id_token.
+const providerIDPayPal = "paypal"
+
+func (g *ProviderGenericOIDC) isPayPalProvider() bool {
+	return g.config.ID == providerIDPayPal
+}
+
 func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	switch g.config.ClaimsSource {
 	case ClaimsSourceIDToken, "":
-		return g.claimsFromIDToken(ctx, exchange)
+		claims, err := g.claimsFromIDToken(ctx, exchange)
+		if err != nil && errors.Is(err, ErrIDTokenMissing) && g.isPayPalProvider() {
+			return g.claimsFromUserInfoOnly(ctx, exchange)
+		}
+		return claims, err
 	case ClaimsSourceUserInfo:
-		return g.claimsFromUserInfo(ctx, exchange)
+		claims, err := g.claimsFromUserInfo(ctx, exchange)
+		if err != nil && errors.Is(err, ErrIDTokenMissing) && g.isPayPalProvider() {
+			return g.claimsFromUserInfoOnly(ctx, exchange)
+		}
+		return claims, err
 	}
 
 	return nil, errors.WithStack(herodot.ErrMisconfiguration.
 		WithReasonf("Unknown claims source: %q", g.config.ClaimsSource))
+}
+
+// claimsFromUserInfoOnly returns claims from the UserInfo endpoint only, without id_token verification.
+// Used for PayPal when the token endpoint does not return an id_token.
+func (g *ProviderGenericOIDC) claimsFromUserInfoOnly(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+	p, err := g.provider(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	t0 := time.Now()
+	userInfo, err := p.UserInfo(g.withHTTPClientContext(ctx), oauth2.StaticTokenSource(exchange))
+	reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
+	if err != nil {
+		return nil, err
+	}
+
+	var claims Claims
+	if err = userInfo.Claims(&claims); err != nil {
+		return nil, err
+	}
+	var rawClaims map[string]interface{}
+	if err := userInfo.Claims(&rawClaims); err != nil {
+		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+	}
+	claims.RawClaims = rawClaims
+
+	if claims.Issuer == "" {
+		claims.Issuer = g.config.IssuerURL
+	}
+
+	return &claims, nil
 }
 
 func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
