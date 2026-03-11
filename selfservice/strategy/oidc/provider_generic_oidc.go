@@ -5,6 +5,9 @@ package oidc
 
 import (
 	"context"
+	"encoding/json"
+	"io"
+	"net/http"
 	"net/url"
 	"slices"
 	"time"
@@ -14,6 +17,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/reqlog"
 )
 
@@ -147,7 +151,12 @@ func (g *ProviderGenericOIDC) Claims(ctx context.Context, exchange *oauth2.Token
 
 // claimsFromUserInfoOnly returns claims from the UserInfo endpoint only, without id_token verification.
 // Used for PayPal when the token endpoint does not return an id_token.
+// If config.UserinfoURL is set, that URL is used (e.g. for PayPal Sandbox which requires ?schema=openid).
 func (g *ProviderGenericOIDC) claimsFromUserInfoOnly(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+	if g.config.UserinfoURL != "" {
+		return g.claimsFromCustomUserinfoURL(ctx, exchange)
+	}
+
 	p, err := g.provider(ctx)
 	if err != nil {
 		return nil, err
@@ -175,6 +184,79 @@ func (g *ProviderGenericOIDC) claimsFromUserInfoOnly(ctx context.Context, exchan
 	}
 
 	return &claims, nil
+}
+
+// claimsFromCustomUserinfoURL fetches claims from the configured UserinfoURL with the access token.
+func (g *ProviderGenericOIDC) claimsFromCustomUserinfoURL(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, g.config.UserinfoURL, nil)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("failed to build userinfo request: %s", err))
+	}
+	req.Header.Set("Authorization", "Bearer "+exchange.AccessToken)
+
+	t0 := time.Now()
+	resp, err := g.reg.HTTPClient(ctx).HTTPClient.Do(req)
+	reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("userinfo request failed: %s", err))
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		g.reg.Logger().
+			WithField("response_code", resp.StatusCode).
+			WithField("response_body", string(body)).
+			WithField("userinfo_url", g.config.UserinfoURL).
+			Error("The upstream OIDC provider userinfo endpoint returned a non-200 status code.")
+		return nil, errors.WithStack(herodot.ErrUpstreamError.
+			WithReasonf("%d %s", resp.StatusCode, resp.Status).
+			WithDetail("response_body", string(body)))
+	}
+
+	rawBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("failed to read userinfo response: %s", err))
+	}
+
+	var rawClaims map[string]interface{}
+	if err := json.Unmarshal(rawBody, &rawClaims); err != nil {
+		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("failed to decode userinfo JSON: %s", err))
+	}
+
+	claims := &Claims{RawClaims: rawClaims}
+	if v, ok := rawClaims["sub"].(string); ok {
+		claims.Subject = v
+	}
+	if v, ok := rawClaims["iss"].(string); ok {
+		claims.Issuer = v
+	}
+	if v, ok := rawClaims["email"].(string); ok {
+		claims.Email = v
+	}
+	if v, ok := rawClaims["name"].(string); ok {
+		claims.Name = v
+	}
+	if v, ok := rawClaims["given_name"].(string); ok {
+		claims.GivenName = v
+	}
+	if v, ok := rawClaims["family_name"].(string); ok {
+		claims.FamilyName = v
+	}
+	if v, ok := rawClaims["picture"].(string); ok {
+		claims.Picture = v
+	}
+	if v, ok := rawClaims["email_verified"]; ok {
+		if b, ok := v.(bool); ok {
+			claims.EmailVerified = x.ConvertibleBoolean(b)
+		}
+	}
+
+	if claims.Issuer == "" {
+		claims.Issuer = g.config.IssuerURL
+	}
+
+	return claims, nil
 }
 
 func (g *ProviderGenericOIDC) claimsFromUserInfo(ctx context.Context, exchange *oauth2.Token) (*Claims, error) {

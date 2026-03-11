@@ -121,6 +121,12 @@ type Configuration struct {
 	// token). It defaults to `id_token`.
 	ClaimsSource string `json:"claims_source"`
 
+	// UserinfoURL is an optional override for the UserInfo endpoint URL. When set, the generic
+	// provider uses this URL when fetching claims via the UserInfo endpoint (e.g. when id_token
+	// is missing and claims_source is id_token, for providers like PayPal that support UserInfo-only).
+	// Some providers (e.g. PayPal Sandbox) require a specific userinfo URL or query (e.g. ?schema=openid).
+	UserinfoURL string `json:"userinfo_url"`
+
 	// PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange).
 	// Possible values are: `auto` (default), `never`, `force`.
 	// - `auto`: PKCE is used if the provider supports it. Requires setting `issuer_url`.
