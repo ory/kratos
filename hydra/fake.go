@@ -20,8 +20,14 @@ const (
 var ErrFakeAcceptLoginRequestFailed = errors.New("failed to accept login request")
 
 type FakeHydra struct {
-	Skip       bool
-	RequestURL string
+	Skip          bool
+	RequestURL    string
+	SubjectSource string
+	params        []AcceptLoginRequestParams
+}
+
+func (h *FakeHydra) Params() []AcceptLoginRequestParams {
+	return h.params
 }
 
 var _ Hydra = &FakeHydra{}
@@ -33,9 +39,23 @@ func NewFake() *FakeHydra {
 }
 
 func (h *FakeHydra) AcceptLoginRequest(_ context.Context, params AcceptLoginRequestParams) (string, error) {
+	h.params = append(h.params, params)
 	if params.SessionID == "" {
 		return "", errors.New("session id must not be empty")
 	}
+
+	// Validate subject source just like DefaultHydra does
+	switch h.SubjectSource {
+	case "", "id":
+		// Use identity ID - no validation needed
+	case "external_id":
+		if params.ExternalID == "" {
+			return "", herodot.ErrBadRequest.WithReasonf("The identity does not have an external ID set, but it is required for the OAuth2 provider subject.")
+		}
+	default:
+		return "", herodot.ErrBadRequest.WithReasonf("Unknown OAuth2 provider subject source %q", h.SubjectSource)
+	}
+
 	switch params.LoginChallenge {
 	case FakeInvalidLoginChallenge:
 		return "", ErrFakeAcceptLoginRequestFailed
