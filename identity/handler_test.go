@@ -70,7 +70,7 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 
-		require.EqualValues(t, expectCode, res.StatusCode, "%s", body)
+		require.EqualValuesf(t, expectCode, res.StatusCode, "%s", body)
 		return gjson.ParseBytes(body), res
 	}
 
@@ -1839,10 +1839,10 @@ func TestHandler(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				res := get(t, ts, "/identities", http.StatusOK)
-				assert.False(t, res.Get("0.credentials").Exists(), "credentials config should be omitted: %s", res.Raw)
-				assert.True(t, res.Get("0.metadata_public").Exists(), "metadata_public config should be included: %s", res.Raw)
-				assert.True(t, res.Get("0.metadata_admin").Exists(), "metadata_admin config should be included: %s", res.Raw)
-				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String(), "%s", res.Raw)
+				assert.Empty(t, res.Get("#.credentials").Array(), "credentials config should be omitted")
+				assert.Equal(t, res.Get("#").Int(), res.Get("#.metadata_public|#").Int(), "metadata_public config should be included")
+				assert.Equal(t, res.Get("#").Int(), res.Get("#.metadata_admin|#").Int(), "metadata_admin config should be included")
+				assert.EqualValues(t, "baz", res.Get(`#(traits.bar=="baz").traits.bar`).String())
 			})
 		}
 	})
@@ -1879,7 +1879,7 @@ func TestHandler(t *testing.T) {
 				t.Run("endpoint="+name, func(t *testing.T) {
 					id := x.NewUUID()
 					res := get(t, ts, "/identities?organization_id="+id.String(), http.StatusOK)
-					assert.Len(t, res.Array(), 0)
+					assert.Empty(t, res.Array())
 				})
 			}
 		})
@@ -1905,18 +1905,16 @@ func TestHandler(t *testing.T) {
 			assert.True(t, foundSAML, "SAML credential included")
 		})
 
-		t.Run("include_credential=saml should not include SAML credentials config", func(t *testing.T) {
+		t.Run("include_credential=saml should not include SAML tokens", func(t *testing.T) {
 			res := get(t, adminTS, "/identities?include_credential=saml", http.StatusOK)
-			t.Log("Result:", res)
-			assert.Empty(t, res.Get("0.credentials.saml.config"), "SAML config should not be included")
+			samlProviders := res.Get("#.credentials.saml.config.providers|@flatten")
+			assert.Greaterf(t, samlProviders.Get("#.subject|#").Int(), int64(0), "SAML config should contain subject: %s", samlProviders.Raw)
+			assert.Zerof(t, res.Get("#.initial_id_token|#").Int(), "SAML config should not contain initial_id_token: %s", samlProviders.Raw)
 		})
 		t.Run("include_credential=totp should not include OIDC credentials config", func(t *testing.T) {
 			res := get(t, adminTS, "/identities?include_credential=totp", http.StatusOK)
-			t.Log("Result:", res)
-			for _, id := range res.Array() {
-				assert.False(t, id.Get("credentials.oidc.config").Exists(), "OIDC config should not be included")
-				assert.False(t, id.Get("credentials.saml.config").Exists(), "SAML config should not be included")
-			}
+			assert.Empty(t, res.Get("#.credentials.oidc.config").Array(), "OIDC config should not be included")
+			assert.Empty(t, res.Get("#.credentials.saml.config").Array(), "SAML config should not be included")
 		})
 	})
 
