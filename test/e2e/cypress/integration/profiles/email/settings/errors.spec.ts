@@ -103,7 +103,6 @@ context("Settings failures with email profile", () => {
           cy.shortPrivilegedSessionTime()
           cy.get('button[value="profile"]').click()
 
-          cy.clearAllCookies()
           cy.login({ email, password, cookieUrl: base })
 
           cy.getSession().should((session) => {

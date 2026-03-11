@@ -351,8 +351,14 @@ Cypress.Commands.add(
   } = {}) => {
     console.log("Creating user account: ", { email, password })
 
-    // see https://github.com/cypress-io/cypress/issues/408
-    cy.clearAllCookies()
+    const cookieDomain = new URL(APP_URL).hostname
+    // Somehow, this line makes the clearCookies call work, without it, the cookies are not always cleared and the test fails randomly. Make it make sense.
+    cy.getCookies({
+      domain: cookieDomain,
+    })
+    cy.clearCookies({
+      domain: cookieDomain,
+    })
 
     cy.request({
       url: APP_URL + "/self-service/registration/browser",
@@ -392,7 +398,13 @@ Cypress.Commands.add(
     query = {},
     expectedMailCount = 1,
   } = {}) => {
-    cy.clearAllCookies()
+    const cookieDomain = new URL(APP_URL).hostname
+    cy.clearCookies({
+      domain: cookieDomain,
+    })
+    cy.getCookies({
+      domain: cookieDomain,
+    }).should("be.empty") // assert cookies are actually empty
 
     cy.request({
       url: APP_URL + "/self-service/registration/browser",
@@ -863,9 +875,14 @@ Cypress.Commands.add(
       console.log("Attempting user sign in: ", { email, password })
     }
 
-    // see https://github.com/cypress-io/cypress/issues/408
-    cy.visit(cookieUrl)
-    cy.clearAllCookies()
+    const cookieDomain = new URL(cookieUrl).hostname
+    // Somehow, this line makes the clearCookies call work, without it, the cookies are not always cleared and the test fails randomly. Make it make sense.
+    cy.getCookies({
+      domain: cookieDomain,
+    })
+    cy.clearCookies({
+      domain: cookieDomain,
+    })
 
     cy.request({
       url: APP_URL + "/self-service/login/browser",

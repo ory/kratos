@@ -26,23 +26,21 @@ context("Account Verification Settings Success", () => {
       })
       for (let s of ["code", "link"] as Strategy[]) {
         describe(`for strategy ${s}`, () => {
-          let identity
-
           beforeEach(() => {
             cy.useConfig((builder) =>
               builder
                 .useVerificationStrategy(s)
                 .notifyUnknownRecipients("verification", false),
             )
-            identity = gen.identity()
+          })
+
+          it("should request verification and receive an email and verify it", () => {
+            const identity = gen.identity()
             cy.register(identity)
             cy.deleteMail({ atLeast: 1 }) // clean up registration email
 
             cy.login(identity)
             cy.visit(verification)
-          })
-
-          it("should request verification and receive an email and verify it", () => {
             cy.get('input[name="email"]').type(identity.email)
             cy.get(`button[value="${s}"]`).click()
 
@@ -55,6 +53,12 @@ context("Account Verification Settings Success", () => {
 
           it("should request verification for an email that does not exist yet", () => {
             cy.notifyUnknownRecipients("verification", true)
+            const identity = gen.identity()
+            cy.register(identity)
+            cy.deleteMail({ atLeast: 1 }) // clean up registration email
+
+            cy.login(identity)
+            cy.visit(verification)
             const email = `not-${identity.email}`
             cy.get('input[name="email"]').type(email)
             cy.get(`button[value="${s}"]`).click()
@@ -84,6 +88,12 @@ context("Account Verification Settings Success", () => {
           })
 
           it("should not verify email when clicking on link received on different address", () => {
+            const identity = gen.identity()
+            cy.register(identity)
+            cy.deleteMail({ atLeast: 1 }) // clean up registration email
+
+            cy.login(identity)
+            cy.visit(verification)
             cy.get('input[name="email"]').type(identity.email)
             cy.get(`button[value="${s}"]`).click()
 

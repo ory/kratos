@@ -353,11 +353,6 @@ declare global {
       ): Chainable<null>
 
       /**
-       * A workaround for cypress not being able to clear cookies properly
-       */
-      clearAllCookies(): Chainable<null>
-
-      /**
        * Submits a password form by clicking the button with method=password
        */
       submitPasswordForm(): Chainable<null>
