@@ -5,6 +5,7 @@ package code_test
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -35,13 +36,20 @@ func TestRecoveryCode(t *testing.T) {
 	t.Run("method=Validate", func(t *testing.T) {
 		t.Parallel()
 
-		t.Run("case=returns error if flow is expired", func(t *testing.T) {
+		t.Run("case=returns ErrCodeNotFound if code is expired", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(-time.Hour, f)
-			expected := new(flow.ExpiredError)
-			require.ErrorAs(t, c.Validate(), &expected)
+			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound)
+		})
+		t.Run("case=expired code does not return flow.ExpiredError", func(t *testing.T) {
+			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			require.NoError(t, err)
+
+			c := newCode(-time.Hour, f)
+			expired := new(flow.ExpiredError)
+			require.False(t, errors.As(c.Validate(), &expired), "expired code should not return flow.ExpiredError")
 		})
 		t.Run("case=returns no error if flow is not expired", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)

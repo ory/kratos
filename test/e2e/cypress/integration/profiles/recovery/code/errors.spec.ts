@@ -91,9 +91,9 @@ context("Account Recovery Errors", () => {
         cy.recoveryEmailWithCode({ expect: { email: identity.email } })
         cy.get("button[value='code']").click()
 
-        cy.get('[data-testid="ui/message/4060005"]').should(
+        cy.get('[data-testid="ui/message/4060006"]').should(
           "contain.text",
-          "The recovery flow expired",
+          "The recovery code is invalid or has already been used. Please try again.",
         )
 
         cy.noSession()

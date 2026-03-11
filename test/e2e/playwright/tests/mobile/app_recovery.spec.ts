@@ -134,7 +134,7 @@ test.describe("Recovery", () => {
 
       await page.getByTestId("code").fill(code)
       await page.getByText("Continue", { exact: true }).click()
-      await expect(page.getByTestId("email")).toBeVisible()
+      await expect(page.getByTestId("ui/message/4060006")).toBeVisible()
     })
   })
 })

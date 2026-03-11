@@ -10,8 +10,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/herodot"
@@ -82,7 +80,7 @@ func (f *RecoveryCode) Validate() error {
 		return errors.WithStack(ErrCodeNotFound)
 	}
 	if f.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+		return errors.WithStack(ErrCodeNotFound)
 	}
 	if f.UsedAt.Valid {
 		return errors.WithStack(ErrCodeAlreadyUsed)

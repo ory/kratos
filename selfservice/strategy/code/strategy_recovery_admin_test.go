@@ -11,7 +11,6 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -161,7 +160,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(t.Context()))))
 
 		body := submitRecoveryCode(t, nil, code.RecoveryLink, code.RecoveryCode)
-		assert.Regexpf(t, regexp.MustCompile(`The recovery flow expired 0\.0\d minutes ago, please try again\.`), gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
+		assert.Equal(t, "The recovery code is invalid or has already been used. Please try again.", gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
 
 		// The recovery address should not be verified if the flow was initiated by the admins
 		assertEmailNotVerified(t, recoveryEmail)

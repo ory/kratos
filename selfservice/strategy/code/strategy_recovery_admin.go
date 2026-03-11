@@ -177,7 +177,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	recoveryFlow, err := recovery.NewFlow(config, expiresIn, s.deps.GenerateCSRFToken(r), r, recovery.Strategies{s}, flowType)
+	recoveryFlow, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx), s.deps.GenerateCSRFToken(r), r, recovery.Strategies{s}, flowType)
 	if err != nil {
 		s.deps.Writer().WriteError(w, r, err)
 		return

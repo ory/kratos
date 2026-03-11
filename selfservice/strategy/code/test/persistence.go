@@ -106,7 +106,7 @@ func TestPersister(ctx context.Context, p interface {
 				require.NoError(t, err)
 
 				_, err = p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
-				assert.Error(t, err)
+				require.ErrorIs(t, err, code.ErrCodeNotFound)
 			})
 
 			t.Run("case=should increment flow submit count and fail after too many tries (default limit)", func(t *testing.T) {
