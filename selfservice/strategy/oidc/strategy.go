@@ -56,6 +56,9 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+// oidcExchangeIDContextKey is the context key for the OIDC token exchange correlation ID (for logging).
+type oidcExchangeIDContextKey struct{}
+
 const (
 	RouteBase = "/self-service/methods/oidc"
 
@@ -488,6 +491,10 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
+		// Set exchange ID before token exchange so request/response logging can use it.
+		oidcExchangeID := uuid.Must(uuid.NewV4()).String()
+		ctx = context.WithValue(ctx, oidcExchangeIDContextKey{}, oidcExchangeID)
+
 		t0 := time.Now()
 		token, err := s.exchangeCode(ctx, p, code, PKCEVerifier(state))
 		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
@@ -495,6 +502,17 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
+
+		// Log token response summary (request/response bodies logged by tokenExchangeLoggingTransport).
+		hasIDToken := token != nil && token.Extra("id_token") != nil
+		s.d.Logger().
+			WithField("oidc_exchange_id", oidcExchangeID).
+			WithField("provider_id", state.ProviderId).
+			WithField("has_access_token", token != nil && token.AccessToken != "").
+			WithField("has_refresh_token", token != nil && token.RefreshToken != "").
+			WithField("has_id_token", hasIDToken).
+			WithField("token_type", cmp.Or(token.TokenType, "")).
+			Infof("OIDC token response (oidc_exchange_id=%s): correlate with OIDC token endpoint request/response logs", oidcExchangeID)
 
 		et, err = s.encryptOAuth2Tokens(ctx, token)
 		if err != nil {
@@ -598,8 +616,20 @@ func (s *Strategy) exchangeCode(ctx context.Context, provider OAuth2Provider, co
 		}
 	}
 
-	client := s.d.HTTPClient(ctx)
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
+	baseClient := s.d.HTTPClient(ctx).HTTPClient
+	baseTransport := baseClient.Transport
+	if baseTransport == nil {
+		baseTransport = http.DefaultTransport
+	}
+	exchangeID, _ := ctx.Value(oidcExchangeIDContextKey{}).(string)
+	loggingTransport := &tokenExchangeLoggingTransport{
+		base:       baseTransport,
+		log:        s.d.Logger(),
+		exchangeID: exchangeID,
+		providerID: provider.Config().ID,
+	}
+	client := &http.Client{Transport: loggingTransport}
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, client)
 	return te.Exchange(ctx, code, opts...)
 }
 

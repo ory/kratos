@@ -30,6 +30,30 @@ selfservice:
       enabled: true
     code:
       enabled: true
+    # OIDC: Replace client_id/client_secret with your app credentials from Google Cloud Console and PayPal Developer Dashboard.
+    # Add this callback URL in each IdP: <serve.public.base_url>/self-service/methods/oidc/callback/<provider_id>
+    # e.g. http://127.0.0.1:4433/self-service/methods/oidc/callback/google and .../callback/paypal
+    oidc:
+      enabled: true
+      config:
+        providers:
+          - id: paypal
+            provider: generic
+            label: "PayPal"
+            client_id: AX2p8_qt8U8OUbKmO2BN2hEI13COGHJakoVX-Kb-vDkKq5fsDv7zib436NZ1vfPheRm6Jh3SsNGDRvjN
+            client_secret: EMBIZ3Cdbrz2PIn9lJbVNaEj_9KqLs5P3hX5urEKUMSpDyT471sGi9TA-QeXJ31aXZ6s-HzRDMVnQ_2c
+            scope:
+              - openid
+              - email
+            requested_claims:
+              id_token:
+                email:
+                  essential: true
+                email_verified:
+                  essential: true
+            issuer_url: https://b5755142-d32e-4e05-898f-cf0bf7632d20.mock.pstmn.io
+            userinfo_url: https://api.sandbox.paypal.com/v1/identity/openidconnect/userinfo?schema=openid
+            mapper_url: "base64://bG9jYWwgY2xhaW1zID0gewogIGVtYWlsX3ZlcmlmaWVkOiBmYWxzZSwKfSArIHN0ZC5leHRWYXIoJ2NsYWltcycpOwoKewogIGlkZW50aXR5OiB7CiAgICB0cmFpdHM6IHsKICAgICAgW2lmICdlbWFpbCcgaW4gY2xhaW1zICYmIGNsYWltcy5lbWFpbF92ZXJpZmllZCB0aGVuICdlbWFpbCcgZWxzZSBudWxsXTogY2xhaW1zLmVtYWlsLAogICAgfSwKCiAgICB2ZXJpZmllZF9hZGRyZXNzZXM6IHN0ZC5wcnVuZShbCiAgICAgIGlmICdlbWFpbCcgaW4gY2xhaW1zICYmIGNsYWltcy5lbWFpbF92ZXJpZmllZCB0aGVuIHsgdmlhOiAnZW1haWwnLCB2YWx1ZTogY2xhaW1zLmVtYWlsIH0sCiAgICBdKSwKICB9LAp9"
 
   flows:
     error:
@@ -68,6 +92,9 @@ selfservice:
           hooks:
             - hook: session
             - hook: show_verification_ui
+        oidc:
+          hooks:
+            - hook: session
 
 log:
   level: debug

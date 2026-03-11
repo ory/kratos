@@ -575,6 +575,13 @@
           "default": "id_token",
           "examples": ["id_token", "userinfo"]
         },
+        "userinfo_url": {
+          "title": "UserInfo URL override",
+          "description": "Optional override for the UserInfo endpoint URL. When set, the generic provider uses this URL when fetching claims via the UserInfo endpoint (e.g. when id_token is missing). Some providers (e.g. PayPal Sandbox) require a specific userinfo URL or query (e.g. ?schema=openid).",
+          "type": "string",
+          "format": "uri",
+          "examples": ["https://api.sandbox.paypal.com/v1/identity/openidconnect/userinfo?schema=openid"]
+        },
         "pkce": {
           "title": "Proof Key for Code Exchange",
           "description": "PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback",
