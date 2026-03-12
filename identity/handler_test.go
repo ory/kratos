@@ -1107,6 +1107,62 @@ func TestHandler(t *testing.T) {
 			})
 		})
 
+		t.Run("case=external_id conflict returns per-item error", func(t *testing.T) {
+			// Regression test for https://github.com/ory-corp/cloud/issues/10580
+			// When batch-importing identities with external_id and the external_id
+			// already exists, the endpoint should return a per-item conflict error
+			// instead of a 500 SQL syntax error.
+			externalID1 := "ext-conflict-" + x.NewUUID().String()
+			externalID2 := "ext-conflict-" + x.NewUUID().String()
+
+			// First call: create two identities with unique external_ids.
+			firstPatches := []*identity.BatchIdentityPatch{
+				{Create: &identity.CreateIdentityBody{
+					SchemaID:   "multiple_emails",
+					Traits:     json.RawMessage(fmt.Sprintf(`{"emails":["first-a-%s@ory.sh"],"username":"first-a-%s@ory.sh"}`, externalID1, externalID1)),
+					ExternalID: externalID1,
+					State:      "active",
+				}},
+				{Create: &identity.CreateIdentityBody{
+					SchemaID:   "multiple_emails",
+					Traits:     json.RawMessage(fmt.Sprintf(`{"emails":["first-b-%s@ory.sh"],"username":"first-b-%s@ory.sh"}`, externalID2, externalID2)),
+					ExternalID: externalID2,
+					State:      "active",
+				}},
+			}
+			res := send(t, adminTS, "PATCH", "/identities", http.StatusOK,
+				&identity.BatchPatchIdentitiesBody{Identities: firstPatches})
+			actions := res.Get("identities.#.action").Array()
+			require.Len(t, actions, 2)
+			assert.Equal(t, "create", actions[0].String())
+			assert.Equal(t, "create", actions[1].String())
+
+			// Second call: different traits/emails, but reuse the same external_ids.
+			// The only conflict is on external_id.
+			secondPatches := []*identity.BatchIdentityPatch{
+				{Create: &identity.CreateIdentityBody{
+					SchemaID:   "multiple_emails",
+					Traits:     json.RawMessage(fmt.Sprintf(`{"emails":["second-a-%s@ory.sh"],"username":"second-a-%s@ory.sh"}`, externalID1, externalID1)),
+					ExternalID: externalID1,
+					State:      "active",
+				}},
+				{Create: &identity.CreateIdentityBody{
+					SchemaID:   "multiple_emails",
+					Traits:     json.RawMessage(fmt.Sprintf(`{"emails":["second-b-%s@ory.sh"],"username":"second-b-%s@ory.sh"}`, externalID2, externalID2)),
+					ExternalID: externalID2,
+					State:      "active",
+				}},
+			}
+			res = send(t, adminTS, "PATCH", "/identities", http.StatusOK,
+				&identity.BatchPatchIdentitiesBody{Identities: secondPatches})
+			actions = res.Get("identities.#.action").Array()
+			require.Lenf(t, actions, 2, "%s", res.Raw)
+			assert.Equalf(t, "error", actions[0].String(), "expected conflict error for duplicate external_id: %s", res.Raw)
+			assert.Equalf(t, "Conflict", res.Get("identities.0.error.status").String(), "%s", res.Raw)
+			assert.Equalf(t, "error", actions[1].String(), "expected conflict error for duplicate external_id: %s", res.Raw)
+			assert.Equalf(t, "Conflict", res.Get("identities.1.error.status").String(), "%s", res.Raw)
+		})
+
 		t.Run("case=ignores create nil bodies", func(t *testing.T) {
 			patches := []*identity.BatchIdentityPatch{
 				{Create: nil},

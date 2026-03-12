@@ -455,6 +455,42 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			})
 		})
 
+		t.Run("case=external_id conflict in batch create returns partial error", func(t *testing.T) {
+			// Regression test for https://github.com/ory-corp/cloud/issues/10580
+			// When all identities in a batch conflict on external_id, CreateIdentities
+			// should return a CreateIdentitiesError, not a raw SQL error.
+			// On Postgres, the bug causes: ERROR: syntax error at or near ")" (SQLSTATE 42601)
+			// because DeleteIdentities is called with an empty ID slice, generating IN ().
+
+			// Step 1: Create two identities with external_ids.
+			first := make([]*identity.Identity, 2)
+			for i := range first {
+				first[i] = NewTestIdentity(1, "ext-id-conflict-first", i)
+				first[i].ExternalID = sqlxx.NullString(fmt.Sprintf("ext-conflict-pool-%d", i))
+			}
+			require.NoError(t, p.CreateIdentities(ctx, first...))
+			for _, id := range first {
+				createdIDs = append(createdIDs, id.ID)
+			}
+
+			// Step 2: Create new identities with different traits but same external_ids.
+			second := make([]*identity.Identity, 2)
+			for i := range second {
+				second[i] = NewTestIdentity(1, "ext-id-conflict-second", i)
+				second[i].ExternalID = sqlxx.NullString(fmt.Sprintf("ext-conflict-pool-%d", i))
+			}
+			err := p.CreateIdentities(ctx, second...)
+			if dbname == "mysql" {
+				assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+				return
+			}
+			errWithCtx := new(identity.CreateIdentitiesError)
+			require.ErrorAsf(t, err, &errWithCtx, "expected CreateIdentitiesError, got: %#v", err)
+			for _, id := range second {
+				assert.NotNil(t, errWithCtx.Find(id), "expected identity %s to be in the error", id.ID)
+			}
+		})
+
 		t.Run("case=should error when the identity ID does not exist", func(t *testing.T) {
 			_, err := p.GetIdentity(ctx, uuid.UUID{}, identity.ExpandNothing)
 			require.Error(t, err)

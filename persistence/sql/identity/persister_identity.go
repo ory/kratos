@@ -1292,6 +1292,10 @@ func (p *IdentityPersister) DeleteIdentities(ctx context.Context, ids []uuid.UUI
 	// when creating a batch of identities at once and some failed to be fully created.
 	// This act should not be observable externally and thus we do not emit an event.
 
+	if len(ids) == 0 {
+		return nil
+	}
+
 	stringIDs := make([]string, len(ids))
 	for k, id := range ids {
 		stringIDs[k] = id.String()
