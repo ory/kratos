@@ -43,7 +43,7 @@ func TestUAEPassOIDCClaims(t *testing.T) {
 			"lastnameEN": "Al Rashid",
 			"lastnameAR": "الراشد",
 			"uuid": "550e8400-e29b-41d4-a716-446655440000",
-			"unifiedID": "784-1990-1234567-1",
+			"unifiedId": "784-1990-1234567-1",
 			"idn": "784199012345671",
 			"userType": "SOP1",
 			"nationalityEN": "ARE",
@@ -80,7 +80,7 @@ func TestUAEPassOIDCClaims(t *testing.T) {
 	// Verify raw claims contain UAE PASS specific data
 	require.NotNil(t, claims.RawClaims)
 	assert.Equal(t, "550e8400-e29b-41d4-a716-446655440000", claims.RawClaims["uuid"])
-	assert.Equal(t, "784-1990-1234567-1", claims.RawClaims["unifiedID"])
+	assert.Equal(t, "784-1990-1234567-1", claims.RawClaims["unifiedId"])
 	assert.Equal(t, "784199012345671", claims.RawClaims["idn"])
 	assert.Equal(t, "SOP1", claims.RawClaims["userType"])
 	assert.Equal(t, "ARE", claims.RawClaims["nationalityEN"])
