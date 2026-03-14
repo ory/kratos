@@ -68,7 +68,7 @@ jobs:
           GOGC: 100
         with:
           args: --timeout 10m0s
-          version: "v2.10.1"
+          version: latest
           only-new-issues: "true"
       - name: Build Kratos
         run: make install
@@ -188,7 +188,7 @@ jobs:
           REACT_UI_PATH: react-ui
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       - if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: cypress-${{ matrix.database }}-logs
           path: test/e2e/*.e2e.log
@@ -300,12 +300,12 @@ jobs:
           NODE_UI_PATH: node-ui
           REACT_UI_PATH: react-ui
       - if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-${{ matrix.database }}-logs
           path: test/e2e/*.e2e.log
       - if: failure()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-test-results-${{ matrix.database }}-${{ github.sha }}
           path: |

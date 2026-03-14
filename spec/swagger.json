@@ -216,9 +216,7 @@
             "in": "query"
           },
           {
-            "minimum": 1,
             "type": "string",
-            "default": "1",
             "description": "Next Page Token\n\nThe next page token. For details on pagination please head over to the\n[pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "name": "page_token",
             "in": "query"
@@ -874,9 +872,7 @@
             "in": "query"
           },
           {
-            "minimum": 1,
             "type": "string",
-            "default": "1",
             "description": "Next Page Token\n\nThe next page token. For details on pagination please head over to the\n[pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "name": "page_token",
             "in": "query"
@@ -1454,9 +1450,7 @@
             "in": "query"
           },
           {
-            "minimum": 1,
             "type": "string",
-            "default": "1",
             "description": "Next Page Token\n\nThe next page token. For details on pagination please head over to the\n[pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "name": "page_token",
             "in": "query"
@@ -3223,9 +3217,7 @@
             "in": "query"
           },
           {
-            "minimum": 1,
             "type": "string",
-            "default": "1",
             "description": "Next Page Token\n\nThe next page token. For details on pagination please head over to the\n[pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
             "name": "page_token",
             "in": "query"
@@ -5700,9 +5692,7 @@
         },
         "page_token": {
           "description": "Next Page Token\n\nThe next page token.\nFor details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).",
-          "type": "string",
-          "default": "1",
-          "minimum": 1
+          "type": "string"
         }
       }
     },

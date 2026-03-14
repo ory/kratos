@@ -4622,9 +4622,6 @@ func (a *FrontendAPIService) ListMySessionsExecute(r FrontendAPIListMySessionsRe
 	}
 	if r.pageToken != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "page_token", r.pageToken, "form", "")
-	} else {
-		var defaultValue string = "1"
-		r.pageToken = &defaultValue
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

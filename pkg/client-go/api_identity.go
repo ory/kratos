@@ -2422,9 +2422,6 @@ func (a *IdentityAPIService) ListIdentitiesExecute(r IdentityAPIListIdentitiesRe
 	}
 	if r.pageToken != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "page_token", r.pageToken, "form", "")
-	} else {
-		var defaultValue string = "1"
-		r.pageToken = &defaultValue
 	}
 	if r.consistency != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "consistency", r.consistency, "form", "")
@@ -2627,9 +2624,6 @@ func (a *IdentityAPIService) ListIdentitySchemasExecute(r IdentityAPIListIdentit
 	}
 	if r.pageToken != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "page_token", r.pageToken, "form", "")
-	} else {
-		var defaultValue string = "1"
-		r.pageToken = &defaultValue
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2795,9 +2789,6 @@ func (a *IdentityAPIService) ListIdentitySessionsExecute(r IdentityAPIListIdenti
 	}
 	if r.pageToken != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "page_token", r.pageToken, "form", "")
-	} else {
-		var defaultValue string = "1"
-		r.pageToken = &defaultValue
 	}
 	if r.active != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "active", r.active, "form", "")

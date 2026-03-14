@@ -31,8 +31,6 @@ type RequestParameters struct {
 	//
 	// required: false
 	// in: query
-	// default: 1
-	// min: 1
 	PageToken string `json:"page_token"`
 }
 
