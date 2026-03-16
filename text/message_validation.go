@@ -312,7 +312,11 @@ func NewErrorValidationDuplicateCredentialsWithHints(availableCredentialTypes []
 	}
 	oidcProviders := make([]string, 0, len(availableOIDCProviders))
 	for _, provider := range availableOIDCProviders {
-		oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
+		if strings.ContainsAny(provider, "{}") {
+			oidcProviders = append(oidcProviders, provider)
+		} else {
+			oidcProviders = append(oidcProviders, cases.Title(language.English).String(provider))
+		}
 	}
 
 	reason := fmt.Sprintf("You tried signing in with %s which is already in use by another account.", identifier)

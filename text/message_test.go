@@ -22,6 +22,23 @@ func TestMessage(t *testing.T) {
 	assert.EqualValues(t, expected, &actual, v)
 }
 
+func TestNewErrorValidationDuplicateCredentialsWithHints(t *testing.T) {
+	t.Run("title-cases real provider names", func(t *testing.T) {
+		msg := NewErrorValidationDuplicateCredentialsWithHints(nil, []string{"google", "github"}, "user@example.com")
+		assert.Contains(t, msg.Text, "Google, Github")
+	})
+
+	t.Run("preserves placeholder templates without title-casing", func(t *testing.T) {
+		msg := NewErrorValidationDuplicateCredentialsWithHints(
+			[]string{"{available_credential_types_list}"},
+			[]string{"{available_oidc_providers_list}"},
+			"{credential_identifier_hint}",
+		)
+		assert.Contains(t, msg.Text, "{available_oidc_providers_list}")
+		assert.NotContains(t, msg.Text, "{Available_oidc_providers_list}")
+	})
+}
+
 func TestMessages(t *testing.T) {
 	expected := Messages{{ID: InfoSelfServiceSettingsUpdateSuccess, Text: "foo", Type: Info}}
 
