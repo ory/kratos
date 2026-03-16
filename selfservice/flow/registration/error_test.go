@@ -5,7 +5,6 @@ package registration_test
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -179,7 +178,7 @@ func TestHandleError(t *testing.T) {
 				require.Equal(t, http.StatusGone, res.StatusCode, "%+v\n\t%s", res.Request, body)
 
 				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.GetBytes(body, "use_flow_id").String())
-				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(anHourAgo), json.RawMessage(body), []string{"since", "redirect_browser_to", "use_flow_id"})
+				assert.Equal(t, text.ErrIDSelfServiceFlowExpired, gjson.GetBytes(body, "error.id").String(), "%s", body)
 			})
 
 			t.Run("case=validation error", func(t *testing.T) {
