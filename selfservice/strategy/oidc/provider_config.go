@@ -15,6 +15,19 @@ import (
 	"github.com/ory/x/urlx"
 )
 
+const (
+	// AccountLinkingModeVerifyWithExistingCredential requires the user to verify their identity
+	// with an existing credential before accounts are linked.
+	AccountLinkingModeVerifyWithExistingCredential = "confirm_with_existing_credential"
+	// AccountLinkingModeAutomatic silently links accounts if the provider verifies email ownership.
+	AccountLinkingModeAutomatic = "automatic"
+
+	// ProviderTypeApple is the provider type for Sign in with Apple.
+	ProviderTypeApple = "apple"
+	// ProviderTypeGoogle is the provider type for Sign in with Google.
+	ProviderTypeGoogle = "google"
+)
+
 type Configuration struct {
 	// ID is the provider's ID
 	ID string `json:"id"`
@@ -139,6 +152,11 @@ type Configuration struct {
 	// NetIDTokenOriginHeader contains the orgin header to be used when exchanging a
 	// NetID FedCM token for an ID token.
 	NetIDTokenOriginHeader string `json:"net_id_token_origin_header"`
+
+	// AccountLinkingMode controls how account conflicts are resolved for this provider.
+	// Possible values: "confirm_with_existing_credential" (default), "automatic".
+	// This is only effective in the Ory Network.
+	AccountLinkingMode string `json:"account_linking_mode,omitempty"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

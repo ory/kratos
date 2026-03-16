@@ -595,6 +595,13 @@
           "description": "Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token",
           "type": "string",
           "examples": ["https://example.com"]
+        },
+        "account_linking_mode": {
+          "title": "Account linking mode",
+          "description": "Controls how account conflicts are resolved for this provider. `confirm_with_existing_credential` (default) requires the user to verify their identity with an existing credential. `automatic` silently links accounts if the provider verifies email ownership. This is only effective in the Ory Network.",
+          "type": "string",
+          "enum": ["confirm_with_existing_credential", "automatic"],
+          "default": "confirm_with_existing_credential"
         }
       },
       "additionalProperties": false,
