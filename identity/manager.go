@@ -12,6 +12,8 @@ import (
 	"sort"
 	"strings"
 
+	stderrors "errors"
+
 	"github.com/gofrs/uuid"
 	"github.com/mohae/deepcopy"
 	"github.com/pkg/errors"
@@ -391,7 +393,11 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 
 		o := newManagerOptions(opts)
 		if err := m.ValidateIdentity(ctx, ident, o); err != nil {
-			createIdentitiesError.AddFailedIdentity(ident, herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err))
+			reason := err.Error()
+			if e, ok := stderrors.AsType[*herodot.DefaultError](err); ok {
+				reason = e.Reason()
+			}
+			createIdentitiesError.AddFailedIdentity(ident, herodot.ErrBadRequest.WithReason(reason).WithWrap(err))
 			continue
 		}
 		validIdentities = append(validIdentities, ident)

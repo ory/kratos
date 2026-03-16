@@ -1042,6 +1042,7 @@ func TestHandler(t *testing.T) {
 					{Create: validCreateIdentityBody(t, "valid", 3, false)},
 					{Create: &identity.CreateIdentityBody{Traits: json.RawMessage(`"invalid traits"`)}}, // <-- invalid traits
 					{Create: validCreateIdentityBody(t, "valid", 4, false)},
+					{Create: &identity.CreateIdentityBody{SchemaID: "nonexistent_schema", Traits: json.RawMessage(`{}`)}}, // <-- invalid schema ID
 				}
 				expectedToPass := []*identity.BatchIdentityPatch{patches[0], patches[1], patches[3], patches[5], patches[7]}
 
@@ -1058,7 +1059,7 @@ func TestHandler(t *testing.T) {
 				var actions []string
 				require.NoErrorf(t, json.Unmarshal(([]byte)(body.Get("identities.#.action").Raw), &actions), "%s", body)
 				assert.Equalf(t,
-					[]string{"create", "create", "error", "create", "error", "create", "error", "create"},
+					[]string{"create", "create", "error", "create", "error", "create", "error", "create", "error"},
 					actions, "%s", body)
 
 				// Check that all patch IDs are returned
@@ -1070,6 +1071,15 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, "Bad Request", body.Get("identities.2.error.status").String())
 				assert.Equal(t, "Conflict", body.Get("identities.4.error.status").String())
 				assert.Equal(t, "Bad Request", body.Get("identities.6.error.status").String())
+				assert.Equal(t, "Bad Request", body.Get("identities.8.error.status").String())
+
+				// Check that error reasons are specific, not generic
+				assert.NotEqualf(t, "The request was malformed or contained invalid parameters",
+					body.Get("identities.2.error.reason").String(), "error reason should be specific, not generic: %s", body)
+				assert.NotEqualf(t, "The request was malformed or contained invalid parameters",
+					body.Get("identities.6.error.reason").String(), "error reason should be specific, not generic: %s", body)
+				assert.Containsf(t, body.Get("identities.8.error.reason").String(),
+					"Unable to find JSON Schema ID: nonexistent_schema", "error reason should mention the missing schema ID: %s", body)
 
 				var identityIDs []uuid.UUID
 				require.NoErrorf(t, json.Unmarshal(([]byte)(body.Get("identities.#.identity").Raw), &identityIDs), "%s", body)
@@ -1092,6 +1102,68 @@ func TestHandler(t *testing.T) {
 				}
 
 				assert.Equal(t, expectedTraits, actualTraits)
+			})
+
+			t.Run("case=per-item errors surface specific reasons", func(t *testing.T) {
+				// Regression test: batch endpoint must propagate specific error reasons
+				// instead of replacing them with the generic herodot.ErrBadRequest message.
+				uniqueSuffix := x.NewUUID().String()
+				patches := []*identity.BatchIdentityPatch{
+					// 0: valid identity (should succeed)
+					{Create: &identity.CreateIdentityBody{
+						SchemaID: "multiple_emails",
+						Traits:   json.RawMessage(fmt.Sprintf(`{"emails":["specific-err-%s@ory.sh"],"username":"specific-err-%s@ory.sh"}`, uniqueSuffix, uniqueSuffix)),
+						State:    "active",
+					}},
+					// 1: unknown schema ID
+					{Create: &identity.CreateIdentityBody{
+						SchemaID: "user_v1",
+						Traits:   json.RawMessage(`{"email":"test@ory.com"}`),
+					}},
+					// 2: another unknown schema ID
+					{Create: &identity.CreateIdentityBody{
+						SchemaID: "completely_made_up",
+						Traits:   json.RawMessage(`{}`),
+					}},
+					// 3: traits are not an object (schema validation error)
+					{Create: &identity.CreateIdentityBody{
+						SchemaID: "employee",
+						Traits:   json.RawMessage(`"just a string"`),
+					}},
+					// 4: empty body (missing schema defaults to "default", but no traits)
+					{Create: &identity.CreateIdentityBody{}},
+				}
+
+				req := &identity.BatchPatchIdentitiesBody{Identities: patches}
+				body := send(t, adminTS, "PATCH", "/identities", http.StatusOK, req)
+
+				var actions []string
+				require.NoErrorf(t, json.Unmarshal([]byte(body.Get("identities.#.action").Raw), &actions), "%s", body)
+				assert.Equalf(t, []string{"create", "error", "error", "error", "error"}, actions, "%s", body)
+
+				genericReason := "The request was malformed or contained invalid parameters"
+
+				// Index 1: unknown schema "user_v1"
+				assert.Equalf(t, float64(400), body.Get("identities.1.error.code").Float(), "%s", body)
+				assert.Containsf(t, body.Get("identities.1.error.reason").String(),
+					"Unable to find JSON Schema ID: user_v1",
+					"expected specific schema-not-found reason: %s", body)
+
+				// Index 2: unknown schema "completely_made_up"
+				assert.Equalf(t, float64(400), body.Get("identities.2.error.code").Float(), "%s", body)
+				assert.Containsf(t, body.Get("identities.2.error.reason").String(),
+					"Unable to find JSON Schema ID: completely_made_up",
+					"expected specific schema-not-found reason: %s", body)
+
+				// Index 3: traits type mismatch (schema validation)
+				assert.Equalf(t, float64(400), body.Get("identities.3.error.code").Float(), "%s", body)
+				assert.NotEqualf(t, genericReason, body.Get("identities.3.error.reason").String(),
+					"schema validation error should have a specific reason: %s", body)
+
+				// Index 4: empty body (schema validation)
+				assert.Equalf(t, float64(400), body.Get("identities.4.error.code").Float(), "%s", body)
+				assert.NotEqualf(t, genericReason, body.Get("identities.4.error.reason").String(),
+					"empty body error should have a specific reason: %s", body)
 			})
 
 			t.Run("valid patches succeed", func(t *testing.T) {
