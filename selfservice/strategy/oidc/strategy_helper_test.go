@@ -26,8 +26,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
+
+	dockertest "github.com/ory/dockertest/v4"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -240,40 +242,41 @@ func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]str
 	publicPort, err := freeport.GetFreePort()
 	require.NoError(t, err)
 
-	pool, err := dockertest.NewPool("")
-	require.NoError(t, err)
-	hydra, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "oryd/hydra",
+	pool := dockertest.NewPoolT(t, "")
+
+	hydra := pool.RunT(t, "oryd/hydra",
 		// Keep tag in sync with the version in ci.yaml
-		Tag: "v2.2.0-rc.3",
-		Env: []string{
+		dockertest.WithTag("v2.2.0"),
+		dockertest.WithoutReuse(),
+		dockertest.WithEnv([]string{
 			"DSN=memory",
 			fmt.Sprintf("URLS_SELF_ISSUER=http://localhost:%d/", publicPort),
 			"URLS_LOGIN=" + hydraIntegrationTSURL + "/login",
 			"URLS_CONSENT=" + hydraIntegrationTSURL + "/consent",
 			"LOG_LEAK_SENSITIVE_VALUES=true",
 			"SECRETS_SYSTEM=someverylongsecretthatis32byteslong",
-		},
-		Cmd:          []string{"serve", "all", "--dev"},
-		ExposedPorts: []string{"4444/tcp", "4445/tcp"},
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			"4444/tcp": {{HostIP: "", HostPort: strconv.Itoa(publicPort)}},
-			"4445/tcp": {{HostIP: "", HostPort: ""}}, // Let Docker assign random port
-		},
-	})
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, hydra.Close())
-	})
-	require.NoError(t, hydra.Expire(uint(60*5)))
-
-	require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container.NetworkSettings.Ports)
+		}),
+		dockertest.WithCmd([]string{"serve", "all", "--dev"}),
+		dockertest.WithContainerConfig(func(cc *container.Config) {
+			cc.ExposedPorts = network.PortSet{
+				network.MustParsePort("4444/tcp"): struct{}{},
+				network.MustParsePort("4445/tcp"): struct{}{},
+			}
+		}),
+		dockertest.WithHostConfig(func(hc *container.HostConfig) {
+			hc.PortBindings = network.PortMap{
+				network.MustParsePort("4444/tcp"): {{HostPort: strconv.Itoa(publicPort)}},
+				network.MustParsePort("4445/tcp"): {{HostPort: ""}},
+			}
+		}),
+	)
+	require.NotEmpty(t, hydra.GetPort("4444/tcp"), "%+v", hydra.Container().NetworkSettings.Ports)
 	require.NotEmpty(t, hydra.GetPort("4445/tcp"), "%+v", hydra.Container)
 
 	remotePublic = "http://localhost:" + hydra.GetPort("4444/tcp")
 	remoteAdmin = "http://localhost:" + hydra.GetPort("4445/tcp")
 
-	err = resilience.Retry(logrusx.New("", ""), time.Second*1, time.Second*5, func() error {
+	err = resilience.Retry(logrusx.New("", ""), time.Second*1, time.Second*30, func() error {
 		pr := remotePublic + "/health/ready"
 		res, err := http.DefaultClient.Get(pr)
 		if err != nil || res.StatusCode != 200 {

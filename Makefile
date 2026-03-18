@@ -31,7 +31,7 @@ docs/swagger:
 	curl --retry 7 --retry-connrefused -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b .bin v2.10.1
 
 .bin/hydra: Makefile
-	bash <(curl --retry 7 --retry-connrefused https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.2.0-rc.3
+	bash <(curl --retry 7 --retry-connrefused https://raw.githubusercontent.com/ory/meta/master/install.sh) -d -b .bin hydra v2.2.0
 
 .bin/ory: Makefile
 	curl --retry 7 --retry-connrefused https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.2.2
@@ -69,7 +69,7 @@ test-resetdb:
 
 .PHONY: test
 test:
-	docker pull oryd/hydra:v2.2.0-rc.3
+	docker pull oryd/hydra:v2.2.0
 	go test -p 1 -tags sqlite -count=1 -failfast ./...
 
 test-short:

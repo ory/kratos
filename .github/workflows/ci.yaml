@@ -42,7 +42,7 @@ jobs:
             || true
           docker start cockroach
         name: Start CockroachDB
-      - run: docker pull oryd/hydra:v2.2.0-rc.3
+      - run: docker pull oryd/hydra:v2.2.0
         name: Pull Hydra
       - uses: ory/ci/checkout@master
         with:

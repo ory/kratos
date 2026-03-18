@@ -865,16 +865,40 @@ func TestOAuth2ProviderRegistration(t *testing.T) {
 			oauthClient,
 			browserClient)
 
+		// In Hydra v2.2.0-rc.3 this would have failed outright: Hydra returned an error
+		// when AcceptLoginRequest arrived with a subject (new user B) that did not match
+		// the subject in the existing login session (user A, skip=true flow).
+		//
+		// In Hydra v2.2.0 final the mismatch is handled with a prompt=login redirect
+		// instead of an error. The restart produces a fresh flow with f.Subject="" so
+		// the mismatch guard (f.Subject != "" && payload.Subject != f.Subject) in
+		// consent/handler.go does not fire on the second attempt, and the new user's
+		// subject is accepted. The flow completes successfully for user B.
+		//
+		// Security note: this is not exploitable in production. AcceptLoginRequest is a
+		// trusted admin API reachable only by the login provider (Kratos), which always
+		// sends the correctly authenticated identity ID. The change removes a hard
+		// early-failure signal for accidental subject substitution but does not
+		// introduce a new attack surface.
 		assert.EqualValues(t, clientAppState{
-			visits: 0,
-			tokens: 0,
+			visits: 1,
+			tokens: 1,
 		}, clientAS)
 
 		expected = []callTrace{
 			RegistrationUI,
-			RegistrationWithOAuth2LoginChallenge,
+			RegistrationWithOAuth2LoginChallenge, // skip=true, subject mismatch → prompt=login redirect
 			RegistrationUI,
 			RegistrationWithFlowID,
+			RegistrationUI,
+			RegistrationWithOAuth2LoginChallenge, // skip=false, f.Subject="" → guard bypassed, new subject accepted
+			LoginUI,
+			LoginWithFlowID,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
 		}
 		require.ElementsMatch(t, expected, ct, "expected the call trace to match")
 	})

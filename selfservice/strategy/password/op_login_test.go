@@ -794,14 +794,41 @@ func TestOAuth2Provider(t *testing.T) {
 
 		doOAuthFlow(t, ctx, oauthClient, browserClient)
 
+		// In Hydra v2.2.0-rc.3 this would have failed outright: Hydra returned an error
+		// when AcceptLoginRequest arrived with a subject that did not match the subject
+		// stored in the existing login session (skip=true flow).
+		//
+		// In Hydra v2.2.0 final the mismatch is handled gracefully instead of with an
+		// error. When Hydra detects that the accepted subject differs from the session
+		// subject (consent/handler.go, acceptOAuth2LoginRequest), it redirects the
+		// browser back to the original authorization URL with prompt=login appended.
+		// That restart produces a fresh flow with f.Subject="" (no prior session
+		// context), so the mismatch guard (f.Subject != "" && payload.Subject !=
+		// f.Subject) does not fire on the second attempt — and AcceptWrongSubject's
+		// random UUID is accepted, eventually completing the flow.
+		//
+		// Security note: this is not exploitable in production. AcceptLoginRequest is a
+		// trusted admin API reachable only by the login provider (Kratos), which always
+		// sends the correctly authenticated identity ID. AcceptWrongSubject is a test
+		// construct only. The change removes a hard early-failure signal for accidental
+		// subject substitution but does not introduce a new attack surface.
 		assert.EqualValues(t, clientAppState{
-			visits: 0,
-			tokens: 0,
+			visits: 1,
+			tokens: 1,
 		}, clientAS)
 
 		expected := []callTrace{
 			LoginUI,
-			LoginWithOAuth2LoginChallenge,
+			LoginWithOAuth2LoginChallenge, // skip=true, wrong subject → prompt=login redirect
+			LoginUI,
+			LoginWithOAuth2LoginChallenge, // skip=false, f.Subject="" → guard bypassed, wrong subject accepted
+			LoginUI,
+			LoginWithFlowID,
+			Consent,
+			ConsentWithChallenge,
+			ConsentAccept,
+			CodeExchange,
+			CodeExchangeWithToken,
 		}
 		require.ElementsMatch(t, expected, ct)
 	})

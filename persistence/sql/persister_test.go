@@ -6,6 +6,7 @@ package sql_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -60,8 +61,7 @@ func init() {
 }
 
 func TestMain(m *testing.M) {
-	m.Run()
-	dockertest.KillAllTestDatabases()
+	os.Exit(m.Run())
 }
 
 func pl(t testing.TB) func(lvl logging.Level, s string, args ...interface{}) {
