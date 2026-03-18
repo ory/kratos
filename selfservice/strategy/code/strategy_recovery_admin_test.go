@@ -187,6 +187,18 @@ func TestAdminStrategy(t *testing.T) {
 		assertEmailNotVerified(t, recoveryEmail)
 	})
 
+	t.Run("description=should respect custom expires_in in response", func(t *testing.T) {
+		id := identity.Identity{Traits: identity.Traits(`{}`)}
+		require.NoError(t, reg.IdentityManager().Create(context.Background(),
+			&id, identity.ManagerAllowWriteProtectedTraits))
+
+		code, _, err := createCode(createCodeParams{IdentityId: id.ID.String(), ExpiresIn: new("24h")})
+		require.NoError(t, err)
+
+		// The response expires_at must reflect the requested 24h, not the default 1h lifespan.
+		require.WithinDuration(t, time.Now().Add(24*time.Hour), *code.ExpiresAt, time.Hour)
+	})
+
 	t.Run("case=should not be able to use code from different flow", func(t *testing.T) {
 		email := testhelpers.RandomEmail()
 		i := createIdentityToRecover(t, reg, email)
