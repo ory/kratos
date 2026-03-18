@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
@@ -34,6 +33,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/fsx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/migratest"
@@ -64,7 +64,7 @@ func CompareWithFixture(t *testing.T, actual interface{}, prefix string, id stri
 func TestMigrations_SQLite(t *testing.T) {
 	t.Parallel()
 	sqlite, err := pop.NewConnection(&pop.ConnectionDetails{
-		URL: "sqlite3://" + filepath.Join(os.TempDir(), x.NewUUID().String()) + ".sql?_fk=true",
+		URL: dbal.NewSQLiteTestDatabase(t),
 	})
 	require.NoError(t, err)
 	require.NoError(t, sqlite.Open())
@@ -137,26 +137,19 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		t.FailNow()
 	}
 
+	opts := driver.WithConfigOptions(
+		configx.WithValues(map[string]any{
+			config.ViperKeyDSN:             url,
+			config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
+			config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
+			config.ViperKeySecretsDefault:  []string{"secret"},
+		}),
+		configx.SkipValidation(),
+	)
+
 	t.Run("suite=fixtures", func(t *testing.T) {
-		t.Cleanup(func() {
-			// clean up test duplicates - remove identity_credential_identifiers 10985ed1-5b6e-4012-ac10-03d87df65618 - otherwise down migration later fails.
-			require.NoError(t, c.RawQuery("DELETE FROM identity_credential_identifiers WHERE identifier = '10985ed1-5b6e-4012-ac10-03d87df65618'").Exec())
-		})
-
-		wg := &sync.WaitGroup{}
-		opts := driver.WithConfigOptions(
-			configx.WithValues(map[string]any{
-				config.ViperKeyDSN:             url,
-				config.ViperKeyPublicBaseURL:   "https://www.ory.sh/",
-				config.ViperKeyIdentitySchemas: config.Schemas{{ID: "default", URL: "file://stub/default.schema.json"}},
-				config.ViperKeySecretsDefault:  []string{"secret"},
-			}),
-			configx.SkipValidation(),
-		)
-
 		t.Run("case=identity", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			d, err := driver.New(
@@ -190,8 +183,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=identity_get", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			d, err := driver.New(
@@ -218,8 +210,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=verification_token", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []link.VerificationToken
@@ -233,8 +224,6 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=session", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
 			t.Parallel()
 
 			var ids []session.Session
@@ -260,8 +249,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=login", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []login.Flow
@@ -286,8 +274,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=registration", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []registration.Flow
@@ -312,8 +299,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=settings_flow", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []settings.Flow
@@ -338,8 +324,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=recovery_flow", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []recovery.Flow
@@ -364,8 +349,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=verification_flow", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []verification.Flow
@@ -390,8 +374,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=recovery_token", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []link.RecoveryToken
@@ -407,8 +390,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=recovery_code", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []code.RecoveryCode
@@ -424,8 +406,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=registration_code", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []code.RegistrationCode
@@ -441,8 +422,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		})
 
 		t.Run("case=login_code", func(t *testing.T) {
-			wg.Add(1)
-			defer wg.Done()
+
 			t.Parallel()
 
 			var ids []code.LoginCode
@@ -456,33 +436,36 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 			}
 			migratest.ContainsExpectedIds(t, filepath.Join("fixtures", "login_code"), found)
 		})
-
-		t.Run("suite=constraints", func(t *testing.T) {
-			// This is not really a parallel test, but we have to mark it parallel so the other tests run first.
-			t.Parallel()
-			wg.Wait()
-
-			d, err := driver.New(
-				context.Background(),
-				os.Stderr,
-				opts,
-			)
-			require.NoError(t, err)
-
-			sr, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
-			require.NoError(t, err)
-
-			require.NoError(t, d.PrivilegedIdentityPool().DeleteIdentity(context.Background(), sr.IdentityID))
-
-			_, err = d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
-			require.Error(t, err)
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
-		})
 	})
 
-	err = tm.Down(ctx, -1) // for easy breakpointing
-	if !assert.NoError(t, err) {
-		assert.NoError(t, tm.DumpMigrationSchema(ctx))
-		t.FailNow()
-	}
+	t.Run("suite=constraints", func(t *testing.T) {
+		t.Cleanup(func() {
+			// clean up test duplicates - remove identity_credential_identifiers 10985ed1-5b6e-4012-ac10-03d87df65618 - otherwise down migration later fails.
+			require.NoError(t, c.RawQuery("DELETE FROM identity_credential_identifiers WHERE identifier = '10985ed1-5b6e-4012-ac10-03d87df65618'").Exec())
+		})
+
+		d, err := driver.New(
+			context.Background(),
+			os.Stderr,
+			opts,
+		)
+		require.NoError(t, err)
+
+		sr, err := d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+		require.NoError(t, err)
+
+		require.NoError(t, d.PrivilegedIdentityPool().DeleteIdentity(context.Background(), sr.IdentityID))
+
+		_, err = d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
+		require.Error(t, err)
+		require.ErrorIs(t, err, sqlcon.ErrNoRows)
+	})
+
+	t.Run("suite=down", func(t *testing.T) {
+		err = tm.Down(ctx, -1) // for easy breakpointing
+		if !assert.NoError(t, err) {
+			assert.NoError(t, tm.DumpMigrationSchema(ctx))
+			t.FailNow()
+		}
+	})
 }
