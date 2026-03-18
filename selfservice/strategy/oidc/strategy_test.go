@@ -901,6 +901,76 @@ func TestStrategy(t *testing.T) {
 			})
 		}
 
+		t.Run("case=should pass transient payload to registration webhook", func(t *testing.T) {
+			subject = "api-transient-payload-registration@ory.sh"
+			transientPayload := `{"data": "api-registration"}`
+
+			webhook := hooktest.NewServer()
+			t.Cleanup(webhook.Close)
+			webhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+
+			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+			action := assertFormValues(t, f.ID, "valid")
+
+			res, err := http.Post(action, "application/json", // #nosec G107 -- test code
+				strings.NewReader(fmt.Sprintf(`{"method":"oidc","provider":"valid","transient_payload":%s}`, transientPayload)))
+			require.NoError(t, err)
+			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+			var changeLocation flow.BrowserLocationChangeRequiredError
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&changeLocation))
+
+			res, err = testhelpers.NewClientWithCookieJar(t, nil, nil).Get(changeLocation.RedirectBrowserTo)
+			require.NoError(t, err)
+
+			returnToCode := res.Request.URL.Query().Get("code")
+			require.NotEmpty(t, returnToCode, "code query param was empty in the return_to URL")
+
+			codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
+				InitCode:     f.SessionTokenExchangeCode,
+				ReturnToCode: returnToCode,
+			})
+			require.NoError(t, err)
+			assert.NotEmpty(t, codeResponse.Token)
+
+			webhook.AssertTransientPayload(t, transientPayload)
+		})
+
+		t.Run("case=should pass transient payload to login webhook", func(t *testing.T) {
+			// subject is the same as above, so this triggers a login (already registered)
+			transientPayload := `{"data": "api-login"}`
+
+			webhook := hooktest.NewServer()
+			t.Cleanup(webhook.Close)
+			webhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, identity.CredentialsTypeOIDC.String()))
+
+			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+			action := assertFormValues(t, f.ID, "valid")
+
+			res, err := http.Post(action, "application/json", // #nosec G107 -- test code
+				strings.NewReader(fmt.Sprintf(`{"method":"oidc","provider":"valid","transient_payload":%s}`, transientPayload)))
+			require.NoError(t, err)
+			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+			var changeLocation flow.BrowserLocationChangeRequiredError
+			require.NoError(t, json.NewDecoder(res.Body).Decode(&changeLocation))
+
+			res, err = testhelpers.NewClientWithCookieJar(t, nil, nil).Get(changeLocation.RedirectBrowserTo)
+			require.NoError(t, err)
+
+			returnToCode := res.Request.URL.Query().Get("code")
+			require.NotEmpty(t, returnToCode, "code query param was empty in the return_to URL")
+
+			codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
+				InitCode:     f.SessionTokenExchangeCode,
+				ReturnToCode: returnToCode,
+			})
+			require.NoError(t, err)
+			assert.NotEmpty(t, codeResponse.Token)
+
+			webhook.AssertTransientPayload(t, transientPayload)
+		})
+
 		t.Run("case=should return exchange code even if already authenticated", func(t *testing.T) {
 			subject = "existing-session-api-code-testing@ory.sh"
 			jar := x.Must(cookiejar.New(nil))

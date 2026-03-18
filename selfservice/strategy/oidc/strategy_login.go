@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tidwall/sjson"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/herodot"
@@ -342,6 +343,19 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}),
 		continuity.WithLifespan(time.Minute*30)); err != nil {
 		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+	}
+
+	// For API/native flows, persist TransientPayload in InternalContext so it
+	// survives the OIDC redirect. Browser flows restore it from the continuity
+	// cookie instead, which is not available in native flows because the
+	// callback comes from a different user agent (system browser/webview).
+	if f.Type == flow.TypeAPI && len(f.TransientPayload) > 0 {
+		f.EnsureInternalContext()
+		ic, err := sjson.SetRawBytes(f.InternalContext, "transient_payload", f.TransientPayload)
+		if err != nil {
+			return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+		}
+		f.InternalContext = ic
 	}
 
 	f.Active = s.ID()
