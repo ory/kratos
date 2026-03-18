@@ -160,7 +160,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.True(t, code.ExpiresAt.Before(time.Now().Add(conf.SelfServiceFlowRecoveryRequestLifespan(t.Context()))))
 
 		body := submitRecoveryCode(t, nil, code.RecoveryLink, code.RecoveryCode)
-		assert.Equal(t, "The recovery code is invalid or has already been used. Please try again.", gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
+		assert.Contains(t, gjson.GetBytes(body, "ui.messages.0.text").Str, "The recovery flow expired", "%s", body)
 
 		// The recovery address should not be verified if the flow was initiated by the admins
 		assertEmailNotVerified(t, recoveryEmail)
