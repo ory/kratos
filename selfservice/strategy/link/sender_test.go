@@ -179,8 +179,6 @@ func TestManager(t *testing.T) {
 	}
 
 	t.Run("case=should be able to disable invalid email dispatch", func(t *testing.T) {
-		t.Parallel()
-
 		for _, tc := range []struct {
 			flow      string
 			send      func(t *testing.T)
@@ -218,8 +216,6 @@ func TestManager(t *testing.T) {
 			},
 		} {
 			t.Run("strategy="+tc.flow, func(t *testing.T) {
-				t.Parallel()
-
 				ctx = contextx.WithConfigValue(ctx, tc.configKey, false)
 
 				tc.send(t)
