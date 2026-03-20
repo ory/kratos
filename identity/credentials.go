@@ -20,6 +20,22 @@ import (
 	"github.com/ory/x/sqlxx"
 )
 
+// In nearly all cases, credential types have a constant id.
+// To make it potentially faster, and not need any data in the database,
+// we define this constant map. In 99.999% of the cases, a look up in this map is a hit and it's fast.
+// In the unlikely event that this is a miss, e.g. for very old self-hosted deployments from a time where
+// credential type ids used to be dynamic, we do a database look-up.
+var ConstantCredentialsTypeToId = map[CredentialsType]string{
+	CredentialsTypePassword: "78c1b41d-8341-4507-aa60-aff1d4369670", // gitleaks:allow
+	CredentialsTypeOIDC:     "6fa5e2e0-bfce-4631-b62b-cf2b0252b289", // gitleaks:allow
+	CredentialsTypeTOTP:     "5e29b036-aa47-457f-9fe6-aa8b854a752b", // gitleaks:allow
+	CredentialsTypeLookup:   "567a0730-7f48-4dd7-a13d-df87a51c245f", // gitleaks:allow
+	CredentialsTypeWebAuthn: "6b213fa0-e6ad-46cb-8878-b088d2ce2e3c", // gitleaks:allow
+	CredentialsTypeCodeAuth: "14f3b7e2-8725-4068-be39-8a796485fd97", // gitleaks:allow
+	CredentialsTypePasskey:  "8d0ca544-9bf6-45d3-bd75-0bbb3aeba3c7", // gitleaks:allow
+	CredentialsTypeSAML:     "7bddcf6c-f50e-4a18-9b0f-429114c33419", // gitleaks:allow
+}
+
 // Authenticator Assurance Level (AAL)
 //
 // The authenticator assurance level can be one of "aal1", "aal2", or "aal3". A higher number means that it is harder
