@@ -159,7 +159,7 @@
           "type": "string",
           "format": "uri",
           "pattern": "^(http|https|file|base64)://",
-          "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads",
+          "description": "URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods which support HTTP body payloads",
           "default": "base64://ZnVuY3Rpb24oY3R4KSB7CiAgcmVjaXBpZW50OiBjdHgucmVjaXBpZW50LAogIHRlbXBsYXRlX3R5cGU6IGN0eC50ZW1wbGF0ZV90eXBlLAogIHRvOiBpZiAidGVtcGxhdGVfZGF0YSIgaW4gY3R4ICYmICJ0byIgaW4gY3R4LnRlbXBsYXRlX2RhdGEgdGhlbiBjdHgudGVtcGxhdGVfZGF0YS50byBlbHNlIG51bGwsCiAgcmVjb3ZlcnlfY29kZTogaWYgInRlbXBsYXRlX2RhdGEiIGluIGN0eCAmJiAicmVjb3ZlcnlfY29kZSIgaW4gY3R4LnRlbXBsYXRlX2RhdGEgdGhlbiBjdHgudGVtcGxhdGVfZGF0YS5yZWNvdmVyeV9jb2RlIGVsc2UgbnVsbCwKICByZWNvdmVyeV91cmw6IGlmICJ0ZW1wbGF0ZV9kYXRhIiBpbiBjdHggJiYgInJlY292ZXJ5X3VybCIgaW4gY3R4LnRlbXBsYXRlX2RhdGEgdGhlbiBjdHgudGVtcGxhdGVfZGF0YS5yZWNvdmVyeV91cmwgZWxzZSBudWxsLAogIHZlcmlmaWNhdGlvbl91cmw6IGlmICJ0ZW1wbGF0ZV9kYXRhIiBpbiBjdHggJiYgInZlcmlmaWNhdGlvbl91cmwiIGluIGN0eC50ZW1wbGF0ZV9kYXRhIHRoZW4gY3R4LnRlbXBsYXRlX2RhdGEudmVyaWZpY2F0aW9uX3VybCBlbHNlIG51bGwsCiAgdmVyaWZpY2F0aW9uX2NvZGU6IGlmICJ0ZW1wbGF0ZV9kYXRhIiBpbiBjdHggJiYgInZlcmlmaWNhdGlvbl9jb2RlIiBpbiBjdHgudGVtcGxhdGVfZGF0YSB0aGVuIGN0eC50ZW1wbGF0ZV9kYXRhLnZlcmlmaWNhdGlvbl9jb2RlIGVsc2UgbnVsbCwKICBzdWJqZWN0OiBjdHguc3ViamVjdCwKICBib2R5OiBjdHguYm9keQp9Cg==",
           "examples": [
             "file:///path/to/body.jsonnet",
@@ -595,6 +595,13 @@
           "description": "Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token",
           "type": "string",
           "examples": ["https://example.com"]
+        },
+        "account_linking_mode": {
+          "title": "Account linking mode",
+          "description": "Controls how account conflicts are resolved for this provider. `confirm_with_existing_credential` (default) requires the user to verify their identity with an existing credential. `automatic` silently links accounts if the provider verifies email ownership. This is only effective in the Ory Network.",
+          "type": "string",
+          "enum": ["confirm_with_existing_credential", "automatic"],
+          "default": "confirm_with_existing_credential"
         }
       },
       "additionalProperties": false,
@@ -2504,7 +2511,7 @@
       "additionalProperties": false
     },
     "tracing": {
-      "$ref": "https://raw.githubusercontent.com/ory/kratos/5badf8be0/oryx/otelx/config.schema.json"
+      "$ref": "https://raw.githubusercontent.com/ory/kratos/c651ecf2e/oryx/otelx/config.schema.json"
     },
     "log": {
       "title": "Log",
