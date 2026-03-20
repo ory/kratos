@@ -194,56 +194,29 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 	// Force case-insensitivity and trimming for identifiers
 	match = NormalizeIdentifier(ct, match)
 
-	// Fast path: if the credential type ID is a known constant, skip the join with
-	// identity_credential_types. In the rare case the constant is stale (old
-	// self-hosted deployments where IDs were dynamic), the query returns no rows and
-	// we fall through to the join-based query below.
-	var found bool
-	if typeID, ok := identity.ConstantCredentialsTypeToId[ct]; ok {
-		if err := p.GetConnection(ctx).RawQuery(`
-			SELECT
-				ic.identity_id
-			FROM identity_credentials ic
-					INNER JOIN identity_credential_identifiers ici
-						ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ?
-			WHERE ici.identifier = ?
-			AND ic.nid = ?
-			AND ici.nid = ?
-			LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
-			typeID,
-			match,
-			nid,
-			nid,
-		).First(&find); err == nil {
-			found = true
+	if err := p.GetConnection(ctx).RawQuery(`
+		SELECT
+			ic.identity_id
+		FROM identity_credentials ic
+				INNER JOIN identity_credential_types ict
+					ON ic.identity_credential_type_id = ict.id
+				INNER JOIN identity_credential_identifiers ici
+					ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
+		WHERE ici.identifier = ?
+		AND ic.nid = ?
+		AND ici.nid = ?
+		AND ict.name = ?
+		LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
+		match,
+		nid,
+		nid,
+		ct,
+	).First(&find); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
 		}
-	}
 
-	if !found {
-		if err := p.GetConnection(ctx).RawQuery(`
-			SELECT
-				ic.identity_id
-			FROM identity_credentials ic
-					INNER JOIN identity_credential_types ict
-						ON ic.identity_credential_type_id = ict.id
-					INNER JOIN identity_credential_identifiers ici
-						ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
-			WHERE ici.identifier = ?
-			AND ic.nid = ?
-			AND ici.nid = ?
-			AND ict.name = ?
-			LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
-			match,
-			nid,
-			nid,
-			ct,
-		).First(&find); err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return nil, nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
-			}
-
-			return nil, nil, sqlcon.HandleError(err)
-		}
+		return nil, nil, sqlcon.HandleError(err)
 	}
 
 	span.SetAttributes(attribute.String("identity.id", find.IdentityID.String()))
@@ -1563,12 +1536,6 @@ var (
 )
 
 func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identity.CredentialsType, error) {
-	for name, cid := range identity.ConstantCredentialsTypeToId {
-		if id.String() == cid {
-			return name, nil
-		}
-	}
-
 	result, found := credentialTypesID.Load(id)
 	if !found {
 		if err := loadCredentialTypes(con); err != nil {
@@ -1586,11 +1553,6 @@ func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identit
 }
 
 func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.CredentialsType) (uuid.UUID, error) {
-	id, ok := identity.ConstantCredentialsTypeToId[ct]
-	if ok {
-		return uuid.Must(uuid.FromString(id)), nil
-	}
-
 	result, found := credentialTypesName.Load(ct)
 	if !found {
 		if err := loadCredentialTypes(con); err != nil {
