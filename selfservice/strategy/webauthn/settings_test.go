@@ -368,6 +368,58 @@ func TestCompleteSettings(t *testing.T) {
 		})
 	})
 
+	t.Run("case=user_handle is not overwritten when adding a second security key", func(t *testing.T) {
+		// Regression test for https://github.com/ory/kratos/issues/4519
+		// The user_handle must remain stable per the WebAuthn spec (user.id must not change).
+		var id identity.Identity
+		require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
+		id.NID = uuid.Must(uuid.NewV4())
+		_ = reg.PrivilegedIdentityPool().DeleteIdentity(t.Context(), id.ID)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, &id)
+
+		// Add an existing WebAuthn credential with a specific user_handle
+		existingUserHandle := []byte("original-user-handle-12")
+		existingCredConfig, err := json.Marshal(identity.CredentialsWebAuthnConfig{
+			Credentials: identity.CredentialsWebAuthn{
+				{ID: []byte("existing-cred"), DisplayName: "existing key"},
+			},
+			UserHandle: existingUserHandle,
+		})
+		require.NoError(t, err)
+		id.Credentials = map[identity.CredentialsType]identity.Credentials{
+			identity.CredentialsTypeWebAuthn: {
+				Type:   identity.CredentialsTypeWebAuthn,
+				Config: sqlxx.JSONRawMessage(existingCredConfig),
+			},
+		}
+		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), &id))
+
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, false, publicTS)
+
+		// Inject the session to replay
+		interim, err := reg.SettingsFlowPersister().GetSettingsFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+		require.NoError(t, err)
+		interim.InternalContext = settingsFixtureSuccessInternalContext
+		require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(context.Background(), interim))
+
+		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		values.Set(node.WebAuthnRegister, string(settingsFixtureSuccessResponse))
+		values.Set(node.WebAuthnRegisterDisplayName, "second key")
+		body, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserClient, testhelpers.EncodeFormAsJSON(t, false, values))
+		require.Equal(t, http.StatusOK, res.StatusCode, body)
+		assert.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
+
+		actual, err := reg.Persister().GetIdentityConfidential(context.Background(), id.ID)
+		require.NoError(t, err)
+		cred, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
+		require.True(t, ok)
+
+		var cc identity.CredentialsWebAuthnConfig
+		require.NoError(t, json.Unmarshal(cred.Config, &cc))
+		assert.Equal(t, existingUserHandle, cc.UserHandle, "user_handle must not be overwritten when adding a second WebAuthn key")
+		assert.Len(t, cc.Credentials, 2, "should now have two credentials")
+	})
+
 	t.Run("case=fails to remove security key if it is passwordless and the last credential available", func(t *testing.T) {
 		conf.MustSet(t.Context(), config.ViperKeyWebAuthnPasswordless, true)
 		t.Cleanup(func() {
