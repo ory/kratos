@@ -25,6 +25,6 @@ func (p Network) TableName() string {
 
 func NewNetwork() *Network {
 	return &Network{
-		ID: uuid.Must(uuid.NewV4()),
+		ID: uuid.Must(uuid.NewV7()),
 	}
 }

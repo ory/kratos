@@ -167,7 +167,7 @@ func buildInsertQueryValues[T any](columns []string, models []*T, opts *createOp
 					continue // break switch, not for
 				}
 
-				id, err := uuid.NewV4()
+				id, err := uuid.NewV7()
 				if err != nil {
 					return nil, err
 				}

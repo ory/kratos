@@ -146,7 +146,7 @@ func buildInsertQueryValues[T any](dialect string, mapper *reflectx.Mapper, colu
 					continue // break switch, not for
 				}
 
-				id, err := uuid.NewV4()
+				id, err := uuid.NewV7()
 				if err != nil {
 					return nil, err
 				}

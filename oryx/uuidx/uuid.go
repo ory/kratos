@@ -9,3 +9,7 @@ import "github.com/gofrs/uuid"
 func NewV4() uuid.UUID {
 	return uuid.Must(uuid.NewV4())
 }
+
+func NewV7() uuid.UUID {
+	return uuid.Must(uuid.NewV7())
+}

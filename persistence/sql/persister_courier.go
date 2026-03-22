@@ -191,7 +191,7 @@ func (p *Persister) RecordDispatch(ctx context.Context, msgID uuid.UUID, status 
 	defer otelx.End(span, &err)
 
 	dispatch := courier.MessageDispatch{
-		ID:        uuidx.NewV4(),
+		ID:        uuidx.NewV7(),
 		MessageID: msgID,
 		Status:    status,
 		NID:       p.NetworkID(ctx),
