@@ -46,6 +46,7 @@ context("Testing logout flows", () => {
         cy.visit(route)
       })
 
+      // playwright:migrated
       it("should sign out and be able to sign in again", () => {
         cy.getSession()
         cy.getCookie("ory_kratos_session").should("not.be.null")
@@ -63,6 +64,7 @@ context("Testing logout flows", () => {
         cy.url().should("include", "/login")
       })
 
+      // playwright:migrated
       it("should be able to sign out on settings page", () => {
         if (app === "react") {
           return
@@ -83,6 +85,7 @@ context("Testing logout flows", () => {
         cy.location("host").should("eq", "www.example.org")
       })
 
+      // playwright:migrated
       it("should be able to sign out on welcome page", () => {
         if (app === "react") {
           return

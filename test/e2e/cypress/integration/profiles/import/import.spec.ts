@@ -48,6 +48,7 @@ context("Import Identities", () => {
       checkPassword: "123456",
     },
   ]) {
+    // playwright:migrated
     it(`should be able to sign in using an imported password (${tc.name})`, () => {
       const email = gen.email()
       cy.request("POST", `${KRATOS_ADMIN}/identities`, {

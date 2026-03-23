@@ -59,6 +59,7 @@ context("Login error messages with code method", () => {
         cy.visit(route)
       })
 
+      // playwright:migrated
       it("should show error message when account identifier does not exist", () => {
         const email = gen.email()
 
@@ -71,6 +72,7 @@ context("Login error messages with code method", () => {
         )
       })
 
+      // playwright:migrated
       it("should show error message when code is invalid", () => {
         cy.get("@email").then((email) => {
           cy.get(Selectors[app]["identity"]).clear().type(email.toString())
@@ -89,6 +91,7 @@ context("Login error messages with code method", () => {
         )
       })
 
+      // playwright:migrated
       it("should show error message when identifier has changed", () => {
         cy.get("@email").then((email) => {
           cy.get(Selectors[app]["identity"]).type(email.toString())
@@ -122,6 +125,7 @@ context("Login error messages with code method", () => {
         )
       })
 
+      // playwright:migrated
       it("should show error message when required fields are missing", () => {
         cy.removeAttribute([Selectors[app]["identity"]], "required")
 
@@ -160,6 +164,7 @@ context("Login error messages with code method", () => {
         }
       })
 
+      // playwright:migrated
       it("should show error message when code is expired", () => {
         cy.updateConfigFile((config) => {
           config.selfservice.methods.code = {

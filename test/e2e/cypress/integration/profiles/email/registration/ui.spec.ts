@@ -29,6 +29,7 @@ describe("Registration UI for email flows", () => {
       })
 
       describe("use ui elements", () => {
+        // playwright:migrated
         it("should use the json schema titles", () => {
           cy.get(appPrefix(app) + 'input[name="traits.email"]')
             .parent()
@@ -39,6 +40,7 @@ describe("Registration UI for email flows", () => {
           cy.get('button[value="password"]').should("contain.text", "Sign up")
         })
 
+        // playwright:migrated
         it("clicks the log in link", () => {
           cy.get('*[data-testid="cta-link"]').click()
           cy.location("pathname").should("include", "/login")

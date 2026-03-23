@@ -66,6 +66,7 @@ context("Login success with code method", () => {
         cy.visit(route)
       })
 
+      // playwright:migrated
       it("should be able to sign in with code", () => {
         cy.get("@email").then((email) => {
           cy.get(Selectors[app]["identity"]).clear().type(email.toString())
@@ -111,6 +112,7 @@ context("Login success with code method", () => {
         })
       })
 
+      // playwright:migrated
       it("should be able to sign in with code on account registered with password", () => {
         const email = gen.email()
         // register account with password
@@ -173,6 +175,7 @@ context("Login success with code method", () => {
         })
       })
 
+      // playwright:migrated
       it("should be able to resend login code", () => {
         cy.get("@email").then((email) => {
           cy.get(Selectors[app]["identity"]).clear().type(email.toString())

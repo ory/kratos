@@ -36,6 +36,7 @@ context("Settings errors with email profile", () => {
       })
 
       describe("use ui elements", () => {
+        // playwright:migrated
         it("should use the json schema titles", () => {
           const settingsLink = appPrefix(app) + 'a[href*="settings"]'
           if (app === "express") {
@@ -58,6 +59,7 @@ context("Settings errors with email profile", () => {
           cy.get('button[value="password"]').should("contain.text", "Save")
         })
 
+        // playwright:migrated
         it("clicks the settings link", () => {
           const settingsLink = 'a[href*="settings"]'
           if (app === "express") {

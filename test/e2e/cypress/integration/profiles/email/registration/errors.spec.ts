@@ -57,6 +57,7 @@ describe("Registration failures with email profile", () => {
       })
 
       describe("show errors when invalid signup data is used", () => {
+        // playwright:migrated
         it("should show an error when the password has leaked before", () => {
           cy.get('input[name="traits.website"]').type("https://www.ory.sh")
           cy.get('input[name="traits.email"]')
@@ -73,6 +74,7 @@ describe("Registration failures with email profile", () => {
           )
         })
 
+        // playwright:migrated
         it("should show an error when the password is too similar", () => {
           cy.get('input[name="traits.website"]').type("https://www.ory.sh")
           cy.get('input[name="traits.email"]').type(identity)
@@ -85,6 +87,7 @@ describe("Registration failures with email profile", () => {
           )
         })
 
+        // playwright:migrated
         it("should show an error when the password is empty", () => {
           cy.get('input[name="traits.website"]').type("https://www.ory.sh")
           cy.get('input[name="traits.email"]').type(identity)
@@ -104,6 +107,7 @@ describe("Registration failures with email profile", () => {
             })
         })
 
+        // playwright:migrated
         it("should show an error when the email is empty", () => {
           cy.get('input[name="traits.website"]').type("https://www.ory.sh")
           cy.get('input[name="password"]').type(password)
@@ -124,6 +128,7 @@ describe("Registration failures with email profile", () => {
             })
         })
 
+        // playwright:migrated
         it("should show an error when the email is not an email", () => {
           cy.get('input[name="traits.website"]').type("https://www.ory.sh")
           cy.get('input[name="password"]').type(password)
@@ -142,6 +147,7 @@ describe("Registration failures with email profile", () => {
           ).should("exist")
         })
 
+        // playwright:migrated
         it("should show a missing indicator if no fields are set", () => {
           // the browser will prevent the form from being submitted if the input field is required
           // we should remove the required attribute to simulate the data not being sent
@@ -170,6 +176,7 @@ describe("Registration failures with email profile", () => {
             })
         })
 
+        // playwright:migrated
         it("should show an error when the website is too short", () => {
           // the browser will prevent the form from being submitted if the input field is required
           // we should remove the required attribute to simulate the data not being sent
@@ -187,6 +194,7 @@ describe("Registration failures with email profile", () => {
           )
         })
 
+        // playwright:migrated
         it("should show an error when required params are missing", () => {
           // the browser will prevent the form from being submitted if the input field is required
           // we should remove it from the DOM entirely to simulate the data not being sent
@@ -209,6 +217,7 @@ describe("Registration failures with email profile", () => {
           )
         })
 
+        // playwright:migrated
         it("should show an error when the age is too high", () => {
           // the browser will prevent the form from being submitted if the input field is required
           // we should remove the required attribute to simulate the data not being sent
@@ -230,6 +239,7 @@ describe("Registration failures with email profile", () => {
           )
         })
 
+        // playwright:migrated
         it("should show a hint for existing account", () => {
           const email = gen.email()
           const password = gen.password()

@@ -61,6 +61,7 @@ context("Registration error messages with code method", () => {
         cy.visit(route)
       })
 
+      // playwright:migrated
       it("should show error message when code is invalid", () => {
         const email = gen.email()
 
@@ -80,6 +81,7 @@ context("Registration error messages with code method", () => {
         )
       })
 
+      // playwright:migrated
       it("should show error message when traits have changed", () => {
         const email = gen.email()
 
@@ -118,6 +120,7 @@ context("Registration error messages with code method", () => {
         )
       })
 
+      // playwright:migrated
       it("should show error message when required fields are missing", () => {
         cy.removeAttribute([Selectors[app]["email"]], "required")
         const email = gen.email()
@@ -157,6 +160,7 @@ context("Registration error messages with code method", () => {
         }
       })
 
+      // playwright:migrated
       it("should show error message when code is expired", () => {
         cy.updateConfigFile((config) => {
           config.selfservice.methods.code.config.lifespan = "1ns"

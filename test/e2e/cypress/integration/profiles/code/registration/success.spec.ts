@@ -91,6 +91,7 @@ context("Registration success with code method", () => {
         cy.visit(route)
       })
 
+      // playwright:migrated
       it("should be able to resend the registration code", () => {
         const email = gen.email()
 
@@ -156,6 +157,7 @@ context("Registration success with code method", () => {
         })
       })
 
+      // playwright:migrated
       it("should sign up and be logged in with session hook", () => {
         const email = gen.email()
 
@@ -202,6 +204,7 @@ context("Registration success with code method", () => {
         })
       })
 
+      // playwright:migrated
       it("should be able to sign up without session hook", () => {
         cy.setPostCodeRegistrationHooks([])
         const email = gen.email()

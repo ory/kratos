@@ -34,6 +34,7 @@ context("Registration success with email profile", () => {
         }
       })
 
+      // playwright:migrated
       it("should sign up and be logged in", () => {
         const email = gen.email()
         const password = gen.password()
@@ -80,6 +81,7 @@ context("Registration success with email profile", () => {
         })
       })
 
+      // playwright:migrated
       it("should sign up with advanced form field values be logged in", () => {
         const email = gen.email()
         const password = gen.password()
@@ -123,6 +125,7 @@ context("Registration success with email profile", () => {
         })
       })
 
+      // playwright:migrated
       it("should sign up and be redirected", () => {
         cy.disableVerification()
         cy.browserReturnUrlOry()

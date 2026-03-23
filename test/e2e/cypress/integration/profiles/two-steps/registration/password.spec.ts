@@ -34,6 +34,7 @@ context("Registration success with two-step signup", () => {
         }
       })
 
+      // playwright:migrated
       it("should sign up and be logged in", () => {
         const email = gen.email()
         const password = gen.password()
@@ -71,6 +72,7 @@ context("Registration success with two-step signup", () => {
         })
       })
 
+      // playwright:migrated
       it("should handle form errors", () => {
         const email = gen.email()
         const password = gen.password()

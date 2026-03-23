@@ -48,6 +48,7 @@ context("Settings success with email profile", () => {
         cy.visit(route)
       })
 
+      // playwright:migrated
       it("shows all settings forms", () => {
         cy.get(appPrefix(app) + "h3").should("contain.text", "Profile")
         cy.get('input[name="traits.email"]').should("contain.value", email)
@@ -58,6 +59,7 @@ context("Settings success with email profile", () => {
       })
 
       describe("password", () => {
+        // playwright:migrated
         it("modifies the password with privileged session", () => {
           // Once input weak password to test which error message is cleared after updating successfully
           cy.get('input[name="password"]').clear().type("123")
@@ -75,6 +77,7 @@ context("Settings success with email profile", () => {
           cy.get('input[name="password"]').should("be.empty")
         })
 
+        // playwright:migrated
         it("is unable to log in with the old password", () => {
           cy.login({
             email: email,
@@ -99,6 +102,7 @@ context("Settings success with email profile", () => {
       })
 
       describe("profile", () => {
+        // playwright:migrated
         it("modifies an unprotected traits", () => {
           cy.get('input[name="traits.website"]')
             .clear()
