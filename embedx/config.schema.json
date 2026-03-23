@@ -2293,6 +2293,13 @@
           "type": "boolean",
           "default": false,
           "description": "Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow."
+        },
+        "subject_source": {
+          "title": "Subject source for OAuth2 login",
+          "type": "string",
+          "enum": ["id", "external_id"],
+          "default": "id",
+          "description": "Determines which identifier to use as the subject in OAuth2 login requests. Can be either 'id' (identity ID, default) or 'external_id' (identity's external ID). If 'external_id' is selected but not set on the identity, an error will be returned."
         }
       },
       "additionalProperties": false
