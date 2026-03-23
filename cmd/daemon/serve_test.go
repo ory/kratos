@@ -51,18 +51,22 @@ func TestMetricsRouterPaths(t *testing.T) {
 
 	// Make some requests that should be recorded in the metrics
 	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("http://127.0.0.1:%d/sessions/session-id", publicPort), nil)
-	_, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
-	_, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d/admin/identities/some-id/sessions", adminPort))
+	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d/admin/identities/8e5f29ec-db29-4e56-8517-75f7d4e2f1bc/sessions", adminPort))
 	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 
-	res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/admin/metrics/prometheus", adminPort))
-	require.NoError(t, err)
-	require.EqualValues(t, http.StatusOK, res.StatusCode)
-	respBody, err := io.ReadAll(res.Body)
-	body := string(respBody)
+	assert.EventuallyWithT(t, func(t *assert.CollectT) {
+		res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/admin/metrics/prometheus", adminPort))
+		require.NoError(t, err)
+		require.EqualValues(t, http.StatusOK, res.StatusCode)
+		respBody, err := io.ReadAll(res.Body)
+		body := string(respBody)
 
-	require.NoError(t, err)
-	assert.Contains(t, body, `endpoint="/sessions/{param}"`)
-	assert.Contains(t, body, `endpoint="/admin/identities/{param}/sessions"`)
+		require.NoError(t, err)
+		assert.Contains(t, body, `endpoint="/sessions/{param}"`)
+		assert.Contains(t, body, `endpoint="/admin/identities/{param}/sessions"`)
+	}, 5*time.Second, 100*time.Millisecond)
 }

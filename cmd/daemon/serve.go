@@ -55,7 +55,11 @@ var httpMetrics = prometheusx.NewHTTPMetrics("kratos", prometheusx.HTTPPrefix, c
 func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Command) (func() error, error) {
 	cfg := r.Config().ServePublic(ctx)
 	l := r.Logger()
-	n := negroni.New()
+	router := httprouterx.NewRouterPublic()
+	n := negroni.New(
+		httprouterx.PopulatePatternNegroni(router),
+		httpMetrics,
+	)
 
 	for _, mw := range r.HTTPMiddlewares() {
 		n.Use(mw)
@@ -73,7 +77,6 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 	n.UseFunc(httprouterx.NoCacheNegroni)
 	n.Use(sqa(ctx, cmd, r))
 
-	router := httprouterx.NewRouterPublic(httpMetrics)
 	csrf := nosurfx.NewCSRFHandler(otelx.SpanNameRecorderMiddleware(router), r)
 
 	// we need to always load the CORS middleware even if it is disabled, to allow hot-enabling CORS
@@ -148,7 +151,11 @@ func servePublic(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comm
 func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Command) (func() error, error) {
 	cfg := r.Config().ServeAdmin(ctx)
 	l := r.Logger()
-	n := negroni.New()
+	router := httprouterx.NewRouterAdminWithPrefix()
+	n := negroni.New(
+		httprouterx.PopulatePatternNegroni(router),
+		httpMetrics,
+	)
 
 	for _, mw := range r.HTTPMiddlewares() {
 		n.Use(mw)
@@ -170,7 +177,6 @@ func serveAdmin(ctx context.Context, r *driver.RegistryDefault, cmd *cobra.Comma
 	n.Use(x.HTTPLoaderContextMiddleware(r))
 	n.Use(sqa(ctx, cmd, r))
 
-	router := httprouterx.NewRouterAdminWithPrefix(httpMetrics)
 	r.RegisterAdminRoutes(ctx, router)
 
 	n.UseHandler(router)
