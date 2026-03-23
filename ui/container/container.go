@@ -166,10 +166,17 @@ func (c *Container) Reset(exclude ...string) {
 // This method DOES NOT touch the values of the node values/names, only its errors.
 func (c *Container) ParseError(group node.UiNodeGroup, err error) error {
 	if e := richError(nil); errors.As(err, &e) {
-		if e.StatusCode() == http.StatusBadRequest {
-			c.AddMessage(group, text.NewValidationErrorGeneric(e.Reason()))
+		switch e.ID() {
+		case text.ErrIDIdentityDisabled:
+			c.AddMessage(group, text.NewErrorValidationIdentityDisabled())
 			return nil
+		default:
+			if e.StatusCode() == http.StatusBadRequest {
+				c.AddMessage(group, text.NewValidationErrorGeneric(e.Reason()))
+				return nil
+			}
 		}
+
 		return err
 	} else if e := new(schema.ValidationError); errors.As(err, &e) {
 		pointer, _ := jsonschemax.JSONPointerToDotNotation(e.InstancePtr)

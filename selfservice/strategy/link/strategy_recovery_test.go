@@ -441,54 +441,29 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to recover an inactive account", func(t *testing.T) {
-		check := func(t *testing.T, recoverySubmissionResponse, recoveryEmail string, isAPI bool) {
-			addr, err := reg.IdentityPool().FindVerifiableAddressByValue(t.Context(), identity.AddressTypeEmail, recoveryEmail)
-			assert.NoError(t, err)
+		for _, name := range []string{"browser", "spa", "api"} {
+			t.Run("case="+name, func(t *testing.T) {
+				recoveryEmail := "recovery_" + name + "@ory.sh"
+				id := createIdentityToRecover(t, reg, recoveryEmail)
+				expectSuccess(t, nil, name == "api", name == "spa", func(v url.Values) {
+					v.Set("email", recoveryEmail)
+				})
 
-			recoveryLink := testhelpers.CourierExpectLinkInMessage(t, testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account"), 1)
-			cl := testhelpers.NewClientWithCookies(t)
+				recoveryLink := testhelpers.CourierExpectLinkInMessage(t, testhelpers.CourierExpectMessage(ctx, t, reg, recoveryEmail, "Recover access to your account"), 1)
+				cl := testhelpers.NewClientWithCookies(t)
 
-			// Deactivate the identity
-			require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery("UPDATE identities SET state=? WHERE id = ?", identity.StateInactive, addr.IdentityID).Exec())
+				// Deactivate the identity
+				require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery("UPDATE identities SET state=? WHERE id = ?", identity.StateInactive, id.ID).Exec())
 
-			res, err := cl.Get(recoveryLink)
-			require.NoError(t, err)
+				res, err := cl.Get(recoveryLink)
+				require.NoError(t, err)
 
-			body := ioutilx.MustReadAll(res.Body)
-			if isAPI {
-				assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
-				assert.Contains(t, res.Request.URL.String(), public.URL+recovery.RouteSubmitFlow)
-				assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
-			} else {
+				body := ioutilx.MustReadAll(res.Body)
 				assert.Equal(t, http.StatusOK, res.StatusCode)
-				assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowErrorURL(ctx).String())
-				assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(body), "%s", body)
-			}
+				assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowRecoveryUI(ctx).String())
+				assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
+			})
 		}
-
-		t.Run("type=browser", func(t *testing.T) {
-			email := "recoverinactive1@ory.sh"
-			createIdentityToRecover(t, reg, email)
-			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
-				v.Set("email", email)
-			}), email, false)
-		})
-
-		t.Run("type=spa", func(t *testing.T) {
-			email := "recoverinactive2@ory.sh"
-			createIdentityToRecover(t, reg, email)
-			check(t, expectSuccess(t, nil, true, true, func(v url.Values) {
-				v.Set("email", email)
-			}), email, true)
-		})
-
-		t.Run("type=api", func(t *testing.T) {
-			email := "recoverinactive3@ory.sh"
-			createIdentityToRecover(t, reg, email)
-			check(t, expectSuccess(t, nil, true, false, func(v url.Values) {
-				v.Set("email", email)
-			}), email, true)
-		})
 	})
 
 	t.Run("description=should recover an account", func(t *testing.T) {

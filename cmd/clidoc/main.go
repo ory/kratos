@@ -191,6 +191,7 @@ func init() {
 		"NewCaptchaContainerMessage":                              text.NewCaptchaContainerMessage(),
 		"NewErrorValidationEmail":                                 text.NewErrorValidationEmail("{value}"),
 		"NewErrorValidationPhone":                                 text.NewErrorValidationPhone("{value}"),
+		"NewErrorValidationIdentityDisabled":                      text.NewErrorValidationIdentityDisabled(),
 	}
 }
 

@@ -17,13 +17,14 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/randx"
 )
 
-var ErrIdentityDisabled = herodot.ErrUnauthorized.WithError("identity is disabled").WithReason("This account was disabled.")
+var ErrIdentityDisabled = herodot.ErrBadRequest.WithID(text.ErrIDIdentityDisabled).WithError("identity is disabled").WithReason("This account was disabled.")
 
 type lifespanProvider interface {
 	SessionLifespan(ctx context.Context) time.Duration

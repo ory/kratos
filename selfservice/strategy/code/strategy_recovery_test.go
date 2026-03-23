@@ -625,13 +625,8 @@ func TestRecovery(t *testing.T) {
 				// Deactivate the identity
 				require.NoError(t, reg.Persister().GetConnection(context.Background()).RawQuery("UPDATE identities SET state=? WHERE id = ?", identity.StateInactive, addr.IdentityID).Exec())
 
-				if flowType.ClientType == RecoveryClientTypeAPI || flowType.ClientType == RecoveryClientTypeSPA {
-					body = submitRecoveryCode(t, cl, body, flowType.ClientType, recoveryCode, http.StatusUnauthorized)
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(gjson.Get(body, "error").Raw), "%s", body)
-				} else {
-					body = submitRecoveryCode(t, cl, body, flowType.ClientType, recoveryCode, http.StatusOK)
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(body), "%s", body)
-				}
+				body = submitRecoveryCode(t, cl, body, flowType.ClientType, recoveryCode, http.StatusOK)
+				assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
 			})
 		}
 	})
@@ -1457,11 +1452,11 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 				case RecoveryClientTypeAPI:
 					fallthrough
 				case RecoveryClientTypeSPA:
-					body = submitRecoveryCode(t, cl, body, testCase.ClientType, recoveryCode, http.StatusUnauthorized)
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(gjson.Get(body, "error").Raw), "%s", body)
+					body = submitRecoveryCode(t, cl, body, testCase.ClientType, recoveryCode, http.StatusBadRequest)
+					assert.Equal(t, session.ErrIdentityDisabled.Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
 				default:
 					body = submitRecoveryCode(t, cl, body, testCase.ClientType, recoveryCode, http.StatusOK)
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(body), "%s", body)
+					assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
 				}
 			})
 		}
@@ -2389,16 +2384,16 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 				// Deactivate the identity
 				require.NoError(t, reg.Persister().GetConnection(context.Background()).RawQuery("UPDATE identities SET state=? WHERE id = ?", identity.StateInactive, addr.IdentityID).Exec())
 
-				code := testhelpers.ExpectStatusCode(testCase.ClientType == RecoveryClientTypeAPI || testCase.ClientType == RecoveryClientTypeSPA, http.StatusUnauthorized, http.StatusOK)
+				code := testhelpers.ExpectStatusCode(testCase.ClientType == RecoveryClientTypeAPI || testCase.ClientType == RecoveryClientTypeSPA, http.StatusBadRequest, http.StatusOK)
 				body = extractCodeFromCourierAndSubmit(t, cl, testCase.ClientType, address, body, code)
 
 				switch testCase.ClientType {
 				case RecoveryClientTypeAPI:
 					fallthrough
 				case RecoveryClientTypeSPA:
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(gjson.Get(body, "error").Raw), "%s", body)
+					assert.Equal(t, session.ErrIdentityDisabled.Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
 				default:
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", addr.IdentityID), json.RawMessage(body), "%s", body)
+					assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
 				}
 			})
 		}
@@ -3153,16 +3148,16 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 				// Deactivate the identity
 				require.NoError(t, reg.Persister().GetConnection(context.Background()).RawQuery("UPDATE identities SET state=? WHERE id = ?", identity.StateInactive, i.ID).Exec())
 
-				code := testhelpers.ExpectStatusCode(testCase.ClientType == RecoveryClientTypeAPI || testCase.ClientType == RecoveryClientTypeSPA, http.StatusUnauthorized, http.StatusOK)
+				code := testhelpers.ExpectStatusCode(testCase.ClientType == RecoveryClientTypeAPI || testCase.ClientType == RecoveryClientTypeSPA, http.StatusBadRequest, http.StatusOK)
 				body = extractCodeFromCourierAndSubmit(t, cl, testCase.ClientType, address, body, code)
 
 				switch testCase.ClientType {
 				case RecoveryClientTypeAPI:
 					fallthrough
 				case RecoveryClientTypeSPA:
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", i.ID), json.RawMessage(gjson.Get(body, "error").Raw), "%s", body)
+					assert.Equal(t, session.ErrIdentityDisabled.Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
 				default:
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", i.ID), json.RawMessage(body), "%s", body)
+					assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
 				}
 			})
 		}
@@ -4008,16 +4003,16 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 				// Deactivate the identity
 				require.NoError(t, reg.Persister().GetConnection(context.Background()).RawQuery("UPDATE identities SET state=? WHERE id = ?", identity.StateInactive, i.ID).Exec())
 
-				code := testhelpers.ExpectStatusCode(testCase.ClientType == RecoveryClientTypeAPI || testCase.ClientType == RecoveryClientTypeSPA, http.StatusUnauthorized, http.StatusOK)
+				code := testhelpers.ExpectStatusCode(testCase.ClientType == RecoveryClientTypeAPI || testCase.ClientType == RecoveryClientTypeSPA, http.StatusBadRequest, http.StatusOK)
 				body = extractCodeFromCourierAndSubmit(t, cl, testCase.ClientType, address2, body, code)
 
 				switch testCase.ClientType {
 				case RecoveryClientTypeAPI:
 					fallthrough
 				case RecoveryClientTypeSPA:
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", i.ID), json.RawMessage(gjson.Get(body, "error").Raw), "%s", body)
+					assert.Equal(t, session.ErrIdentityDisabled.Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
 				default:
-					assertx.EqualAsJSON(t, session.ErrIdentityDisabled.WithDetail("identity_id", i.ID), json.RawMessage(body), "%s", body)
+					assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
 				}
 			})
 		}

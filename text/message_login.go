@@ -291,3 +291,11 @@ func NewInfoSelfServiceLoginAAL2CodeAddress(channel string, to string) *Message 
 		}),
 	}
 }
+
+func NewErrorValidationIdentityDisabled() *Message {
+	return &Message{
+		ID:   ErrorValidationIdentityDisabled,
+		Text: "This account has been disabled. Please contact support for assistance.",
+		Type: Error,
+	}
+}

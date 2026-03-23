@@ -152,7 +152,7 @@ func TestHandler(t *testing.T) {
 			t.Run("description=without privileges", func(t *testing.T) {
 				res, body := initFlow(t, new(http.Client), true)
 				assert.Equalf(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equalf(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+				assert.Equalf(t, text.ErrIDNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
 			})
 
 			t.Run("description=success", func(t *testing.T) {
@@ -274,7 +274,7 @@ func TestHandler(t *testing.T) {
 			t.Run("description=without privileges", func(t *testing.T) {
 				res, body := initSPAFlow(t, new(http.Client))
 				assert.Equalf(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
-				assert.Equalf(t, text.ErrNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
+				assert.Equalf(t, text.ErrIDNoActiveSession, gjson.GetBytes(body, "error.id").String(), "%s", body)
 			})
 
 			t.Run("description=success", func(t *testing.T) {

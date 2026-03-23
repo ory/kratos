@@ -7,5 +7,6 @@ type (
 	richError interface {
 		StatusCode() int
 		Reason() string
+		ID() string
 	}
 )

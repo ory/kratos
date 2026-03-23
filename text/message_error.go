@@ -17,9 +17,11 @@ const (
 	ErrIDSessionHasAALAlready        = "session_aal_already_fulfilled"
 	ErrIDSessionRequiredForHigherAAL = "session_aal1_required"
 	ErrIDHigherAALRequired           = "session_aal2_required"
-	ErrNoActiveSession               = "session_inactive"
+	ErrIDNoActiveSession             = "session_inactive"
 	ErrIDRedirectURLNotAllowed       = "self_service_flow_return_to_forbidden"
 	ErrIDInitiatedBySomeoneElse      = "security_identity_mismatch"
+
+	ErrIDIdentityDisabled = "identity_disabled"
 
 	ErrIDCSRF = "security_csrf_violation"
 )
