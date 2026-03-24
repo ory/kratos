@@ -112,7 +112,7 @@ type ListCourierMessagesParameters struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) listCourierMessages(w http.ResponseWriter, r *http.Request) {
 	keys := h.r.Config().SecretsPagination(r.Context())
 	filter, paginator, err := parseMessagesFilter(r, keys)

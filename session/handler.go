@@ -207,7 +207,7 @@ type toSession struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-low
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 	ctx, span := h.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.Handler.whoami")
 	defer span.End()
@@ -305,7 +305,7 @@ type deleteIdentitySessions struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request) {
 	iID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
@@ -474,7 +474,7 @@ type getSession struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-low
+//	  x-ory-ratelimit-bucket: kratos-admin-high
 func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 	if r.PathValue("id") == "whoami" {
 		// for /admin/sessions/whoami redirect to the public route
@@ -546,7 +546,7 @@ type disableSession struct {
 //		default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request) {
 	sID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
@@ -692,7 +692,7 @@ type disableMyOtherSessions struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-high
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) deleteMySessions(w http.ResponseWriter, r *http.Request) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
@@ -754,7 +754,7 @@ type disableMySession struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-high
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request) {
 	sid := r.PathValue("id")
 	if sid == "whoami" {
@@ -939,7 +939,7 @@ type extendSession struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {

@@ -277,7 +277,7 @@ type getRecoveryFlow struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-low
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
@@ -405,7 +405,7 @@ type updateRecoveryFlowBody struct{}
 //	      default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-high
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {

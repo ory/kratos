@@ -41,7 +41,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "hydra-public-low"
+        "x-ory-ratelimit-bucket": "hydra-public-high"
       }
     },
     "/admin/courier/messages": {
@@ -112,7 +112,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/courier/messages/{id}": {
@@ -340,7 +340,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "patch": {
         "security": [
@@ -399,7 +399,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/identities/by/external/{externalID}": {
@@ -553,7 +553,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-low"
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       },
       "put": {
         "security": [
@@ -625,7 +625,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "delete": {
         "security": [
@@ -672,7 +672,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "patch": {
         "security": [
@@ -744,7 +744,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/identities/{id}/credentials/{type}": {
@@ -823,7 +823,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/identities/{id}/sessions": {
@@ -970,7 +970,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/recovery/code": {
@@ -1031,7 +1031,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/recovery/link": {
@@ -1097,7 +1097,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/sessions": {
@@ -1233,7 +1233,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-low"
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       },
       "delete": {
         "security": [
@@ -1283,7 +1283,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/sessions/{id}/extend": {
@@ -1341,7 +1341,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/health/alive": {
@@ -1567,7 +1567,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/fed-cm/parameters": {
@@ -1608,7 +1608,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/fed-cm/token": {
@@ -1675,7 +1675,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/login": {
@@ -1763,7 +1763,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/login/api": {
@@ -2007,7 +2007,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/logout": {
@@ -2059,7 +2059,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/logout/api": {
@@ -2251,7 +2251,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/recovery/api": {
@@ -2391,7 +2391,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/registration": {
@@ -2471,7 +2471,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/registration/api": {
@@ -2664,7 +2664,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/settings": {
@@ -2767,7 +2767,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/settings/api": {
@@ -2951,7 +2951,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/verification": {
@@ -3031,7 +3031,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/verification/api": {
@@ -3173,7 +3173,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/sessions": {
@@ -3311,7 +3311,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/sessions/token-exchange": {
@@ -3440,7 +3440,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/sessions/{id}": {
@@ -3499,7 +3499,7 @@
             }
           }
         },
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/version": {

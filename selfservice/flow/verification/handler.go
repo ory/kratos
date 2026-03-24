@@ -287,7 +287,7 @@ type getVerificationFlow struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-low
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
@@ -414,7 +414,7 @@ type updateVerificationFlowBody struct{}
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-high
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	rid, err := flow.GetFlowID(r)
 	if err != nil {

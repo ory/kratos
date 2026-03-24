@@ -4093,7 +4093,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "hydra-public-low"
+        "x-ory-ratelimit-bucket": "hydra-public-high"
       }
     },
     "/admin/courier/messages": {
@@ -4172,7 +4172,7 @@
         "tags": [
           "courier"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/courier/messages/{id}": {
@@ -4431,7 +4431,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "post": {
         "description": "Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to\n[import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
@@ -4497,7 +4497,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/identities/by/external/{externalID}": {
@@ -4632,7 +4632,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "get": {
         "description": "Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its ID. You can optionally\ninclude credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.",
@@ -4713,7 +4713,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-low"
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       },
       "patch": {
         "description": "Partially updates an [identity's](https://www.ory.sh/docs/kratos/concepts/identity-user-model) field using [JSON Patch](https://jsonpatch.com/).\nThe fields `id`, `stateChangedAt` and `credentials` can not be updated using this method.",
@@ -4800,7 +4800,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "put": {
         "description": "This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity\npayload, except credentials, is expected. For partial updates, use the [patchIdentity](https://www.ory.sh/docs/reference/api#tag/identity/operation/patchIdentity) operation.\n\nA credential can be provided via the `credentials` field in the request body.\nIf provided, the credentials will be imported and added to the existing credentials of the identity.",
@@ -4887,7 +4887,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/identities/{id}/credentials/{type}": {
@@ -4970,7 +4970,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/identities/{id}/sessions": {
@@ -5042,7 +5042,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "get": {
         "description": "This endpoint returns all sessions that belong to the given Identity.",
@@ -5219,7 +5219,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/recovery/link": {
@@ -5296,7 +5296,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/admin/sessions": {
@@ -5444,7 +5444,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "get": {
         "description": "This endpoint is useful for:\n\nGetting a session object with all specified expandables that exist in an administrative context.",
@@ -5516,7 +5516,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-low"
+        "x-ory-ratelimit-bucket": "kratos-admin-high"
       }
     },
     "/admin/sessions/{id}/extend": {
@@ -5588,7 +5588,7 @@
         "tags": [
           "identity"
         ],
-        "x-ory-ratelimit-bucket": "kratos-admin-high"
+        "x-ory-ratelimit-bucket": "kratos-admin-low"
       }
     },
     "/health/alive": {
@@ -5879,7 +5879,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/fed-cm/parameters": {
@@ -5922,7 +5922,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/fed-cm/token": {
@@ -6004,7 +6004,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/login": {
@@ -6113,7 +6113,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/login/api": {
@@ -6416,7 +6416,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/logout": {
@@ -6471,7 +6471,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/logout/api": {
@@ -6698,7 +6698,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/recovery/api": {
@@ -6869,7 +6869,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/registration": {
@@ -6970,7 +6970,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/registration/api": {
@@ -7207,7 +7207,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/settings": {
@@ -7341,7 +7341,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/settings/api": {
@@ -7578,7 +7578,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/self-service/verification": {
@@ -7677,7 +7677,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/self-service/verification/api": {
@@ -7848,7 +7848,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/sessions": {
@@ -7919,7 +7919,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       },
       "get": {
         "description": "This endpoints returns all other active sessions that belong to the logged-in user.\nThe current session can be retrieved by calling the `/sessions/whoami` endpoint.",
@@ -8185,7 +8185,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-low"
+        "x-ory-ratelimit-bucket": "kratos-public-high"
       }
     },
     "/sessions/{id}": {
@@ -8258,7 +8258,7 @@
         "tags": [
           "frontend"
         ],
-        "x-ory-ratelimit-bucket": "kratos-public-high"
+        "x-ory-ratelimit-bucket": "kratos-public-low"
       }
     },
     "/version": {

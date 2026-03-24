@@ -147,7 +147,7 @@ type recoveryLinkForIdentity struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

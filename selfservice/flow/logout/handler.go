@@ -323,7 +323,7 @@ type updateLogoutFlow struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-low
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request) {
 	expected := r.URL.Query().Get("token")
 	if len(expected) == 0 {

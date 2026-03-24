@@ -91,7 +91,7 @@ type getFlowError struct {
 //	  500: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-low
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) publicFetchError(w http.ResponseWriter, r *http.Request) {
 	if err := h.fetchError(w, r); err != nil {
 		h.r.Writer().WriteError(w, r, err)

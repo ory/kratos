@@ -377,7 +377,7 @@ type getIdentityByExternalID struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-low
+//	  x-ory-ratelimit-bucket: kratos-admin-high
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	i, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), x.ParseUUID(r.PathValue("id")))
 	if err != nil {
@@ -666,7 +666,7 @@ type AdminCreateIdentityImportCredentialsSAMLProvider struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var cr CreateIdentityBody
 	if err := jsonx.NewStrictDecoder(r.Body).Decode(&cr); err != nil {
@@ -781,7 +781,7 @@ func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *Create
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) batchPatchIdentities(w http.ResponseWriter, r *http.Request) {
 	var (
 		req BatchPatchIdentitiesBody
@@ -948,7 +948,7 @@ type UpdateIdentityBody struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	var ur UpdateIdentityBody
 	if err := decoderx.Decode(r, &ur,
@@ -1040,7 +1040,7 @@ type deleteIdentity struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	if err := h.r.PrivilegedIdentityPool().DeleteIdentity(r.Context(), x.ParseUUID(r.PathValue("id"))); err != nil {
 		h.r.Writer().WriteError(w, r, err)
@@ -1093,7 +1093,7 @@ type patchIdentity struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) patch(w http.ResponseWriter, r *http.Request) {
 	requestBody, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -1202,7 +1202,7 @@ type _ struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-admin-high
+//	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	identity, err := h.r.PrivilegedIdentityPool().GetIdentityConfidential(ctx, x.ParseUUID(r.PathValue("id")))

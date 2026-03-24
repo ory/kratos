@@ -713,7 +713,7 @@ type getLoginFlow struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-low
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.getLoginFlow")
@@ -858,7 +858,7 @@ type updateLoginFlowBody struct{}
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-high
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 	var err error
 	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.flow.login.updateLoginFlow")

@@ -410,7 +410,7 @@ type getSettingsFlow struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-low
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	rid := x.ParseUUID(r.URL.Query().Get("id"))
@@ -575,7 +575,7 @@ type updateSettingsFlowBody struct{}
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-high
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error

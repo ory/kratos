@@ -521,7 +521,7 @@ type getRegistrationFlow struct {
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-low
+//	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled))
@@ -661,7 +661,7 @@ type updateRegistrationFlowBody struct{}
 //	  default: errorGeneric
 //
 //	Extensions:
-//	  x-ory-ratelimit-bucket: kratos-public-high
+//	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	ctx = semconv.ContextWithAttributes(ctx,
