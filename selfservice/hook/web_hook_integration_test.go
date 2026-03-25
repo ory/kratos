@@ -29,6 +29,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
@@ -60,12 +61,9 @@ var transientPayload = json.RawMessage(`{
 	}
 }`)
 
-func TestWebHooks(t *testing.T) {
-	ctx := context.Background()
+func makeConfigurationAndRegistry(t *testing.T) *driver.RegistryDefault {
 	conf, reg := pkg.NewFastRegistryWithMocks(t)
-	logger := logrusx.New("kratos", "test")
-
-	conf.MustSet(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{
+	conf.MustSet(t.Context(), config.ViperKeyWebhookHeaderAllowlist, []string{
 		"Accept",
 		"Accept-Encoding",
 		"Accept-Language",
@@ -85,16 +83,27 @@ func TestWebHooks(t *testing.T) {
 		"User-Agent",
 		"Valid-Header",
 	})
+	return reg
+}
 
-	whDeps := struct {
-		x.BasicRegistry
-		*jsonnetsecure.TestProvider
-		config.Provider
-	}{
-		x.BasicRegistry{L: logger, C: reg.HTTPClient(ctx), T: otelx.NewNoop()},
-		jsonnetsecure.NewTestProvider(t),
-		reg,
+type webHookDeps struct {
+	x.BasicRegistry
+	*jsonnetsecure.TestProvider
+	config.Provider
+}
+
+func newWebHookDeps(t *testing.T, logger *logrusx.Logger, reg *driver.RegistryDefault) *webHookDeps {
+	t.Helper()
+	return &webHookDeps{
+		BasicRegistry: x.BasicRegistry{L: logger, C: reg.HTTPClient(t.Context()), T: otelx.NewNoop()},
+		TestProvider:  jsonnetsecure.NewTestProvider(t),
+		Provider:      reg,
 	}
+}
+
+func TestWebHooks(t *testing.T) {
+	logger := logrusx.New("kratos", "test")
+
 	type WebHookRequest struct {
 		Body    string
 		Headers http.Header
@@ -355,7 +364,7 @@ func TestWebHooks(t *testing.T) {
 								RequestURI: "/some_end_point",
 								Method:     http.MethodPost,
 								URL:        &url.URL{Path: "/some_end_point"},
-							}).WithContext(ctx)
+							}).WithContext(t.Context())
 							cookie, err := req.Cookie("Some-Cookie-1")
 							require.NoError(t, err)
 							require.Equal(t, cookie.Name, "Some-Cookie-1")
@@ -373,7 +382,8 @@ func TestWebHooks(t *testing.T) {
 							whr := &WebHookRequest{}
 							ts := newServer(webHookEndPoint(whr))
 
-							wh := hook.NewWebHook(&whDeps, &request.Config{
+							whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+							wh := hook.NewWebHook(whDeps, &request.Config{
 								Method:      method,
 								URL:         ts.URL + path,
 								TemplateURI: "file://./stub/test_body.jsonnet",
@@ -653,7 +663,8 @@ func TestWebHooks(t *testing.T) {
 					code, res := tc.webHookResponse()
 					ts := newServer(webHookHttpCodeWithBodyEndPoint(t, code, res))
 
-					wh := hook.NewWebHook(&whDeps, &request.Config{
+					whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+					wh := hook.NewWebHook(whDeps, &request.Config{
 						Method:       method,
 						URL:          ts.URL + path,
 						TemplateURI:  "file://./stub/test_body.jsonnet",
@@ -688,7 +699,8 @@ func TestWebHooks(t *testing.T) {
 				URL:        &url.URL{Path: "some_end_point"},
 			}
 			ts := newServer(webHookHttpCodeWithBodyEndPoint(t, responseCode, response))
-			wh := hook.NewWebHook(&whDeps, &request.Config{
+			whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+			wh := hook.NewWebHook(whDeps, &request.Config{
 				Method:      "POST",
 				URL:         ts.URL + path,
 				TemplateURI: "file://./stub/test_body.jsonnet",
@@ -795,7 +807,8 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "GET",
 			URL:         ts.URL + path,
 			TemplateURI: "./stub/test_body.jsonnet",
@@ -828,7 +841,8 @@ func TestWebHooks(t *testing.T) {
 				Method: http.MethodPost,
 			}
 			f := &settings.Flow{ID: x.NewUUID()}
-			wh := hook.NewWebHook(&whDeps, &request.Config{
+			whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+			wh := hook.NewWebHook(whDeps, &request.Config{
 				Method:      "POST",
 				URL:         ts.URL + path,
 				TemplateURI: "file://./stub/test_body.jsonnet",
@@ -865,7 +879,8 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "POST",
 			URL:         ts.URL + path,
 			TemplateURI: "file://./stub/bad_template.jsonnet",
@@ -885,7 +900,8 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "GET",
 			URL:         ts.URL + path,
 			TemplateURI: "file://./stub/bad_template.jsonnet",
@@ -909,7 +925,8 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "POST",
 			URL:         "https://i-do-not-exist/",
 			TemplateURI: "file://./stub/cancel_template.jsonnet",
@@ -946,7 +963,8 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "GET",
 			URL:         ts.URL + path,
 			TemplateURI: "file://./stub/test_body.jsonnet",
@@ -985,7 +1003,8 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "GET",
 			URL:         ts.URL + path,
 			TemplateURI: "file://./stub/test_body.jsonnet",
@@ -1023,7 +1042,8 @@ func TestWebHooks(t *testing.T) {
 				Method: http.MethodPost,
 			}
 			f := &login.Flow{ID: x.NewUUID()}
-			wh := hook.NewWebHook(&whDeps, &request.Config{
+			whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+			wh := hook.NewWebHook(whDeps, &request.Config{
 				Method:      "POST",
 				URL:         ts.URL + path,
 				TemplateURI: "file://./stub/test_body.jsonnet",
@@ -1041,20 +1061,7 @@ func TestWebHooks(t *testing.T) {
 
 func TestDisallowPrivateIPRanges(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-	conf.MustSet(ctx, config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
 	logger := logrusx.New("kratos", "test")
-	whDeps := struct {
-		x.BasicRegistry
-		*jsonnetsecure.TestProvider
-		config.Provider
-	}{
-		x.BasicRegistry{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop()},
-		jsonnetsecure.NewTestProvider(t),
-		reg,
-	}
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -1068,7 +1075,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 
 	t.Run("not allowed to call url", func(t *testing.T) {
 		t.Parallel()
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		conf, reg := pkg.NewFastRegistryWithMocks(t)
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
+		whDeps := newWebHookDeps(t, logger, reg)
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			URL:         "https://localhost:1234/",
 			Method:      "GET",
 			TemplateURI: "file://stub/test_body.jsonnet",
@@ -1079,7 +1090,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
 		t.Parallel()
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		conf, reg := pkg.NewFastRegistryWithMocks(t)
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
+		whDeps := newWebHookDeps(t, logger, reg)
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			URL:         "http://localhost/exception",
 			Method:      "GET",
 			TemplateURI: "file://stub/test_body.jsonnet",
@@ -1100,7 +1115,11 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 		}
 		s := &session.Session{ID: x.NewUUID(), Identity: &identity.Identity{ID: x.NewUUID()}}
 		f := &login.Flow{ID: x.NewUUID()}
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		conf, reg := pkg.NewFastRegistryWithMocks(t)
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
+		whDeps := newWebHookDeps(t, logger, reg)
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			URL:         "https://www.google.com/",
 			Method:      "GET",
 			TemplateURI: "http://192.168.178.0/test_body.jsonnet",
@@ -1116,15 +1135,7 @@ func TestAsyncWebhook(t *testing.T) {
 	logger := logrusx.New("kratos", "test")
 	logHook := new(test.Hook)
 	logger.Logger.Hooks.Add(logHook)
-	whDeps := struct {
-		x.BasicRegistry
-		*jsonnetsecure.TestProvider
-		config.Provider
-	}{
-		x.BasicRegistry{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop()},
-		jsonnetsecure.NewTestProvider(t),
-		reg,
-	}
+	whDeps := newWebHookDeps(t, logger, reg)
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -1154,7 +1165,7 @@ func TestAsyncWebhook(t *testing.T) {
 	}))
 	t.Cleanup(webhookReceiver.Close)
 
-	wh := hook.NewWebHook(&whDeps, &request.Config{
+	wh := hook.NewWebHook(whDeps, &request.Config{
 		URL:         webhookReceiver.URL,
 		Method:      "GET",
 		TemplateURI: "file://stub/test_body.jsonnet",
@@ -1197,15 +1208,7 @@ func TestWebhookEvents(t *testing.T) {
 	t.Parallel()
 	_, reg := pkg.NewFastRegistryWithMocks(t)
 	logger := logrusx.New("kratos", "test")
-	whDeps := struct {
-		x.BasicRegistry
-		*jsonnetsecure.TestProvider
-		config.Provider
-	}{
-		x.BasicRegistry{L: logger, C: reg.HTTPClient(context.Background()), T: otelx.NewNoop()},
-		jsonnetsecure.NewTestProvider(t),
-		reg,
-	}
+	whDeps := newWebHookDeps(t, logger, reg)
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
@@ -1243,7 +1246,7 @@ func TestWebhookEvents(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		whID := x.NewUUID()
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			ID:          whID.String(),
 			URL:         webhookReceiver.URL + "/ok",
 			Method:      "GET",
@@ -1252,7 +1255,7 @@ func TestWebhookEvents(t *testing.T) {
 
 		recorder := tracetest.NewSpanRecorder()
 		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
-		ctx, span := tracer.Start(context.Background(), "parent")
+		ctx, span := tracer.Start(t.Context(), "parent")
 		defer span.End()
 
 		r1 := req.Clone(ctx)
@@ -1290,7 +1293,7 @@ func TestWebhookEvents(t *testing.T) {
 
 	t.Run("failed", func(t *testing.T) {
 		whID := x.NewUUID()
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			ID:          whID.String(),
 			URL:         webhookReceiver.URL + "/fail",
 			Method:      "GET",
@@ -1299,7 +1302,7 @@ func TestWebhookEvents(t *testing.T) {
 
 		recorder := tracetest.NewSpanRecorder()
 		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
-		ctx, span := tracer.Start(context.Background(), "parent")
+		ctx, span := tracer.Start(t.Context(), "parent")
 		defer span.End()
 
 		r1 := req.Clone(ctx)
@@ -1346,7 +1349,7 @@ func TestWebhookEvents(t *testing.T) {
 	})
 
 	t.Run("event disabled", func(t *testing.T) {
-		wh := hook.NewWebHook(&whDeps, &request.Config{
+		wh := hook.NewWebHook(whDeps, &request.Config{
 			URL:                webhookReceiver.URL + "/fail",
 			Method:             "GET",
 			TemplateURI:        "file://stub/test_body.jsonnet",
@@ -1355,7 +1358,7 @@ func TestWebhookEvents(t *testing.T) {
 
 		recorder := tracetest.NewSpanRecorder()
 		tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
-		ctx, span := tracer.Start(context.Background(), "parent")
+		ctx, span := tracer.Start(t.Context(), "parent")
 		defer span.End()
 
 		r1 := req.Clone(ctx)
