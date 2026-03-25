@@ -55,13 +55,17 @@ func StartCourier(ctx context.Context, r driver.Registry) error {
 func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
 	cfg := r.Config().ServeAdmin(ctx)
 	l := r.Logger()
-	n := negroni.New()
+
+	recovery := negroni.NewRecovery()
+	recovery.Logger = l
+
+	n := negroni.New(
+		recovery,
+		reqlog.NewMiddlewareFromLogger(l, "admin#"+cfg.BaseURL.String()),
+	)
 
 	router := http.NewServeMux()
-
 	router.Handle(prometheusx.MetricsPrometheusPath, promhttp.Handler())
-	n.Use(reqlog.NewMiddlewareFromLogger(l, "admin#"+cfg.BaseURL.String()))
-
 	n.UseHandler(router)
 
 	var handler http.Handler = n
