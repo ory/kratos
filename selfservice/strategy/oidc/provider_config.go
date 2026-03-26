@@ -26,6 +26,12 @@ const (
 	ProviderTypeApple = "apple"
 	// ProviderTypeGoogle is the provider type for Sign in with Google.
 	ProviderTypeGoogle = "google"
+
+	// UpdateIdentityOnLoginNever disables identity updates on login (default).
+	UpdateIdentityOnLoginNever = "never"
+	// UpdateIdentityOnLoginAutomatic re-runs the Jsonnet claims mapper on every
+	// OIDC login and updates the identity's traits and metadata automatically.
+	UpdateIdentityOnLoginAutomatic = "automatic"
 )
 
 type Configuration struct {
@@ -157,6 +163,15 @@ type Configuration struct {
 	// Possible values: "confirm_with_existing_credential" (default), "automatic".
 	// This is only effective in the Ory Network.
 	AccountLinkingMode string `json:"account_linking_mode,omitempty"`
+
+	// UpdateIdentityOnLogin controls whether the identity is updated from
+	// OIDC claims on each login.
+	//
+	// Possible values:
+	// - "never" (default): the identity is not updated on login.
+	// - "automatic": re-runs the Jsonnet claims mapper on every OIDC login
+	//   and updates the identity's traits and metadata automatically.
+	UpdateIdentityOnLogin string `json:"update_identity_on_login,omitempty"`
 }
 
 func (p Configuration) Redir(public *url.URL) string {

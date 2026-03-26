@@ -1895,6 +1895,239 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	t.Run("case=update identity on login", func(t *testing.T) {
+		t.Run("case=should update traits when claims change", func(t *testing.T) {
+			subject = "update-traits-on-login@ory.sh"
+			scope = []string{"openid", "offline"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://original.example.com"
+			claims.metadataPublic.picture = "original.png"
+			claims.metadataAdmin.phoneNumber = "111"
+
+			// Set up a provider with update_identity_on_login: automatic.
+			viperSetProviderConfig(t, conf,
+				newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", func(c *oidc.Configuration) {
+					c.UpdateIdentityOnLogin = oidc.UpdateIdentityOnLoginAutomatic
+				}),
+			)
+
+			t.Run("step=register", func(t *testing.T) {
+				r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+				assertIdentity(t, res, body)
+			})
+
+			t.Run("step=login with changed claims updates identity", func(t *testing.T) {
+				claims.traits.website = "https://updated.example.com"
+				claims.metadataPublic.picture = "updated.png"
+				claims.metadataAdmin.phoneNumber = "222"
+
+				r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+
+				assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+				assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+				assert.Equal(t, "https://updated.example.com", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+				assert.Equal(t, "updated.png", gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
+
+				// Verify metadata_admin was updated by reading the identity from the admin API.
+				identityID := gjson.GetBytes(body, "identity.id").String()
+				i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(identityID))
+				require.NoError(t, err)
+				assert.Equal(t, "222", gjson.GetBytes(i.MetadataAdmin, "phone_number").String())
+			})
+		})
+
+		t.Run("case=should not update identity when claims are unchanged", func(t *testing.T) {
+			subject = "no-change-on-login@ory.sh"
+			scope = []string{"openid", "offline"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://stable.example.com"
+			claims.metadataPublic.picture = "stable.png"
+
+			viperSetProviderConfig(t, conf,
+				newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", func(c *oidc.Configuration) {
+					c.UpdateIdentityOnLogin = oidc.UpdateIdentityOnLoginAutomatic
+				}),
+			)
+
+			t.Run("step=register", func(t *testing.T) {
+				r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+				assertIdentity(t, res, body)
+			})
+
+			t.Run("step=login with same claims does not error", func(t *testing.T) {
+				r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+
+				assertIdentity(t, res, body)
+			})
+		})
+
+		t.Run("case=should not update identity when update_identity_on_login is never", func(t *testing.T) {
+			subject = "never-update-on-login@ory.sh"
+			scope = []string{"openid", "offline"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://original.example.com"
+			claims.metadataPublic.picture = "original.png"
+
+			viperSetProviderConfig(t, conf,
+				newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid"),
+			)
+
+			t.Run("step=register", func(t *testing.T) {
+				r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+				assertIdentity(t, res, body)
+			})
+
+			t.Run("step=login with changed claims does not update identity", func(t *testing.T) {
+				claims.traits.website = "https://changed.example.com"
+				claims.metadataPublic.picture = "changed.png"
+
+				r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+
+				assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+				assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+				// Traits should still have the original values from registration.
+				assert.Equal(t, "https://original.example.com", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+				assert.Equal(t, "original.png", gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
+			})
+		})
+
+		t.Run("case=should update only metadata without changing traits", func(t *testing.T) {
+			subject = "metadata-only-update@ory.sh"
+			scope = []string{"openid", "offline"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://example.com"
+			claims.metadataPublic.picture = "old-pic.png"
+			claims.metadataAdmin.phoneNumber = "111"
+
+			viperSetProviderConfig(t, conf,
+				newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", func(c *oidc.Configuration) {
+					c.UpdateIdentityOnLogin = oidc.UpdateIdentityOnLoginAutomatic
+				}),
+			)
+
+			t.Run("step=register", func(t *testing.T) {
+				r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+				assertIdentity(t, res, body)
+			})
+
+			t.Run("step=login with changed metadata only", func(t *testing.T) {
+				// Traits stay the same, only metadata changes.
+				claims.metadataPublic.picture = "new-pic.png"
+				claims.metadataAdmin.phoneNumber = "222"
+
+				r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+
+				assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+				assert.Equal(t, "https://example.com", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+				assert.Equal(t, "new-pic.png", gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
+
+				// Verify metadata_admin was updated by reading the identity from the admin API.
+				identityID := gjson.GetBytes(body, "identity.id").String()
+				i, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, uuid.FromStringOrNil(identityID))
+				require.NoError(t, err)
+				assert.Equal(t, "222", gjson.GetBytes(i.MetadataAdmin, "phone_number").String())
+			})
+		})
+
+		t.Run("case=should fail login when mapper is invalid", func(t *testing.T) {
+			subject = "invalid-mapper-on-login@ory.sh"
+			scope = []string{"openid", "offline"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://example.com"
+
+			// Register with a valid mapper.
+			viperSetProviderConfig(t, conf,
+				newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", func(c *oidc.Configuration) {
+					c.UpdateIdentityOnLogin = oidc.UpdateIdentityOnLoginAutomatic
+				}),
+			)
+
+			t.Run("step=register", func(t *testing.T) {
+				r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+				assertIdentity(t, res, body)
+			})
+
+			t.Run("step=login with broken mapper causes error", func(t *testing.T) {
+				// Reconfigure with a mapper that produces invalid output.
+				viperSetProviderConfig(t, conf,
+					newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", func(c *oidc.Configuration) {
+						c.UpdateIdentityOnLogin = oidc.UpdateIdentityOnLoginAutomatic
+						c.Mapper = "file://./stub/oidc.invalid-mapper.jsonnet"
+					}),
+				)
+
+				r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+
+				assertSystemErrorWithReason(t, res, body, http.StatusInternalServerError,
+					"OpenID Connect Jsonnet mapper did not return an object for key identity.traits")
+			})
+		})
+
+		t.Run("case=should preserve existing traits when mapper omits them", func(t *testing.T) {
+			subject = "preserve-traits-on-login@ory.sh"
+			scope = []string{"openid", "offline"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://example.com"
+
+			// Register with the standard mapper (includes subject and website in traits).
+			viperSetProviderConfig(t, conf,
+				newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", func(c *oidc.Configuration) {
+					c.UpdateIdentityOnLogin = oidc.UpdateIdentityOnLoginAutomatic
+				}),
+			)
+
+			t.Run("step=register", func(t *testing.T) {
+				r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+				assertIdentity(t, res, body)
+			})
+
+			t.Run("step=login with mapper that omits subject preserves it via merge", func(t *testing.T) {
+				// Reconfigure with a mapper that omits the "subject" trait but
+				// outputs a new website. Merge should preserve subject from the
+				// existing identity.
+				claims.traits.website = "https://new.example.com"
+				viperSetProviderConfig(t, conf,
+					newOIDCProvider(t, ts, remotePublic, remoteAdmin, "valid", func(c *oidc.Configuration) {
+						c.UpdateIdentityOnLogin = oidc.UpdateIdentityOnLoginAutomatic
+						c.Mapper = "file://./stub/oidc.missing-subject.jsonnet"
+					}),
+				)
+
+				r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+				action := assertFormValues(t, r.ID, "valid")
+				res, body := makeRequest(t, "valid", action, url.Values{})
+
+				assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
+				// Subject should be preserved from the existing identity via merge.
+				assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
+				// Website should be updated from the new mapper output.
+				assert.Equal(t, "https://new.example.com", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+			})
+		})
+	})
+
 	t.Run("method=TestPopulateSignUpMethod", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://foo/")
 

@@ -384,17 +384,19 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	return nil, nil
 }
 
-func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer, schema flow.IdentitySchema) (_ *identity.Identity, _ []VerifiedAddress, err error) {
+// EvaluateClaimsMapper runs the Jsonnet mapper for the given claims and returns
+// the evaluated JSON string. If currentIdentity is non-nil, its traits and
+// metadata are made available in the Jsonnet context as std.extVar('identity').
+func (s *Strategy) EvaluateClaimsMapper(ctx context.Context, claims *Claims, provider Provider, currentIdentity *identity.Identity) (evaluated string, claimsJSON []byte, err error) {
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
 	jsonnetSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
 	if err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 
 	var jsonClaims bytes.Buffer
-	var evaluated string
 	if err = json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 
 	defer func() {
@@ -407,11 +409,42 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 
 	vm, err := s.d.JsonnetVM(ctx)
 	if err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 
 	vm.ExtCode("claims", jsonClaims.String())
+
+	if currentIdentity != nil {
+		// Coerce nil/empty fields to empty JSON objects so that Jsonnet
+		// mappers can safely access identity.traits, identity.metadata_public,
+		// and identity.metadata_admin without null-reference errors.
+		coalesce := func(b json.RawMessage) json.RawMessage {
+			if len(b) == 0 {
+				return json.RawMessage("{}")
+			}
+			return b
+		}
+		identityCtx, err := json.Marshal(map[string]json.RawMessage{
+			"traits":          coalesce(json.RawMessage(currentIdentity.Traits)),
+			"metadata_public": coalesce(json.RawMessage(currentIdentity.MetadataPublic)),
+			"metadata_admin":  coalesce(json.RawMessage(currentIdentity.MetadataAdmin)),
+		})
+		if err != nil {
+			return "", nil, err
+		}
+		vm.ExtCode("identity", string(identityCtx))
+	}
+
 	evaluated, err = vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jsonnetSnippet.String())
+	if err != nil {
+		return "", nil, err
+	}
+
+	return evaluated, jsonClaims.Bytes(), nil
+}
+
+func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer, schema flow.IdentitySchema) (_ *identity.Identity, _ []VerifiedAddress, err error) {
+	evaluated, _, err := s.EvaluateClaimsMapper(ctx, claims, provider, nil)
 	if err != nil {
 		return nil, nil, err
 	}

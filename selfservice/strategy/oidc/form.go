@@ -4,7 +4,6 @@
 package oidc
 
 import (
-	"bytes"
 	"encoding/json"
 
 	"dario.cat/mergo"
@@ -12,32 +11,31 @@ import (
 	"github.com/ory/kratos/identity"
 )
 
-// merge merges the userFormValues (extracted from the initial POST request) prefixed with `traits` (encoded) with the
-// values coming from the OpenID Provider (openIDProviderValues).
-func merge(containerTraits json.RawMessage, openIDProviderValues json.RawMessage) (identity.Traits, error) {
-	if len(containerTraits) == 0 || string(containerTraits) == "{}" {
-		return identity.Traits(openIDProviderValues), nil
+// merge merges the JSON messages in a and b. If a value is defined in both a and b, a wins.
+func merge(a, b json.RawMessage) (identity.Traits, error) {
+	if len(a) == 0 || string(a) == "{}" {
+		return identity.Traits(b), nil
 	}
 
-	var pt map[string]interface{}
-	if err := json.NewDecoder(bytes.NewBuffer(openIDProviderValues)).Decode(&pt); err != nil {
+	var aMap, bMap map[string]any
+
+	if err := json.Unmarshal(a, &aMap); err != nil {
 		return nil, err
 	}
 
-	var ct map[string]interface{}
-	if err := json.NewDecoder(bytes.NewBuffer(containerTraits)).Decode(&ct); err != nil {
+	if err := json.Unmarshal(b, &bMap); err != nil {
 		return nil, err
 	}
 
-	// decoderForm (coming from POST request) overrides decodedTraits (coming from OP)
-	if err := mergo.Merge(&pt, &ct, mergo.WithOverride); err != nil {
+	// values in aMap (src) win.
+	if err := mergo.Merge(&bMap, &aMap, mergo.WithOverride); err != nil {
 		return nil, err
 	}
 
-	var result bytes.Buffer
-	if err := json.NewEncoder(&result).Encode(pt); err != nil {
+	traits, err := json.Marshal(bMap)
+	if err != nil {
 		return nil, err
 	}
 
-	return result.Bytes(), nil
+	return traits, nil
 }

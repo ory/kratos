@@ -7,12 +7,15 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -158,6 +161,161 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, loginFlow *log
 	return verdict, existingIdentity, creds, nil
 }
 
+func verifiableAddressHash(i *identity.Identity) [sha256.Size]byte {
+	h := sha256.New()
+	for _, a := range i.VerifiableAddresses {
+		h.Write([]byte(a.Signature())) // sha256 Write never returns an error
+	}
+	return [sha256.Size]byte(h.Sum(nil))
+}
+
+func recoveryAddressHash(i *identity.Identity) [sha256.Size]byte {
+	h := sha256.New()
+	for _, a := range i.RecoveryAddresses {
+		h.Write([]byte(a.Signature())) // sha256 Write never returns an error
+	}
+	return [sha256.Size]byte(h.Sum(nil))
+}
+
+// jsonEqual reports whether two JSON values are deeply equal, ignoring key
+// order and whitespace differences. Array element order is significant.
+func jsonEqual(a, b json.RawMessage) bool {
+	if len(a) == 0 && len(b) == 0 {
+		return true
+	}
+	if len(a) == 0 || len(b) == 0 {
+		return false
+	}
+	var aVal, bVal any
+	if err := json.Unmarshal(a, &aVal); err != nil {
+		return false
+	}
+	if err := json.Unmarshal(b, &bVal); err != nil {
+		return false
+	}
+	return reflect.DeepEqual(aVal, bVal)
+}
+
+// UpdateIdentityFromClaims re-runs the Jsonnet claims mapper and applies the
+// result to an existing identity. It returns true if traits or metadata changed.
+// Unlike registration, user-supplied form traits are not merged — only the
+// mapper output is applied.
+func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, i *identity.Identity) (changed bool, err error) {
+	evaluated, _, err := s.EvaluateClaimsMapper(ctx, claims, provider, i)
+	if err != nil {
+		return false, err
+	}
+
+	// Save the current state for comparison.
+	oldTraits := json.RawMessage(i.Traits)
+	oldMetadataPublic := json.RawMessage(i.MetadataPublic)
+	oldMetadataAdmin := json.RawMessage(i.MetadataAdmin)
+	oldVerifiableHash := verifiableAddressHash(i)
+	oldRecoveryHash := recoveryAddressHash(i)
+
+	// Merge the mapper output with the existing identity traits. The mapper
+	// output takes precedence, but existing traits that the mapper does not
+	// output are preserved.
+	jsonTraits := gjson.Get(evaluated, "identity.traits")
+	if !jsonTraits.IsObject() {
+		return false, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
+	}
+	// merge(override, base) merges base into override, with override winning.
+	// Pass mapper output as override so it takes precedence over existing traits,
+	// while traits not in the mapper output are preserved from the base.
+	mergedTraits, err := merge(json.RawMessage(jsonTraits.Raw), json.RawMessage(i.Traits))
+	if err != nil {
+		return false, err
+	}
+	i.Traits = mergedTraits
+
+	// Only update metadata if the mapper explicitly outputs the key. When the
+	// mapper omits metadata_public or metadata_admin (common for mappers
+	// written for registration only), we preserve the existing values rather
+	// than wiping them.
+	if gjson.Get(evaluated, string(PublicMetadata)).Exists() {
+		if err = s.setMetadata(evaluated, i, PublicMetadata); err != nil {
+			return false, err
+		}
+	}
+	if gjson.Get(evaluated, string(AdminMetadata)).Exists() {
+		if err = s.setMetadata(evaluated, i, AdminMetadata); err != nil {
+			return false, err
+		}
+	}
+
+	// Save existing addresses before Validate regenerates them from the schema.
+	oldVerifiableAddresses := make([]identity.VerifiableAddress, len(i.VerifiableAddresses))
+	copy(oldVerifiableAddresses, i.VerifiableAddresses)
+	oldRecoveryAddresses := make([]identity.RecoveryAddress, len(i.RecoveryAddresses))
+	copy(oldRecoveryAddresses, i.RecoveryAddresses)
+
+	// Validate the updated identity against the schema to prevent persisting
+	// invalid traits produced by a broken mapper.
+	if err = s.d.IdentityValidator().Validate(ctx, i); err != nil {
+		return false, err
+	}
+
+	// Restore existing verification and recovery state for addresses that
+	// survived validation. Validate regenerates both VerifiableAddresses and
+	// RecoveryAddresses from the schema, losing IDs, verified/verifiedAt
+	// status, etc. Carry over the state for matching addresses.
+	for n := range i.VerifiableAddresses {
+		addr := &i.VerifiableAddresses[n]
+		for _, old := range oldVerifiableAddresses {
+			if addr.Via == old.Via && addr.Value == old.Value {
+				*addr = old
+				break
+			}
+		}
+	}
+	for n := range i.RecoveryAddresses {
+		addr := &i.RecoveryAddresses[n]
+		for _, old := range oldRecoveryAddresses {
+			if addr.Via == old.Via && addr.Value == old.Value {
+				*addr = old
+				break
+			}
+		}
+	}
+
+	// Apply verified addresses from the mapper output, matching the
+	// registration behavior. This lets the mapper carry over the verified
+	// status from the SSO provider on every login (e.g., when the user's
+	// email changes upstream).
+	va, err := s.extractVerifiedAddresses(evaluated)
+	if err != nil {
+		return false, err
+	}
+	for n := range i.VerifiableAddresses {
+		verifiable := &i.VerifiableAddresses[n]
+		for _, verified := range va {
+			if verifiable.Via == verified.Via && verifiable.Value == verified.Value {
+				if !verifiable.Verified {
+					verifiable.Status = identity.VerifiableAddressStatusCompleted
+					verifiable.Verified = true
+					t := sqlxx.NullTime(time.Now().UTC().Round(time.Second))
+					verifiable.VerifiedAt = &t
+				}
+			}
+		}
+	}
+
+	changed = !jsonEqual(oldTraits, json.RawMessage(i.Traits)) ||
+		!jsonEqual(oldMetadataPublic, json.RawMessage(i.MetadataPublic)) ||
+		!jsonEqual(oldMetadataAdmin, json.RawMessage(i.MetadataAdmin)) ||
+		oldVerifiableHash != verifiableAddressHash(i) ||
+		oldRecoveryHash != recoveryAddressHash(i)
+
+	s.d.Logger().
+		WithField("oidc_provider", provider.Config().ID).
+		WithField("identity_id", i.ID).
+		WithField("identity_changed", changed).
+		Debug("Re-evaluated OpenID Connect claims mapper on login.")
+
+	return changed, nil
+}
+
 func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *registration.Flow, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processLogin")
 	defer otelx.End(span, &err)
@@ -247,6 +405,18 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {
+			if provider.Config().UpdateIdentityOnLogin == UpdateIdentityOnLoginAutomatic {
+				identityChanged, err := s.UpdateIdentityFromClaims(ctx, claims, provider, i)
+				if err != nil {
+					return nil, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
+				}
+				if identityChanged {
+					if err := s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
+						return nil, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
+					}
+				}
+			}
+
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
 				return nil, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
 			}
