@@ -25,7 +25,7 @@ type UpdateVerificationFlowWithCodeMethod struct {
 	Code *string `json:"code,omitempty"`
 	// Sending the anti-csrf token is only required for browser login flows.
 	CsrfToken *string `json:"csrf_token,omitempty"`
-	// The email address to verify  If the email belongs to a valid account, a verifiation email will be sent.  If you want to notify the email address if the account does not exist, see the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)  If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.  format: email
+	// The email address or phone number to verify  If the provided address belongs to a valid account, a verification email or SMS will be sent.  If you want to notify the email address if the account does not exist, see the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)  If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
 	Email *string `json:"email,omitempty"`
 	// Method is the method that should be used for this verification flow  Allowed values are `link` and `code`. link VerificationStrategyLink code VerificationStrategyCode
 	Method string `json:"method"`

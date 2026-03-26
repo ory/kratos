@@ -5,14 +5,14 @@
       "name": "email",
       "node_type": "input",
       "required": true,
-      "type": "email"
+      "type": "text"
     },
     "group": "code",
     "messages": [],
     "meta": {
       "label": {
-        "id": 1070007,
-        "text": "Email",
+        "id": 1070018,
+        "text": "Email or phone number",
         "type": "info"
       }
     },

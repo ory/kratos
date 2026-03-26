@@ -67,8 +67,19 @@ func (s *Strategy) handleVerificationError(r *http.Request, f *verification.Flow
 		if body != nil {
 			email = body.Email
 		}
+		label := text.NewInfoNodeInputEmail()
+		inputType := node.InputAttributeTypeEmail
+		if channels, chErr := s.deps.Config().CourierChannels(r.Context()); chErr == nil {
+			for _, ch := range channels {
+				if ch.ID == "sms" {
+					label = text.NewInfoNodeInputEmailOrPhone()
+					inputType = node.InputAttributeTypeText
+					break
+				}
+			}
+		}
 		f.UI.GetNodes().Upsert(
-			node.NewInputField("email", email, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).WithMetaLabel(text.NewInfoNodeInputEmail()),
+			node.NewInputField("email", email, node.CodeGroup, inputType, node.WithRequiredInputAttribute).WithMetaLabel(label),
 		)
 	}
 
@@ -77,16 +88,15 @@ func (s *Strategy) handleVerificationError(r *http.Request, f *verification.Flow
 
 // swagger:model updateVerificationFlowWithCodeMethod
 type updateVerificationFlowWithCodeMethod struct {
-	// The email address to verify
+	// The email address or phone number to verify
 	//
-	// If the email belongs to a valid account, a verifiation email will be sent.
+	// If the provided address belongs to a valid account, a verification email or SMS will be sent.
 	//
 	// If you want to notify the email address if the account does not exist, see
 	// the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)
 	//
 	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
 	//
-	// format: email
 	// required: false
 	Email string `form:"email" json:"email"`
 
@@ -206,7 +216,8 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	if err := s.deps.CodeSender().SendVerificationCode(ctx, f, identity.AddressTypeEmail, body.Email); err != nil {
+	via := hackyInferChannel(body.Email)
+	if err := s.deps.CodeSender().SendVerificationCode(ctx, f, via, body.Email); err != nil {
 		if !errors.Is(err, ErrUnknownAddress) {
 			return s.handleVerificationError(r, f, body, err)
 		}
@@ -217,6 +228,11 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 
 	if err := s.PopulateVerificationMethod(r, f); err != nil {
 		return s.handleVerificationError(r, f, body, err)
+	}
+
+	if via == identity.AddressTypeSMS {
+		f.UI.Messages.Clear()
+		f.UI.Messages.Add(text.NewVerificationPhoneWithCodeSent())
 	}
 
 	if body.Email != "" {
@@ -276,7 +292,11 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 	f.State = flow.StatePassedChallenge
 	// See https://github.com/ory/kratos/issues/1547
 	f.SetCSRFToken(flow.GetCSRFToken(s.deps, w, r, f.Type))
-	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	if address.Via == identity.AddressTypeSMS {
+		f.UI.Messages.Set(text.NewInfoSelfServiceVerificationPhoneSuccessful())
+	} else {
+		f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	}
 	f.UI.
 		Nodes.
 		Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).

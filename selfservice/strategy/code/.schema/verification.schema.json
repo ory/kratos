@@ -15,7 +15,7 @@
     },
     "email": {
       "type": "string",
-      "format": "email"
+      "maxLength": 320
     },
     "flow": {
       "type": "string",

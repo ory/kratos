@@ -110,6 +110,7 @@ const (
 	InfoNodeLabelCaptcha                                    // 1070015
 	InfoNodeLabelRecoveryAddress                            // 1070016
 	InfoNodeLabelPhoneNumber                                // 1070017
+	InfoNodeLabelEmailOrPhone                               // 1070018
 )
 
 const (
@@ -117,6 +118,8 @@ const (
 	InfoSelfServiceVerificationEmailSent                             // 1080001
 	InfoSelfServiceVerificationSuccessful                            // 1080002
 	InfoSelfServiceVerificationEmailWithCodeSent                     // 1080003
+	InfoSelfServiceVerificationPhoneWithCodeSent                     // 1080004
+	InfoSelfServiceVerificationPhoneSuccessful                       // 1080005
 )
 
 const (

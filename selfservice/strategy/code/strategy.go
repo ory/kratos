@@ -243,7 +243,27 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error {
 	ctx := r.Context()
 	switch f := f.(type) {
-	case *recovery.Flow, *verification.Flow:
+	case *verification.Flow:
+		label := text.NewInfoNodeInputEmail()
+		inputType := node.InputAttributeTypeEmail
+		if channels, err := s.deps.Config().CourierChannels(ctx); err == nil {
+			for _, ch := range channels {
+				if ch.ID == "sms" {
+					label = text.NewInfoNodeInputEmailOrPhone()
+					inputType = node.InputAttributeTypeText
+					break
+				}
+			}
+		}
+		f.GetUI().Nodes.Append(
+			node.NewInputField("email", nil, node.CodeGroup, inputType, node.WithRequiredInputAttribute).
+				WithMetaLabel(label),
+		)
+		f.GetUI().Nodes.Append(
+			node.NewInputField("method", s.ID(), node.CodeGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(text.NewInfoNodeLabelContinue()),
+		)
+	case *recovery.Flow:
 		f.GetUI().Nodes.Append(
 			node.NewInputField("email", nil, node.CodeGroup, node.InputAttributeTypeEmail, node.WithRequiredInputAttribute).
 				WithMetaLabel(text.NewInfoNodeInputEmail()),

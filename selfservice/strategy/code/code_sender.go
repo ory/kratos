@@ -349,8 +349,9 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		if !notifyUnknownRecipients {
-			// do nothing
+		if !notifyUnknownRecipients || via != identity.AddressTypeEmail {
+			// Only send unknown-address notifications via email. SMS costs money per
+			// message, so we skip notification for unknown phone numbers.
 		} else if err := s.send(ctx, via, email.NewVerificationCodeInvalid(s.deps, &email.VerificationCodeInvalidModel{
 			To:               to,
 			RequestURL:       f.GetRequestURL(),

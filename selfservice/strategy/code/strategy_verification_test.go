@@ -24,7 +24,9 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/x/configx"
+	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 
+	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
@@ -47,6 +49,15 @@ func TestVerification(t *testing.T) {
 
 	ctx := context.Background()
 	conf, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(defaultConfig))
+
+	// Configure an SMS courier channel so verification supports phone numbers.
+	conf.MustSet(ctx, config.ViperKeyCourierChannels, []map[string]any{
+		{"id": "sms", "type": "http", "request_config": map[string]any{
+			"url":    "http://localhost:1234/sms",
+			"method": "POST",
+			"body":   "base64://ZnVuY3Rpb24oY3R4KSBjdHg=",
+		}},
+	})
 
 	identityToVerify := &identity.Identity{
 		ID:       x.NewUUID(),
@@ -123,6 +134,11 @@ func TestVerification(t *testing.T) {
 		testhelpers.SnapshotTExcept(t, rs.Ui.Nodes, []string{"2.attributes.value"})
 		assert.EqualValues(t, public.URL+verification.RouteSubmitFlow+"?flow="+rs.Id, rs.Ui.Action)
 		assert.Empty(t, rs.Ui.Messages)
+
+		// The email input label should read "Email or phone number" since verification accepts both.
+		emailNode := rs.Ui.Nodes[0]
+		assert.EqualValues(t, int(text.InfoNodeLabelEmailOrPhone), emailNode.Meta.Label.Id)
+		assert.EqualValues(t, "Email or phone number", emailNode.Meta.Label.Text)
 	})
 
 	t.Run("description=should not execute submit without correct method set", func(t *testing.T) {
@@ -164,31 +180,165 @@ func TestVerification(t *testing.T) {
 		})
 	})
 
-	t.Run("description=should require a valid email to be sent", func(t *testing.T) {
-		check := func(t *testing.T, actual string, value string) {
+	t.Run("description=should accept arbitrary addresses without validation error", func(t *testing.T) {
+		// The email field now accepts both email addresses and phone numbers.
+		// Malformed values are no longer rejected at the schema level — they are
+		// treated as unknown addresses (SMS channel for non-@ values, email for @
+		// values). The flow still succeeds to prevent address enumeration.
+		check := func(t *testing.T, actual string) {
 			assert.EqualValues(t, string(node.CodeGroup), gjson.Get(actual, "active").String(), "%s", actual)
-			assert.EqualValues(t, "Enter a valid email address",
-				gjson.Get(actual, "ui.nodes.#(attributes.name==email).messages.0.text").String(),
-				"%s", actual)
+			msgID := gjson.Get(actual, "ui.messages.0.id").Int()
+			assert.True(t,
+				msgID == int64(text.InfoSelfServiceVerificationEmailWithCodeSent) ||
+					msgID == int64(text.InfoSelfServiceVerificationPhoneWithCodeSent),
+				"expected email or phone code-sent message, got %d in %s", msgID, actual)
 		}
 
-		for _, email := range []string{"\\", "asdf", "...", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com"} {
+		for _, addr := range []string{"\\", "asdf", "...", "aiacobelli.sec@gmail.com,alejandro.iacobelli@mercadolibre.com"} {
 			values := func(v url.Values) {
-				v.Set("email", email)
+				v.Set("email", addr)
 			}
 
-			t.Run("type=browser", func(t *testing.T) {
-				check(t, expectValidationError(t, nil, false, false, values), email)
+			t.Run("type=browser/value="+addr, func(t *testing.T) {
+				check(t, expectSuccess(t, nil, false, false, values))
 			})
 
-			t.Run("type=spa", func(t *testing.T) {
-				check(t, expectValidationError(t, nil, false, true, values), email)
+			t.Run("type=spa/value="+addr, func(t *testing.T) {
+				check(t, expectSuccess(t, nil, false, true, values))
 			})
 
-			t.Run("type=api", func(t *testing.T) {
-				check(t, expectValidationError(t, nil, true, false, values), email)
+			t.Run("type=api/value="+addr, func(t *testing.T) {
+				check(t, expectSuccess(t, nil, true, false, values))
 			})
 		}
+	})
+
+	t.Run("description=should accept a phone number for verification", func(t *testing.T) {
+
+		phoneNumber := "+12065551234"
+		phoneIdentity := &identity.Identity{
+			ID:       x.NewUUID(),
+			Traits:   identity.Traits(fmt.Sprintf(`{"phone":"%s"}`, phoneNumber)),
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				"password": {
+					Type:        "password",
+					Identifiers: []string{phoneNumber},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
+				},
+			},
+		}
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), phoneIdentity,
+			identity.ManagerAllowWriteProtectedTraits))
+
+		check := func(t *testing.T, actual string) {
+			assert.EqualValues(t, string(node.CodeGroup), gjson.Get(actual, "active").String(), "%s", actual)
+			assertx.EqualAsJSON(t, text.NewVerificationPhoneWithCodeSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
+
+			message := testhelpers.CourierExpectMessage(ctx, t, reg, phoneNumber, "verification code")
+			assert.EqualValues(t, "sms", message.Channel)
+			code := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+			require.NotEmpty(t, code)
+		}
+
+		values := func(v url.Values) {
+			v.Set("email", phoneNumber)
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectSuccess(t, nil, false, false, values))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, expectSuccess(t, nil, false, true, values))
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, expectSuccess(t, nil, true, false, values))
+		})
+	})
+
+	t.Run("description=should verify a phone number and show phone-specific success message", func(t *testing.T) {
+		phone := "+12065559999"
+		phoneIdentity := &identity.Identity{
+			ID:       x.NewUUID(),
+			Traits:   identity.Traits(fmt.Sprintf(`{"phone":"%s"}`, phone)),
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				"password": {
+					Type:        "password",
+					Identifiers: []string{phone},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`),
+				},
+			},
+		}
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), phoneIdentity,
+			identity.ManagerAllowWriteProtectedTraits))
+
+		body := expectSuccess(t, nil, true, false, func(v url.Values) {
+			v.Set("email", phone)
+		})
+
+		message := testhelpers.CourierExpectMessage(ctx, t, reg, phone, "verification code")
+		verificationCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+
+		body, _ = submitVerificationCode(t, body, testhelpers.NewClientWithCookies(t), verificationCode)
+
+		assert.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String())
+		assert.EqualValues(t, text.NewInfoSelfServiceVerificationPhoneSuccessful().Text, gjson.Get(body, "ui.messages.0.text").String())
+		assert.EqualValues(t, int(text.InfoSelfServiceVerificationPhoneSuccessful), gjson.Get(body, "ui.messages.0.id").Int())
+	})
+
+	t.Run("description=should not send SMS for unknown phone number", func(t *testing.T) {
+
+		check := func(t *testing.T, actual string) {
+			assert.EqualValues(t, string(node.CodeGroup), gjson.Get(actual, "active").String(), "%s", actual)
+			assertx.EqualAsJSON(t, text.NewVerificationPhoneWithCodeSent(), json.RawMessage(gjson.Get(actual, "ui.messages.0").Raw))
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			unknownPhone := "+10005551001"
+			check(t, expectSuccess(t, nil, false, false, func(v url.Values) {
+				v.Set("email", unknownPhone)
+			}))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			unknownPhone := "+10005551002"
+			check(t, expectSuccess(t, nil, false, true, func(v url.Values) {
+				v.Set("email", unknownPhone)
+			}))
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			unknownPhone := "+10005551003"
+			check(t, expectSuccess(t, nil, true, false, func(v url.Values) {
+				v.Set("email", unknownPhone)
+			}))
+		})
+	})
+
+	t.Run("description=should not send SMS for unknown phone number even with notify_unknown_recipients", func(t *testing.T) {
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, true)
+		t.Cleanup(func() {
+			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationNotifyUnknownRecipients, false)
+		})
+
+		unknownPhone := "+10005559999"
+
+		body := expectSuccess(t, nil, true, false, func(v url.Values) {
+			v.Set("email", unknownPhone)
+		})
+
+		assert.EqualValues(t, string(node.CodeGroup), gjson.Get(body, "active").String(), "%s", body)
+		assertx.EqualAsJSON(t, text.NewVerificationPhoneWithCodeSent(), json.RawMessage(gjson.Get(body, "ui.messages.0").Raw))
+
+		// Verify no SMS was enqueued for the unknown phone number.
+		messages, _, err := reg.CourierPersister().ListMessages(ctx, courier.ListCourierMessagesParameters{
+			Recipient: unknownPhone,
+		}, []keysetpagination.Option{})
+		require.NoError(t, err)
+		assert.Empty(t, messages, "no SMS should be sent to an unknown phone number even with notify_unknown_recipients enabled")
 	})
 
 	t.Run("description=should try to verify an email that does not exist", func(t *testing.T) {
