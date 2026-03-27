@@ -254,8 +254,7 @@ jobs:
         with:
           check-latest: true
           go-version-file: go.mod
-      - run: go build -tags sqlite,json1 .
-
+      - run: go build .
       - name: Install selfservice-ui-react-native
         uses: actions/checkout@v6
         with:

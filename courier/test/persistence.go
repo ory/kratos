@@ -47,7 +47,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 
 		messages := make([]courier.Message, 5)
 		t.Run("case=add messages to the queue", func(t *testing.T) {
-			now := time.Now()
+			now := time.Now().UTC()
 			for k := range messages {
 				require.NoError(t, faker.FakeData(&messages[k]))
 				require.NoError(t, p.AddMessage(ctx, &messages[k]))

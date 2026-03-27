@@ -46,8 +46,8 @@ export default defineConfig({
     {
       command: [
         "cp test/e2e/playwright/kratos.base-config.json test/e2e/playwright/kratos.config.json",
-        "go run -tags sqlite,json1 . migrate sql -e --yes",
-        "go run -tags sqlite,json1 . serve --watch-courier --dev -c test/e2e/playwright/kratos.config.json",
+        "go run . migrate sql -e --yes",
+        "go run . serve --watch-courier --dev -c test/e2e/playwright/kratos.config.json",
       ].join(" && "),
       cwd: "../..",
       url: "http://localhost:4433/health/ready",

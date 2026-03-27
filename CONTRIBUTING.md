@@ -165,7 +165,7 @@ request, go through this checklist:
 1. Create a feature branch off of `master` so that changes do not get mixed up.
 1. [Rebase](http://git-scm.com/book/en/Git-Branching-Rebasing) your local
    changes against the `master` branch.
-1. Run the full project test suite with the `go test -tags sqlite ./...` (or
+1. Run the full project test suite with the `go test ./...` (or
    equivalent) command and confirm that it passes.
 1. Run `make format`
 1. Add a descriptive prefix to commits. This ensures a uniform commit history

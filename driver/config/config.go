@@ -48,7 +48,7 @@ import (
 const (
 	DefaultIdentityTraitsSchemaID                            = "default"
 	DefaultBrowserReturnURL                                  = "default_browser_return_url"
-	DefaultSQLiteMemoryDSN                                   = "sqlite://file::memory:?_fk=true&cache=shared"
+	DefaultSQLiteMemoryDSN                                   = "sqlite://file::memory:?_fk=true"
 	DefaultPasswordHashingAlgorithm                          = "argon2"
 	DefaultCipherAlgorithm                                   = "noop"
 	UnknownVersion                                           = "unknown version"

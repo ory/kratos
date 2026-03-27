@@ -1,6 +1,6 @@
 CREATE TABLE "_sessions_tmp" (
 "id" TEXT PRIMARY KEY,
-"issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
+"issued_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 "expires_at" DATETIME NOT NULL,
 "authenticated_at" DATETIME NOT NULL,
 "identity_id" char(36) NOT NULL,

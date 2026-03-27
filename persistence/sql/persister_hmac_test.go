@@ -17,6 +17,7 @@ import (
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 )
@@ -68,7 +69,7 @@ func TestPersisterHMAC(t *testing.T) {
 	baseSecretBytes := []byte(baseSecret)
 	opts := []configx.OptionModifier{configx.SkipValidation(), configx.WithValue(config.ViperKeySecretsDefault, []string{baseSecret})}
 	conf := config.MustNew(t, logrusx.New("", ""), contextx.NewTestConfigProvider(embedx.ConfigSchema, opts...), opts...)
-	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: "sqlite://foo?mode=memory"})
+	c, err := pop.NewConnection(&pop.ConnectionDetails{URL: dbal.NewSQLiteTestDatabase(t)})
 	require.NoError(t, err)
 	p, err := NewPersister(&logRegistryOnly{c: conf}, c)
 	require.NoError(t, err)

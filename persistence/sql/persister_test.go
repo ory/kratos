@@ -185,6 +185,14 @@ func TestPersister(t *testing.T) {
 
 			t.Run("racy identity creation", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+					// Pre-run migrations so concurrent goroutine startups below
+					// don't race to apply the same migrations on a fresh DB.
+					pkg.NewRegistryDefaultWithDSN(t, dsn)
+				}
 
 				var wg sync.WaitGroup
 
@@ -212,6 +220,12 @@ func TestPersister(t *testing.T) {
 
 			t.Run("case=credential types exist", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword} {
@@ -221,51 +235,95 @@ func TestPersister(t *testing.T) {
 
 			t.Run("contract=identity.TestPool", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				identity.TestPool(ctx, p, reg.IdentityManager(), name)(t)
 			})
 			t.Run("contract=registration.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				registration.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=errorx.TestPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				errorx.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=login.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				login.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=settings.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				settings.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=session.TestPersister", func(t *testing.T) {
-				// Don't run this in parallel on SQLite as it causes table locks.
-				if name != "sqlite" {
-					t.Parallel()
+				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				session.TestPersister(ctx, reg.Config(), p)(t)
 			})
 			t.Run("contract=sessiontokenexchange.TestPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				sessiontokenexchange.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=courier.TestPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
 
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
@@ -274,36 +332,72 @@ func TestPersister(t *testing.T) {
 			})
 			t.Run("contract=verification.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				verification.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=recovery.TestFlowPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				recovery.TestFlowPersister(ctx, p)(t)
 			})
 			t.Run("contract=link.TestPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				link.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=code.TestPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				code.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=continuity.TestPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				continuity.TestPersister(ctx, p)(t)
 			})
 			t.Run("contract=batch.TestPersister", func(t *testing.T) {
 				t.Parallel()
+				dsn := dsn
+				// Just have a separate DB for sqlite to speed it up.
+				if name == "sqlite" {
+					dsn = dbal.NewSQLiteTestDatabase(t)
+				}
+
 				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				batch.TestPersister(ctx, reg.Tracer(ctx), p)(t)

@@ -700,7 +700,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) identityFromCreateIdentityBody(ctx context.Context, cr *CreateIdentityBody) (*Identity, error) {
-	stateChangedAt := sqlxx.NullTime(time.Now())
+	stateChangedAt := sqlxx.NullTime(time.Now().UTC())
 	state := StateActive
 	if cr.State != "" {
 		if err := cr.State.IsValid(); err != nil {

@@ -1,7 +1,7 @@
 CREATE TABLE "_selfservice_settings_flows_tmp" (
 "id" TEXT PRIMARY KEY,
 "request_url" TEXT NOT NULL,
-"issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
+"issued_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 "expires_at" DATETIME NOT NULL,
 "identity_id" char(36) NOT NULL,
 "created_at" DATETIME NOT NULL,

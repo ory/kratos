@@ -150,7 +150,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			seedSessionIDs := make([]uuid.UUID, 5)
 			seedSessionsList := make([]session.Session, 5)
-			now := time.Now()
+			now := time.Now().UTC()
 			for j := range seedSessionsList {
 				require.NoError(t, faker.FakeData(&seedSessionsList[j]))
 				seedSessionsList[j].Identity = &identity1

@@ -9,7 +9,7 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/main.go",
-      "buildFlags": "-tags sqlite",
+      "buildFlags": "",
       "preLaunchTask": "Kratos: setup",
       "postDebugTask": "close tasks", // stops mailhog. Needed, because VSCode does not re-use existing isBackground tasks
       "args": [

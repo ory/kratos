@@ -61,7 +61,7 @@ gen/oidc/v1/state.pb.go: proto/oidc/v1/state.proto buf.yaml buf.gen.yaml .bin/bu
 
 .PHONY: install
 install:
-	go install -tags sqlite .
+	go install .
 
 .PHONY: test-resetdb
 test-resetdb:
@@ -70,18 +70,18 @@ test-resetdb:
 .PHONY: test
 test:
 	docker pull oryd/hydra:v2.2.0
-	go test -p 1 -tags sqlite -count=1 -failfast ./...
+	go test -p 1 -count=1 -failfast ./...
 
 test-short:
-	go test -tags sqlite -count=1 -failfast -short ./...
+	go test -count=1 -failfast -short ./...
 
 .PHONY: test-coverage
 test-coverage:
-	go test -coverprofile=coverage.out -failfast -timeout=20m -tags sqlite ./...
+	go test -coverprofile=coverage.out -failfast -timeout=20m  ./...
 
 .PHONY: test-coverage-next
 test-coverage-next:
-	go test -short -failfast -timeout=20m -tags sqlite -cover ./... --args test.gocoverdir="$$PWD/coverage"
+	go test -short -failfast -timeout=20m -cover ./... --args test.gocoverdir="$$PWD/coverage"
 	go tool covdata percent -i=coverage
 	go tool covdata textfmt -i=./coverage -o coverage.new.out
 
@@ -183,7 +183,7 @@ test-e2e-playwright: node_modules test-resetdb kratos-config-e2e
 
 .PHONY: test-refresh
 test-refresh:
-	UPDATE_SNAPSHOTS=true go test -tags sqlite,json1,refresh -short ./...
+	UPDATE_SNAPSHOTS=true go test -tags refresh -short ./...
 
 .PHONY: pre-release
 pre-release:

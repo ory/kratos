@@ -1,7 +1,7 @@
 CREATE TABLE "_selfservice_profile_management_requests_tmp" (
 "id" TEXT PRIMARY KEY,
 "request_url" TEXT NOT NULL,
-"issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
+"issued_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 "expires_at" DATETIME NOT NULL,
 "update_successful" bool NOT NULL,
 "identity_id" char(36) NOT NULL,

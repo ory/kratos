@@ -1,7 +1,7 @@
 CREATE TABLE "_selfservice_recovery_flows_tmp" (
 "id" TEXT PRIMARY KEY,
 "request_url" TEXT NOT NULL,
-"issued_at" DATETIME NOT NULL DEFAULT 'CURRENT_TIMESTAMP',
+"issued_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 "expires_at" DATETIME NOT NULL,
 "active_method" TEXT,
 "csrf_token" TEXT NOT NULL,

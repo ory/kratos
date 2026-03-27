@@ -64,14 +64,14 @@ Short tests run quickly and use SQLite.
 Run all short tests:
 
 ```bash
-go test -short -tags sqlite ./...
+go test -short ./...
 ```
 
 Run short tests in a specific module:
 
 ```bash
 cd client
-go test -short -tags sqlite .
+go test -short .
 ```
 
 ### Regular tests
@@ -103,11 +103,11 @@ export TEST_DATABASE_COCKROACHDB='cockroach://root@127.0.0.1:3446/defaultdb?sslm
 Then you can run Go tests directly as often as needed:
 
 ```bash
-go test -tags sqlite ./...
+go test ./...
 
 # or in a module:
 cd client
-go test -tags sqlite .
+go test .
 ```
 
 ### Updating test fixtures
@@ -123,7 +123,7 @@ make test-update-snapshots
 Update all snapshots:
 
 ```bash
-UPDATE_SNAPSHOTS=true go test -p 4 -tags sqlite ./...
+UPDATE_SNAPSHOTS=true go test -p 4 ./...
 ```
 
 You can run this from the repository root or from subdirectories.

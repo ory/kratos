@@ -634,7 +634,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			ident.SchemaID = p.r.Config().DefaultIdentityTraitsSchemaID(ctx)
 		}
 
-		stateChangedAt := sqlxx.NullTime(time.Now())
+		stateChangedAt := sqlxx.NullTime(time.Now().UTC())
 		ident.StateChangedAt = &stateChangedAt
 		if ident.State == "" {
 			ident.State = identity.StateActive
