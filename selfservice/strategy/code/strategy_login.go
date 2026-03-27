@@ -250,6 +250,16 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())), false)
 }
 
+// nonOrgFilter excludes strategies that support organization-based authentication.
+// Used in FastLogin1FA to prevent org strategies from contributing to the
+// competing-credential count that decides whether code login should defer.
+var nonOrgFilter = []login.StrategyFilter{
+	func(strategy login.Strategy) bool {
+		s, ok := strategy.(flow.OrganizationImplementor)
+		return !ok || !s.SupportsOrganizations()
+	},
+}
+
 func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.FastLogin1FA")
 	defer otelx.End(span, &err)
@@ -278,7 +288,7 @@ func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login
 	} else if c == 0 {
 		return flow.ErrStrategyNotResponsible
 	} else {
-		for _, strat := range s.deps.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
+		for _, strat := range s.deps.LoginStrategies(ctx, nonOrgFilter...) {
 			if strat, ok := strat.(identity.ActiveCredentialsCounter); !ok || strat.ID() == identity.CredentialsTypeCodeAuth {
 				continue
 			} else {

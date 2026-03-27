@@ -33,6 +33,7 @@ import (
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -357,7 +358,7 @@ nextStrategy:
 					continue nextStrategy
 				}
 			}
-			if m.strategyRegistrationEnabled(ctx, s.ID().String()) {
+			if m.strategyRegistrationEnabled(ctx, s.ID().String()) || supportsOrganizations(strategy) {
 				registrationStrategies = append(registrationStrategies, s)
 			}
 		}
@@ -386,12 +387,21 @@ nextStrategy:
 				}
 			}
 
-			if m.strategyLoginEnabled(ctx, s.ID().String()) {
+			if m.strategyLoginEnabled(ctx, s.ID().String()) || supportsOrganizations(strategy) {
 				loginStrategies = append(loginStrategies, s)
 			}
 		}
 	}
 	return
+}
+
+// supportsOrganizations checks if a strategy implements organization-based authentication.
+// Organization strategies manage their own enablement via provider configuration,
+// not via the strategy-enabled config flag, so they bypass the strategyLoginEnabled /
+// strategyRegistrationEnabled check.
+func supportsOrganizations(s any) bool {
+	o, ok := s.(flow.OrganizationImplementor)
+	return ok && o.SupportsOrganizations()
 }
 
 func (m *RegistryDefault) AllLoginStrategies() login.Strategies {
