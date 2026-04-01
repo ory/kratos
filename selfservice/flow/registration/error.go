@@ -5,6 +5,7 @@ package registration
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/gofrs/uuid"
 	"go.opentelemetry.io/otel/attribute"
@@ -155,8 +156,16 @@ func (s *ErrorHandler) WriteFlowError(
 		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String(), http.StatusFound)
 		return
 	}
-	if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); group == node.OpenIDConnectGroup && f.Type == flow.TypeAPI && hasCode {
-		http.Redirect(w, r, f.ReturnTo, http.StatusSeeOther)
+	if codes, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); group == node.OpenIDConnectGroup && f.Type == flow.TypeAPI && hasCode {
+		returnTo, err := url.Parse(f.ReturnTo)
+		if err != nil {
+			s.forward(w, r, f, errors.WithStack(err))
+			return
+		}
+		q := returnTo.Query()
+		q.Set("code", codes.ReturnToCode)
+		returnTo.RawQuery = q.Encode()
+		http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 		return
 	}
 

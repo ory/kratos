@@ -8089,6 +8089,16 @@
             },
             "description": "errorGeneric"
           },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          },
           "default": {
             "content": {
               "application/json": {

@@ -31,6 +31,8 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/pkg/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/registration"
 	. "github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
@@ -1093,6 +1095,104 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 		body := ioutilx.MustReadAll(res.Body)
 		assert.NotEqual(t, gjson.GetBytes(body, "error.id").String(), "security_csrf_violation")
+	})
+}
+
+func TestExchangeCode(t *testing.T) {
+	t.Parallel()
+
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
+	)
+	ts, _, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
+	ctx := context.Background()
+
+	newRegistrationFlow := func(t *testing.T) *registration.Flow {
+		t.Helper()
+		req := &http.Request{URL: urlx.ParseOrPanic("/")}
+		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", req, flow.TypeAPI)
+		require.NoError(t, err)
+		require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(ctx, f))
+		return f
+	}
+
+	exchangeURL := func(initCode, returnToCode string) string {
+		return fmt.Sprintf("%s/sessions/token-exchange?init_code=%s&return_to_code=%s", ts.URL, initCode, returnToCode)
+	}
+
+	t.Run("case=returns 400 when codes are missing", func(t *testing.T) {
+		t.Parallel()
+		res, err := ts.Client().Get(ts.URL + "/sessions/token-exchange")
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+	})
+
+	t.Run("case=returns 404 for invalid codes", func(t *testing.T) {
+		t.Parallel()
+		res, err := ts.Client().Get(exchangeURL("invalid_init", "invalid_return"))
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+	})
+
+	t.Run("case=returns 422 with flow when exchanger exists but has no session", func(t *testing.T) {
+		t.Parallel()
+		f := newRegistrationFlow(t)
+
+		e, err := reg.SessionTokenExchangePersister().CreateSessionTokenExchanger(ctx, f.ID)
+		require.NoError(t, err)
+
+		res, err := ts.Client().Get(exchangeURL(e.InitCode, e.ReturnToCode))
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+
+		assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		assert.Equal(t, f.ID.String(), gjson.GetBytes(body, "id").String())
+	})
+
+	t.Run("case=returns 404 when exchanger exists but flow was deleted", func(t *testing.T) {
+		t.Parallel()
+		// Create an exchanger with a flow ID that has no corresponding persisted flow.
+		orphanFlowID := uuid.Must(uuid.NewV4())
+		e, err := reg.SessionTokenExchangePersister().CreateSessionTokenExchanger(ctx, orphanFlowID)
+		require.NoError(t, err)
+
+		res, err := ts.Client().Get(exchangeURL(e.InitCode, e.ReturnToCode))
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+	})
+
+	t.Run("case=returns 200 with session when exchanger has a session", func(t *testing.T) {
+		t.Parallel()
+		f := newRegistrationFlow(t)
+
+		e, err := reg.SessionTokenExchangePersister().CreateSessionTokenExchanger(ctx, f.ID)
+		require.NoError(t, err)
+
+		i := identity.NewIdentity("")
+		require.NoError(t, reg.IdentityManager().Create(ctx, i))
+		req := &http.Request{URL: urlx.ParseOrPanic("/")}
+		sess, err := testhelpers.NewActiveSession(req, reg, i, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+		require.NoError(t, reg.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, f.ID, sess.ID))
+
+		res, err := ts.Client().Get(exchangeURL(e.InitCode, e.ReturnToCode))
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		assert.NotEmpty(t, gjson.GetBytes(body, "session_token").String())
+		assert.Equal(t, sess.ID.String(), gjson.GetBytes(body, "session.id").String())
 	})
 }
 

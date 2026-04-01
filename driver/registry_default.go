@@ -14,6 +14,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/dgraph-io/ristretto/v2"
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lestrrat-go/jwx/jwk"
@@ -731,10 +732,32 @@ func (m *RegistryDefault) ContinuityManager() continuity.Manager {
 	return m.continuityManager
 }
 
-func (m *RegistryDefault) Persister() persistence.Persister                      { return m.persister }
-func (m *RegistryDefault) ContinuityPersister() continuity.Persister             { return m.persister }
-func (m *RegistryDefault) IdentityPool() identity.Pool                           { return m.persister }
-func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool       { return m.persister }
+func (m *RegistryDefault) Persister() persistence.Persister                { return m.persister }
+func (m *RegistryDefault) ContinuityPersister() continuity.Persister       { return m.persister }
+func (m *RegistryDefault) IdentityPool() identity.Pool                     { return m.persister }
+func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool { return m.persister }
+func (m *RegistryDefault) FlowForTokenExchange() session.FlowForTokenExchange {
+	return m
+}
+func (m *RegistryDefault) GetFlowForTokenExchange(ctx context.Context, flowID uuid.UUID) (any, error) {
+	rf, err := m.RegistrationFlowPersister().GetRegistrationFlow(ctx, flowID)
+	if err == nil {
+		return rf, nil
+	}
+	if !errors.Is(err, sqlcon.ErrNoRows) {
+		return nil, err
+	}
+
+	lf, err := m.LoginFlowPersister().GetLoginFlow(ctx, flowID)
+	if err == nil {
+		return lf, nil
+	}
+	if !errors.Is(err, sqlcon.ErrNoRows) {
+		return nil, err
+	}
+
+	return nil, errors.WithStack(sqlcon.ErrNoRows)
+}
 func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister { return m.persister }
 func (m *RegistryDefault) RecoveryFlowPersister() recovery.FlowPersister         { return m.persister }
 func (m *RegistryDefault) LoginFlowPersister() login.FlowPersister               { return m.persister }

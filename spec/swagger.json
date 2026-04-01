@@ -3369,6 +3369,12 @@
               "$ref": "#/definitions/errorGeneric"
             }
           },
+          "422": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
+          },
           "default": {
             "description": "errorGeneric",
             "schema": {

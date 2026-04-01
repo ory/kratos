@@ -97,6 +97,48 @@ func TestPersister(ctx context.Context, p interface {
 			})
 		})
 
+		t.Run("suite=GetExchangerFromCodeAllowPending", func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("case=returns exchanger without session", func(t *testing.T) {
+				t.Parallel()
+				params := newParams()
+
+				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
+				require.NoError(t, err)
+				params.setCodes(e)
+
+				e, err = p.GetExchangerFromCodeAllowPending(ctx, params.initCode, params.returnToCode)
+				require.NoError(t, err)
+				assert.Equal(t, params.flowID, e.FlowID)
+				assert.False(t, e.SessionID.Valid)
+			})
+
+			t.Run("case=returns exchanger with session", func(t *testing.T) {
+				t.Parallel()
+				params := newParams()
+
+				e, err := p.CreateSessionTokenExchanger(ctx, params.flowID)
+				require.NoError(t, err)
+				params.setCodes(e)
+				require.NoError(t, p.UpdateSessionOnExchanger(ctx, params.flowID, params.sessionID))
+
+				e, err = p.GetExchangerFromCodeAllowPending(ctx, params.initCode, params.returnToCode)
+				require.NoError(t, err)
+				assert.Equal(t, params.flowID, e.FlowID)
+				assert.Equal(t, params.sessionID, e.SessionID.UUID)
+			})
+
+			t.Run("case=errors if code is invalid", func(t *testing.T) {
+				t.Parallel()
+				other := newParams()
+
+				e, err := p.GetExchangerFromCodeAllowPending(ctx, other.initCode, other.returnToCode)
+				assert.Error(t, err)
+				assert.Nil(t, e)
+			})
+		})
+
 		t.Run("suite=GetExchangerFromCode", func(t *testing.T) {
 			t.Parallel()
 

@@ -37,6 +37,7 @@ type (
 	Persister interface {
 		CreateSessionTokenExchanger(ctx context.Context, flowID uuid.UUID) (e *Exchanger, err error)
 		GetExchangerFromCode(ctx context.Context, initCode string, returnToCode string) (*Exchanger, error)
+		GetExchangerFromCodeAllowPending(ctx context.Context, initCode string, returnToCode string) (*Exchanger, error)
 		UpdateSessionOnExchanger(ctx context.Context, flowID uuid.UUID, sessionID uuid.UUID) error
 		CodeForFlow(ctx context.Context, flowID uuid.UUID) (codes *Codes, found bool, err error)
 		MoveToNewFlow(ctx context.Context, oldFlow, newFlow uuid.UUID) error

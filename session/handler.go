@@ -36,6 +36,17 @@ import (
 )
 
 type (
+	// FlowForTokenExchange looks up a login or registration flow by ID.
+	// It is used by the token exchange handler to surface flow errors when no
+	// session was created (e.g. because a before-registration webhook rejected
+	// the request).
+	FlowForTokenExchange interface {
+		GetFlowForTokenExchange(ctx context.Context, flowID uuid.UUID) (any, error)
+	}
+	FlowForTokenExchangeProvider interface {
+		FlowForTokenExchange() FlowForTokenExchange
+	}
+
 	handlerDependencies interface {
 		ManagementProvider
 		PersistenceProvider
@@ -45,6 +56,7 @@ type (
 		nosurfx.CSRFProvider
 		config.Provider
 		sessiontokenexchange.PersistenceProvider
+		FlowForTokenExchangeProvider
 		TokenizerProvider
 	}
 	HandlerProvider interface {
@@ -1072,6 +1084,7 @@ type CodeExchangeResponse struct {
 //	  403: errorGeneric
 //	  404: errorGeneric
 //	  410: errorGeneric
+//	  422: errorGeneric
 //	  default: errorGeneric
 //
 //	Extensions:
@@ -1090,7 +1103,25 @@ func (h *Handler) exchangeCode(w http.ResponseWriter, r *http.Request) {
 
 	e, err := h.r.SessionTokenExchangePersister().GetExchangerFromCode(ctx, initCode, returnToCode)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(`no session yet for this "code"`))
+		// The session might not be set because the flow encountered an error (e.g. a
+		// before-registration webhook rejected the request). Check whether the exchanger
+		// exists without requiring a session and, if so, return the flow with its error
+		// messages so that the client can act on them.
+		pending, pendingErr := h.r.SessionTokenExchangePersister().GetExchangerFromCodeAllowPending(ctx, initCode, returnToCode)
+		if pendingErr != nil {
+			h.r.Logger().WithRequest(r).WithError(pendingErr).Info("Could not look up pending session token exchanger.")
+			h.r.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(`no session yet for this "code"`))
+			return
+		}
+
+		f, fErr := h.r.FlowForTokenExchange().GetFlowForTokenExchange(ctx, pending.FlowID)
+		if fErr != nil {
+			h.r.Logger().WithRequest(r).WithError(fErr).Info("Could not look up flow for pending session token exchange.")
+			h.r.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(`no session yet for this "code"`))
+			return
+		}
+
+		h.r.Writer().WriteCode(w, r, http.StatusUnprocessableEntity, f)
 		return
 	}
 
