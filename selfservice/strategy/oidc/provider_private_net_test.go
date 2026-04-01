@@ -6,6 +6,8 @@ package oidc_test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
@@ -25,7 +27,13 @@ const (
 )
 
 func TestProviderPrivateIP(t *testing.T) {
-	ctx := context.Background()
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Error("the request should not have reached the test server")
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(ts.Close)
+
+	ctx := t.Context()
 	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
 
@@ -50,17 +58,17 @@ func TestProviderPrivateIP(t *testing.T) {
 	}{
 		// Apple uses a fixed token URL and does not use the issuer.
 
-		{p: auth0, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination"},
+		{p: auth0, c: &oidc.Configuration{IssuerURL: ts.URL}, e: "no route to host"},
 		// The TokenURL is fixed in Auth0 to {issuer_url}/token. Since the issuer is called first, any local token fails also.
 
 		// If the issuer URL is local, we fail
-		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination", id: fakeJWTJWKS},
-		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/", ClaimsSource: "userinfo"}, e: "is not a permitted destination", id: fakeJWTJWKS},
-		{p: generic, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/", ClaimsSource: "invalid"}, e: "Unknown claims source: \"invalid\"", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{IssuerURL: ts.URL}, e: "no route to host", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{IssuerURL: ts.URL, ClaimsSource: "userinfo"}, e: "no route to host", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{IssuerURL: ts.URL, ClaimsSource: "invalid"}, e: "Unknown claims source: \"invalid\"", id: fakeJWTJWKS},
 
 		// If the issuer URL has a local JWKs URL, we fail
-		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs}, e: "is not a permitted destination", id: fakeJWTJWKS},
-		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs, ClaimsSource: "userinfo"}, e: "is not a permitted destination", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs}, e: "no route to host", id: fakeJWTJWKS},
+		{p: generic, c: &oidc.Configuration{ClientID: "abcd", IssuerURL: wellknownJWKs, ClaimsSource: "userinfo"}, e: "no route to host", id: fakeJWTJWKS},
 
 		// The next call does not fail because the provider uses only the ID JSON Web Token to verify this call and does
 		// not use the TokenURL at all!
@@ -73,7 +81,7 @@ func TestProviderPrivateIP(t *testing.T) {
 		// GitHub App uses a fixed token URL and does not use the issuer.
 		// LinkedInV2 uses a fixed token URL and does not use the issuer.
 
-		{p: gitlab, c: &oidc.Configuration{IssuerURL: "http://127.0.0.2/"}, e: "is not a permitted destination"},
+		{p: gitlab, c: &oidc.Configuration{IssuerURL: ts.URL}, e: "no route to host"},
 		// The TokenURL is fixed in GitLab to {issuer_url}/token. Since the issuer is called first, any local token fails also.
 
 		// Google uses a fixed token URL and does not use the issuer.

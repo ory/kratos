@@ -1063,6 +1063,17 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 	t.Parallel()
 	logger := logrusx.New("kratos", "test")
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/exception", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
+		t.Error("the request should not have reached the test server")
+		w.WriteHeader(http.StatusOK)
+	})
+	ts := httptest.NewServer(mux)
+	t.Cleanup(ts.Close)
+
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
 		Host:   "www.ory.sh",
@@ -1077,31 +1088,30 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 		t.Parallel()
 		conf, reg := pkg.NewFastRegistryWithMocks(t)
 		conf.MustSet(t.Context(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{ts.URL + "/exception"})
 		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
-			URL:         "https://localhost:1234/",
+			URL:         ts.URL,
 			Method:      "GET",
 			TemplateURI: "file://stub/test_body.jsonnet",
 		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
-		assert.ErrorContains(t, err, "is not a permitted destination")
+		assert.ErrorContains(t, err, "no route to host")
 	})
 
 	t.Run("allowed to call exempt url", func(t *testing.T) {
 		t.Parallel()
 		conf, reg := pkg.NewFastRegistryWithMocks(t)
 		conf.MustSet(t.Context(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{ts.URL + "/exception"})
 		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
-			URL:         "http://localhost/exception",
+			URL:         ts.URL + "/exception",
 			Method:      "GET",
 			TemplateURI: "file://stub/test_body.jsonnet",
 		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
-		require.Error(t, err, "the target does not exist and we still receive an error")
-		require.NotContains(t, err.Error(), "is not a permitted destination", "but the error is not related to the IP range.")
+		require.NoError(t, err)
 	})
 
 	t.Run("not allowed to load from source", func(t *testing.T) {
@@ -1117,15 +1127,15 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 		f := &login.Flow{ID: x.NewUUID()}
 		conf, reg := pkg.NewFastRegistryWithMocks(t)
 		conf.MustSet(t.Context(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{"http://localhost/exception"})
+		conf.MustSet(t.Context(), config.ViperKeyClientHTTPPrivateIPExceptionURLs, []string{ts.URL + "/exception"})
 		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
-			URL:         "https://www.google.com/",
+			URL:         ts.URL + "/exception",
 			Method:      "GET",
 			TemplateURI: "http://192.168.178.0/test_body.jsonnet",
 		})
 		err := wh.ExecuteLoginPostHook(nil, req, node.DefaultGroup, f, s)
-		require.ErrorContains(t, err, "is not a permitted destination")
+		require.ErrorContains(t, err, "no route to host")
 	})
 }
 

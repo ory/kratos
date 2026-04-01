@@ -180,10 +180,10 @@ func TestLoadTextTemplate(t *testing.T) {
 			reg.HTTPClient(ctx).RetryWaitMax = time.Millisecond
 
 			_, err := template.LoadHTML(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
-			assert.ErrorContains(t, err, "is not a permitted destination")
+			assert.ErrorContains(t, err, "no such host")
 
 			_, err = template.LoadText(ctx, reg, nil, "", "", map[string]interface{}{}, "http://localhost:8080/1234")
-			assert.ErrorContains(t, err, "is not a permitted destination")
+			assert.ErrorContains(t, err, "no such host")
 		})
 
 		t.Run("method=cache works", func(t *testing.T) {
