@@ -33,13 +33,12 @@ func TestRegistrationCode(t *testing.T) {
 	t.Run("method=Validate", func(t *testing.T) {
 		t.Parallel()
 
-		t.Run("case=returns error if flow is expired", func(t *testing.T) {
+		t.Run("case=returns error if code is expired", func(t *testing.T) {
 			f, err := registration.NewFlow(conf, -time.Hour, "", req, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(-time.Hour, f)
-			expected := new(flow.ExpiredError)
-			require.ErrorAs(t, c.Validate(), &expected)
+			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound)
 		})
 		t.Run("case=returns no error if flow is not expired", func(t *testing.T) {
 			f, err := registration.NewFlow(conf, time.Hour, "", req, flow.TypeBrowser)

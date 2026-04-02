@@ -1257,9 +1257,9 @@ Cypress.Commands.add(
       if (strategy === "code") {
         cy.get('button[name="method"][value="code"]').click()
       }
-      cy.get('[data-testid="ui/message/4070005"]').should(
+      cy.get('[data-testid="ui/message/4070006"]').should(
         "contain.text",
-        "verification flow expired",
+        "The verification code is invalid or has already been used",
       )
       cy.location("pathname").should("include", "verification")
 

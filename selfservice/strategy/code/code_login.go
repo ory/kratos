@@ -10,8 +10,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/selfservice/flow"
-
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/identity"
@@ -65,25 +63,25 @@ func (LoginCode) TableName(ctx context.Context) string {
 	return "identity_login_codes"
 }
 
-func (f *LoginCode) Validate() error {
-	if f == nil {
+func (c *LoginCode) Validate() error {
+	if c == nil {
 		return errors.WithStack(ErrCodeNotFound)
 	}
-	if f.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+	if c.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(ErrCodeNotFound)
 	}
-	if f.UsedAt.Valid {
+	if c.UsedAt.Valid {
 		return errors.WithStack(ErrCodeAlreadyUsed)
 	}
 	return nil
 }
 
-func (f *LoginCode) GetHMACCode() string {
-	return f.CodeHMAC
+func (c *LoginCode) GetHMACCode() string {
+	return c.CodeHMAC
 }
 
-func (f *LoginCode) GetID() uuid.UUID {
-	return f.ID
+func (c *LoginCode) GetID() uuid.UUID {
+	return c.ID
 }
 
 // swagger:ignore

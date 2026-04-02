@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
-	"github.com/ory/kratos/selfservice/flow"
 )
 
 type VerificationCode struct {
@@ -61,25 +60,25 @@ func (VerificationCode) TableName(context.Context) string {
 // - If the code is expired, `flow.ExpiredError` is returned
 // - If the code was already used `ErrCodeAlreadyUsed` is returnd
 // - Otherwise, `nil` is returned
-func (f *VerificationCode) Validate() error {
-	if f == nil {
+func (c *VerificationCode) Validate() error {
+	if c == nil {
 		return errors.WithStack(ErrCodeNotFound)
 	}
-	if f.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+	if c.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(ErrCodeNotFound)
 	}
-	if f.UsedAt.Valid {
+	if c.UsedAt.Valid {
 		return errors.WithStack(ErrCodeAlreadyUsed)
 	}
 	return nil
 }
 
-func (f *VerificationCode) GetHMACCode() string {
-	return f.CodeHMAC
+func (c *VerificationCode) GetHMACCode() string {
+	return c.CodeHMAC
 }
 
-func (f *VerificationCode) GetID() uuid.UUID {
-	return f.ID
+func (c *VerificationCode) GetID() uuid.UUID {
+	return c.ID
 }
 
 type CreateVerificationCodeParams struct {

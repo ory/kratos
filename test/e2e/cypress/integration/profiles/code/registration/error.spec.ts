@@ -180,15 +180,10 @@ context("Registration error messages with code method", () => {
           cy.submitCodeForm(app)
         })
 
-        // in the react spa app we don't show the 410 gone error. we create a new flow.
-        if (app === "express") {
-          cy.get('[data-testid="ui/message/4040001"]').should(
-            "contain",
-            "The registration flow expired",
-          )
-        } else {
-          cy.get(Selectors[app]["email"]).should("be.visible")
-        }
+        cy.get('[data-testid="ui/message/4040003"]').should(
+          "contain",
+          "The registration code is invalid or has already been used",
+        )
 
         cy.noSession()
 

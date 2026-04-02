@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -660,20 +659,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
 					if tc.apiType == ApiTypeBrowser {
-						// with browser clients we redirect back to the UI with a new flow id as a query parameter
-						require.Equal(t, http.StatusOK, resp.StatusCode)
-						require.Equal(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
-						lf, _, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendAPI.GetLoginFlow(ctx).Id(resp.Request.URL.Query().Get("flow")).Execute()
-						require.NoError(t, err)
-						require.EqualValues(t, http.StatusOK, resp.StatusCode)
-
-						body, err := json.Marshal(lf)
-						require.NoError(t, err)
-						assert.Regexpf(t, regexp.MustCompile(`The login flow expired 0\.0\d minutes ago, please try again\.`), gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
+						require.Equal(t, http.StatusOK, resp.StatusCode, "%s", body)
 					} else {
-						require.EqualValues(t, http.StatusGone, resp.StatusCode)
-						assert.Regexpf(t, regexp.MustCompile(`The self-service flow expired 0\.0\d minutes ago, initialize a new one\.`), gjson.Get(body, "error.reason").Str, "%s", body)
+						require.Equal(t, http.StatusBadRequest, resp.StatusCode, "%s", body)
 					}
+					require.Contains(t, gjson.Get(body, "ui.messages").String(), "The login code is invalid or has already been used. Please try again", "%s", body)
 				})
 			})
 

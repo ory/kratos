@@ -75,25 +75,25 @@ func (RecoveryCode) TableName(ctx context.Context) string {
 	return "identity_recovery_codes"
 }
 
-func (f *RecoveryCode) Validate() error {
-	if f == nil {
+func (c *RecoveryCode) Validate() error {
+	if c == nil {
 		return errors.WithStack(ErrCodeNotFound)
 	}
-	if f.ExpiresAt.Before(time.Now().UTC()) {
+	if c.ExpiresAt.Before(time.Now().UTC()) {
 		return errors.WithStack(ErrCodeNotFound)
 	}
-	if f.UsedAt.Valid {
+	if c.UsedAt.Valid {
 		return errors.WithStack(ErrCodeAlreadyUsed)
 	}
 	return nil
 }
 
-func (f *RecoveryCode) GetHMACCode() string {
-	return f.CodeHMAC
+func (c *RecoveryCode) GetHMACCode() string {
+	return c.CodeHMAC
 }
 
-func (f *RecoveryCode) GetID() uuid.UUID {
-	return f.ID
+func (c *RecoveryCode) GetID() uuid.UUID {
+	return c.ID
 }
 
 type CreateRecoveryCodeParams struct {
