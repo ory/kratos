@@ -166,7 +166,7 @@ type _ struct {
 	// Include Credentials in Response
 	//
 	// Include any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return
-	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
+	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.
 	//
 	// required: false
 	// in: query
@@ -323,7 +323,7 @@ type getIdentity struct {
 	// Include Credentials in Response
 	//
 	// Include any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return
-	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
+	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.
 	//
 	// required: false
 	// in: query
@@ -346,7 +346,7 @@ type getIdentityByExternalID struct {
 	// Include Credentials in Response
 	//
 	// Include any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return
-	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
+	// the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.
 	//
 	// required: false
 	// in: query
@@ -543,8 +543,92 @@ type IdentityWithCredentials struct {
 	// OIDC if set will import an OIDC credential.
 	OIDC *AdminIdentityImportCredentialsOIDC `json:"oidc"`
 
-	// OIDC if set will import an OIDC credential.
+	// SAML if set will import a SAML credential.
 	SAML *AdminIdentityImportCredentialsSAML `json:"saml"`
+
+	// TOTP if set will import a TOTP credential.
+	TOTP *AdminIdentityImportCredentialsTOTP `json:"totp"`
+
+	// WebAuthn if set will import a WebAuthn credential.
+	WebAuthn *AdminIdentityImportCredentialsWebAuthn `json:"webauthn"`
+
+	// Passkey if set will import a Passkey credential.
+	Passkey *AdminIdentityImportCredentialsPasskey `json:"passkey"`
+
+	// LookupSecret if set will import a magic code credential.
+	LookupSecret *AdminIdentityImportCredentialsLookupSecret `json:"lookup_secret"`
+}
+
+// Create Identity and Import TOTP 2FA Credentials
+//
+// swagger:model identityWithCredentialsTotp
+type AdminIdentityImportCredentialsTOTP struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsTOTPConfig `json:"config"`
+}
+
+// Create Identity and Import TOTP 2FA Credentials Configuration
+//
+// swagger:model identityWithCredentialsTotpConfig
+type AdminIdentityImportCredentialsTOTPConfig struct {
+	// TOTPURL is the TOTP URL
+	//
+	// For more details see: https://github.com/google/google-authenticator/wiki/Key-Uri-Format
+	TOTPURL string `json:"totp_url"`
+}
+
+// Create Identity and Import WebAuthn Credentials
+//
+// swagger:model identityWithCredentialsWebAuthn
+type AdminIdentityImportCredentialsWebAuthn struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsWebAuthnConfig `json:"config"`
+}
+
+// Create Identity and Import WebAuthn Credentials Configuration
+//
+// swagger:model identityWithCredentialsWebAuthnConfig
+type AdminIdentityImportCredentialsWebAuthnConfig struct {
+	// List of webauthn credentials.
+	Credentials CredentialsWebAuthn `json:"credentials"`
+
+	// UserHandle is the user handle of the webauthn credential.
+	UserHandle []byte `json:"user_handle"`
+}
+
+// Create Identity and Import Passkey Credentials
+//
+// swagger:model identityWithCredentialsPasskey
+type AdminIdentityImportCredentialsPasskey struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsPasskeyConfig `json:"config"`
+}
+
+// Create Identity and Import Passkey Credentials Configuration
+//
+// swagger:model identityWithCredentialsPasskeyConfig
+type AdminIdentityImportCredentialsPasskeyConfig struct {
+	// List of webauthn credentials.
+	Credentials CredentialsWebAuthn `json:"credentials"`
+
+	// UserHandle is the user handle of the webauthn credential.
+	UserHandle []byte `json:"user_handle"`
+}
+
+// Create Identity and Import Lookup Secret Credentials
+//
+// swagger:model identityWithCredentialsLookup Secret
+type AdminIdentityImportCredentialsLookupSecret struct {
+	// Configuration options for the import.
+	Config AdminIdentityImportCredentialsLookupSecretConfig `json:"config"`
+}
+
+// Create Identity and Import Lookup Secret Credentials Configuration
+//
+// swagger:model identityWithCredentialsLookup SecretConfig
+type AdminIdentityImportCredentialsLookupSecretConfig struct {
+	// Codes is a list of "lookup secret" codes configured for the user.
+	Codes []RecoveryCode `json:"codes"`
 }
 
 // Create Identity and Import Password Credentials
@@ -646,7 +730,7 @@ type AdminCreateIdentityImportCredentialsSAMLProvider struct {
 //
 // Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to
 // [import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
-// for instance passwords, social sign in configurations or multifactor methods.
+// for instance passwords, social sign in configurations, or multifactor methods.
 //
 //	Consumes:
 //	- application/json
@@ -924,10 +1008,19 @@ type UpdateIdentityBody struct {
 // # Update an Identity
 //
 // This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
-// payload, except credentials, is expected. For partial updates, use the [patchIdentity](https://www.ory.sh/docs/reference/api#tag/identity/operation/patchIdentity) operation.
+// payload (except credentials) is expected.
 //
-// A credential can be provided via the `credentials` field in the request body.
-// If provided, the credentials will be imported and added to the existing credentials of the identity.
+// It is possible to update the identity's credentials as well. Using this operation, credentials will not be overwritten
+// but instead added to the list. For example, if a user has a social sign in connection set up, updating the credentials
+// will keep the social sign in connection and add the new credentials to the list. This prevents accidentally overwriting
+// credentials and locking out users. A complete view of all credential types is here:
+//
+// - `password`: The existing password credential will be completely replaced with the new configuration. You can provide either a hashed password, a plaintext password (which will be hashed), or enable the password migration hook.
+// - `oidc`, `saml`: The existing OIDC and SAML credentials will be kept and the new credentials will be added to the list.
+// - `totp`: The existing TOTP credentials will be replaced with the new configuration.
+// - `lookup_secret`: The existing Lookup Secret codes will be kept and the new codes will be added to the list.
+// - `webauthn`, `passkey`: The existing credentials are preserved, new credentials are added, and credentials with matching IDs are updated with new values. If a new `user_handle` is provided, it's added to the identity's identifiers list while preserving previous user handles.
+// - `code`: To import code credentials, configure your identity schema to use one of the identity traits as an identifier source (`{"ory.sh/kratos":{"code":{"identifier":true", "via":"email"}}}`).
 //
 //	Consumes:
 //	- application/json

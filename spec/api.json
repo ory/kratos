@@ -81,6 +81,33 @@
       }
     },
     "schemas": {
+      "AdminIdentityImportCredentialsLookupSecret": {
+        "description": "Create Identity and Import Lookup Secret Credentials",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/AdminIdentityImportCredentialsLookupSecretConfig"
+          }
+        },
+        "type": "object"
+      },
+      "AdminIdentityImportCredentialsLookupSecretConfig": {
+        "description": "Create Identity and Import Lookup Secret Credentials Configuration",
+        "properties": {
+          "codes": {
+            "description": "Codes is a list of \"lookup secret\" codes configured for the user.",
+            "items": {
+              "$ref": "#/components/schemas/identityCredentialsLookupSecretCode"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "AuthenticatorTransport": {
+        "description": "Authenticators may implement various transports for communicating with clients. This enumeration defines hints as to\nhow clients might communicate with a particular authenticator in order to obtain an assertion for a specific\ncredential. Note that these hints represent the WebAuthn Relying Party's best belief as to how an authenticator may\nbe reached. A Relying Party will typically learn of the supported transports for a public key credential via\ngetTransports().\n\nSpecification: §5.8.4. Authenticator Transport Enumeration (https://www.w3.org/TR/webauthn/#enumdef-authenticatortransport)",
+        "title": "AuthenticatorTransport represents the IDL enum with the same name.",
+        "type": "string"
+      },
       "CodeChannel": {
         "type": "string"
       },
@@ -1172,6 +1199,20 @@
         },
         "type": "object"
       },
+      "identityCredentialsLookupSecretCode": {
+        "description": "Recovery codes can be used once and are invalidated after use.",
+        "properties": {
+          "code": {
+            "description": "A recovery code",
+            "type": "string"
+          },
+          "used_at": {
+            "$ref": "#/components/schemas/nullTime"
+          }
+        },
+        "title": "RecoveryCode represents one recovery code associated with a lookup_secret credential.",
+        "type": "object"
+      },
       "identityCredentialsOidc": {
         "properties": {
           "providers": {
@@ -1224,6 +1265,136 @@
         },
         "title": "CredentialsPassword is contains the configuration for credentials of the type password.",
         "type": "object"
+      },
+      "identityCredentialsWebAuthn": {
+        "properties": {
+          "added_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "attestation": {
+            "$ref": "#/components/schemas/identityCredentialsWebAuthnAttestation"
+          },
+          "attestation_type": {
+            "type": "string"
+          },
+          "authenticator": {
+            "$ref": "#/components/schemas/identityCredentialsWebAuthnAuthenticator"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "flags": {
+            "$ref": "#/components/schemas/identityCredentialsWebAuthnFlags"
+          },
+          "id": {
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "is_passwordless": {
+            "type": "boolean"
+          },
+          "public_key": {
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "transport": {
+            "items": {
+              "$ref": "#/components/schemas/AuthenticatorTransport"
+            },
+            "type": "array"
+          }
+        },
+        "title": "CredentialWebAuthn contains information about a webauthn credential.",
+        "type": "object"
+      },
+      "identityCredentialsWebAuthnAttestation": {
+        "properties": {
+          "authenticator_data": {
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "client_dataJSON": {
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "client_data_hash": {
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "object": {
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "public_key_algorithm": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "title": "CredentialWebAuthnAttestation contains information about attestation of a webauthn credential.",
+        "type": "object"
+      },
+      "identityCredentialsWebAuthnAuthenticator": {
+        "properties": {
+          "aaguid": {
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "clone_warning": {
+            "type": "boolean"
+          },
+          "sign_count": {
+            "format": "uint32",
+            "type": "integer"
+          }
+        },
+        "title": "AuthenticatorWebAuthn contains information about the authenticator of a webauthn credential.",
+        "type": "object"
+      },
+      "identityCredentialsWebAuthnFlags": {
+        "properties": {
+          "backup_eligible": {
+            "type": "boolean"
+          },
+          "backup_state": {
+            "type": "boolean"
+          },
+          "user_present": {
+            "type": "boolean"
+          },
+          "user_verified": {
+            "type": "boolean"
+          }
+        },
+        "title": "CredentialWebAuthnFlags contains information about the flags of a webauthn credential.",
+        "type": "object"
+      },
+      "identityCredentialsWebAuthnList": {
+        "items": {
+          "$ref": "#/components/schemas/identityCredentialsWebAuthn"
+        },
+        "type": "array"
       },
       "identityPatch": {
         "description": "Payload for patching an identity",
@@ -1306,14 +1477,26 @@
       "identityWithCredentials": {
         "description": "Create Identity and Import Credentials",
         "properties": {
+          "lookup_secret": {
+            "$ref": "#/components/schemas/AdminIdentityImportCredentialsLookupSecret"
+          },
           "oidc": {
             "$ref": "#/components/schemas/identityWithCredentialsOidc"
+          },
+          "passkey": {
+            "$ref": "#/components/schemas/identityWithCredentialsPasskey"
           },
           "password": {
             "$ref": "#/components/schemas/identityWithCredentialsPassword"
           },
           "saml": {
             "$ref": "#/components/schemas/identityWithCredentialsSaml"
+          },
+          "totp": {
+            "$ref": "#/components/schemas/identityWithCredentialsTotp"
+          },
+          "webauthn": {
+            "$ref": "#/components/schemas/identityWithCredentialsWebAuthn"
           }
         },
         "type": "object"
@@ -1362,6 +1545,32 @@
           "subject",
           "provider"
         ],
+        "type": "object"
+      },
+      "identityWithCredentialsPasskey": {
+        "description": "Create Identity and Import Passkey Credentials",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/identityWithCredentialsPasskeyConfig"
+          }
+        },
+        "type": "object"
+      },
+      "identityWithCredentialsPasskeyConfig": {
+        "description": "Create Identity and Import Passkey Credentials Configuration",
+        "properties": {
+          "credentials": {
+            "$ref": "#/components/schemas/identityCredentialsWebAuthnList"
+          },
+          "user_handle": {
+            "description": "UserHandle is the user handle of the webauthn credential.",
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
         "type": "object"
       },
       "identityWithCredentialsPassword": {
@@ -1432,6 +1641,51 @@
           "subject",
           "provider"
         ],
+        "type": "object"
+      },
+      "identityWithCredentialsTotp": {
+        "description": "Create Identity and Import TOTP 2FA Credentials",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/identityWithCredentialsTotpConfig"
+          }
+        },
+        "type": "object"
+      },
+      "identityWithCredentialsTotpConfig": {
+        "description": "Create Identity and Import TOTP 2FA Credentials Configuration",
+        "properties": {
+          "totp_url": {
+            "description": "TOTPURL is the TOTP URL\n\nFor more details see: https://github.com/google/google-authenticator/wiki/Key-Uri-Format",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "identityWithCredentialsWebAuthn": {
+        "description": "Create Identity and Import WebAuthn Credentials",
+        "properties": {
+          "config": {
+            "$ref": "#/components/schemas/identityWithCredentialsWebAuthnConfig"
+          }
+        },
+        "type": "object"
+      },
+      "identityWithCredentialsWebAuthnConfig": {
+        "description": "Create Identity and Import WebAuthn Credentials Configuration",
+        "properties": {
+          "credentials": {
+            "$ref": "#/components/schemas/identityCredentialsWebAuthnList"
+          },
+          "user_handle": {
+            "description": "UserHandle is the user handle of the webauthn credential.",
+            "items": {
+              "format": "uint8",
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
         "type": "object"
       },
       "jsonPatch": {
@@ -4322,7 +4576,7 @@
             }
           },
           {
-            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.",
+            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.",
             "in": "query",
             "name": "include_credential",
             "schema": {
@@ -4434,7 +4688,7 @@
         "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "post": {
-        "description": "Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to\n[import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations or multifactor methods.",
+        "description": "Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to\n[import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)\nfor instance passwords, social sign in configurations, or multifactor methods.",
         "operationId": "createIdentity",
         "requestBody": {
           "content": {
@@ -4515,7 +4769,7 @@
             }
           },
           {
-            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.",
+            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.",
             "in": "query",
             "name": "include_credential",
             "schema": {
@@ -4648,7 +4902,7 @@
             }
           },
           {
-            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.",
+            "description": "Include Credentials in Response\n\nInclude any credential, for example `password` or `oidc`, in the response. When set to `oidc`, This will return\nthe initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.",
             "in": "query",
             "name": "include_credential",
             "schema": {
@@ -4803,7 +5057,7 @@
         "x-ory-ratelimit-bucket": "kratos-admin-low"
       },
       "put": {
-        "description": "This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity\npayload, except credentials, is expected. For partial updates, use the [patchIdentity](https://www.ory.sh/docs/reference/api#tag/identity/operation/patchIdentity) operation.\n\nA credential can be provided via the `credentials` field in the request body.\nIf provided, the credentials will be imported and added to the existing credentials of the identity.",
+        "description": "This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity\npayload (except credentials) is expected.\n\nIt is possible to update the identity's credentials as well. Using this operation, credentials will not be overwritten\nbut instead added to the list. For example, if a user has a social sign in connection set up, updating the credentials\nwill keep the social sign in connection and add the new credentials to the list. This prevents accidentally overwriting\ncredentials and locking out users. A complete view of all credential types is here:\n\n`password`: The existing password credential will be completely replaced with the new configuration. You can provide either a hashed password, a plaintext password (which will be hashed), or enable the password migration hook.\n`oidc`, `saml`: The existing OIDC and SAML credentials will be kept and the new credentials will be added to the list.\n`totp`: The existing TOTP credentials will be replaced with the new configuration.\n`lookup_secret`: The existing Lookup Secret codes will be kept and the new codes will be added to the list.\n`webauthn`, `passkey`: The existing credentials are preserved, new credentials are added, and credentials with matching IDs are updated with new values. If a new `user_handle` is provided, it's added to the identity's identifiers list while preserving previous user handles.\n`code`: To import code credentials, configure your identity schema to use one of the identity traits as an identifier source (`{\"ory.sh/kratos\":{\"code\":{\"identifier\":true\", \"via\":\"email\"}}}`).",
         "operationId": "updateIdentity",
         "parameters": [
           {

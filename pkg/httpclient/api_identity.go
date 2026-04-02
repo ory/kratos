@@ -63,7 +63,7 @@ type IdentityAPI interface {
 
 			Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to
 		[import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
-		for instance passwords, social sign in configurations or multifactor methods.
+		for instance passwords, social sign in configurations, or multifactor methods.
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return IdentityAPICreateIdentityRequest
@@ -329,10 +329,19 @@ type IdentityAPI interface {
 			UpdateIdentity Update an Identity
 
 			This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
-		payload, except credentials, is expected. For partial updates, use the [patchIdentity](https://www.ory.sh/docs/reference/api#tag/identity/operation/patchIdentity) operation.
+		payload (except credentials) is expected.
 
-		A credential can be provided via the `credentials` field in the request body.
-		If provided, the credentials will be imported and added to the existing credentials of the identity.
+		It is possible to update the identity's credentials as well. Using this operation, credentials will not be overwritten
+		but instead added to the list. For example, if a user has a social sign in connection set up, updating the credentials
+		will keep the social sign in connection and add the new credentials to the list. This prevents accidentally overwriting
+		credentials and locking out users. A complete view of all credential types is here:
+
+		`password`: The existing password credential will be completely replaced with the new configuration. You can provide either a hashed password, a plaintext password (which will be hashed), or enable the password migration hook.
+		`oidc`, `saml`: The existing OIDC and SAML credentials will be kept and the new credentials will be added to the list.
+		`totp`: The existing TOTP credentials will be replaced with the new configuration.
+		`lookup_secret`: The existing Lookup Secret codes will be kept and the new codes will be added to the list.
+		`webauthn`, `passkey`: The existing credentials are preserved, new credentials are added, and credentials with matching IDs are updated with new values. If a new `user_handle` is provided, it's added to the identity's identifiers list while preserving previous user handles.
+		`code`: To import code credentials, configure your identity schema to use one of the identity traits as an identifier source (`{"ory.sh/kratos":{"code":{"identifier":true", "via":"email"}}}`).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@param id ID must be set to the ID of identity you want to update
@@ -541,7 +550,7 @@ CreateIdentity Create an Identity
 
 Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to
 [import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
-for instance passwords, social sign in configurations or multifactor methods.
+for instance passwords, social sign in configurations, or multifactor methods.
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return IdentityAPICreateIdentityRequest
@@ -1704,7 +1713,7 @@ type IdentityAPIGetIdentityRequest struct {
 	includeCredential *[]string
 }
 
-// Include Credentials in Response  Include any credential, for example &#x60;password&#x60; or &#x60;oidc&#x60;, in the response. When set to &#x60;oidc&#x60;, This will return the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
+// Include Credentials in Response  Include any credential, for example &#x60;password&#x60; or &#x60;oidc&#x60;, in the response. When set to &#x60;oidc&#x60;, This will return the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.
 func (r IdentityAPIGetIdentityRequest) IncludeCredential(includeCredential []string) IdentityAPIGetIdentityRequest {
 	r.includeCredential = &includeCredential
 	return r
@@ -1860,7 +1869,7 @@ type IdentityAPIGetIdentityByExternalIDRequest struct {
 	includeCredential *[]string
 }
 
-// Include Credentials in Response  Include any credential, for example &#x60;password&#x60; or &#x60;oidc&#x60;, in the response. When set to &#x60;oidc&#x60;, This will return the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
+// Include Credentials in Response  Include any credential, for example &#x60;password&#x60; or &#x60;oidc&#x60;, in the response. When set to &#x60;oidc&#x60;, This will return the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.
 func (r IdentityAPIGetIdentityByExternalIDRequest) IncludeCredential(includeCredential []string) IdentityAPIGetIdentityByExternalIDRequest {
 	r.includeCredential = &includeCredential
 	return r
@@ -2352,7 +2361,7 @@ func (r IdentityAPIListIdentitiesRequest) PreviewCredentialsIdentifierSimilar(pr
 	return r
 }
 
-// Include Credentials in Response  Include any credential, for example &#x60;password&#x60; or &#x60;oidc&#x60;, in the response. When set to &#x60;oidc&#x60;, This will return the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token and the OpenID Connect ID Token if available.
+// Include Credentials in Response  Include any credential, for example &#x60;password&#x60; or &#x60;oidc&#x60;, in the response. When set to &#x60;oidc&#x60;, This will return the initial OAuth 2.0 Access Token, OAuth 2.0 Refresh Token, and the OpenID Connect ID Token if available.
 func (r IdentityAPIListIdentitiesRequest) IncludeCredential(includeCredential []string) IdentityAPIListIdentitiesRequest {
 	r.includeCredential = &includeCredential
 	return r
@@ -3263,10 +3272,19 @@ func (r IdentityAPIUpdateIdentityRequest) Execute() (*Identity, *http.Response, 
 UpdateIdentity Update an Identity
 
 This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
-payload, except credentials, is expected. For partial updates, use the [patchIdentity](https://www.ory.sh/docs/reference/api#tag/identity/operation/patchIdentity) operation.
+payload (except credentials) is expected.
 
-A credential can be provided via the `credentials` field in the request body.
-If provided, the credentials will be imported and added to the existing credentials of the identity.
+It is possible to update the identity's credentials as well. Using this operation, credentials will not be overwritten
+but instead added to the list. For example, if a user has a social sign in connection set up, updating the credentials
+will keep the social sign in connection and add the new credentials to the list. This prevents accidentally overwriting
+credentials and locking out users. A complete view of all credential types is here:
+
+`password`: The existing password credential will be completely replaced with the new configuration. You can provide either a hashed password, a plaintext password (which will be hashed), or enable the password migration hook.
+`oidc`, `saml`: The existing OIDC and SAML credentials will be kept and the new credentials will be added to the list.
+`totp`: The existing TOTP credentials will be replaced with the new configuration.
+`lookup_secret`: The existing Lookup Secret codes will be kept and the new codes will be added to the list.
+`webauthn`, `passkey`: The existing credentials are preserved, new credentials are added, and credentials with matching IDs are updated with new values. If a new `user_handle` is provided, it's added to the identity's identifiers list while preserving previous user handles.
+`code`: To import code credentials, configure your identity schema to use one of the identity traits as an identifier source (`{"ory.sh/kratos":{"code":{"identifier":true", "via":"email"}}}`).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@param id ID must be set to the ID of identity you want to update
