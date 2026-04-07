@@ -24,6 +24,12 @@ type (
 		// required: true
 		Via string `json:"via" db:"via"`
 
+		// BreakGlassForOrganization, when set to an organization ID, allows this
+		// recovery address to bypass SSO enforcement for that organization. This
+		// enables designated users to recover their account via email when the
+		// SSO provider is unavailable.
+		BreakGlassForOrganization uuid.NullUUID `json:"break_glass_for_organization,omitzero" db:"break_glass_for_organization"`
+
 		// IdentityID is a helper struct field for gobuffalo.pop.
 		IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 		// CreatedAt is a helper struct field for gobuffalo.pop.
@@ -39,7 +45,7 @@ func (a RecoveryAddress) GetID() uuid.UUID  { return a.ID }
 
 // Signature returns a unique string representation for the recovery address.
 func (a RecoveryAddress) Signature() string {
-	return fmt.Sprintf("%v|%v|%v|%v", a.Value, a.Via, a.IdentityID, a.NID)
+	return fmt.Sprintf("%v|%v|%v|%v|%v", a.Value, a.Via, a.BreakGlassForOrganization, a.IdentityID, a.NID)
 }
 
 func NewRecoveryEmailAddress(

@@ -1426,9 +1426,8 @@ func (p *IdentityPersister) FindAllRecoveryAddressesForIdentityByRecoveryAddress
 	//
 	// This is all done in one query with a self-join.
 	// We also bound the results for safety.
-	err = p.GetConnection(ctx).RawQuery(
-		`
-SELECT A.id, A.via, A.value, A.identity_id, A.created_at, A.updated_at, A.nid
+	err = p.GetConnection(ctx).RawQuery(`
+SELECT A.id, A.via, A.value, A.identity_id, A.created_at, A.updated_at, A.nid, A.break_glass_for_organization
 FROM identity_recovery_addresses A
 JOIN identity_recovery_addresses B
 ON A.identity_id = B.identity_id

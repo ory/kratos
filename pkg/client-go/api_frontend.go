@@ -1341,14 +1341,21 @@ func (a *FrontendAPIService) CreateBrowserLogoutFlowExecute(r FrontendAPICreateB
 }
 
 type FrontendAPICreateBrowserRecoveryFlowRequest struct {
-	ctx        context.Context
-	ApiService FrontendAPI
-	returnTo   *string
+	ctx          context.Context
+	ApiService   FrontendAPI
+	returnTo     *string
+	skipSettings *string
 }
 
 // The URL to return the browser to after the flow was completed.
 func (r FrontendAPICreateBrowserRecoveryFlowRequest) ReturnTo(returnTo string) FrontendAPICreateBrowserRecoveryFlowRequest {
 	r.returnTo = &returnTo
+	return r
+}
+
+// Skip redirection to the settings UI after the recovery flow was completed. Instead, the user will be redirected to the URL specified in &#x60;return_to&#x60; query parameter or the default return URL if &#x60;return_to&#x60; is not set.
+func (r FrontendAPICreateBrowserRecoveryFlowRequest) SkipSettings(skipSettings string) FrontendAPICreateBrowserRecoveryFlowRequest {
+	r.skipSettings = &skipSettings
 	return r
 }
 
@@ -1404,6 +1411,9 @@ func (a *FrontendAPIService) CreateBrowserRecoveryFlowExecute(r FrontendAPICreat
 
 	if r.returnTo != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "return_to", r.returnTo, "form", "")
+	}
+	if r.skipSettings != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "skip_settings", r.skipSettings, "form", "")
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

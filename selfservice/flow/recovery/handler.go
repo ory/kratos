@@ -158,6 +158,14 @@ type createBrowserRecoveryFlow struct {
 	//
 	// in: query
 	ReturnTo string `json:"return_to"`
+
+	// Skip redirection to the settings UI after the recovery flow was
+	// completed. Instead, the user will be redirected to the URL specified in
+	// `return_to` query parameter or the default return URL if `return_to` is
+	// not set.
+	//
+	// in: query
+	SkipSettings string `json:"skip_settings"`
 }
 
 // swagger:route GET /self-service/recovery/browser frontend createBrowserRecoveryFlow

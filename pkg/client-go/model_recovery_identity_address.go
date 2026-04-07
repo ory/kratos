@@ -22,6 +22,7 @@ var _ MappedNullable = &RecoveryIdentityAddress{}
 
 // RecoveryIdentityAddress struct for RecoveryIdentityAddress
 type RecoveryIdentityAddress struct {
+	BreakGlassForOrganization NullableString `json:"break_glass_for_organization,omitempty"`
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	Id        *string    `json:"id,omitempty"`
@@ -51,6 +52,49 @@ func NewRecoveryIdentityAddress(value string, via string) *RecoveryIdentityAddre
 func NewRecoveryIdentityAddressWithDefaults() *RecoveryIdentityAddress {
 	this := RecoveryIdentityAddress{}
 	return &this
+}
+
+// GetBreakGlassForOrganization returns the BreakGlassForOrganization field value if set, zero value otherwise (both if not set or set to explicit null).
+func (o *RecoveryIdentityAddress) GetBreakGlassForOrganization() string {
+	if o == nil || IsNil(o.BreakGlassForOrganization.Get()) {
+		var ret string
+		return ret
+	}
+	return *o.BreakGlassForOrganization.Get()
+}
+
+// GetBreakGlassForOrganizationOk returns a tuple with the BreakGlassForOrganization field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+// NOTE: If the value is an explicit nil, `nil, true` will be returned
+func (o *RecoveryIdentityAddress) GetBreakGlassForOrganizationOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return o.BreakGlassForOrganization.Get(), o.BreakGlassForOrganization.IsSet()
+}
+
+// HasBreakGlassForOrganization returns a boolean if a field has been set.
+func (o *RecoveryIdentityAddress) HasBreakGlassForOrganization() bool {
+	if o != nil && o.BreakGlassForOrganization.IsSet() {
+		return true
+	}
+
+	return false
+}
+
+// SetBreakGlassForOrganization gets a reference to the given NullableString and assigns it to the BreakGlassForOrganization field.
+func (o *RecoveryIdentityAddress) SetBreakGlassForOrganization(v string) {
+	o.BreakGlassForOrganization.Set(&v)
+}
+
+// SetBreakGlassForOrganizationNil sets the value for BreakGlassForOrganization to be an explicit nil
+func (o *RecoveryIdentityAddress) SetBreakGlassForOrganizationNil() {
+	o.BreakGlassForOrganization.Set(nil)
+}
+
+// UnsetBreakGlassForOrganization ensures that no value is present for BreakGlassForOrganization, not even an explicit nil
+func (o *RecoveryIdentityAddress) UnsetBreakGlassForOrganization() {
+	o.BreakGlassForOrganization.Unset()
 }
 
 // GetCreatedAt returns the CreatedAt field value if set, zero value otherwise.
@@ -207,6 +251,9 @@ func (o RecoveryIdentityAddress) MarshalJSON() ([]byte, error) {
 
 func (o RecoveryIdentityAddress) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
+	if o.BreakGlassForOrganization.IsSet() {
+		toSerialize["break_glass_for_organization"] = o.BreakGlassForOrganization.Get()
+	}
 	if !IsNil(o.CreatedAt) {
 		toSerialize["created_at"] = o.CreatedAt
 	}
@@ -262,6 +309,7 @@ func (o *RecoveryIdentityAddress) UnmarshalJSON(data []byte) (err error) {
 	additionalProperties := make(map[string]interface{})
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "break_glass_for_organization")
 		delete(additionalProperties, "created_at")
 		delete(additionalProperties, "id")
 		delete(additionalProperties, "updated_at")

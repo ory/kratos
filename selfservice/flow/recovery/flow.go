@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"go.opentelemetry.io/otel/trace"
@@ -189,6 +190,33 @@ func (f *Flow) GetState() State                      { return f.State }
 func (Flow) GetFlowName() flow.FlowName              { return flow.RecoveryFlow }
 func (f *Flow) SetState(state State)                 { f.State = state }
 func (f *Flow) GetTransientPayload() json.RawMessage { return f.TransientPayload }
+
+// ShouldSkipSettingsFlow flow returns true iff. `skip_settings` was requested
+// in the URL query parameters.
+func (f *Flow) ShouldSkipSettingsFlow() bool {
+	u, err := url.Parse(f.RequestURL)
+	if err != nil {
+		return false
+	}
+	shouldSkip, _ := strconv.ParseBool(u.Query().Get("skip_settings"))
+
+	return shouldSkip
+}
+
+// SetShouldSkipSettingsFlow encodes shouldSkip in the flow's request URL. The
+// setting can be retreived with `f.ShouldSkipSettingsFlow`
+func (f *Flow) SetShouldSkipSettingsFlow(shouldSkip bool) error {
+	reqUrl, err := url.Parse(f.RequestURL)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	q := reqUrl.Query()
+	q.Set("skip_settings", strconv.FormatBool(shouldSkip))
+	reqUrl.RawQuery = q.Encode()
+	f.RequestURL = reqUrl.String()
+
+	return nil
+}
 
 func (f *Flow) Valid() error {
 	if f.ExpiresAt.Before(time.Now().UTC()) {

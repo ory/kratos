@@ -2138,6 +2138,9 @@
       },
       "recoveryIdentityAddress": {
         "properties": {
+          "break_glass_for_organization": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
           "created_at": {
             "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
             "format": "date-time",
@@ -7007,6 +7010,14 @@
             "description": "The URL to return the browser to after the flow was completed.",
             "in": "query",
             "name": "return_to",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Skip redirection to the settings UI after the recovery flow was\ncompleted. Instead, the user will be redirected to the URL specified in\n`return_to` query parameter or the default return URL if `return_to` is\nnot set.",
+            "in": "query",
+            "name": "skip_settings",
             "schema": {
               "type": "string"
             }

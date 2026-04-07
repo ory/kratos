@@ -297,6 +297,13 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSetToken(sess.Token))
 	}
 
+	if f.ShouldSkipSettingsFlow() {
+		if err := redir.SecureContentNegotiationRedirection(w, r, f, f.RequestURL, s.deps.Writer(), s.deps.Config()); err != nil {
+			return errors.WithStack(err)
+		}
+		return errors.WithStack(flow.ErrCompletedByStrategy)
+	}
+
 	sf, err := s.deps.SettingsHandler().NewFlow(ctx, w, r, sess.Identity, sess, f.Type)
 	if err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))

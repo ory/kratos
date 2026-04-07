@@ -13,6 +13,8 @@ import (
 	"github.com/ory/jsonschema/v3"
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
 
@@ -22,6 +24,7 @@ import (
 
 func TestSchemaExtensionRecovery(t *testing.T) {
 	iid := x.NewUUID()
+	breakGlassOrgID := uuid.NullUUID{UUID: x.NewUUID(), Valid: true}
 	for k, tc := range []struct {
 		expectErr   error
 		schema      string
@@ -209,6 +212,46 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			schema:      "file://./stub/extension/recovery/sms.schema.json",
 			// We get 2 errors: one from the JSON schema `format` validation and one from the Go validation.
 			expectErr: errors.New("I[#/telephoneNumber] S[#/properties/telephoneNumber] validation failed\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"foobar\" is not valid \"tel\"\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"foobar\" is not valid \"tel\""),
+		},
+		{
+			description: "break_glass_for_organization preserved on existing recovery address",
+			doc:         `{"username":"foo@ory.sh"}`,
+			schema:      "file://./stub/extension/recovery/email.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:                     "foo@ory.sh",
+					Via:                       AddressTypeEmail,
+					IdentityID:                iid,
+					BreakGlassForOrganization: breakGlassOrgID,
+				},
+			},
+			existing: []RecoveryAddress{
+				{
+					Value:                     "foo@ory.sh",
+					Via:                       AddressTypeEmail,
+					IdentityID:                iid,
+					BreakGlassForOrganization: breakGlassOrgID,
+				},
+			},
+		},
+		{
+			description: "break_glass null preserved on existing recovery address",
+			doc:         `{"username":"foo@ory.sh"}`,
+			schema:      "file://./stub/extension/recovery/email.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "foo@ory.sh",
+					Via:        AddressTypeEmail,
+					IdentityID: iid,
+				},
+			},
+			existing: []RecoveryAddress{
+				{
+					Value:      "foo@ory.sh",
+					Via:        AddressTypeEmail,
+					IdentityID: iid,
+				},
+			},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d description=%s", k, tc.description), func(t *testing.T) {

@@ -2307,6 +2307,12 @@
             "description": "The URL to return the browser to after the flow was completed.",
             "name": "return_to",
             "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Skip redirection to the settings UI after the recovery flow was\ncompleted. Instead, the user will be redirected to the URL specified in\n`return_to` query parameter or the default return URL if `return_to` is\nnot set.",
+            "name": "skip_settings",
+            "in": "query"
           }
         ],
         "responses": {
@@ -5525,6 +5531,9 @@
         "via"
       ],
       "properties": {
+        "break_glass_for_organization": {
+          "$ref": "#/definitions/NullUUID"
+        },
         "created_at": {
           "description": "CreatedAt is a helper struct field for gobuffalo.pop.",
           "type": "string",
