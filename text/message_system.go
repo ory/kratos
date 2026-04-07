@@ -22,6 +22,14 @@ func NewErrorSystemNoAuthenticationMethodsAvailable() *Message {
 	}
 }
 
+func NewErrorSystemOrganizationNoSSOProvidersAvailable() *Message {
+	return &Message{
+		ID:   ErrorSystemOrganizationNoSSOProvidersAvailable,
+		Text: "Your organization requires SSO authentication, but no SSO provider is configured. Please contact the system administrator.",
+		Type: Error,
+	}
+}
+
 func NewCaptchaContainerMessage() *Message {
 	return &Message{
 		ID:   InfoNodeLabelCaptcha,

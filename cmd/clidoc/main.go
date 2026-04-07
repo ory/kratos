@@ -86,6 +86,7 @@ func init() {
 		"NewErrorValidationVerificationCodeInvalidOrAlreadyUsed":  text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(),
 		"NewErrorSystemGeneric":                                   text.NewErrorSystemGeneric("{reason}"),
 		"NewErrorSystemNoAuthenticationMethodsAvailable":          text.NewErrorSystemNoAuthenticationMethodsAvailable(),
+		"NewErrorSystemOrganizationNoSSOProvidersAvailable":       text.NewErrorSystemOrganizationNoSSOProvidersAvailable(),
 		"NewValidationErrorGeneric":                               text.NewValidationErrorGeneric("{reason}"),
 		"NewValidationErrorRequired":                              text.NewValidationErrorRequired("{property}"),
 		"NewErrorValidationMinLength":                             text.NewErrorValidationMinLength(5, 3),

@@ -16,15 +16,17 @@ context("Account Verification Registration Errors", () => {
   ;[
     {
       login: react.login,
+      verification: react.verification,
       app: "react" as "react",
       profile: "verification",
     },
     {
       login: express.login,
+      verification: express.verification,
       app: "express" as "express",
       profile: "verification",
     },
-  ].forEach(({ profile, login, app }) => {
+  ].forEach(({ profile, login, verification, app }) => {
     describe(`for app ${app}`, () => {
       before(() => {
         cy.deleteMail()
@@ -55,6 +57,7 @@ context("Account Verification Registration Errors", () => {
 
         cy.longCodeLifespan()
 
+        cy.visit(verification)
         cy.get(appPrefix(app) + 'input[name="email"]').should("be.empty")
         cy.get('input[name="email"]').type(identity.email)
         cy.get('button[value="code"]').click()
