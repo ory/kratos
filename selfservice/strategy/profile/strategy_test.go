@@ -73,7 +73,7 @@ func TestStrategyTraits(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.com/")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 

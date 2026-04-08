@@ -181,7 +181,7 @@ func TestOneStepRegistration(t *testing.T) {
 
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.com/")
 	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationFlowStyle, "unified")
 
 	_ = testhelpers.NewErrorTestServer(t, reg)

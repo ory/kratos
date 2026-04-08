@@ -20,7 +20,7 @@ import (
 // checks if the Identity type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &Identity{}
 
-// Identity An [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
+// Identity An [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
 type Identity struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt *time.Time `json:"created_at,omitempty"`

@@ -33,7 +33,7 @@ type webAuthnJavaScript string
 //	<script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
 //	```
 //
-// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 //
 //	Produces:
 //	- text/javascript

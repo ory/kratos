@@ -47,7 +47,7 @@ type FrontendAPI interface {
 
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPICreateBrowserLoginFlowRequest
@@ -125,7 +125,7 @@ type FrontendAPI interface {
 
 		This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPICreateBrowserRegistrationFlowRequest
@@ -185,7 +185,7 @@ type FrontendAPI interface {
 
 		This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPICreateBrowserVerificationFlowRequest
@@ -232,7 +232,7 @@ type FrontendAPI interface {
 
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPICreateNativeLoginFlowRequest
@@ -290,7 +290,7 @@ type FrontendAPI interface {
 
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPICreateNativeRegistrationFlowRequest
@@ -349,7 +349,7 @@ type FrontendAPI interface {
 
 		This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-		More information can be found at [Ory Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+		More information can be found at [Ory Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPICreateNativeVerificationFlowRequest
@@ -411,7 +411,7 @@ type FrontendAPI interface {
 
 		`?id=stub:500` - returns a stub 500 (Internal Server Error) error.
 
-		More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+		More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-facing-errors).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIGetFlowErrorRequest
@@ -447,7 +447,7 @@ type FrontendAPI interface {
 		`session_already_available`: The user is already signed in.
 		`self_service_flow_expired`: The flow is expired and you should request a new one.
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIGetLoginFlowRequest
@@ -514,7 +514,7 @@ type FrontendAPI interface {
 		`session_already_available`: The user is already signed in.
 		`self_service_flow_expired`: The flow is expired and you should request a new one.
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIGetRegistrationFlowRequest
@@ -577,7 +577,7 @@ type FrontendAPI interface {
 		})
 		```
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIGetVerificationFlowRequest
@@ -599,7 +599,7 @@ type FrontendAPI interface {
 		<script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
 		```
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIGetWebAuthnJavaScriptRequest
@@ -763,7 +763,7 @@ type FrontendAPI interface {
 		`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 		Most likely used in Social Sign In flows.
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIUpdateLoginFlowRequest
@@ -789,7 +789,7 @@ type FrontendAPI interface {
 		with browsers (Chrome, Firefox, ...). For API clients you can
 		call the `/self-service/logout/api` URL directly with the Ory Session Token.
 
-		More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+		More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.com/docs/next/kratos/self-service/flows/user-logout).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIUpdateLogoutFlowRequest
@@ -858,7 +858,7 @@ type FrontendAPI interface {
 		`browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 		Most likely used in Social Sign In flows.
 
-		More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+		More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIUpdateRegistrationFlowRequest
@@ -943,7 +943,7 @@ type FrontendAPI interface {
 		(if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 		a new Verification Flow ID which contains an error message that the verification link was invalid.
 
-		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+		More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 
 			@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 			@return FrontendAPIUpdateVerificationFlowRequest
@@ -1048,7 +1048,7 @@ option.
 
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPICreateBrowserLoginFlowRequest
@@ -1553,7 +1553,7 @@ If this endpoint is called via an AJAX request, the response contains the regist
 
 This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPICreateBrowserRegistrationFlowRequest
@@ -1876,7 +1876,7 @@ If this endpoint is called via an AJAX request, the response contains the recove
 
 This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPICreateBrowserVerificationFlowRequest
@@ -2181,7 +2181,7 @@ In the case of an error, the `error.id` of the JSON response body can be one of:
 
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPICreateNativeLoginFlowRequest
@@ -2501,7 +2501,7 @@ In the case of an error, the `error.id` of the JSON response body can be one of:
 
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPICreateNativeRegistrationFlowRequest
@@ -2799,7 +2799,7 @@ you vulnerable to a variety of CSRF attacks.
 
 This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 
-More information can be found at [Ory Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+More information can be found at [Ory Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPICreateNativeVerificationFlowRequest
@@ -3400,7 +3400,7 @@ This endpoint supports stub values to help you implement the error UI:
 
 `?id=stub:500` - returns a stub 500 (Internal Server Error) error.
 
-More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-facing-errors).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIGetFlowErrorRequest
@@ -3572,7 +3572,7 @@ This request may fail due to several reasons. The `error.id` can be one of:
 `session_already_available`: The user is already signed in.
 `self_service_flow_expired`: The flow is expired and you should request a new one.
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIGetLoginFlowRequest
@@ -3924,7 +3924,7 @@ This request may fail due to several reasons. The `error.id` can be one of:
 `session_already_available`: The user is already signed in.
 `self_service_flow_expired`: The flow is expired and you should request a new one.
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIGetRegistrationFlowRequest
@@ -4304,7 +4304,7 @@ res.render('verification', flow)
 })
 ```
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIGetVerificationFlowRequest
@@ -4449,7 +4449,7 @@ If you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you 
 <script src="https://public-kratos.example.org/.well-known/ory/webauthn.js" type="script" async />
 ```
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIGetWebAuthnJavaScriptRequest
@@ -4560,13 +4560,13 @@ func (r FrontendAPIListMySessionsRequest) Page(page int64) FrontendAPIListMySess
 	return r
 }
 
-// Page Size  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+// Page Size  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.com/docs/ecosystem/api-design#pagination).
 func (r FrontendAPIListMySessionsRequest) PageSize(pageSize int64) FrontendAPIListMySessionsRequest {
 	r.pageSize = &pageSize
 	return r
 }
 
-// Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+// Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.com/docs/ecosystem/api-design#pagination).
 func (r FrontendAPIListMySessionsRequest) PageToken(pageToken string) FrontendAPIListMySessionsRequest {
 	r.pageToken = &pageToken
 	return r
@@ -5297,7 +5297,7 @@ case of an error, the `error.id` of the JSON response body can be one of:
 `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 Most likely used in Social Sign In flows.
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIUpdateLoginFlowRequest
@@ -5486,7 +5486,7 @@ This endpoint is NOT INTENDED for API clients and only works
 with browsers (Chrome, Firefox, ...). For API clients you can
 call the `/self-service/logout/api` URL directly with the Ory Session Token.
 
-More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.com/docs/next/kratos/self-service/flows/user-logout).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIUpdateLogoutFlowRequest
@@ -5836,7 +5836,7 @@ case of an error, the `error.id` of the JSON response body can be one of:
 `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 Most likely used in Social Sign In flows.
 
-More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIUpdateRegistrationFlowRequest
@@ -6278,7 +6278,7 @@ does not have any API capabilities. The server responds with a HTTP 303 See Othe
 (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 a new Verification Flow ID which contains an error message that the verification link was invalid.
 
-More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
 	@return FrontendAPIUpdateVerificationFlowRequest

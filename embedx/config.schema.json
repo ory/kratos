@@ -40,7 +40,7 @@
     },
     "defaultReturnTo": {
       "title": "Redirect browsers to set URL per default",
-      "description": "Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).",
+      "description": "Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.com/kratos/docs/concepts/browser-redirect-flow-completion).",
       "type": "string",
       "format": "uri-reference",
       "examples": ["https://my-app.com/dashboard", "/dashboard"]
@@ -243,7 +243,7 @@
                 "parse": {
                   "type": "boolean",
                   "default": false,
-                  "description": "If enabled parses the response before saving the flow result. Set this value to true if you would like to modify the identity, for example identity metadata, before saving it during registration. When enabled, you may also abort the registration, verification, login or settings flow due to, for example, a validation flow. Head over to the [web hook documentation](https://www.ory.sh/docs/kratos/hooks/configure-hooks) for more information."
+                  "description": "If enabled parses the response before saving the flow result. Set this value to true if you would like to modify the identity, for example identity metadata, before saving it during registration. When enabled, you may also abort the registration, verification, login or settings flow due to, for example, a validation flow. Head over to the [web hook documentation](https://www.ory.com/docs/kratos/hooks/configure-hooks) for more information."
                 }
               },
               "not": {
@@ -1225,7 +1225,7 @@
                   "type": "string",
                   "format": "uri-reference",
                   "examples": ["https://my-app.com/user/settings"],
-                  "default": "https://www.ory.sh/kratos/docs/fallback/settings"
+                  "default": "https://www.ory.com/kratos/docs/fallback/settings"
                 },
                 "lifespan": {
                   "type": "string",
@@ -1272,7 +1272,7 @@
                 "enabled": {
                   "type": "boolean",
                   "title": "Enable User Registration",
-                  "description": "If set to true will enable [User Registration](https://www.ory.sh/kratos/docs/self-service/flows/user-registration/).",
+                  "description": "If set to true will enable [User Registration](https://www.ory.com/kratos/docs/self-service/flows/user-registration/).",
                   "default": true
                 },
                 "login_hints": {
@@ -1287,7 +1287,7 @@
                   "type": "string",
                   "format": "uri-reference",
                   "examples": ["https://my-app.com/signup"],
-                  "default": "https://www.ory.sh/kratos/docs/fallback/registration"
+                  "default": "https://www.ory.com/kratos/docs/fallback/registration"
                 },
                 "lifespan": {
                   "type": "string",
@@ -1327,7 +1327,7 @@
                   "type": "string",
                   "format": "uri-reference",
                   "examples": ["https://my-app.com/login"],
-                  "default": "https://www.ory.sh/kratos/docs/fallback/login"
+                  "default": "https://www.ory.com/kratos/docs/fallback/login"
                 },
                 "lifespan": {
                   "type": "string",
@@ -1358,7 +1358,7 @@
                 "enabled": {
                   "type": "boolean",
                   "title": "Enable Email/Phone Verification",
-                  "description": "If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.sh/kratos/docs/self-service/flows/verify-email-account-activation/).",
+                  "description": "If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.com/kratos/docs/self-service/flows/verify-email-account-activation/).",
                   "default": false
                 },
                 "ui_url": {
@@ -1367,7 +1367,7 @@
                   "type": "string",
                   "format": "uri-reference",
                   "examples": ["https://my-app.com/verify"],
-                  "default": "https://www.ory.sh/kratos/docs/fallback/verification"
+                  "default": "https://www.ory.com/kratos/docs/fallback/verification"
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterVerification"
@@ -1406,7 +1406,7 @@
                 "enabled": {
                   "type": "boolean",
                   "title": "Enable Account Recovery",
-                  "description": "If set to true will enable [Account Recovery](https://www.ory.sh/kratos/docs/self-service/flows/password-reset-account-recovery/).",
+                  "description": "If set to true will enable [Account Recovery](https://www.ory.com/kratos/docs/self-service/flows/password-reset-account-recovery/).",
                   "default": false
                 },
                 "ui_url": {
@@ -1415,7 +1415,7 @@
                   "type": "string",
                   "format": "uri-reference",
                   "examples": ["https://my-app.com/verify"],
-                  "default": "https://www.ory.sh/kratos/docs/fallback/recovery"
+                  "default": "https://www.ory.com/kratos/docs/fallback/recovery"
                 },
                 "after": {
                   "$ref": "#/definitions/selfServiceAfterRecovery"
@@ -1456,7 +1456,7 @@
                   "type": "string",
                   "format": "uri-reference",
                   "examples": ["https://my-app.com/kratos-error"],
-                  "default": "https://www.ory.sh/kratos/docs/fallback/error"
+                  "default": "https://www.ory.com/kratos/docs/fallback/error"
                 }
               }
             }
@@ -1829,7 +1829,7 @@
                           "description": "An explicit RP origin. If left empty, this defaults to `id`, prepended with the current protocol schema (HTTP or HTTPS).",
                           "format": "uri",
                           "deprecationMessage": "This field is deprecated. Use `origins` instead.",
-                          "examples": ["https://www.ory.sh"]
+                          "examples": ["https://www.ory.com"]
                         },
                         "origins": {
                           "type": "array",
@@ -1839,7 +1839,7 @@
                             "type": "string",
                             "format": "uri",
                             "examples": [
-                              "https://www.ory.sh",
+                              "https://www.ory.com",
                               "https://auth.ory.sh"
                             ]
                           }
@@ -1850,7 +1850,7 @@
                           "description": "An icon to help the user identify this RP.",
                           "format": "uri",
                           "deprecationMessage": "This field is deprecated and ignored due to security considerations.",
-                          "examples": ["https://www.ory.sh/an-icon.png"]
+                          "examples": ["https://www.ory.com/an-icon.png"]
                         }
                       },
                       "type": "object",
@@ -1944,7 +1944,7 @@
                           "items": {
                             "type": "string",
                             "examples": [
-                              "https://www.ory.sh",
+                              "https://www.ory.com",
                               "https://auth.ory.sh"
                             ]
                           }

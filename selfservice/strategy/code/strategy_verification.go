@@ -93,7 +93,7 @@ type updateVerificationFlowWithCodeMethod struct {
 	// If the provided address belongs to a valid account, a verification email or SMS will be sent.
 	//
 	// If you want to notify the email address if the account does not exist, see
-	// the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)
+	// the [notify_unknown_recipients flag](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)
 	//
 	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
 	//

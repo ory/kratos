@@ -1323,7 +1323,7 @@ func TestStrategy(t *testing.T) {
 			subject = fmt.Sprintf("incomplete-data@%s.ory.sh", tc.name)
 			scope = []string{"openid"}
 			claims = idTokenClaims{}
-			claims.traits.website = "https://www.ory.sh/kratos"
+			claims.traits.website = "https://www.ory.com/kratos"
 			claims.traits.groups = []string{"group1", "group2"}
 			claims.metadataPublic.picture = "picture.png"
 			claims.metadataAdmin.phoneNumber = "911"
@@ -1338,7 +1338,7 @@ func TestStrategy(t *testing.T) {
 					assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
 					assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
 					assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
-					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body)  // make sure the field is being echoed
+					assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body) // make sure the field is being echoed
 				})
 
 				t.Run("case=should pass registration with valid data", func(t *testing.T) {
@@ -1346,7 +1346,7 @@ func TestStrategy(t *testing.T) {
 					action := assertFormValues(t, r.ID, tc.provider)
 					res, body := makeRequest(t, tc.provider, action, url.Values{"traits.name": {"valid-name"}})
 					assertIdentity(t, res, body)
-					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+					assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 					assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
 					assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
 				})
@@ -1364,7 +1364,7 @@ func TestStrategy(t *testing.T) {
 					assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
 					assert.Equal(t, "traits.extra_data", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.extra_data).attributes.name").String(), "%s", body)        // make sure the field is being echoed
 					assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
-					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body)  // make sure the field is being echoed
+					assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body) // make sure the field is being echoed
 				})
 
 				t.Run("case=should pass registration with selected schema with valid data", func(t *testing.T) {
@@ -1372,7 +1372,7 @@ func TestStrategy(t *testing.T) {
 					action := assertFormValues(t, r.ID, tc.provider)
 					res, body := makeRequest(t, tc.provider, action, url.Values{"traits.name": {"valid-name-2"}, "traits.extra_data": {"extra-data"}})
 					assertIdentity(t, res, body)
-					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+					assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 					assert.Equal(t, "valid-name-2", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
 					assert.Equal(t, "extra-data", gjson.GetBytes(body, "identity.traits.extra_data").String(), "%s", body)
 					assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)

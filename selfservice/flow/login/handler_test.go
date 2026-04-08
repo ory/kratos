@@ -791,7 +791,7 @@ func TestFlowLifecycle(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
 			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
-				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
+				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.com", "https://example.com"})
 				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderOverrideReturnTo, true)
 
 				t.Cleanup(func() {
@@ -817,7 +817,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 				require.NoError(t, res.Body.Close())
 
-				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
+				assert.Equal(t, "https://www.ory.com", gjson.GetBytes(body, "return_to").Value())
 			})
 
 			t.Run("case=invalid oauth2 login challenge returns 400 Bad Request", func(t *testing.T) {

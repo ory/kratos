@@ -30,7 +30,7 @@ func TestVerifyRequest(t *testing.T) {
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeBrowser, false, nosurfx.FakeCSRFTokenGenerator, nosurfx.FakeCSRFToken), nil)
 	require.NoError(t, flow.EnsureCSRF(reg, &http.Request{}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""))
 	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
-		Header: http.Header{"Origin": {"https://www.ory.sh"}},
+		Header: http.Header{"Origin": {"https://www.ory.com"}},
 	}, flow.TypeAPI, false, nosurfx.FakeCSRFTokenGenerator, ""), flow.ErrOriginHeaderNeedsBrowserFlow.Error())
 	require.EqualError(t, flow.EnsureCSRF(reg, &http.Request{
 		Header: http.Header{"Cookie": {"cookie=ory"}},

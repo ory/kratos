@@ -165,7 +165,7 @@ func TestWebHooks(t *testing.T) {
 						"Some-Cookie-2": "Some-other-Cookie-Value",
 						"Some-Cookie-3": "Third-Cookie-Value"
 					}
-				}`, f.GetID(), req.Method, "http://www.ory.sh/some_end_point")
+				}`, f.GetID(), req.Method, "http://www.ory.com/some_end_point")
 		if len(req.Header) != 0 {
 			if ua := req.Header.Get("User-Agent"); ua != "" {
 				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
@@ -187,7 +187,7 @@ func TestWebHooks(t *testing.T) {
 						"Some-Cookie-3": "Third-Cookie-Value"
 					},
 					"transient_payload": %s
-				}`, f.GetID(), s.Identity.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp))
+				}`, f.GetID(), s.Identity.ID, req.Method, "http://www.ory.com/some_end_point", string(tp))
 		if len(req.Header) != 0 {
 			if ua := req.Header.Get("User-Agent"); ua != "" {
 				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
@@ -210,7 +210,7 @@ func TestWebHooks(t *testing.T) {
 						"Some-Cookie-3": "Third-Cookie-Value"
 					},
 					"transient_payload": %s
-				}`, f.GetID(), s.Identity.ID, s.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp))
+				}`, f.GetID(), s.Identity.ID, s.ID, req.Method, "http://www.ory.com/some_end_point", string(tp))
 		if len(req.Header) != 0 {
 			if ua := req.Header.Get("User-Agent"); ua != "" {
 				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
@@ -353,7 +353,7 @@ func TestWebHooks(t *testing.T) {
 						t.Run("method="+method, func(t *testing.T) {
 							f := tc.createFlow()
 							req := (&http.Request{
-								Host: "www.ory.sh",
+								Host: "www.ory.com",
 								Header: map[string][]string{
 									"Some-Header":    {"Some-Value"},
 									"User-Agent":     {"Foo-Bar-Browser"},
@@ -647,7 +647,7 @@ func TestWebHooks(t *testing.T) {
 				t.Run("method="+method, func(t *testing.T) {
 					f := tc.createFlow()
 					req := &http.Request{
-						Host: "www.ory.sh",
+						Host: "www.ory.com",
 						Header: map[string][]string{
 							"Some-Header":       {"Some-Value"},
 							"X-Forwarded-Proto": {"https"},
@@ -692,7 +692,7 @@ func TestWebHooks(t *testing.T) {
 		run := func(t *testing.T, id identity.Identity, responseCode int, response []byte) *identity.WithCredentialsAndAdminMetadataInJSON {
 			f := &registration.Flow{ID: x.NewUUID()}
 			req := &http.Request{
-				Host:       "www.ory.sh",
+				Host:       "www.ory.com",
 				Header:     map[string][]string{},
 				RequestURI: "/some_end_point",
 				Method:     http.MethodPost,
@@ -800,7 +800,7 @@ func TestWebHooks(t *testing.T) {
 		ts := newServer(webHookHttpCodeEndPoint(200))
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
-			Host:   "www.ory.sh",
+			Host:   "www.ory.com",
 			TLS:    new(tls.ConnectionState),
 			URL:    &url.URL{Path: "/some_end_point"},
 
@@ -834,7 +834,7 @@ func TestWebHooks(t *testing.T) {
 			ts := newServer(webHookHttpCodeWithBodyEndPoint(t, 200, []byte(`{"identity":{"traits":{"email":"some@other-example.org"}}}`)))
 			req := &http.Request{
 				Header: map[string][]string{"Some-Header": {"Some-Value"}},
-				Host:   "www.ory.sh",
+				Host:   "www.ory.com",
 				TLS:    new(tls.ConnectionState),
 				URL:    &url.URL{Path: "/some_end_point"},
 
@@ -873,7 +873,7 @@ func TestWebHooks(t *testing.T) {
 		ts := newServer(webHookHttpCodeEndPoint(200))
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
-			Host:   "www.ory.sh",
+			Host:   "www.ory.com",
 			TLS:    new(tls.ConnectionState),
 			URL:    &url.URL{Path: "/some_end_point"},
 			Method: http.MethodPost,
@@ -894,7 +894,7 @@ func TestWebHooks(t *testing.T) {
 		ts := newServer(webHookHttpCodeEndPoint(200))
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
-			Host:   "www.ory.sh",
+			Host:   "www.ory.com",
 			TLS:    new(tls.ConnectionState),
 			URL:    &url.URL{Path: "/some_end_point"},
 			Method: http.MethodPost,
@@ -918,7 +918,7 @@ func TestWebHooks(t *testing.T) {
 		t.Parallel()
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
-			Host:   "www.ory.sh",
+			Host:   "www.ory.com",
 			TLS:    new(tls.ConnectionState),
 			URL:    &url.URL{Path: "/some_end_point"},
 
@@ -957,7 +957,7 @@ func TestWebHooks(t *testing.T) {
 
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
-			Host:   "www.ory.sh",
+			Host:   "www.ory.com",
 			TLS:    new(tls.ConnectionState),
 			URL:    &url.URL{Path: "/some_end_point"},
 			Method: http.MethodPost,
@@ -997,7 +997,7 @@ func TestWebHooks(t *testing.T) {
 
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
-			Host:   "www.ory.sh",
+			Host:   "www.ory.com",
 			TLS:    new(tls.ConnectionState),
 			URL:    &url.URL{Path: "/some_end_point"},
 			Method: http.MethodPost,
@@ -1036,7 +1036,7 @@ func TestWebHooks(t *testing.T) {
 			ts := newServer(webHookHttpCodeEndPoint(tc.code))
 			req := &http.Request{
 				Header: map[string][]string{"Some-Header": {"Some-Value"}},
-				Host:   "www.ory.sh",
+				Host:   "www.ory.com",
 				TLS:    new(tls.ConnectionState),
 				URL:    &url.URL{Path: "/some_end_point"},
 				Method: http.MethodPost,
@@ -1076,7 +1076,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
-		Host:   "www.ory.sh",
+		Host:   "www.ory.com",
 		TLS:    new(tls.ConnectionState),
 		URL:    &url.URL{Path: "/some_end_point"},
 		Method: http.MethodPost,
@@ -1118,7 +1118,7 @@ func TestDisallowPrivateIPRanges(t *testing.T) {
 		t.Parallel()
 		req := &http.Request{
 			Header: map[string][]string{"Some-Header": {"Some-Value"}},
-			Host:   "www.ory.sh",
+			Host:   "www.ory.com",
 			TLS:    new(tls.ConnectionState),
 			URL:    &url.URL{Path: "/some_end_point"},
 			Method: http.MethodPost,
@@ -1149,7 +1149,7 @@ func TestAsyncWebhook(t *testing.T) {
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
-		Host:   "www.ory.sh",
+		Host:   "www.ory.com",
 		TLS:    new(tls.ConnectionState),
 		URL:    &url.URL{Path: "/some_end_point"},
 		Method: http.MethodPost,
@@ -1222,7 +1222,7 @@ func TestWebhookEvents(t *testing.T) {
 
 	req := &http.Request{
 		Header: map[string][]string{"Some-Header": {"Some-Value"}},
-		Host:   "www.ory.sh",
+		Host:   "www.ory.com",
 		TLS:    new(tls.ConnectionState),
 		URL:    &url.URL{Path: "/some_end_point"},
 		Method: http.MethodPost,

@@ -82,7 +82,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	t.Run("oauth2 with session and skip=false is redirected to login", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
-		fakeHydra.RequestURL = "https://www.ory.sh/oauth2/auth?audience=&client_id=foo&login_verifier="
+		fakeHydra.RequestURL = "https://www.ory.com/oauth2/auth?audience=&client_id=foo&login_verifier="
 		fakeHydra.Skip = false
 
 		client := testhelpers.NewClientWithCookies(t)
@@ -97,7 +97,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
 		fakeHydra.Skip = true
-		fakeHydra.RequestURL = "https://www.ory.sh/oauth2/auth?audience=&client_id=foo&login_verifier="
+		fakeHydra.RequestURL = "https://www.ory.com/oauth2/auth?audience=&client_id=foo&login_verifier="
 
 		client := testhelpers.NewClientWithCookies(t)
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {

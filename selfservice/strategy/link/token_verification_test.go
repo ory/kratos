@@ -24,7 +24,7 @@ import (
 func TestVerificationToken(t *testing.T) {
 	conf, _ := pkg.NewFastRegistryWithMocks(t)
 
-	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 	t.Run("func=NewSelfServiceVerificationToken", func(t *testing.T) {
 		t.Run("case=creates unique tokens", func(t *testing.T) {
 			f, err := verification.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)

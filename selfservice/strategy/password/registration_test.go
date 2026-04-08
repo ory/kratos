@@ -670,7 +670,7 @@ func TestRegistration(t *testing.T) {
 			//  We set default to phone and select email in InitializeRegistrationFlowViaBrowser
 			conf.MustSet(t.Context(), config.ViperKeyDefaultIdentitySchemaID, "phone")
 
-			conf.MustSet(t.Context(), config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, "https://www.ory.sh")
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, "https://www.ory.com")
 
 			browserClient := testhelpers.NewClientWithCookies(t)
 

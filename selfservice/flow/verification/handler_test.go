@@ -121,7 +121,7 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
-		returnTo := "https://www.ory.sh"
+		returnTo := "https://www.ory.com"
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)

@@ -32,7 +32,7 @@ func TestVerificationCode(t *testing.T) {
 		}
 	}
 
-	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 	t.Run("method=Validate", func(t *testing.T) {
 		t.Parallel()
 

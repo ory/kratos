@@ -310,7 +310,7 @@ type updateLogoutFlow struct {
 // with browsers (Chrome, Firefox, ...). For API clients you can
 // call the `/self-service/logout/api` URL directly with the Ory Session Token.
 //
-// More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+// More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.com/docs/next/kratos/self-service/flows/user-logout).
 //
 //	Produces:
 //	- application/json

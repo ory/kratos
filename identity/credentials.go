@@ -28,7 +28,7 @@ import (
 // Generally, "aal1" implies that one authentication factor was used while AAL2 implies that two factors (e.g.
 // password + TOTP) have been used.
 //
-// To learn more about these levels please head over to: https://www.ory.sh/kratos/docs/concepts/credentials
+// To learn more about these levels please head over to: https://www.ory.com/kratos/docs/concepts/credentials
 //
 // swagger:model authenticatorAssuranceLevel
 type AuthenticatorAssuranceLevel string

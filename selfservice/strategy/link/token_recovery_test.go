@@ -24,7 +24,7 @@ import (
 func TestRecoveryToken(t *testing.T) {
 	conf, _ := pkg.NewFastRegistryWithMocks(t)
 
-	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 	t.Run("func=NewSelfServiceRecoveryToken", func(t *testing.T) {
 		t.Run("case=creates unique tokens", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)

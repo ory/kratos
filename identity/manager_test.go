@@ -815,7 +815,7 @@ func TestManagerNoDefaultNamedSchema(t *testing.T) {
 		config.ViperKeyIdentitySchemas: config.Schemas{
 			{ID: "user_v0", URL: "file://./stub/manager.schema.json"},
 		},
-		config.ViperKeyPublicBaseURL: "https://www.ory.sh/",
+		config.ViperKeyPublicBaseURL: "https://www.ory.com/",
 	}))
 
 	t.Run("case=should create identity with default schema", func(t *testing.T) {

@@ -46,7 +46,7 @@ func (lt State) IsValid() error {
 
 // Identity represents an Ory Kratos identity
 //
-// An [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
+// An [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
 //
 // swagger:model identity
 type Identity struct {

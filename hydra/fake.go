@@ -28,7 +28,7 @@ var _ Hydra = &FakeHydra{}
 
 func NewFake() *FakeHydra {
 	return &FakeHydra{
-		RequestURL: "https://www.ory.sh",
+		RequestURL: "https://www.ory.com",
 	}
 }
 

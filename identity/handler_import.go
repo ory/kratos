@@ -203,7 +203,7 @@ func (h *Handler) ImportPasswordCredentials(ctx context.Context, i *Identity, cr
 	}
 
 	if !(hash.IsValidHashFormat(hashed)) {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The imported password does not match any known hash format. For more information see https://www.ory.sh/dr/2"))
+		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The imported password does not match any known hash format. For more information see https://www.ory.com/dr/2"))
 	}
 
 	return i.SetCredentialsWithConfig(CredentialsTypePassword, Credentials{}, CredentialsPassword{HashedPassword: string(hashed)})

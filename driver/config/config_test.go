@@ -583,11 +583,11 @@ func TestViperProvider_Defaults(t *testing.T) {
 
 	t.Run("suite=ui_url", func(t *testing.T) {
 		p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI(ctx).String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI(ctx).String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/registration", p.SelfServiceFlowRegistrationUI(ctx).String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/recovery", p.SelfServiceFlowRecoveryUI(ctx).String())
-		assert.Equal(t, "https://www.ory.sh/kratos/docs/fallback/verification", p.SelfServiceFlowVerificationUI(ctx).String())
+		assert.Equal(t, "https://www.ory.com/kratos/docs/fallback/login", p.SelfServiceFlowLoginUI(ctx).String())
+		assert.Equal(t, "https://www.ory.com/kratos/docs/fallback/settings", p.SelfServiceFlowSettingsUI(ctx).String())
+		assert.Equal(t, "https://www.ory.com/kratos/docs/fallback/registration", p.SelfServiceFlowRegistrationUI(ctx).String())
+		assert.Equal(t, "https://www.ory.com/kratos/docs/fallback/recovery", p.SelfServiceFlowRecoveryUI(ctx).String())
+		assert.Equal(t, "https://www.ory.com/kratos/docs/fallback/verification", p.SelfServiceFlowVerificationUI(ctx).String())
 	})
 }
 
@@ -597,15 +597,15 @@ func TestViperProvider_ReturnTo(t *testing.T) {
 	l := logrusx.New("", "")
 	p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
 
-	p.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
-	assert.Equal(t, "https://www.ory.sh/", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
+	p.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.com/")
+	assert.Equal(t, "https://www.ory.com/", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.com/")).String())
+	assert.Equal(t, "https://www.ory.com/", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.com/")).String())
 
-	p.MustSet(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.sh/recovery")
-	assert.Equal(t, "https://www.ory.sh/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
+	p.MustSet(ctx, config.ViperKeySelfServiceRecoveryBrowserDefaultReturnTo, "https://www.ory.com/recovery")
+	assert.Equal(t, "https://www.ory.com/recovery", p.SelfServiceFlowRecoveryReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.com/")).String())
 
-	p.MustSet(ctx, config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.sh/verification")
-	assert.Equal(t, "https://www.ory.sh/verification", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.sh/")).String())
+	p.MustSet(ctx, config.ViperKeySelfServiceVerificationBrowserDefaultReturnTo, "https://www.ory.com/verification")
+	assert.Equal(t, "https://www.ory.com/verification", p.SelfServiceFlowVerificationReturnTo(ctx, urlx.ParseOrPanic("https://www.ory.com/")).String())
 }
 
 func TestSession(t *testing.T) {

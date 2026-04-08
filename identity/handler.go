@@ -247,7 +247,7 @@ func parseListIdentitiesParameters(r *http.Request) (params ListIdentityParamete
 //
 // # List Identities
 //
-// Lists all [identities](https://www.ory.sh/docs/kratos/concepts/identity-user-model) in the system. Note: filters cannot be combined.
+// Lists all [identities](https://www.ory.com/docs/kratos/concepts/identity-user-model) in the system. Note: filters cannot be combined.
 //
 //	Produces:
 //	- application/json
@@ -357,7 +357,7 @@ type getIdentityByExternalID struct {
 //
 // # Get an Identity
 //
-// Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its ID. You can optionally
+// Return an [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model) by its ID. You can optionally
 // include credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.
 //
 //	Consumes:
@@ -409,7 +409,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 //
 // # Get an Identity by its External ID
 //
-// Return an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) by its external ID. You can optionally
+// Return an [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model) by its external ID. You can optionally
 // include credentials (e.g. social sign in connections) in the response by using the `include_credential` query parameter.
 //
 //	Consumes:
@@ -643,7 +643,7 @@ type AdminIdentityImportCredentialsPassword struct {
 //
 // swagger:model identityWithCredentialsPasswordConfig
 type AdminIdentityImportCredentialsPasswordConfig struct {
-	// The hashed password in [PHC format](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities#hashed-passwords)
+	// The hashed password in [PHC format](https://www.ory.com/docs/kratos/manage-identities/import-user-accounts-identities#hashed-passwords)
 	HashedPassword string `json:"hashed_password"`
 
 	// The password in plain text if no hash is available.
@@ -728,8 +728,8 @@ type AdminCreateIdentityImportCredentialsSAMLProvider struct {
 //
 // # Create an Identity
 //
-// Create an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to
-// [import credentials](https://www.ory.sh/docs/kratos/manage-identities/import-user-accounts-identities)
+// Create an [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model).  This endpoint can also be used to
+// [import credentials](https://www.ory.com/docs/kratos/manage-identities/import-user-accounts-identities)
 // for instance passwords, social sign in configurations, or multifactor methods.
 //
 //	Consumes:
@@ -1007,7 +1007,7 @@ type UpdateIdentityBody struct {
 //
 // # Update an Identity
 //
-// This endpoint updates an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model). The full identity
+// This endpoint updates an [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model). The full identity
 // payload (except credentials) is expected.
 //
 // It is possible to update the identity's credentials as well. Using this operation, credentials will not be overwritten
@@ -1116,7 +1116,7 @@ type deleteIdentity struct {
 //
 // # Delete an Identity
 //
-// Calling this endpoint irrecoverably and permanently deletes the [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) given its ID. This action can not be undone.
+// Calling this endpoint irrecoverably and permanently deletes the [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model) given its ID. This action can not be undone.
 // This endpoint returns 204 when the identity was deleted or 404 if the identity was not found.
 //
 //	Produces:
@@ -1164,7 +1164,7 @@ type patchIdentity struct {
 //
 // # Patch an Identity
 //
-// Partially updates an [identity's](https://www.ory.sh/docs/kratos/concepts/identity-user-model) field using [JSON Patch](https://jsonpatch.com/).
+// Partially updates an [identity's](https://www.ory.com/docs/kratos/concepts/identity-user-model) field using [JSON Patch](https://jsonpatch.com/).
 // The fields `id`, `stateChangedAt` and `credentials` can not be updated using this method.
 //
 //	Consumes:
@@ -1275,7 +1275,7 @@ type _ struct {
 //
 // # Delete a credential for a specific identity
 //
-// Delete an [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) credential by its type.
+// Delete an [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model) credential by its type.
 // You cannot delete passkeys or code auth credentials through this API.
 //
 //	Consumes:
