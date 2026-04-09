@@ -164,6 +164,36 @@ func (Session) DefaultPageToken() keysetpagination.PageToken {
 
 func (Session) TableName() string { return "sessions" }
 
+// AdminSession is a Session that preserves metadata_admin on the embedded
+// identity during JSON marshaling. Use this type (or AdminSessions for slices)
+// when writing responses from admin endpoints.
+type AdminSession Session
+
+func (s AdminSession) MarshalJSON() ([]byte, error) {
+	type sessionAlias Session
+	type adminSession struct {
+		sessionAlias
+		Identity *identity.WithAdminMetadataInJSON `json:"identity"`
+	}
+	session := Session(s)
+	session.Active = session.IsActive()
+
+	return json.Marshal(adminSession{
+		sessionAlias: sessionAlias(session),
+		Identity:     (*identity.WithAdminMetadataInJSON)(session.Identity),
+	})
+}
+
+// AdminSessions converts a slice of Session to a slice of AdminSession for
+// admin endpoint responses that need to include metadata_admin.
+func AdminSessions(sessions []Session) []AdminSession {
+	result := make([]AdminSession, len(sessions))
+	for i, s := range sessions {
+		result[i] = AdminSession(s)
+	}
+	return result
+}
+
 func (s *Session) CompletedLoginForMethod(method AuthenticationMethod) {
 	method.CompletedAt = time.Now().UTC()
 	s.AMR = append(s.AMR, method)

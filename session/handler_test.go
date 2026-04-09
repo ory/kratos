@@ -506,6 +506,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			{Method: identity.CredentialsTypePassword, CompletedAt: time.Now().UTC().Round(time.Second)},
 			{Method: identity.CredentialsTypeOIDC, CompletedAt: time.Now().UTC().Round(time.Second)},
 		}
+		s.Identity.MetadataAdmin = []byte(`{"admin":"data"}`)
 		require.NoError(t, reg.Persister().CreateIdentity(t.Context(), s.Identity))
 
 		var expectedSessionDevice Device
@@ -569,6 +570,9 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 					assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "id").String())
 					assert.Equal(t, tc.expectedIdentityId, gjson.GetBytes(body, "identity.id").String())
 					assert.EqualValuesf(t, tc.expectedDevices, gjson.GetBytes(body, "devices.#").Int(), "%s", gjson.GetBytes(body, "devices").Raw)
+					if tc.expectedIdentityId != "" {
+						assert.True(t, gjson.GetBytes(body, "identity.metadata_admin").Exists(), "expected metadata_admin to be present in admin session response, body: %s", body)
+					}
 				})
 			}
 		})
@@ -665,6 +669,9 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 					assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "0.id").String())
 					assert.Equal(t, tc.expectedIdentityId, gjson.GetBytes(body, "0.identity.id").String())
 					assert.Equal(t, tc.expectedDevicesCount, gjson.GetBytes(body, "0.devices.#").String())
+					if tc.expectedIdentityId != "" {
+						assert.True(t, gjson.GetBytes(body, "0.identity.metadata_admin").Exists(), "expected metadata_admin to be present in admin session response, body: %s", body)
+					}
 				})
 			}
 		})
@@ -675,10 +682,10 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			var sessions []Session
-			require.NoError(t, json.NewDecoder(res.Body).Decode(&sessions))
-			require.Len(t, sessions, 1)
-			assert.Equal(t, s.ID, sessions[0].ID)
+			body := ioutilx.MustReadAll(res.Body)
+			require.Equal(t, 1, int(gjson.GetBytes(body, "#").Int()))
+			assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "0.id").String())
+			assert.True(t, gjson.GetBytes(body, "0.identity.metadata_admin").Exists(), "expected metadata_admin to be present in admin identity sessions response, body: %s", body)
 		})
 
 		t.Run("should revoke session by id", func(t *testing.T) {

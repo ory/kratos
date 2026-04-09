@@ -440,7 +440,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request) {
 
 	u := *r.URL
 	keysetpagination.Header(w, &u, nextPage)
-	h.r.Writer().Write(w, r, sess)
+	h.r.Writer().Write(w, r, AdminSessions(sess))
 }
 
 // Session Get Request
@@ -520,7 +520,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.r.Writer().Write(w, r, sess)
+	h.r.Writer().Write(w, r, AdminSession(*sess))
 }
 
 // List Identity Sessions Parameters
@@ -655,7 +655,7 @@ func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	x.PaginationHeader(w, *r.URL, total, page, perPage)
-	h.r.Writer().Write(w, r, sess)
+	h.r.Writer().Write(w, r, AdminSessions(sess))
 }
 
 // Deleted Session Count

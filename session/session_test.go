@@ -4,12 +4,14 @@
 package session_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -20,6 +22,71 @@ import (
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 )
+
+func TestAdminSessionMarshal(t *testing.T) {
+	t.Parallel()
+
+	metadataAdmin := []byte(`{"role":"admin"}`)
+	ident := &identity.Identity{
+		MetadataAdmin: metadataAdmin,
+		State:         identity.StateActive,
+	}
+	sess := session.Session{
+		ID:        x.NewUUID(),
+		Active:    true,
+		Identity:  ident,
+		ExpiresAt: time.Now().Add(time.Hour),
+	}
+
+	t.Run("case=regular Session omits metadata_admin", func(t *testing.T) {
+		t.Parallel()
+		b, err := json.Marshal(sess)
+		require.NoError(t, err)
+		assert.False(t, gjson.GetBytes(b, "identity.metadata_admin").Exists())
+		assert.Equal(t, sess.ID.String(), gjson.GetBytes(b, "id").String())
+		assert.True(t, gjson.GetBytes(b, "active").Bool())
+	})
+
+	t.Run("case=AdminSession includes metadata_admin", func(t *testing.T) {
+		t.Parallel()
+		b, err := json.Marshal(session.AdminSession(sess))
+		require.NoError(t, err)
+		assert.Equal(t, `{"role":"admin"}`, gjson.GetBytes(b, "identity.metadata_admin").Raw)
+		assert.Equal(t, sess.ID.String(), gjson.GetBytes(b, "id").String())
+		assert.True(t, gjson.GetBytes(b, "active").Bool())
+	})
+
+	t.Run("case=AdminSession uses runtime active semantics for expired sessions", func(t *testing.T) {
+		t.Parallel()
+
+		expiredSess := session.Session{
+			ID:        x.NewUUID(),
+			Active:    true,
+			Identity:  ident,
+			ExpiresAt: time.Now().Add(-time.Minute),
+		}
+
+		b, err := json.Marshal(session.AdminSession(expiredSess))
+		require.NoError(t, err)
+		assert.Equal(t, `{"role":"admin"}`, gjson.GetBytes(b, "identity.metadata_admin").Raw)
+		assert.Equal(t, expiredSess.ID.String(), gjson.GetBytes(b, "id").String())
+		assert.False(t, gjson.GetBytes(b, "active").Bool())
+	})
+
+	t.Run("case=AdminSessions converts slice", func(t *testing.T) {
+		t.Parallel()
+		sessions := []session.Session{sess, sess}
+		adminSessions := session.AdminSessions(sessions)
+		require.Len(t, adminSessions, 2)
+		for _, as := range adminSessions {
+			b, err := json.Marshal(as)
+			require.NoError(t, err)
+			assert.Equal(t, `{"role":"admin"}`, gjson.GetBytes(b, "identity.metadata_admin").Raw)
+			assert.Equal(t, sess.ID.String(), gjson.GetBytes(b, "id").String())
+			assert.True(t, gjson.GetBytes(b, "active").Bool())
+		}
+	})
+}
 
 func TestSession(t *testing.T) {
 	_, reg := pkg.NewFastRegistryWithMocks(t,
