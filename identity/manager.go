@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"slices"
 	"sort"
 	"strings"
@@ -418,22 +417,18 @@ func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, update
 	_, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.requiresPrivilegedAccess")
 	defer otelx.End(span, &err)
 
-	if !o.AllowWriteProtectedTraits {
-		if !CredentialsEqual(updated.Credentials, original.Credentials) {
-			// reset the identity
-			*updated = *original
+	switch {
 
-			return errors.WithStack(ErrProtectedFieldModified)
-		}
+	case o.AllowWriteProtectedTraits:
+		return nil
 
-		if !reflect.DeepEqual(original.VerifiableAddresses, updated.VerifiableAddresses) &&
-			/* prevent nil != []string{} */
-			len(original.VerifiableAddresses)+len(updated.VerifiableAddresses) != 0 {
-			// reset the identity
-			*updated = *original
-			return errors.WithStack(ErrProtectedFieldModified)
-		}
+	case !CredentialsEqual(updated.Credentials, original.Credentials),
+		!VerifiableAddressesEqual(updated.VerifiableAddresses, original.VerifiableAddresses):
+		// reset the identity
+		*updated = *original
+		return errors.WithStack(ErrProtectedFieldModified)
 	}
+
 	return nil
 }
 

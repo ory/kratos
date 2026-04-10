@@ -5,6 +5,7 @@ package identity
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -103,4 +104,10 @@ func (a VerifiableAddress) GetID() uuid.UUID {
 // Signature returns a unique string representation for the recovery address.
 func (a VerifiableAddress) Signature() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", a.Value, a.Verified, a.Via, a.Status, a.VerifiedAt, a.IdentityID, a.NID)
+}
+
+func VerifiableAddressesEqual(original, updated []VerifiableAddress) bool {
+	return slices.EqualFunc(original, updated, func(a, b VerifiableAddress) bool {
+		return a.Signature() == b.Signature()
+	})
 }

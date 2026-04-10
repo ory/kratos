@@ -698,6 +698,27 @@ func TestManager(t *testing.T) {
 			require.NoError(t, err)
 			assert.NotEqual(t, original.UpdatedAt, updated.UpdatedAt, "UpdatedAt field should be updated")
 		})
+
+		t.Run("case=should update unprotected traits with verified user", func(t *testing.T) {
+			email := x.NewUUID().String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "initial")
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
+
+			// mock successful verification so VerifiedAt is non-nil
+			addr := original.VerifiableAddresses[0]
+			addr.Verified = true
+			addr.VerifiedAt = new(sqlxx.NullTime(time.Now().UTC()))
+			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(t.Context(), &addr))
+
+			// UpdateTraits -> SetTraits -> deepcopy.Copy is the path that triggered the bug
+			require.NoError(t, reg.IdentityManager().UpdateTraits(
+				t.Context(), original.ID, newTraits(email, "updated")))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, string(newTraits(email, "updated")), string(fromStore.Traits))
+		})
 	})
 
 	t.Run("method=RefreshAvailableAAL", func(t *testing.T) {
