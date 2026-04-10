@@ -15,13 +15,13 @@
   },
   "devDependencies": {
     "license-checker": "25.0.1",
-    "prettier": "3.8.1",
+    "prettier": "3.8.2",
     "prettier-plugin-packagejson": "3.0.2",
     "process": "0.11.10",
     "wait-on": "9.0.1"
   },
   "overrides": {
-    "axios": ">=1.13.5",
+    "axios": ">=1.15.0",
     "glob": ">=11.1.0"
   }
 }
