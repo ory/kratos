@@ -12,7 +12,7 @@ import (
 	"maps"
 	"sort"
 	"strings"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -194,23 +194,25 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 	// Force case-insensitivity and trimming for identifiers
 	match = NormalizeIdentifier(ct, match)
 
+	credentialTypeID, err := FindIdentityCredentialsTypeByName(p.GetConnection(ctx), ct)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	if err := p.GetConnection(ctx).RawQuery(`
-		SELECT
-			ic.identity_id
-		FROM identity_credentials ic
-				INNER JOIN identity_credential_types ict
-					ON ic.identity_credential_type_id = ict.id
-				INNER JOIN identity_credential_identifiers ici
-					ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
-		WHERE ici.identifier = ?
-		AND ic.nid = ?
-		AND ici.nid = ?
-		AND ict.name = ?
-		LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
+			SELECT
+				ic.identity_id
+			FROM identity_credentials ic
+					INNER JOIN identity_credential_identifiers ici
+					ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ?
+			WHERE ici.identifier = ?
+			AND ic.nid = ?
+			AND ici.nid = ?
+			LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
+		credentialTypeID,
 		match,
 		nid,
 		nid,
-		ct,
 	).First(&find); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
@@ -1529,59 +1531,85 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 	return nil
 }
 
-var (
-	credentialTypesID   = sync.Map{}
-	credentialTypesName = sync.Map{}
-)
+type credentialTypesCache struct {
+	byID   map[uuid.UUID]identity.CredentialsType
+	byName map[identity.CredentialsType]uuid.UUID
+}
+
+// credentialTypesCachePtr holds the loaded cache. It is nil until the first
+// successful load. Reads and writes are lock-free (atomic.Pointer).
+// In the rare case where multiple goroutines see a nil pointer simultaneously,
+// they each load from the database independently and store the result; the
+// last store wins, but all results are identical. After the first successful
+// store, all subsequent calls take the fast path.
+var credentialTypesCachePtr atomic.Pointer[credentialTypesCache]
+
+// ensureCredentialTypesLoaded loads the credential type mappings from the
+// database on the first successful call. If the load fails the pointer stays
+// nil and the next call retries, so a transient DB error does not permanently
+// break the process.
+func ensureCredentialTypesLoaded(con *pop.Connection) (*credentialTypesCache, error) {
+	if c := credentialTypesCachePtr.Load(); c != nil {
+		return c, nil
+	}
+	c, err := loadCredentialTypes(con)
+	if err != nil {
+		return nil, err
+	}
+	credentialTypesCachePtr.Store(c)
+	return c, nil
+}
 
 func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identity.CredentialsType, error) {
-	result, found := credentialTypesID.Load(id)
-	if !found {
-		if err := loadCredentialTypes(con); err != nil {
-			return "", err
-		}
-
-		result, found = credentialTypesID.Load(id)
+	c, err := ensureCredentialTypesLoaded(con)
+	if err != nil {
+		return "", err
 	}
 
+	result, found := c.byID[id]
 	if !found {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for id %q. This is a bug in the code.", id))
+		return "", herodot.ErrInternalServerError.WithReasonf(`No identity credential type id "%s" could be found, this is a code bug.`, id)
 	}
 
-	return result.(identity.CredentialsType), nil
+	return result, nil
 }
 
 func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.CredentialsType) (uuid.UUID, error) {
-	result, found := credentialTypesName.Load(ct)
-	if !found {
-		if err := loadCredentialTypes(con); err != nil {
-			return uuid.Nil, err
-		}
-
-		result, found = credentialTypesName.Load(ct)
+	c, err := ensureCredentialTypesLoaded(con)
+	if err != nil {
+		return uuid.Nil, err
 	}
 
+	result, found := c.byName[ct]
 	if !found {
-		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for name %q. This is a bug in the code.", ct))
+		return uuid.Nil, herodot.ErrInternalServerError.WithReasonf(`No identity credential type "%s" could be found, this is a code bug.`, ct)
 	}
 
-	return result.(uuid.UUID), nil
+	return result, nil
 }
 
-func loadCredentialTypes(con *pop.Connection) (err error) {
+func loadCredentialTypes(con *pop.Connection) (_ *credentialTypesCache, err error) {
 	ctx, span := trace.SpanFromContext(con.Context()).TracerProvider().Tracer("").Start(con.Context(), "persistence.sql.identity.loadCredentialTypes")
 	defer otelx.End(span, &err)
 	_ = ctx
 
 	var tt []identity.CredentialsTypeTable
 	if err := con.WithContext(ctx).All(&tt); err != nil {
-		return sqlcon.HandleError(err)
+		return nil, sqlcon.HandleError(err)
 	}
 
+	if len(tt) == 0 {
+		return nil, herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return any credentials_type. This is a bug in the code/db.")
+	}
+
+	c := &credentialTypesCache{
+		byID:   make(map[uuid.UUID]identity.CredentialsType, 16),
+		byName: make(map[identity.CredentialsType]uuid.UUID, 16),
+	}
 	for _, t := range tt {
-		credentialTypesID.Store(t.ID, t.Name)
-		credentialTypesName.Store(t.Name, t.ID)
+		c.byID[t.ID] = t.Name
+		c.byName[t.Name] = t.ID
 	}
 
-	return nil
+	return c, nil
 }
