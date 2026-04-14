@@ -51,7 +51,7 @@ func (p *Persister) UseRegistrationCode(ctx context.Context, flowID uuid.UUID, u
 
 	// ensure that the identifiers extracted from the traits are contained in the registration code
 	if !slice.Contains(addresses, codeRow.Address) {
-		return nil, errors.WithStack(code.ErrCodeNotFound)
+		return nil, errors.WithStack(code.ErrCodeNotFound())
 	}
 
 	return codeRow, nil

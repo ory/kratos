@@ -312,7 +312,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		tracer    = trace.SpanFromContext(ctx).TracerProvider().Tracer("kratos-webhooks")
 	)
 	if ignoreResponse && (parseResponse || canInterrupt) {
-		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
+		return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("A webhook is configured to ignore the response but also to parse the response. This is not possible."))
 	}
 
 	makeRequest := func() (finalErr error) {
@@ -390,13 +390,13 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 		resp, err := httpClient.Do(req)
 		if err != nil {
 			if IsTimeoutError(err) {
-				return herodot.DefaultError{
+				return (&herodot.DefaultError{
 					CodeField:     http.StatusGatewayTimeout,
 					StatusField:   http.StatusText(http.StatusGatewayTimeout),
 					GRPCCodeField: grpccodes.DeadlineExceeded,
 					ErrorField:    err.Error(),
 					ReasonField:   "A third-party upstream service could not be reached. Please try again later.",
-				}.WithWrap(errors.WithStack(err))
+				}).WithWrap(errors.WithStack(err))
 			}
 			return errors.WithStack(err)
 		}
@@ -411,7 +411,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 					return err
 				}
 			}
-			return herodot.DefaultError{
+			return &herodot.DefaultError{
 				CodeField:     http.StatusBadGateway,
 				StatusField:   http.StatusText(http.StatusBadGateway),
 				GRPCCodeField: grpccodes.Aborted,

@@ -132,29 +132,29 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	webAuthnSession := gjson.GetBytes(regFlow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if !webAuthnSession.IsObject() {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object.")))
+			herodot.ErrInternalServerError().WithReasonf("Expected WebAuthN in internal context to be an object.")))
 	}
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(webAuthnSession.Raw), &webAuthnSess); err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
+			herodot.ErrInternalServerError().WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 
 	if len(webAuthnSess.UserID) == 0 {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN session data to contain a user ID")))
+			herodot.ErrInternalServerError().WithReasonf("Expected WebAuthN session data to contain a user ID")))
 	}
 
 	webAuthnResponse, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(params.Register))
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err)))
+			herodot.ErrBadRequest().WithReasonf("Unable to parse WebAuthn response: %s", err)))
 	}
 
 	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config").WithDebug(err.Error())))
+			herodot.ErrInternalServerError().WithReasonf("Unable to get webAuthn config").WithDebug(err.Error())))
 	}
 
 	credential, err := webAuthn.CreateCredential(&webauthnx.User{
@@ -166,7 +166,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 			s.d.Logger().WithError(err).WithField("error_devinfo", devErr.DevInfo).Error("Failed to create WebAuthn credential")
 		}
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err)))
+			herodot.ErrInternalServerError().WithReasonf("Unable to create WebAuthn credential: %s", err)))
 	}
 
 	credentialWebAuthn := identity.CredentialFromWebAuthn(credential, true)
@@ -176,7 +176,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	})
 	if err != nil {
 		return s.handleRegistrationError(w, r, regFlow, params, errors.WithStack(
-			herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
+			herodot.ErrInternalServerError().WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error())))
 	}
 
 	ident.UpsertCredentialsConfig(s.ID(), credentialWebAuthnConfig, 1)

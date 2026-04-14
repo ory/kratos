@@ -205,7 +205,7 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 
 	co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(newPasswordHash)})
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode password options to JSON: %s", err))
 	}
 	i.UpsertCredentialsConfig(s.ID(), co, 0)
 	ctxUpdate.UpdateIdentity(i)

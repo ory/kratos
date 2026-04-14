@@ -227,11 +227,11 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 	}
 
 	if err := e.d.IdentityManager().Update(ctx, i, options...); err != nil {
-		if errors.Is(err, identity.ErrProtectedFieldModified) {
+		if errors.Is(err, identity.ErrProtectedFieldModified()) {
 			e.d.Logger().WithError(err).Debug("Modifying protected field requires re-authentication.")
 			return errors.WithStack(NewFlowNeedsReAuth())
 		}
-		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+		if errors.Is(err, sqlcon.ErrUniqueViolation()) {
 			return schema.NewDuplicateCredentialsError(err)
 		}
 		return err

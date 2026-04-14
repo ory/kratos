@@ -444,7 +444,7 @@ func TestSettings(t *testing.T) {
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, res.Request.URL.String(), conf.GetProvider(t.Context()).String(config.ViperKeySelfServiceErrorUI))
 
-		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch, json.RawMessage(actual), "%s", actual)
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch(), json.RawMessage(actual), "%s", actual)
 	})
 
 	t.Run("case=should pass even without CSRF token/type=spa", func(t *testing.T) {
@@ -457,7 +457,7 @@ func TestSettings(t *testing.T) {
 		assert.Equal(t, http.StatusForbidden, res.StatusCode)
 
 		assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch(), json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 	})
 
 	t.Run("case=should pass even without CSRF token/type=api", func(t *testing.T) {

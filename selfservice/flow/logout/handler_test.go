@@ -124,7 +124,7 @@ func TestLogout(t *testing.T) {
 			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
 			body := x.MustReadAll(res.Body)
-			assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+			assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken().ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 		}
 
 		t.Run("type=browser", func(t *testing.T) {

@@ -145,7 +145,7 @@ func (p *Persister) SetMessageStatus(ctx context.Context, id uuid.UUID, ms couri
 	}
 
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func (p *Persister) IncrementMessageSendCount(ctx context.Context, id uuid.UUID)
 	}
 
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 
 	return nil

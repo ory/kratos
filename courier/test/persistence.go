@@ -314,7 +314,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			t.Run("can not update on another network", func(t *testing.T) {
 				_, p := newNetwork(t, ctx)
 				err := p.SetMessageStatus(ctx, id, courier.MessageStatusProcessing)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -329,7 +329,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				_, p := newNetwork(t, ctx)
 
 				_, err := p.FetchMessage(ctx, msgID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -349,7 +349,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 				_, p := newNetwork(t, ctx)
 
 				_, err := p.FetchMessage(ctx, msgID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 	}

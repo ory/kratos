@@ -85,7 +85,7 @@ func TestPersister(ctx context.Context, p interface {
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
-					require.ErrorIs(t, err, code.ErrCodeNotFound)
+					require.ErrorIs(t, err, code.ErrCodeNotFound())
 				})
 
 				actual, err := p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
@@ -96,7 +96,7 @@ func TestPersister(ctx context.Context, p interface {
 				assert.EqualValues(t, f.ID, actual.FlowID)
 
 				_, err = p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
-				require.ErrorIs(t, err, code.ErrCodeAlreadyUsed)
+				require.ErrorIs(t, err, code.ErrCodeAlreadyUsed())
 			})
 
 			t.Run("case=should not be able to use expired codes", func(t *testing.T) {
@@ -106,7 +106,7 @@ func TestPersister(ctx context.Context, p interface {
 				require.NoError(t, err)
 
 				_, err = p.UseRecoveryCode(ctx, f.ID, dto.RawCode)
-				require.ErrorIs(t, err, code.ErrCodeNotFound)
+				require.ErrorIs(t, err, code.ErrCodeNotFound())
 			})
 
 			t.Run("case=should increment flow submit count and fail after too many tries (default limit)", func(t *testing.T) {
@@ -124,7 +124,7 @@ func TestPersister(ctx context.Context, p interface {
 						if !assert.Error(t, err) {
 							return
 						}
-						if errors.Is(err, code.ErrCodeSubmittedTooOften) {
+						if errors.Is(err, code.ErrCodeSubmittedTooOften()) {
 							atomic.AddInt32(&tooOften, 1)
 						} else {
 							atomic.AddInt32(&wrongCode, 1)
@@ -138,7 +138,7 @@ func TestPersister(ctx context.Context, p interface {
 
 				// Submit again, just to be sure
 				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
-				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften)
+				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften())
 			})
 
 			t.Run("case=should increment flow submit count and fail after too many tries (custom limit)", func(t *testing.T) {
@@ -159,7 +159,7 @@ func TestPersister(ctx context.Context, p interface {
 						if !assert.Error(t, err) {
 							return
 						}
-						if errors.Is(err, code.ErrCodeSubmittedTooOften) {
+						if errors.Is(err, code.ErrCodeSubmittedTooOften()) {
 							atomic.AddInt32(&tooOften, 1)
 						} else {
 							atomic.AddInt32(&wrongCode, 1)
@@ -173,7 +173,7 @@ func TestPersister(ctx context.Context, p interface {
 
 				// Submit again, just to be sure
 				_, err = p.UseRecoveryCode(ctx, f.ID, "i-do-not-exist")
-				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften)
+				require.ErrorIs(t, err, code.ErrCodeSubmittedTooOften())
 			})
 
 			t.Run("case=should delete codes of flow", func(t *testing.T) {

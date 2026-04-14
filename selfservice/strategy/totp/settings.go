@@ -171,16 +171,16 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 func (s *Strategy) continueSettingsFlowAddTOTP(ctx context.Context, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithTotpMethod) (*identity.Identity, error) {
 	keyURL := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyURL)).String()
 	if len(keyURL) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find the TOTP key in the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Could not find the TOTP key in the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
 	}
 
 	key, err := otp.NewKeyFromURL(keyURL)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithTrace(err).WithReasonf("Could not decode TOTP key from the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithTrace(err).WithReasonf("Could not decode TOTP key from the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
 	}
 
 	if len(key.Secret()) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("TOTP secret is not set. This is a code bug and should be reported to https://github.com/ory/kratos/."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("TOTP secret is not set. This is a code bug and should be reported to https://github.com/ory/kratos/."))
 	}
 
 	if p.ValidationTOTP == "" {
@@ -193,7 +193,7 @@ func (s *Strategy) continueSettingsFlowAddTOTP(ctx context.Context, ctxUpdate *s
 
 	co, err := json.Marshal(&identity.CredentialsTOTPConfig{TOTPURL: key.URL()})
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode totp options to JSON: %s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode totp options to JSON: %s", err))
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)

@@ -80,7 +80,7 @@ func (p *Persister) UseVerificationToken(ctx context.Context, fID uuid.UUID, tok
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.r.Config().SecretsSession(ctx) {
 			if err = tx.Where("token = ? AND nid = ? AND NOT used AND selfservice_verification_flow_id = ?", hmacValueWithSecret(token, secret), nid, fID).First(&rt); err != nil {
-				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
+				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows()) {
 					return err
 				}
 			} else {

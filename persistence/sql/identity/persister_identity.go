@@ -230,7 +230,7 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 
 	creds, ok := i.GetCredentials(ct)
 	if !ok {
-		return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type \"%s\". This is a bug in the code.", ct))
+		return nil, nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("The SQL adapter failed to return the appropriate credentials_type \"%s\". This is a bug in the code.", ct))
 	}
 
 	return i, creds, nil
@@ -332,7 +332,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, ident
 			identifier = NormalizeIdentifier(cred.Type, identifier)
 
 			if identifier == "" {
-				return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf(
+				return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf(
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
 
@@ -741,7 +741,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 
 			for _, ident := range identities {
 				if info, ok := failedIdentityIDs[ident.ID]; ok {
-					partialErr.AddFailedIdentity(ident, sqlcon.ErrUniqueViolation)
+					partialErr.AddFailedIdentity(ident, sqlcon.ErrUniqueViolation())
 					if info.created {
 						idsToBeRemoved = append(idsToBeRemoved, ident.ID)
 					}
@@ -1283,7 +1283,7 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (e
 		return sqlcon.HandleError(err)
 	}
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	span.AddEvent(events.NewIdentityDeleted(ctx, id))
 	return nil
@@ -1330,7 +1330,7 @@ func (p *IdentityPersister) DeleteIdentities(ctx context.Context, ids []uuid.UUI
 		return sqlcon.HandleError(err)
 	}
 	if count != len(ids) {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	return nil
 }
@@ -1477,7 +1477,7 @@ func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err
 	}
 
 	if count == 0 {
-		return sqlcon.HandleError(sqlcon.ErrNoRows)
+		return sqlcon.HandleError(sqlcon.ErrNoRows())
 	}
 
 	return nil
@@ -1505,7 +1505,7 @@ func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Id
 
 	if err := p.r.IdentityValidator().ValidateWithRunner(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+			return errors.WithStack(herodot.ErrBadRequest().WithReasonf("%s", err))
 		}
 		return err
 	}
@@ -1524,7 +1524,7 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 	}
 	s, err := ss.GetByID(i.SchemaID)
 	if err != nil {
-		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf(
+		return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf(
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()
@@ -1568,7 +1568,7 @@ func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identit
 
 	result, found := c.byID[id]
 	if !found {
-		return "", herodot.ErrInternalServerError.WithReasonf(`No identity credential type id "%s" could be found, this is a code bug.`, id)
+		return "", errors.WithStack(herodot.ErrInternalServerError().WithReasonf(`No identity credential type id "%s" could be found, this is a code bug.`, id))
 	}
 
 	return result, nil
@@ -1582,7 +1582,7 @@ func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.Credenti
 
 	result, found := c.byName[ct]
 	if !found {
-		return uuid.Nil, herodot.ErrInternalServerError.WithReasonf(`No identity credential type "%s" could be found, this is a code bug.`, ct)
+		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf(`No identity credential type "%s" could be found, this is a code bug.`, ct))
 	}
 
 	return result, nil
@@ -1599,7 +1599,7 @@ func loadCredentialTypes(con *pop.Connection) (_ *credentialTypesCache, err erro
 	}
 
 	if len(tt) == 0 {
-		return nil, herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return any credentials_type. This is a bug in the code/db.")
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("The SQL adapter failed to return any credentials_type. This is a bug in the code/db."))
 	}
 
 	c := &credentialTypesCache{

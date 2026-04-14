@@ -27,11 +27,15 @@ import (
 //go:embed .schema/method.schema.json
 var methodSchema []byte
 
-var ErrOriginHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
-	WithReasonf(`The HTTP Request Header included the "Origin" key, indicating that this request was made as part of an AJAX request in a Browser. The flow however was initiated as an API request. To prevent potential misuse and mitigate several attack vectors including CSRF, the request has been blocked. Please consult the documentation.`)
+func ErrOriginHeaderNeedsBrowserFlow() *herodot.DefaultError {
+	return herodot.ErrBadRequest().
+		WithReasonf(`The HTTP Request Header included the "Origin" key, indicating that this request was made as part of an AJAX request in a Browser. The flow however was initiated as an API request. To prevent potential misuse and mitigate several attack vectors including CSRF, the request has been blocked. Please consult the documentation.`)
+}
 
-var ErrCookieHeaderNeedsBrowserFlow = herodot.ErrBadRequest.
-	WithReasonf(`The HTTP Request Header included the "Cookie" key, indicating that this request was made by a Browser. The flow however was initiated as an API request. To prevent potential misuse and mitigate several attack vectors including CSRF, the request has been blocked. Please consult the documentation.`)
+func ErrCookieHeaderNeedsBrowserFlow() *herodot.DefaultError {
+	return herodot.ErrBadRequest().
+		WithReasonf(`The HTTP Request Header included the "Cookie" key, indicating that this request was made by a Browser. The flow however was initiated as an API request. To prevent potential misuse and mitigate several attack vectors including CSRF, the request has been blocked. Please consult the documentation.`)
+}
 
 func EnsureCSRF(
 	reg config.Provider,
@@ -52,7 +56,7 @@ func EnsureCSRF(
 
 		// Let's ensure that no-one mistakenly makes an AJAX request using the API flow.
 		if r.Header.Get("Origin") != "" {
-			return errors.WithStack(ErrOriginHeaderNeedsBrowserFlow)
+			return errors.WithStack(ErrOriginHeaderNeedsBrowserFlow())
 		}
 
 		// Workaround for Cloudflare setting cookies that we can't control.
@@ -65,7 +69,7 @@ func EnsureCSRF(
 		}
 
 		if len(cookies) > 0 {
-			return errors.WithStack(ErrCookieHeaderNeedsBrowserFlow.WithDetail("found cookies", cookies))
+			return errors.WithStack(ErrCookieHeaderNeedsBrowserFlow().WithDetail("found cookies", cookies))
 		}
 
 		return nil
@@ -109,7 +113,7 @@ func MethodEnabledAndAllowed(ctx context.Context, _ FlowName, expected, actual s
 	}
 
 	if !d.Config().SelfServiceStrategy(ctx, expected).Enabled {
-		return errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage))
+		return errors.WithStack(herodot.ErrNotFound().WithReason(strategy.EndpointDisabledMessage))
 	}
 
 	return nil

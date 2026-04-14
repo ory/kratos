@@ -110,7 +110,7 @@ func mergeWebAuthnCredentials(
 	if c, ok := i.GetCredentials(credentialType); ok {
 		var original CredentialsWebAuthnConfig
 		if err := json.Unmarshal(c.Config, &original); err != nil {
-			return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason(err.Error()))
+			return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReason(err.Error()))
 		}
 
 		resultCredentials = make(CredentialsWebAuthn, len(original.Credentials))
@@ -167,7 +167,7 @@ func (h *Handler) importLookupSecretCredentials(_ context.Context, i *Identity, 
 	if c, ok := i.GetCredentials(CredentialsTypeLookup); ok {
 		var target CredentialsLookupConfig
 		if err := json.Unmarshal(c.Config, &target); err != nil {
-			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason(err.Error()))
+			return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReason(err.Error()))
 		}
 		codes = target.RecoveryCodes
 	}
@@ -203,7 +203,7 @@ func (h *Handler) ImportPasswordCredentials(ctx context.Context, i *Identity, cr
 	}
 
 	if !(hash.IsValidHashFormat(hashed)) {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The imported password does not match any known hash format. For more information see https://www.ory.com/dr/2"))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("The imported password does not match any known hash format. For more information see https://www.ory.sh/dr/2"))
 	}
 
 	return i.SetCredentialsWithConfig(CredentialsTypePassword, Credentials{}, CredentialsPassword{HashedPassword: string(hashed)})
@@ -236,7 +236,7 @@ func (h *Handler) importOIDCCredentials(_ context.Context, i *Identity, creds *A
 	}
 
 	if err := json.Unmarshal(c.Config, &target); err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason(err.Error()))
+		return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReason(err.Error()))
 	}
 
 	for _, p := range creds.Config.Providers {
@@ -280,7 +280,7 @@ func (h *Handler) importSAMLCredentials(_ context.Context, i *Identity, creds *A
 	}
 
 	if err := json.Unmarshal(c.Config, &target); err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason(err.Error()))
+		return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReason(err.Error()))
 	}
 
 	for _, p := range creds.Config.Providers {

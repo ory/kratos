@@ -24,7 +24,9 @@ import (
 	"github.com/ory/x/randx"
 )
 
-var ErrIdentityDisabled = herodot.ErrBadRequest.WithID(text.ErrIDIdentityDisabled).WithError("identity is disabled").WithReason("This account was disabled.")
+func ErrIdentityDisabled() *herodot.DefaultError {
+	return herodot.ErrBadRequest().WithID(text.ErrIDIdentityDisabled).WithError("identity is disabled").WithReason("This account was disabled.")
+}
 
 type lifespanProvider interface {
 	SessionLifespan(ctx context.Context) time.Duration

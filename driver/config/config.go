@@ -700,12 +700,12 @@ func (p *Config) SelfServiceFlowIdentitySchema(ctx context.Context, requestedSch
 	for _, schema := range schemas {
 		if schema.ID == requestedSchema {
 			if !schema.SelfserviceSelectable {
-				return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Requested identity schema %q is not enabled for self-service flows.", requestedSchema))
+				return "", errors.WithStack(herodot.ErrBadRequest().WithReasonf("Requested identity schema %q is not enabled for self-service flows.", requestedSchema))
 			}
 			return requestedSchema, nil
 		}
 	}
-	return "", errors.WithStack(herodot.ErrBadRequest.WithReasonf("Requested identity schema %q does not exist.", requestedSchema))
+	return "", errors.WithStack(herodot.ErrBadRequest().WithReasonf("Requested identity schema %q does not exist.", requestedSchema))
 }
 
 func (p *Config) SelfServiceFlowVerificationEnabled(ctx context.Context) bool {
@@ -1565,11 +1565,11 @@ func (p *Config) TokenizeTemplate(ctx context.Context, key string) (_ *SessionTo
 	var result SessionTokenizeFormat
 	path := ViperKeySessionTokenizerTemplates + "." + key
 	if !p.GetProvider(ctx).Exists(path) {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to find tokenizer template \"%s\".", key))
+		return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to find tokenizer template \"%s\".", key))
 	}
 
 	if err := p.GetProvider(ctx).Unmarshal(path, &result); err != nil {
-		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to decode tokenizer template \"%s\": %s", key, err))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Unable to decode tokenizer template \"%s\": %s", key, err))
 	}
 
 	return &result, nil

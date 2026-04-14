@@ -179,7 +179,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 
 		actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, values.Encode())
 		assert.EqualValues(t, http.StatusOK, res.StatusCode)
-		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch,
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch(),
 			json.RawMessage(actual), "%s", actual)
 	})
 
@@ -192,7 +192,7 @@ func AssertCSRFFailures(t *testing.T, reg *driver.RegistryDefault, flows []strin
 
 		actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, values.Encode())
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch,
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch(),
 			json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 	})
 
@@ -302,7 +302,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 			require.NoError(t, err)
 			assert.Len(t, res.Cookies(), 0)
 			defer func() { _ = res.Body.Close() }()
-			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(ioutilx.MustReadAll(res.Body), "error").Raw))
+			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(ioutilx.MustReadAll(res.Body), "error").Raw))
 		})
 	})
 
@@ -351,7 +351,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 			require.NoError(t, err)
 			assert.Len(t, res.Cookies(), 0)
 			defer func() { _ = res.Body.Close() }()
-			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(ioutilx.MustReadAll(res.Body), "error").Raw))
+			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(ioutilx.MustReadAll(res.Body), "error").Raw))
 		})
 	})
 

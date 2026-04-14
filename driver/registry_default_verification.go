@@ -58,7 +58,7 @@ func (m *RegistryDefault) GetActiveVerificationStrategies(ctx context.Context) (
 	as := m.Config().SelfServiceFlowVerificationUse(ctx)
 	s, ps, err := m.VerificationStrategies(ctx).ActiveStrategies(as)
 	if err != nil {
-		return nil, ps, errors.WithStack(herodot.ErrBadRequest.
+		return nil, ps, errors.WithStack(herodot.ErrBadRequest().
 			WithReasonf("The active verification strategy %s is not enabled. Please enable it in the configuration.", as))
 	}
 	return s, ps, nil

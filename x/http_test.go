@@ -81,7 +81,7 @@ func TestAcceptToRedirectOrJSON(t *testing.T) {
 		})
 
 		t.Run("error payload", func(t *testing.T) {
-			ee := errors.WithStack(herodot.ErrBadRequest)
+			ee := errors.WithStack(herodot.ErrBadRequest())
 			w := httptest.NewRecorder()
 			SendFlowCompletedAsRedirectOrJSON(w, r, wr, ee, "https://www.ory.com/redir")
 			_, err := w.Result().Location()

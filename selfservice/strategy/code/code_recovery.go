@@ -24,11 +24,17 @@ const (
 	RecoveryCodeTypeSelfService
 )
 
-var (
-	ErrCodeNotFound          = herodot.ErrNotFound.WithReasonf("unknown code")
-	ErrCodeAlreadyUsed       = herodot.ErrBadRequest.WithReasonf("The code was already used. Please request another code.")
-	ErrCodeSubmittedTooOften = herodot.ErrBadRequest.WithReasonf("The request was submitted too often. Please request another code.")
-)
+func ErrCodeNotFound() *herodot.DefaultError {
+	return herodot.ErrNotFound().WithReasonf("unknown code")
+}
+
+func ErrCodeAlreadyUsed() *herodot.DefaultError {
+	return herodot.ErrBadRequest().WithReasonf("The code was already used. Please request another code.")
+}
+
+func ErrCodeSubmittedTooOften() *herodot.DefaultError {
+	return herodot.ErrBadRequest().WithReasonf("The request was submitted too often. Please request another code.")
+}
 
 type RecoveryCode struct {
 	// ID represents the code's unique ID.
@@ -75,15 +81,15 @@ func (RecoveryCode) TableName(ctx context.Context) string {
 	return "identity_recovery_codes"
 }
 
-func (c *RecoveryCode) Validate() error {
-	if c == nil {
-		return errors.WithStack(ErrCodeNotFound)
+func (f *RecoveryCode) Validate() error {
+	if f == nil {
+		return errors.WithStack(ErrCodeNotFound())
 	}
-	if c.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(ErrCodeNotFound)
+	if f.ExpiresAt.Before(time.Now().UTC()) {
+		return errors.WithStack(ErrCodeNotFound())
 	}
-	if c.UsedAt.Valid {
-		return errors.WithStack(ErrCodeAlreadyUsed)
+	if f.UsedAt.Valid {
+		return errors.WithStack(ErrCodeAlreadyUsed())
 	}
 	return nil
 }

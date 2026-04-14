@@ -707,7 +707,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					}
 
 					identity, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeCodeAuth, state.email)
-					require.NoError(t, err, sqlcon.ErrNoRows)
+					require.NoError(t, err, sqlcon.ErrNoRows())
 
 					assert.NotEmpty(t, identity.ID, "%s", identity.ID)
 					assert.Equal(t, state.email, gjson.Get(identity.Traits.String(), "email").String(), "%s", identity.Traits.String())
@@ -881,7 +881,7 @@ func TestCodeRegistrationWithLoginChallenge(t *testing.T) {
 		r.Header.Add("Content-Type", "application/json")
 
 		err := s.Register(httptest.NewRecorder(), r, f, i)
-		require.ErrorIs(t, err, herodot.ErrBadRequest)
+		require.ErrorIs(t, err, herodot.ErrBadRequest())
 		require.Nil(t, f.HydraLoginRequest)
 	})
 }

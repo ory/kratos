@@ -47,7 +47,7 @@ func TestPersister(ctx context.Context, p interface {
 
 		t.Run("case=not found", func(t *testing.T) {
 			_, err := p.GetContinuitySession(ctx, x.NewUUID())
-			require.EqualError(t, err, sqlcon.ErrNoRows.Error())
+			require.EqualError(t, err, sqlcon.ErrNoRows().Error())
 		})
 
 		t.Run("case=save and find", func(t *testing.T) {
@@ -68,7 +68,7 @@ func TestPersister(ctx context.Context, p interface {
 			require.NoError(t, p.DeleteContinuitySession(ctx, expected.ID))
 
 			_, err := p.GetContinuitySession(ctx, expected.ID)
-			require.EqualError(t, err, sqlcon.ErrNoRows.Error())
+			require.EqualError(t, err, sqlcon.ErrNoRows().Error())
 		})
 
 		t.Run("case=network", func(t *testing.T) {
@@ -91,13 +91,13 @@ func TestPersister(ctx context.Context, p interface {
 			t.Run("can not get on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetLoginFlow(ctx, id)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 
 			t.Run("can not delete on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				err := p.DeleteContinuitySession(ctx, id)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -121,7 +121,7 @@ func TestPersister(ctx context.Context, p interface {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				newExpiry := time.Now().Add(12 * time.Hour).UTC().Truncate(time.Second)
 				err := p.SetContinuitySessionExpiry(ctx, expected.ID, newExpiry)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 

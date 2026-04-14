@@ -48,7 +48,7 @@ func (m *RegistryDefault) GetActiveRecoveryStrategies(ctx context.Context) (acti
 	as := m.Config().SelfServiceFlowRecoveryUse(ctx)
 	s, ps, err := m.RecoveryStrategies(ctx).ActiveStrategies(as)
 	if err != nil {
-		return nil, ps, errors.WithStack(herodot.ErrBadRequest.
+		return nil, ps, errors.WithStack(herodot.ErrBadRequest().
 			WithReasonf("You attempted recovery using %s, which is not enabled or does not exist. An administrator needs to enable this recovery method.", as))
 	}
 	return s, ps, nil

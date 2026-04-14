@@ -242,10 +242,10 @@ func TestCompleteSettings(t *testing.T) {
 			}, id)
 			if spa {
 				assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-				assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
+				assert.Equal(t, nosurfx.ErrInvalidCSRFToken().Reason(), gjson.Get(body, "error.reason").String(), body)
 			} else {
 				assert.Contains(t, res.Request.URL.String(), errTS.URL)
-				assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "reason").String(), body)
+				assert.Equal(t, nosurfx.ErrInvalidCSRFToken().Reason(), gjson.Get(body, "reason").String(), body)
 			}
 		}
 

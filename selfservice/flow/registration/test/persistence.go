@@ -180,7 +180,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				require.Error(t, other.UpdateRegistrationFlow(ctx, expected))
 
 				_, err = other.GetRegistrationFlow(ctx, id)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				actual, err := p.GetRegistrationFlow(ctx, id)
 				require.NoError(t, err)
@@ -190,7 +190,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			t.Run("can not get on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRegistrationFlow(ctx, id)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 	}

@@ -99,7 +99,7 @@ func (s *Strategy) linkedProviders(conf *ConfigurationCollection, confidential *
 	var result []Provider
 	for _, p := range available.Providers {
 		prov, err := conf.Provider(p.Provider, s.d)
-		if errors.Is(err, herodot.ErrNotFound) {
+		if errors.Is(err, herodot.ErrNotFound()) {
 			continue
 		} else if err != nil {
 			return nil, err
@@ -265,7 +265,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
 		if !s.d.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
-			return nil, s.handleMethodNotAllowedError(errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage)))
+			return nil, s.handleMethodNotAllowedError(errors.WithStack(herodot.ErrNotFound().WithReason(strategy.EndpointDisabledMessage)))
 		}
 
 		if len(p.Link) > 0 {
@@ -282,7 +282,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 			return ctxUpdate, nil
 		}
 
-		return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrBadRequest.WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
+		return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, &p, errors.WithStack(herodot.ErrBadRequest().WithReason("Expected either link or unlink to be set when continuing flow but both are unset.")))
 	} else if err != nil {
 		return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, &p, err)
 	}
@@ -293,7 +293,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	}
 
 	if !s.d.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
-		return nil, s.handleMethodNotAllowedError(errors.WithStack(herodot.ErrNotFound.WithReason(strategy.EndpointDisabledMessage)))
+		return nil, s.handleMethodNotAllowedError(errors.WithStack(herodot.ErrNotFound().WithReason(strategy.EndpointDisabledMessage)))
 	}
 
 	switch l, u := len(p.Link), len(p.Unlink); {

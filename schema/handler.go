@@ -121,7 +121,7 @@ func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	s, err := ss.GetByID(id)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound.WithReasonf("Identity schema `%s` could not be found.", id)))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrNotFound().WithReasonf("Identity schema `%s` could not be found.", id)))
 		return
 	}
 
@@ -130,11 +130,11 @@ func (h *Handler) getIdentitySchema(w http.ResponseWriter, r *http.Request) {
 		code, ok := errorsx.GetCodeFromHerodotError(err)
 
 		if errors.Is(err, fs.ErrNotExist) || (ok && code == http.StatusNotFound) {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrMisconfiguration.WithReason("The file for this JSON Schema ID could not be found/fetched. This is a configuration issue.").WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrMisconfiguration().WithReason("The file for this JSON Schema ID could not be found/fetched. This is a configuration issue.").WithDebugf("%+v", err)))
 		} else if ok && code == http.StatusBadGateway {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrUpstreamError.WithReason("The file for this JSON Schema ID could not be fetched. This is an upstream issue.").WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrUpstreamError().WithReason("The file for this JSON Schema ID could not be fetched. This is an upstream issue.").WithDebugf("%+v", err)))
 		} else {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError.WithReason("The file for this JSON Schema ID could not be read. This is an I/O issue.").WithDebugf("%+v", err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrInternalServerError().WithReason("The file for this JSON Schema ID could not be read. This is an I/O issue.").WithDebugf("%+v", err)))
 		}
 		return
 	}
@@ -212,7 +212,7 @@ func (h *Handler) getAll(w http.ResponseWriter, r *http.Request) {
 	for i, schema := range schemas {
 		raw, err := h.ReadSchema(ctx, schema.URL)
 		if err != nil {
-			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("The file for a JSON Schema ID could not be found or opened. This is a configuration issue.").WithWrap(err)))
+			h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("The file for a JSON Schema ID could not be found or opened. This is a configuration issue.").WithWrap(err)))
 			return
 		}
 		ss[i] = identitySchemaContainer{
@@ -247,18 +247,18 @@ func (h *Handler) ReadSchema(ctx context.Context, uri *url.URL) (data []byte, er
 		}
 		resp, err := h.r.HTTPClient(ctx).Do(req)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrUpstreamError.WithReason("could not fetch schema").WithError(err.Error()).WithDetail("uri", uri))
+			return nil, errors.WithStack(herodot.ErrUpstreamError().WithReason("could not fetch schema").WithError(err.Error()).WithDetail("uri", uri))
 		}
 		defer func() { _ = resp.Body.Close() }()
 		if resp.StatusCode != http.StatusOK {
 			if resp.StatusCode == http.StatusNotFound {
-				return nil, herodot.ErrNotFound.WithDetail("url", uri)
+				return nil, herodot.ErrNotFound().WithDetail("url", uri)
 			}
-			return nil, errors.WithStack(herodot.ErrUpstreamError.WithError("upstream error").WithDetail("status_code", resp.StatusCode).WithDetail("uri", uri))
+			return nil, errors.WithStack(herodot.ErrUpstreamError().WithError("upstream error").WithDetail("status_code", resp.StatusCode).WithDetail("uri", uri))
 		}
 		data, err = io.ReadAll(io.LimitReader(resp.Body, maxSchemaSize))
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrUpstreamError.WithReason("could not read schema response").WithError(err.Error()).WithDetail("uri", uri))
+			return nil, errors.WithStack(herodot.ErrUpstreamError().WithReason("could not read schema response").WithError(err.Error()).WithDetail("uri", uri))
 		}
 	}
 	return data, nil

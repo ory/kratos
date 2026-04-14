@@ -57,7 +57,7 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	defer otelx.End(span, &err)
 
 	if c.smtpClient.Host == "" {
-		return errors.WithStack(herodot.ErrInternalServerError.WithErrorf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
+		return errors.WithStack(herodot.ErrInternalServerError().WithErrorf("Courier tried to deliver an email but %s is not set!", config.ViperKeyCourierSMTPURL))
 	}
 
 	channels, err := c.d.CourierConfig().CourierChannels(ctx)
@@ -74,7 +74,7 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	}
 
 	if cfg == nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithErrorf("Courier tried to deliver an email but SMTP channel is misconfigured."))
+		return errors.WithStack(herodot.ErrInternalServerError().WithErrorf("Courier tried to deliver an email but SMTP channel is misconfigured."))
 	}
 
 	gm := mail.NewMessage()
@@ -130,7 +130,7 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 			WithField("smtp_host", c.smtpClient.Host).
 			WithField("smtp_port", c.smtpClient.Port).
 			Error("Unable to dial SMTP connection.")
-		return errors.WithStack(herodot.ErrInternalServerError.
+		return errors.WithStack(herodot.ErrInternalServerError().
 			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}
 	defer func() { _ = snd.Close() }()
@@ -161,7 +161,7 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 			}
 		}
 
-		return errors.WithStack(herodot.ErrInternalServerError.
+		return errors.WithStack(herodot.ErrInternalServerError().
 			WithError(err.Error()).WithReason("failed to send email via smtp"))
 	}
 

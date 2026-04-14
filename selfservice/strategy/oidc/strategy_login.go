@@ -218,7 +218,7 @@ func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *Claims,
 	// output are preserved.
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
-		return false, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
+		return false, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
 	}
 	// merge(override, base) merges base into override, with override winning.
 	// Pass mapper output as override so it takes precedence over existing traits,
@@ -322,7 +322,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
 	if err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
+		if errors.Is(err, sqlcon.ErrNoRows()) {
 			var verdict ConflictingIdentityVerdict
 			verdict, i, c, err = s.handleConflictingIdentity(ctx, loginFlow, token, claims, provider, container)
 			switch verdict {
@@ -387,7 +387,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 				if err != nil {
 					return nil, err
 				}
-				return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("The OpenID Connect identity merge policy returned an unknown verdict without other error details, which prevents the sign up from completing. Please report this as a bug."))
+				return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("The OpenID Connect identity merge policy returned an unknown verdict without other error details, which prevents the sign up from completing. Please report this as a bug."))
 			}
 
 		} else {
@@ -397,7 +397,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 	var oidcCredentials identity.CredentialsOIDC
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&oidcCredentials); err != nil {
-		return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("The OpenID Connect credentials could not be decoded properly").WithDebug(err.Error())), i.ID))
+		return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("The OpenID Connect credentials could not be decoded properly").WithDebug(err.Error())), i.ID))
 	}
 
 	sess := session.NewInactiveSession()
@@ -424,7 +424,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 		}
 	}
 
-	return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to find matching OpenID Connect credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)), i.ID))
+	return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("Unable to find matching OpenID Connect credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)), i.ID))
 }
 
 func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
@@ -530,7 +530,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithWrap(err)))
+		return nil, s.HandleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("Could not update flow").WithWrap(err)))
 	}
 
 	var up map[string]string

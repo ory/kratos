@@ -198,7 +198,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, r *http
 func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWriter, r *http.Request, body *verificationSubmitPayload, f *verification.Flow) error {
 	token, err := s.d.VerificationTokenPersister().UseVerificationToken(ctx, f.ID, body.Token)
 	if err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
+		if errors.Is(err, sqlcon.ErrNoRows()) {
 			return s.retryVerificationFlowWithMessage(ctx, w, r, flow.TypeBrowser, text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
 		}
 

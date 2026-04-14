@@ -438,7 +438,7 @@ func TestPersister_Transaction(t *testing.T) {
 		assert.Contains(t, err.Error(), errMessage)
 		_, err = p.GetIdentity(context.Background(), i.ID, ri.ExpandNothing)
 		require.Error(t, err)
-		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
+		assert.Equal(t, sqlcon.ErrNoRows().Error(), err.Error())
 	})
 
 	t.Run("case=functions should use the context connection", func(t *testing.T) {
@@ -457,7 +457,7 @@ func TestPersister_Transaction(t *testing.T) {
 		assert.Contains(t, err.Error(), errMessage)
 		_, err = p.GetLoginFlow(context.Background(), lr.ID)
 		require.Error(t, err)
-		assert.Equal(t, sqlcon.ErrNoRows.Error(), err.Error())
+		assert.Equal(t, sqlcon.ErrNoRows().Error(), err.Error())
 	})
 }
 

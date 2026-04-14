@@ -105,7 +105,7 @@ func (p *Persister) CodeForFlow(ctx context.Context, flowID uuid.UUID) (codes *s
 			InitCode:     e.InitCode,
 			ReturnToCode: e.ReturnToCode,
 		}, true, nil
-	case errors.Is(err, sqlcon.ErrNoRows):
+	case errors.Is(err, sqlcon.ErrNoRows()):
 		return nil, false, nil
 	default:
 		return nil, false, err

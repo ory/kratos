@@ -427,7 +427,7 @@ func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if pr.IdentityID != sess.Identity.ID {
-		h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.
+		h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden().
 			WithID(text.ErrIDInitiatedBySomeoneElse).
 			WithReasonf("The request was made for another identity and has been blocked for security reasons.")))
 		return
@@ -446,13 +446,13 @@ func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request) {
 		if pr.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(ctx, h.d.Config(), RouteInitBrowserFlow, pr.ReturnTo)
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.
+			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().
 				WithReason("The settings flow has expired. Redirect the user to the settings flow init endpoint to initialize a new settings flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", pr.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.
+		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().
 			WithReason("The settings flow has expired. Call the settings flow init API endpoint to initialize a new settings flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(ctx), RouteInitAPIFlow).String())))
 		return
@@ -592,8 +592,8 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	f, err := h.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
-	if errors.Is(err, sqlcon.ErrNoRows) {
-		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, nil, errors.WithStack(herodot.ErrNotFound.WithReasonf("The settings request could not be found. Please restart the flow.")))
+	if errors.Is(err, sqlcon.ErrNoRows()) {
+		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, nil, errors.WithStack(herodot.ErrNotFound().WithReasonf("The settings request could not be found. Please restart the flow.")))
 		return
 	} else if err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, nil, nil, nil, err)

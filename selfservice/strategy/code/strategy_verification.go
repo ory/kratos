@@ -218,7 +218,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 
 	via := hackyInferChannel(body.Email)
 	if err := s.deps.CodeSender().SendVerificationCode(ctx, f, via, body.Email); err != nil {
-		if !errors.Is(err, ErrUnknownAddress) {
+		if !errors.Is(err, ErrUnknownAddress()) {
 			return s.handleVerificationError(r, f, body, err)
 		}
 		// Continue execution
@@ -251,7 +251,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 
 func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWriter, r *http.Request, codeString string, f *verification.Flow) error {
 	code, err := s.deps.VerificationCodePersister().UseVerificationCode(ctx, f.ID, codeString)
-	if errors.Is(err, ErrCodeNotFound) {
+	if errors.Is(err, ErrCodeNotFound()) {
 		f.UI.Messages.Clear()
 		f.UI.Messages.Add(text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed())
 		if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {

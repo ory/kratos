@@ -47,7 +47,7 @@ func ToMessageStatus(str string) (MessageStatus, error) {
 	case s.AddCase(MessageStatusAbandoned.String()):
 		return MessageStatusAbandoned, nil
 	default:
-		return 0, errors.WithStack(herodot.ErrBadRequest.WithWrap(s.ToUnknownCaseErr()).WithReason("Message status is not valid"))
+		return 0, errors.WithStack(herodot.ErrBadRequest().WithWrap(s.ToUnknownCaseErr()).WithReason("Message status is not valid"))
 	}
 }
 
@@ -71,7 +71,7 @@ func (ms MessageStatus) IsValid() error {
 	case MessageStatusQueued, MessageStatusSent, MessageStatusProcessing, MessageStatusAbandoned:
 		return nil
 	default:
-		return errors.WithStack(herodot.ErrBadRequest.WithReason("Message status is not valid"))
+		return errors.WithStack(herodot.ErrBadRequest().WithReason("Message status is not valid"))
 	}
 }
 
@@ -121,7 +121,7 @@ func ToMessageType(str string) (MessageType, error) {
 	case s.AddCase(messageTypeSMSText):
 		return MessageTypeSMS, nil
 	default:
-		return 0, errors.WithStack(herodot.ErrBadRequest.WithWrap(s.ToUnknownCaseErr()).WithReason("Message type is not valid"))
+		return 0, errors.WithStack(herodot.ErrBadRequest().WithWrap(s.ToUnknownCaseErr()).WithReason("Message type is not valid"))
 	}
 }
 
@@ -141,7 +141,7 @@ func (mt MessageType) IsValid() error {
 	case MessageTypeEmail, MessageTypeSMS:
 		return nil
 	default:
-		return errors.WithStack(herodot.ErrBadRequest.WithReason("Message type is not valid"))
+		return errors.WithStack(herodot.ErrBadRequest().WithReason("Message type is not valid"))
 	}
 }
 

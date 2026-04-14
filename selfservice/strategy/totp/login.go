@@ -122,7 +122,7 @@ func (s *Strategy) Login(_ http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	var o identity.CredentialsTOTPConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("The TOTP credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)), i.ID)
+		return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("The TOTP credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)), i.ID)
 	}
 
 	key, err := otp.NewKeyFromURL(o.TOTPURL)
@@ -136,7 +136,7 @@ func (s *Strategy) Login(_ http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())), i.ID))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("Could not update flow").WithDebug(err.Error())), i.ID))
 	}
 
 	return i, nil

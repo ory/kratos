@@ -49,7 +49,7 @@ func (h *FakeHydra) AcceptLoginRequest(_ context.Context, params AcceptLoginRequ
 func (h *FakeHydra) GetLoginRequest(_ context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error) {
 	switch loginChallenge {
 	case FakeInvalidLoginChallenge:
-		return nil, herodot.ErrBadRequest.WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
+		return nil, herodot.ErrBadRequest().WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 	case FakeValidLoginChallenge:
 		return &hydraclientgo.OAuth2LoginRequest{
 			RequestUrl: h.RequestURL,

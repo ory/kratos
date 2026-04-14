@@ -130,7 +130,7 @@ func TestHandleError(t *testing.T) {
 	t.Run("case=error with nil flow defaults to error ui redirect", func(t *testing.T) {
 		t.Cleanup(reset)
 
-		flowError = herodot.ErrInternalServerError.WithReason("system error")
+		flowError = herodot.ErrInternalServerError().WithReason("system error")
 		group = node.PasswordGroup
 
 		sse, _ := expectErrorUI(t)
@@ -140,7 +140,7 @@ func TestHandleError(t *testing.T) {
 	t.Run("case=error with nil flow detects application/json", func(t *testing.T) {
 		t.Cleanup(reset)
 
-		flowError = herodot.ErrInternalServerError.WithReason("system error")
+		flowError = herodot.ErrInternalServerError().WithReason("system error")
 		group = node.PasswordGroup
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -203,7 +203,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				registrationFlow = newFlow(t, time.Minute, tc.t)
-				flowError = herodot.ErrInternalServerError.WithReason("system error")
+				flowError = herodot.ErrInternalServerError().WithReason("system error")
 				group = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -221,7 +221,7 @@ func TestHandleError(t *testing.T) {
 
 				registrationFlow = newFlow(t, time.Minute, flow.TypeBrowser, withLoginChallenge(hydra.FakeInvalidLoginChallenge))
 				group = node.PasswordGroup
-				flowError = herodot.ErrBadRequest.WithReason("missing field 'password' fake error")
+				flowError = herodot.ErrBadRequest().WithReason("missing field 'password' fake error")
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -243,7 +243,7 @@ func TestHandleError(t *testing.T) {
 
 				registrationFlow = newFlow(t, time.Minute, flow.TypeBrowser, withLoginChallenge(hydra.FakeValidLoginChallenge))
 				group = node.PasswordGroup
-				flowError = herodot.ErrBadRequest.WithReason("missing field 'password' fake error")
+				flowError = herodot.ErrBadRequest().WithReason("missing field 'password' fake error")
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
 				require.NoError(t, err)
@@ -298,7 +298,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			registrationFlow = newFlow(t, time.Minute, flow.TypeBrowser)
-			flowError = herodot.ErrInternalServerError.WithReason("system error")
+			flowError = herodot.ErrInternalServerError().WithReason("system error")
 			group = node.PasswordGroup
 
 			sse, _ := expectErrorUI(t)

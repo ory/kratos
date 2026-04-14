@@ -813,7 +813,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{totp()},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypeRecoveryCode]},
-			errIs:   session.ErrNoAALAvailable,
+			errIs:   session.ErrNoAALAvailable(),
 		},
 
 		{

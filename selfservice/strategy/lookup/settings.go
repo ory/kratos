@@ -220,7 +220,7 @@ func (s *Strategy) continueSettingsFlowReveal(ctx context.Context, ctxUpdate *se
 	}
 
 	if !hasLookup {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Can not reveal lookup codes because you have none."))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("Can not reveal lookup codes because you have none."))
 	}
 
 	_, cred, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), ctxUpdate.Session.IdentityID.String())
@@ -230,7 +230,7 @@ func (s *Strategy) continueSettingsFlowReveal(ctx context.Context, ctxUpdate *se
 
 	var creds identity.CredentialsLookupConfig
 	if err := json.Unmarshal(cred.Config, &creds); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode lookup codes from JSON.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode lookup codes from JSON.").WithDebug(err.Error()))
 	}
 
 	for _, n := range allSettingsNodes {
@@ -282,7 +282,7 @@ func (s *Strategy) continueSettingsFlowRegenerate(ctx context.Context, ctxUpdate
 func (s *Strategy) continueSettingsFlowConfirm(ctx context.Context, ctxUpdate *settings.UpdateContext) error {
 	codes := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyRegenerated)).Array()
 	if len(codes) != numCodes {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
 	}
 
 	rc := make([]identity.RecoveryCode, len(codes))
@@ -292,7 +292,7 @@ func (s *Strategy) continueSettingsFlowConfirm(ctx context.Context, ctxUpdate *s
 
 	co, err := json.Marshal(&identity.CredentialsLookupConfig{RecoveryCodes: rc})
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode totp options to JSON: %s", err))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode totp options to JSON: %s", err))
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)

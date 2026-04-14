@@ -32,7 +32,7 @@ type ErrNoActiveSessionFound struct {
 // NewErrNoActiveSessionFound creates a new ErrNoActiveSessionFound
 func NewErrNoActiveSessionFound() *ErrNoActiveSessionFound {
 	return &ErrNoActiveSessionFound{
-		DefaultError: herodot.ErrUnauthorized.WithID(text.ErrIDNoActiveSession).WithError("request does not have a valid authentication session").WithReason("No active session was found in this request."),
+		DefaultError: herodot.ErrUnauthorized().WithID(text.ErrIDNoActiveSession).WithError("request does not have a valid authentication session").WithReason("No active session was found in this request."),
 	}
 }
 

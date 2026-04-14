@@ -161,6 +161,6 @@ func TestTokenizer(t *testing.T) {
 		tid := "rs512-template"
 		ctx := setTokenizeConfig(t.Context(), tid, "jwk.es512.broken.json", "file://stub/rs512-template.jsonnet")
 		err := tkn.TokenizeSession(ctx, tid, s)
-		require.ErrorIs(t, err, herodot.ErrBadRequest)
+		require.ErrorIs(t, err, herodot.ErrBadRequest())
 	})
 }

@@ -163,7 +163,7 @@ func (s *Strategy) validateAndGetCredentialsFromTraits(ctx context.Context, i *i
 	var conf identity.CredentialsCode
 	if len(cred.Config) > 0 {
 		if err := json.Unmarshal(cred.Config, &conf); err != nil {
-			return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to unmarshal credentials config: %s", err))
+			return nil, nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to unmarshal credentials config: %s", err))
 		}
 	}
 
@@ -206,7 +206,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 	}
 
-	return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())))
+	return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unexpected flow state: %s", f.GetState())))
 }
 
 func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
@@ -331,7 +331,7 @@ func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.F
 	// Step 3: Attempt to use the code
 	registrationCode, err := s.deps.RegistrationCodePersister().UseRegistrationCode(ctx, f.ID, p.Code, cred.Identifiers...)
 	if err != nil {
-		if errors.Is(err, ErrCodeNotFound) {
+		if errors.Is(err, ErrCodeNotFound()) {
 			return errors.WithStack(schema.NewRegistrationCodeInvalid())
 		}
 		return errors.WithStack(err)

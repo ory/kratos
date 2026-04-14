@@ -217,8 +217,8 @@ func TestContainer(t *testing.T) {
 			expect    Container
 		}{
 			{err: errors.New("foo"), expectErr: true},
-			{err: &herodot.ErrNotFound, expectErr: true},
-			{err: herodot.ErrBadRequest.WithReason("tests"), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("tests")}}},
+			{err: herodot.ErrNotFound(), expectErr: true},
+			{err: herodot.ErrBadRequest().WithReason("tests"), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewValidationErrorGeneric("tests")}}},
 			{err: schema.NewInvalidCredentialsError(), expect: Container{Nodes: node.Nodes{}, Messages: text.Messages{*text.NewErrorValidationInvalidCredentials()}}},
 			{err: &jsonschema.ValidationError{Message: "test", InstancePtr: "#/foo/bar/baz"}, expect: Container{Nodes: node.Nodes{
 				&node.Node{Group: node.DefaultGroup, Type: node.Input, Attributes: &node.InputAttributes{Name: "foo.bar.baz", Type: node.InputAttributeTypeText}, Messages: text.Messages{*text.NewValidationErrorGeneric("test")}, Meta: new(node.Meta)},

@@ -79,7 +79,7 @@ func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 
 	public.GET(RouteInitBrowserFlow, h.createBrowserRegistrationFlow)
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.createNativeRegistrationFlow,
-		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn))))
+		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn()))))
 
 	public.GET(RouteGetFlow, h.getRegistrationFlow)
 
@@ -90,7 +90,7 @@ func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request) {
 	handler := session.RedirectOnAuthenticated(h.d)
 	if x.IsJSONRequest(r) {
-		handler = session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)
+		handler = session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn())
 	}
 
 	handler(w, r)
@@ -120,7 +120,7 @@ func WithFlowOAuth2LoginChallenge(loginChallenge string) FlowOption {
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
 	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
-		return nil, errors.WithStack(ErrRegistrationDisabled)
+		return nil, errors.WithStack(ErrRegistrationDisabled())
 	}
 
 	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRegistrationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)
@@ -134,7 +134,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
 		e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithWrap(err))
 		}
 		f.SessionTokenExchangeCode = e.InitCode
 	}
@@ -411,7 +411,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 				}
 				returnTo, err := url.Parse(rt)
 				if err != nil {
-					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
+					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to parse URL: %s", rt)))
 					return
 				}
 				x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
@@ -433,7 +433,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 		}
 
 		if x.IsJSONRequest(r) {
-			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn()))
 			return
 		}
 
@@ -524,7 +524,7 @@ type getRegistrationFlow struct {
 //	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled()))
 		return
 	}
 
@@ -546,13 +546,13 @@ func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, ar.ReturnTo)
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().WithID(text.ErrIDSelfServiceFlowExpired).
 				WithReason("The registration flow has expired. Redirect the user to the registration flow init endpoint to initialize a new registration flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", ar.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().WithID(text.ErrIDSelfServiceFlowExpired).
 			WithReason("The registration flow has expired. Call the registration flow init API endpoint to initialize a new registration flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
@@ -688,7 +688,7 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn()))
 		return
 	}
 

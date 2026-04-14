@@ -121,7 +121,7 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 	defer otelx.End(span, &err)
 
 	id, cred, err = s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		// this is a migration for old identities that do not have a code credential
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		// Case insensitive because we only care about emails.
@@ -247,7 +247,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoLoginStrategyResponsible()), false)
 	}
 
-	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())), false)
+	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unexpected flow state: %s", f.GetState())), false)
 }
 
 // nonOrgFilter excludes strategies that support organization-based authentication.
@@ -582,7 +582,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *update
 
 	loginCode, err := s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
 	if err != nil {
-		if errors.Is(err, ErrCodeNotFound) {
+		if errors.Is(err, ErrCodeNotFound()) {
 			return nil, schema.NewLoginCodeInvalid()
 		}
 		return nil, errors.WithStack(err)
@@ -644,7 +644,7 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 		address.VerifiedAt = new(sqlxx.NullTime(time.Now().UTC()))
 		address.Status = identity.VerifiableAddressStatusCompleted
 		if persistNow {
-			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows) {
+			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows()) {
 				// This happens when the verified address does not yet exist, for example during registration. In this case we just skip.
 				s.deps.Logger().WithError(err).Warnf("Could not update verifiable address for identity %s.", i.ID)
 				continue

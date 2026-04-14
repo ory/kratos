@@ -317,7 +317,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("different network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetIdentity(ctx, expected.ID, identity.ExpandDefault)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				count, err := p.CountIdentities(ctx)
 				require.NoError(t, err)
@@ -414,7 +414,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				err := p.CreateIdentities(ctx, identities...)
 				if dbname == "mysql" {
 					// partial inserts are not supported on mysql
-					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation())
 					return
 				}
 				createdAt := time.Now().UTC()
@@ -481,7 +481,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			}
 			err := p.CreateIdentities(ctx, second...)
 			if dbname == "mysql" {
-				assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+				assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation())
 				return
 			}
 			errWithCtx := new(identity.CreateIdentitiesError)
@@ -550,10 +550,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("different network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetIdentity(ctx, expected.ID, identity.ExpandNothing)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				_, err = p.GetIdentityConfidential(ctx, expected.ID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -572,7 +572,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				ids := transform(email)
 				expected := passwordIdentity("", ids)
 				err := p.CreateIdentity(ctx, expected)
-				require.ErrorIs(t, err, sqlcon.ErrUniqueViolation, "%+v", err)
+				require.ErrorIs(t, err, sqlcon.ErrUniqueViolation(), "%+v", err)
 
 				_, err = p.GetIdentity(ctx, expected.ID, identity.ExpandNothing)
 				require.Error(t, err)
@@ -640,7 +640,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("fails on different network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetIdentityConfidential(ctx, initial.ID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -673,7 +673,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("fails on different network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				require.ErrorIs(t, p.UpdateIdentity(ctx, expected), sqlcon.ErrNoRows)
+				require.ErrorIs(t, p.UpdateIdentity(ctx, expected), sqlcon.ErrNoRows())
 			})
 		})
 
@@ -765,7 +765,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("fails on different network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
-				require.ErrorIs(t, p.DeleteIdentity(ctx, expected.ID), sqlcon.ErrNoRows)
+				require.ErrorIs(t, p.DeleteIdentity(ctx, expected.ID), sqlcon.ErrNoRows())
 
 				p = testhelpers.ExistingNetwork(t, p, nid)
 				_, err := p.GetIdentity(ctx, expected.ID, identity.ExpandNothing)
@@ -1014,7 +1014,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, email)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -1057,7 +1057,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err = p.FindIdentityByWebauthnUserHandle(ctx, userHandle)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -1078,7 +1078,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), false, identity.ExpandDefault)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -1091,7 +1091,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			createdIDs = append(createdIDs, expected.ID)
 
 			_, err := p.FindIdentityByCredentialIdentifier(ctx, strings.ToUpper(email), true, identity.ExpandDefault)
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 			actual, err := p.FindIdentityByCredentialIdentifier(ctx, email, true, identity.ExpandDefault)
 			require.NoError(t, err)
@@ -1102,7 +1102,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.FindIdentityByCredentialIdentifier(ctx, email, true, identity.ExpandDefault)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -1186,7 +1186,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			t.Run("not if on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, identifier)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -1204,7 +1204,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("case=not found", func(t *testing.T) {
 				_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "does-not-exist")
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 
 			transform := func(k int, value string) string {
@@ -1248,7 +1248,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 							t.Run("not if on another network", func(t *testing.T) {
 								_, p := testhelpers.NewNetwork(t, ctx, p)
 								_, err := p.FindVerifiableAddressByValue(ctx, expected.Via, transform(k+1, expected.Value))
-								require.ErrorIs(t, err, sqlcon.ErrNoRows)
+								require.ErrorIs(t, err, sqlcon.ErrNoRows())
 							})
 						})
 					})
@@ -1263,7 +1263,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 				t.Run("not if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
-					require.ErrorIs(t, p.UpdateVerifiableAddress(ctx, &address), sqlcon.ErrNoRows)
+					require.ErrorIs(t, p.UpdateVerifiableAddress(ctx, &address), sqlcon.ErrNoRows())
 				})
 
 				actual, err := p.FindVerifiableAddressByValue(ctx, address.Via, address.Value)
@@ -1285,7 +1285,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 
 				address = identity.NewVerifiableEmailAddress("verification.TestPersister.Update-Identity-next@ory.sh", i.ID)
@@ -1293,12 +1293,12 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				require.NoError(t, p.UpdateIdentity(ctx, &i))
 
 				_, err = p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
-				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
+				require.EqualError(t, err, sqlcon.ErrNoRows().Error())
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity@ory.sh")
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 
 				actual, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
@@ -1309,7 +1309,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity-next@ory.sh")
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 			})
 
@@ -1327,7 +1327,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 
 				address = identity.NewVerifiableEmailAddress("verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh", i.ID)
@@ -1335,12 +1335,12 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				require.NoError(t, p.UpdateIdentity(ctx, &i))
 
 				_, err = p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
-				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
+				require.EqualError(t, err, sqlcon.ErrNoRows().Error())
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive@ory.sh"))
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 
 				actual, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh"))
@@ -1351,7 +1351,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeEmail, "verification.TestPersister.Update-Identity-case-insensitive-next@ory.sh")
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 			})
 		})
@@ -1400,7 +1400,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 			t.Run("case=not found", func(t *testing.T) {
 				_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, "does-not-exist")
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "does-not-exist")
 				require.NoError(t, err)
@@ -1432,7 +1432,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 							t.Run("not if on another network", func(t *testing.T) {
 								_, p := testhelpers.NewNetwork(t, ctx, p)
 								_, err := p.FindRecoveryAddressByValue(ctx, expected.Via, expected.Value)
-								require.ErrorIs(t, err, sqlcon.ErrNoRows)
+								require.ErrorIs(t, err, sqlcon.ErrNoRows())
 							})
 						})
 					})
@@ -1475,7 +1475,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
 					require.NoError(t, err)
@@ -1487,7 +1487,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				require.NoError(t, p.UpdateIdentity(ctx, id))
 
 				_, err = p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
-				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
+				require.EqualError(t, err, sqlcon.ErrNoRows().Error())
 
 				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
 				require.NoError(t, err)
@@ -1496,7 +1496,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
 					require.NoError(t, err)
@@ -1521,7 +1521,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, emailNext)
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
 					require.NoError(t, err)
@@ -1538,19 +1538,19 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("Recovery.TestPersister.Update-case-insensitive@ory.sh"))
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 
 				id.RecoveryAddresses = []identity.RecoveryAddress{{Via: identity.AddressTypeEmail, Value: "recovery.TestPersister.Update-case-insensitive-next@ory.sh"}}
 				require.NoError(t, p.UpdateIdentity(ctx, id))
 
 				_, err = p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
-				require.EqualError(t, err, sqlcon.ErrNoRows.Error())
+				require.EqualError(t, err, sqlcon.ErrNoRows().Error())
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive@ory.sh"))
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 
 				actual, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
@@ -1561,7 +1561,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 			})
 		})
@@ -1585,10 +1585,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			require.NoError(t, p.GetConnection(ctx).RawQuery("INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", ici2, iid, cid2, nid2, "nid2", time.Now(), time.Now(), m[0].ID).Exec())
 
 			_, err := p.GetIdentity(ctx, nid1, identity.ExpandNothing)
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 			_, err = p.GetIdentityConfidential(ctx, nid1)
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 			i, c, err := p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid1")
 			require.NoError(t, err)
@@ -1596,7 +1596,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			require.Len(t, i.Credentials, 1)
 
 			_, _, err = p.FindByCredentialsIdentifier(ctx, m[0].Name, "nid2")
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 			i, err = p.GetIdentityConfidential(ctx, iid)
 			require.NoError(t, err)

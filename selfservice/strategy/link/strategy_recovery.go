@@ -162,13 +162,13 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		var err error
 		expiresIn, err = time.ParseDuration(p.ExpiresIn)
 		if err != nil {
-			s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.ExpiresIn)))
+			s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.ExpiresIn)))
 			return
 		}
 	}
 
 	if expiresIn <= 0 {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Value from "expires_in" must be result to a future time: %s`, p.ExpiresIn)))
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Value from "expires_in" must be result to a future time: %s`, p.ExpiresIn)))
 		return
 	}
 
@@ -179,8 +179,8 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 	}
 
 	id, err := s.d.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
-	if errors.Is(err, sqlcon.ErrNoRows) {
-		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The requested identity id does not exist.").WithWrap(err)))
+	if errors.Is(err, sqlcon.ErrNoRows()) {
+		s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("The requested identity id does not exist.").WithWrap(err)))
 		return
 	} else if err != nil {
 		s.d.Writer().WriteError(w, r, err)
@@ -272,7 +272,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 
 	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
 		if x.IsJSONRequest(r) {
-			session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), recovery.ErrAlreadyLoggedIn)(w, r)
+			session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), recovery.ErrAlreadyLoggedIn())(w, r)
 		} else {
 			session.RedirectOnAuthenticated(s.d)(w, r)
 		}
@@ -363,7 +363,7 @@ func (s *Strategy) recoveryIssueSession(ctx context.Context, w http.ResponseWrit
 func (s *Strategy) recoveryUseToken(ctx context.Context, w http.ResponseWriter, r *http.Request, fID uuid.UUID, body *recoverySubmitPayload) error {
 	token, err := s.d.RecoveryTokenPersister().UseRecoveryToken(r.Context(), fID, body.Token)
 	if err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
+		if errors.Is(err, sqlcon.ErrNoRows()) {
 			return s.retryRecoveryFlowWithMessage(w, r, flow.TypeBrowser, text.NewErrorValidationRecoveryTokenInvalidOrAlreadyUsed())
 		}
 

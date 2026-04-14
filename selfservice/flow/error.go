@@ -73,7 +73,7 @@ func (e *ReplacedError) EnhanceJSONError() interface{} {
 
 func NewFlowReplacedError(message *text.Message) *ReplacedError {
 	return &ReplacedError{
-		DefaultError: nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowReplaced).
+		DefaultError: nosurfx.ErrGone().WithID(text.ErrIDSelfServiceFlowReplaced).
 			WithError("self-service flow replaced").
 			WithReason(message.Text),
 	}
@@ -144,7 +144,7 @@ func NewFlowExpiredError(at time.Time) *ExpiredError {
 	return &ExpiredError{
 		ExpiredAt: at.UTC(),
 		Since:     ago,
-		DefaultError: nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+		DefaultError: nosurfx.ErrGone().WithID(text.ErrIDSelfServiceFlowExpired).
 			WithError("self-service flow expired").
 			WithReasonf("The self-service flow expired %.2f minutes ago, initialize a new one.", ago.Minutes()),
 	}

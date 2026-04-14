@@ -259,7 +259,7 @@ func (b *Builder) addRawBody(body any) (err error) {
 			return errors.WithStack(err)
 		}
 	default:
-		return herodot.ErrMisconfiguration.WithDetail("invalid_content_type", contentType)
+		return herodot.ErrMisconfiguration().WithDetail("invalid_content_type", contentType)
 	}
 
 	return nil

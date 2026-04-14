@@ -67,14 +67,14 @@ func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 	redirect := session.RedirectOnAuthenticated(h.d)
 	public.GET(RouteInitBrowserFlow, h.d.SessionHandler().IsNotAuthenticated(h.createBrowserRecoveryFlow, func(w http.ResponseWriter, r *http.Request) {
 		if x.IsJSONRequest(r) {
-			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn()))
 		} else {
 			redirect(w, r)
 		}
 	}))
 
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.createNativeRecoveryFlow,
-		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)))
+		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn())))
 
 	public.GET(RouteGetFlow, h.getRecoveryFlow)
 
@@ -119,7 +119,7 @@ func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 //	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 	activeRecoveryStrategies, _, err := h.d.GetActiveRecoveryStrategies(r.Context())
@@ -195,7 +195,7 @@ type createBrowserRecoveryFlow struct {
 //	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 	activeRecoveryStrategies, _, err := h.d.GetActiveRecoveryStrategies(r.Context())
@@ -288,7 +288,7 @@ type getRecoveryFlow struct {
 //	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRecoveryEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Recovery is not allowed because it was disabled.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Recovery is not allowed because it was disabled.")))
 		return
 	}
 
@@ -311,7 +311,7 @@ func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 		if f.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, f.ReturnTo)
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.
+			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().
 				WithReason("The recovery flow has expired. Redirect the user to the recovery flow init endpoint to initialize a new recovery flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", f.ReturnTo)))
@@ -422,8 +422,8 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	f, err := h.d.RecoveryFlowPersister().GetRecoveryFlow(r.Context(), rid)
-	if errors.Is(err, sqlcon.ErrNoRows) {
-		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrNotFound.WithReasonf("The recovery request could not be found. Please restart the flow.")))
+	if errors.Is(err, sqlcon.ErrNoRows()) {
+		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrNotFound().WithReasonf("The recovery request could not be found. Please restart the flow.")))
 		return
 	} else if err != nil {
 		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)

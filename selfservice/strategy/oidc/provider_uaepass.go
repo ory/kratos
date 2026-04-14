@@ -123,7 +123,7 @@ func (p *ProviderUAEPass) Claims(ctx context.Context, exchange *oauth2.Token, qu
 
 	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, p.userinfoURL, nil)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.
+		return nil, errors.WithStack(herodot.ErrInternalServerError().
 			WithReason("failed to create HTTP request").
 			WithDetail("url", p.userinfoURL).
 			WithError(err.Error()))
@@ -134,7 +134,7 @@ func (p *ProviderUAEPass) Claims(ctx context.Context, exchange *oauth2.Token, qu
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.
+		return nil, errors.WithStack(herodot.ErrUpstreamError().
 			WithReason("failed to make HTTP request to UAE PASS userinfo endpoint").
 			WithDetail("url", p.userinfoURL).
 			WithError(err.Error()))
@@ -145,7 +145,7 @@ func (p *ProviderUAEPass) Claims(ctx context.Context, exchange *oauth2.Token, qu
 
 	if resp.StatusCode != http.StatusOK {
 		rawResponse, _ := io.ReadAll(body)
-		return nil, errors.WithStack(herodot.ErrUpstreamError.
+		return nil, errors.WithStack(herodot.ErrUpstreamError().
 			WithReason("UAE PASS userinfo endpoint returned non-200 status").
 			WithDetail("url", p.userinfoURL).
 			WithDetail("external_error", string(rawResponse)).
@@ -154,7 +154,7 @@ func (p *ProviderUAEPass) Claims(ctx context.Context, exchange *oauth2.Token, qu
 
 	var rawClaims map[string]interface{}
 	if err := json.NewDecoder(body).Decode(&rawClaims); err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.
+		return nil, errors.WithStack(herodot.ErrUpstreamError().
 			WithReason("failed to decode UAE PASS userinfo response").
 			WithDetail("url", p.userinfoURL).
 			WithError(err.Error()))

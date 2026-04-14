@@ -61,7 +61,9 @@ type (
 	}
 )
 
-var ErrUnknownAddress = herodot.ErrNotFound.WithReason("recovery requested for unknown address")
+func ErrUnknownAddress() *herodot.DefaultError {
+	return herodot.ErrNotFound().WithReason("recovery requested for unknown address")
+}
 
 func NewSender(deps senderDependencies) *Sender {
 	return &Sender{deps: deps}
@@ -211,7 +213,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to
 		Debug("Preparing recovery code.")
 
 	address, err := s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, via, to)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
 		s.deps.Logger().
 			WithField("via", via).
@@ -238,7 +240,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to
 		})); err != nil {
 			return err
 		}
-		return errors.WithStack(ErrUnknownAddress)
+		return errors.WithStack(ErrUnknownAddress())
 	} else if err != nil {
 		// DB error
 		return err
@@ -318,7 +320,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 			UserRequestHeaders: hook.RemoveDisallowedHeaders(requestHeader, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 		})
 	default:
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.RecoveryAddress.Via))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email or sms but got %s", code.RecoveryAddress.Via))
 	}
 
 	return s.send(ctx, code.RecoveryAddress.Via, t)
@@ -336,7 +338,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		Debug("Preparing verification code.")
 
 	address, err := s.deps.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowVerificationNotifyUnknownRecipients(ctx)
 		s.deps.Logger().
 			WithField("via", via).
@@ -359,7 +361,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		})); err != nil {
 			return err
 		}
-		return errors.WithStack(ErrUnknownAddress)
+		return errors.WithStack(ErrUnknownAddress())
 
 	} else if err != nil {
 		return err
@@ -437,7 +439,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 		})
 	default:
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))
 	}
 
 	if err := s.send(ctx, code.VerifiableAddress.Via, t); err != nil {
@@ -457,7 +459,7 @@ func (s *Sender) send(ctx context.Context, via string, t courier.Template) error
 
 		t, ok := t.(courier.EmailTemplate)
 		if !ok {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email template but got %T", t))
+			return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email template but got %T", t))
 		}
 
 		_, err = c.QueueEmail(ctx, t)
@@ -470,7 +472,7 @@ func (s *Sender) send(ctx context.Context, via string, t courier.Template) error
 
 		t, ok := t.(courier.SMSTemplate)
 		if !ok {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected sms template but got %T", t))
+			return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected sms template but got %T", t))
 		}
 
 		_, err = c.QueueSMS(ctx, t)

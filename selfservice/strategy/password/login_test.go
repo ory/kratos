@@ -252,7 +252,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch(),
 				json.RawMessage(actual), "%s", actual)
 		})
 
@@ -263,7 +263,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch(),
 				json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 		})
 
@@ -568,7 +568,7 @@ func TestCompleteLogin(t *testing.T) {
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
-					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 				})
 
 				t.Run("show UI and hint at username", func(t *testing.T) {
@@ -618,7 +618,7 @@ func TestCompleteLogin(t *testing.T) {
 					body := ioutilx.MustReadAll(res.Body)
 
 					require.EqualValues(t, http.StatusBadRequest, res.StatusCode)
-					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 				})
 
 				t.Run("show UI and hint at username", func(t *testing.T) {

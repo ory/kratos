@@ -179,12 +179,12 @@ func (l *ProviderLinkedIn) Claims(ctx context.Context, exchange *oauth2.Token, q
 	ctx, client := httpx.SetOAuth2(ctx, l.reg.HTTPClient(ctx), o, exchange)
 	profile, err := l.Profile(ctx, client)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(err).WithReasonf("%s", err))
 	}
 
 	email, err := l.Email(ctx, client)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(err).WithReasonf("%s", err))
 	}
 
 	claims := &Claims{

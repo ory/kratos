@@ -42,7 +42,7 @@ func TestHandler(t *testing.T) {
 			w.WriteHeader(http.StatusNoContent)
 		}))
 		router.Handler("GET", "/set-error", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			id, err := reg.SelfServiceErrorPersister().CreateErrorContainer(context.Background(), nosurf.Token(r), herodot.ErrNotFound.WithReason("foobar"))
+			id, err := reg.SelfServiceErrorPersister().CreateErrorContainer(context.Background(), nosurf.Token(r), herodot.ErrNotFound().WithReason("foobar"))
 			require.NoError(t, err)
 			_, _ = w.Write([]byte(id.String()))
 		}))
@@ -59,7 +59,7 @@ func TestHandler(t *testing.T) {
 			require.NoError(t, err)
 			return body
 		}
-		expectedError := x.MustEncodeJSON(t, herodot.ErrNotFound.WithReason("foobar"))
+		expectedError := x.MustEncodeJSON(t, herodot.ErrNotFound().WithReason("foobar"))
 
 		t.Run("call with valid csrf cookie", func(t *testing.T) {
 			hc := &http.Client{}
@@ -97,10 +97,10 @@ func TestHandler(t *testing.T) {
 		for k, tc := range []struct {
 			gave error
 		}{
-			{gave: herodot.ErrNotFound.WithReason("foobar")},
-			{gave: herodot.ErrNotFound.WithReason("foobar")},
-			{gave: errors.WithStack(herodot.ErrNotFound.WithReason("foobar"))},
-			{gave: errors.WithStack(herodot.ErrNotFound.WithReason("foobar").WithTrace(errors.New("asdf")))},
+			{gave: herodot.ErrNotFound().WithReason("foobar")},
+			{gave: herodot.ErrNotFound().WithReason("foobar")},
+			{gave: errors.WithStack(herodot.ErrNotFound().WithReason("foobar"))},
+			{gave: errors.WithStack(herodot.ErrNotFound().WithReason("foobar").WithTrace(errors.New("asdf")))},
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				csrf := x.NewUUID()

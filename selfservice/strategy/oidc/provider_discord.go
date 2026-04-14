@@ -73,18 +73,18 @@ func (d *ProviderDiscord) Claims(ctx context.Context, exchange *oauth2.Token, qu
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), " ")
 	for _, check := range d.Config().Scope {
 		if !slices.Contains(grantedScopes, check) {
-			return nil, errors.WithStack(ErrScopeMissing)
+			return nil, errors.WithStack(ErrScopeMissing())
 		}
 	}
 
 	dg, err := discordgo.New(fmt.Sprintf("Bearer %s", exchange.AccessToken))
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("%s", err))
 	}
 
 	user, err := dg.User("@me")
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(err).WithReasonf("%s", err))
 	}
 
 	claims := &Claims{

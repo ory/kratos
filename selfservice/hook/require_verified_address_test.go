@@ -58,14 +58,14 @@ func TestAddressVerifier(t *testing.T) {
 					{
 						name:                "No Verification Address",
 						verifiableAddresses: []identity.VerifiableAddress{},
-						expectedError:       herodot.ErrMisconfiguration.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."),
+						expectedError:       herodot.ErrMisconfiguration().WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."),
 					},
 					{
 						name: "Single Address Not Verified",
 						verifiableAddresses: []identity.VerifiableAddress{
 							{ID: uuid.UUID{}, Verified: false},
 						},
-						expectedError: login.ErrAddressNotVerified,
+						expectedError: login.ErrAddressNotVerified(),
 					},
 					{
 						name: "Single Address Verified",
@@ -86,7 +86,7 @@ func TestAddressVerifier(t *testing.T) {
 							{ID: uuid.UUID{}, Verified: false},
 							{ID: uuid.UUID{}, Verified: false},
 						},
-						expectedError: login.ErrAddressNotVerified,
+						expectedError: login.ErrAddressNotVerified(),
 					},
 					{
 						name: "One Address Verified And One Not",
@@ -169,7 +169,7 @@ func TestAddressVerifier(t *testing.T) {
 
 			// Check for required JSON fields
 			require.NoError(t, json.Unmarshal([]byte(gjson.GetBytes(body, "error").Raw), &responseErr))
-			assert.Contains(t, responseErr.ReasonField, login.ErrAddressNotVerified.Reason(), "%s", string(body))
+			assert.Contains(t, responseErr.ReasonField, login.ErrAddressNotVerified().Reason(), "%s", string(body))
 
 			// Verify flow has continueWith added
 			var continueWith flow.ContinueWithVerificationUI
@@ -280,7 +280,7 @@ func TestAddressVerifier(t *testing.T) {
 			}
 
 			err := verifier.ExecuteLoginPostHook(nil, mockRequest, node.DefaultGroup, noAddressFlow, sessions)
-			assert.ErrorIs(t, err, herodot.ErrMisconfiguration)
+			assert.ErrorIs(t, err, herodot.ErrMisconfiguration())
 		})
 	})
 }

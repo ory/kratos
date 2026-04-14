@@ -496,7 +496,7 @@ func TestManager(t *testing.T) {
 			original.Traits = newTraits("email-update-2@ory.sh", "")
 			err := reg.IdentityManager().Update(t.Context(), original)
 			require.Error(t, err)
-			assert.Equal(t, identity.ErrProtectedFieldModified, errors.Cause(err))
+			assert.Equal(t, identity.ErrProtectedFieldModified(), errors.Cause(err))
 
 			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
@@ -674,7 +674,7 @@ func TestManager(t *testing.T) {
 			err := reg.IdentityManager().UpdateTraits(
 				t.Context(), original.ID, newTraits("email-updatetraits-2@ory.sh", ""))
 			require.Error(t, err)
-			assert.Equal(t, identity.ErrProtectedFieldModified, errors.Cause(err))
+			assert.Equal(t, identity.ErrProtectedFieldModified(), errors.Cause(err))
 
 			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
@@ -785,7 +785,7 @@ func TestManager(t *testing.T) {
 					identity.CredentialsTypePassword: {Identifiers: []string{"no-conflict@example.com"}},
 				},
 			})
-			assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+			assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 			assert.Nil(t, found)
 			assert.Empty(t, foundConflictAddress)
 			assert.Empty(t, addressType)

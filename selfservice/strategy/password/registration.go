@@ -153,7 +153,7 @@ func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registrat
 	case h := <-hpw:
 		co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(h)})
 		if err != nil {
-			return s.handleRegistrationError(r, f, p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode password options to JSON: %s", err)))
+			return s.handleRegistrationError(r, f, p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode password options to JSON: %s", err)))
 		}
 		i.UpsertCredentialsConfig(s.ID(), co, 0)
 	}

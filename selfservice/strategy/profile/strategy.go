@@ -162,7 +162,7 @@ func (s *Strategy) continueFlow(ctx context.Context, r *http.Request, ctxUpdate 
 	}
 
 	if len(p.Traits) == 0 {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Did not receive any value changes."))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("Did not receive any value changes."))
 	}
 
 	if err := s.hydrateForm(r, ctxUpdate.Flow, p.Traits); err != nil {
@@ -177,7 +177,7 @@ func (s *Strategy) continueFlow(ctx context.Context, r *http.Request, ctxUpdate 
 
 	update, err := s.d.IdentityManager().SetTraits(ctx, ctxUpdate.GetSessionIdentity().ID, identity.Traits(p.Traits), options...)
 	if err != nil {
-		if errors.Is(err, identity.ErrProtectedFieldModified) {
+		if errors.Is(err, identity.ErrProtectedFieldModified()) {
 			return settings.NewFlowNeedsReAuth()
 		}
 		return err

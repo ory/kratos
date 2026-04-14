@@ -746,7 +746,7 @@ func TestRegistration(t *testing.T) {
 					}
 
 					identity, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePassword, values.Get("traits.email"))
-					require.NoError(t, err, sqlcon.ErrNoRows)
+					require.NoError(t, err, sqlcon.ErrNoRows())
 
 					assert.NotEmpty(t, identity.ID)
 					assert.Equalf(t, values.Get("traits.email"), gjson.GetBytes(identity.Traits, "email").String(), "%s", identity.Traits)

@@ -207,7 +207,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
-		return errors.WithStack(registration.ErrAlreadyLoggedIn)
+		return errors.WithStack(registration.ErrAlreadyLoggedIn())
 	}
 
 	if p.IDToken != "" {
@@ -483,7 +483,7 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 func (s *Strategy) setTraits(provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
 	}
 
 	if container != nil {
@@ -512,7 +512,7 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 
 	metadata := gjson.Get(evaluated, string(m))
 	if metadata.Exists() && !metadata.IsObject() {
-		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
+		return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
 	}
 
 	switch m {
@@ -528,12 +528,12 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress, error) {
 	if verifiedAddresses := gjson.Get(evaluated, VerifiedAddressesKey); verifiedAddresses.Exists() {
 		if !verifiedAddresses.IsArray() {
-			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("OpenID Connect Jsonnet mapper did not return an array for key %s. Please check your Jsonnet code!", VerifiedAddressesKey))
+			return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("OpenID Connect Jsonnet mapper did not return an array for key %s. Please check your Jsonnet code!", VerifiedAddressesKey))
 		}
 
 		var va []VerifiedAddress
 		if err := json.Unmarshal([]byte(verifiedAddresses.Raw), &va); err != nil {
-			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
+			return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
 		}
 
 		for i := range va {

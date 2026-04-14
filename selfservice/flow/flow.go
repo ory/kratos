@@ -30,7 +30,7 @@ func AppendFlowTo(src *url.URL, id uuid.UUID) *url.URL {
 func GetFlowID(r *http.Request) (uuid.UUID, error) {
 	rid := x.ParseUUID(r.URL.Query().Get("flow"))
 	if rid == uuid.Nil {
-		return rid, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing or malformed."))
+		return rid, errors.WithStack(herodot.ErrBadRequest().WithReasonf("The flow query parameter is missing or malformed."))
 	}
 	return rid, nil
 }

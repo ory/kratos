@@ -221,7 +221,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch(),
 				json.RawMessage(actual), "%s", actual)
 		})
 
@@ -232,7 +232,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch(),
 				json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 		})
 

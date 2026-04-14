@@ -64,7 +64,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			t.Run("can not fetch on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, r.ID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -113,7 +113,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			t.Run("can not fetch on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, r.ID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -223,7 +223,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				_, other := testhelpers.NewNetwork(t, ctx, p)
 
 				expected.RequestURL = "updated"
-				require.ErrorIs(t, other.UpdateSettingsFlow(ctx, expected), sqlcon.ErrNoRows)
+				require.ErrorIs(t, other.UpdateSettingsFlow(ctx, expected), sqlcon.ErrNoRows())
 
 				actual, err := p.GetSettingsFlow(ctx, id)
 				require.NoError(t, err)
@@ -235,7 +235,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 			t.Run("can not get on another network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetSettingsFlow(ctx, id)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 
 			t.Run("network isolation", func(t *testing.T) {
@@ -253,7 +253,7 @@ func TestFlowPersister(ctx context.Context, p persistence.Persister) func(t *tes
 				_, err := p.GetSettingsFlow(ctx, sid1)
 				require.NoError(t, err)
 				_, err = p.GetSettingsFlow(ctx, sid2)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 	}

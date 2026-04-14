@@ -238,5 +238,5 @@ func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, maps.Keys(supportedProviders))
 		}
 	}
-	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
+	return nil, errors.WithStack(herodot.ErrNotFound().WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
 }

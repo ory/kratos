@@ -63,7 +63,7 @@ func useOneTimeCode[P any, U interface {
 	}
 
 	if submitCount > maxSubmissions {
-		return nil, errors.WithStack(code.ErrCodeSubmittedTooOften)
+		return nil, errors.WithStack(code.ErrCodeSubmittedTooOften())
 	}
 
 	nid := p.NetworkID(ctx)
@@ -76,8 +76,8 @@ func useOneTimeCode[P any, U interface {
 		}
 
 		if err := sqlcon.HandleError(codesQuery.All(&codes)); err != nil {
-			if errors.Is(err, sqlcon.ErrNoRows) {
-				return errors.WithStack(code.ErrCodeNotFound)
+			if errors.Is(err, sqlcon.ErrNoRows()) {
+				return errors.WithStack(code.ErrCodeNotFound())
 			}
 			return err
 		}
@@ -156,8 +156,8 @@ func incrementOTPCodeSubmitCount(ctx context.Context, p *Persister, flowID uuid.
 		q := fmt.Sprintf("UPDATE %s SET submit_count = submit_count + 1 WHERE id = ? AND nid = ? RETURNING submit_count", flowTableName)
 		err = sqlcon.HandleError(p.Connection(ctx).RawQuery(q, flowID, nid).First(&submitCount))
 	}
-	if errors.Is(err, sqlcon.ErrNoRows) {
-		return 0, errors.WithStack(code.ErrCodeNotFound)
+	if errors.Is(err, sqlcon.ErrNoRows()) {
+		return 0, errors.WithStack(code.ErrCodeNotFound())
 	}
 
 	return submitCount, err

@@ -762,7 +762,7 @@ func TestHandlerAdminSessionManagement(t *testing.T) {
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 		_, err = reg.SessionPersister().GetSession(t.Context(), s.ID, ExpandNothing)
-		require.True(t, errors.Is(err, sqlcon.ErrNoRows))
+		require.True(t, errors.Is(err, sqlcon.ErrNoRows()))
 
 		t.Run("should not list session", func(t *testing.T) {
 			req, _ := http.NewRequest("GET", ts.URL+"/admin/identities/"+s.Identity.ID.String()+"/sessions", nil)

@@ -57,7 +57,7 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 
 	traits, err := sjson.SetRawBytes([]byte(`{}`), "traits", i.Traits)
 	if err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()))
+		return errors.WithStack(herodot.ErrBadRequest().WithError(err.Error()))
 	}
 
 	return v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner))

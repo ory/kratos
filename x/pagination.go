@@ -37,7 +37,7 @@ func ParseKeysetOrPagePagination(r *http.Request) ([]keysetpagination.Option, *P
 	if q.Has("page_token") || q.Has("page_size") {
 		keyset, err := keysetpagination.Parse(q, keysetpagination.NewStringPageToken)
 		if err != nil {
-			return nil, nil, herodot.ErrBadRequest.WithReason(err.Error())
+			return nil, nil, herodot.ErrBadRequest().WithReason(err.Error())
 		}
 		return keyset, nil, nil
 	}
@@ -46,7 +46,7 @@ func ParseKeysetOrPagePagination(r *http.Request) ([]keysetpagination.Option, *P
 		paginator := pagepagination.PagePaginator{MaxItems: 500, DefaultItems: 250}
 		page, perPage := paginator.ParsePagination(r)
 		if page*perPage > PagePaginationLimit {
-			return nil, nil, herodot.ErrBadRequest.WithReasonf("Legacy pagination is not supported for enumerating over %d items. Please switch to using page_token and page_size.", PagePaginationLimit)
+			return nil, nil, herodot.ErrBadRequest().WithReasonf("Legacy pagination is not supported for enumerating over %d items. Please switch to using page_token and page_size.", PagePaginationLimit)
 		}
 		return nil, &Page{page, perPage}, nil
 	}
@@ -59,7 +59,7 @@ func ParseKeysetOrPagePagination(r *http.Request) ([]keysetpagination.Option, *P
 	// ... and defaul to keyset pagination
 	keyset, err := keysetpagination.Parse(q, keysetpagination.NewStringPageToken)
 	if err != nil {
-		return nil, nil, herodot.ErrBadRequest.WithReason(err.Error())
+		return nil, nil, herodot.ErrBadRequest().WithReason(err.Error())
 	}
 	return keyset, nil, nil
 }

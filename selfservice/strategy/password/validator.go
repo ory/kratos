@@ -43,8 +43,8 @@ type ValidationProvider interface {
 
 var (
 	_                       Validator = new(DefaultPasswordValidator)
-	ErrNetworkFailure                 = herodot.ErrUpstreamError.WithError("Leaked password server unavailable").WithReasonf("Unable to check if password has been leaked because an unexpected network error occurred")
-	ErrUnexpectedStatusCode           = herodot.ErrUpstreamError.WithError("Leaked password server unavailable").WithReasonf("Unexpected status code from haveibeenpwned.com")
+	ErrNetworkFailure                 = herodot.ErrUpstreamError().WithError("Leaked password server unavailable").WithReasonf("Unable to check if password has been leaked because an unexpected network error occurred")
+	ErrUnexpectedStatusCode           = herodot.ErrUpstreamError().WithError("Leaked password server unavailable").WithReasonf("Unexpected status code from haveibeenpwned.com")
 )
 
 // DefaultPasswordValidator implements Validator. It is based on best
@@ -148,7 +148,7 @@ func (s *DefaultPasswordValidator) fetch(ctx context.Context, hpw []byte, apiDNS
 		if len(result) == 2 {
 			count, err = strconv.ParseInt(strings.ReplaceAll(result[1], ",", ""), 10, 64)
 			if err != nil {
-				return 0, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
+				return 0, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("Expected password hash to contain a count formatted as int but got: %s", result[1]))
 			}
 		}
 
@@ -159,7 +159,7 @@ func (s *DefaultPasswordValidator) fetch(ctx context.Context, hpw []byte, apiDNS
 	}
 
 	if err := sc.Err(); err != nil {
-		return 0, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initialize string scanner: %s", err))
+		return 0, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to initialize string scanner: %s", err))
 	}
 
 	s.hashes.SetWithTTL(b20(hpw), thisCount, 1, hashCacheItemTTL)

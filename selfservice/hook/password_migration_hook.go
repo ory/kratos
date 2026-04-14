@@ -103,13 +103,13 @@ func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow
 
 	resp, err := httpClient.Do(whReq)
 	if err != nil {
-		return herodot.DefaultError{
+		return (&herodot.DefaultError{
 			CodeField:     http.StatusBadGateway,
 			StatusField:   http.StatusText(http.StatusBadGateway),
 			GRPCCodeField: grpccodes.Aborted,
 			ReasonField:   "A third-party upstream service could not be reached. Please try again later.",
 			ErrorField:    "calling the password migration hook failed",
-		}.WithWrap(errors.WithStack(err))
+		}).WithWrap(errors.WithStack(err))
 	}
 	defer func() { _ = resp.Body.Close() }()
 	span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
@@ -128,7 +128,7 @@ func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow
 		return errors.WithStack(schema.NewInvalidCredentialsError())
 	default:
 		span.SetStatus(codes.Error, "Unexpected HTTP status code")
-		return herodot.DefaultError{
+		return &herodot.DefaultError{
 			CodeField:     http.StatusBadGateway,
 			StatusField:   http.StatusText(http.StatusBadGateway),
 			GRPCCodeField: grpccodes.Aborted,

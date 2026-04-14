@@ -62,13 +62,13 @@ func (VerificationCode) TableName(context.Context) string {
 // - Otherwise, `nil` is returned
 func (c *VerificationCode) Validate() error {
 	if c == nil {
-		return errors.WithStack(ErrCodeNotFound)
+		return errors.WithStack(ErrCodeNotFound())
 	}
 	if c.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(ErrCodeNotFound)
+		return errors.WithStack(ErrCodeNotFound())
 	}
 	if c.UsedAt.Valid {
-		return errors.WithStack(ErrCodeAlreadyUsed)
+		return errors.WithStack(ErrCodeAlreadyUsed())
 	}
 	return nil
 }

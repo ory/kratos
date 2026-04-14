@@ -20,7 +20,7 @@ import (
 
 const RouteGet = "/self-service/errors"
 
-var stub500, _ = json.Marshal(herodot.ErrInternalServerError.WithReasonf("This is a stub error."))
+var stub500, _ = json.Marshal(herodot.ErrInternalServerError().WithReasonf("This is a stub error."))
 
 type (
 	handlerDependencies interface {

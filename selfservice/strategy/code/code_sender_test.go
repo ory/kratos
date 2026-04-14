@@ -76,7 +76,7 @@ func TestSender(t *testing.T) {
 			header.Add("X-Custom-header", "x-custom header 2")
 			header.Add("some-other-header", "some-other-value")
 			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "tracked@ory.sh", header))
-			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh", header), code.ErrUnknownAddress)
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh", header), code.ErrUnknownAddress())
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -146,7 +146,7 @@ func TestSender(t *testing.T) {
 			header.Add("X-Custom-header", "x-custom header 2")
 			header.Add("some-other-header", "some-other-value")
 			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberKnown, header))
-			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberUnknown, header), code.ErrUnknownAddress)
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberUnknown, header), code.ErrUnknownAddress())
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -194,7 +194,7 @@ func TestSender(t *testing.T) {
 			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
 			require.NoError(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "tracked@ory.sh"))
-			require.ErrorIs(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
+			require.ErrorIs(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress())
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -258,7 +258,7 @@ func TestSender(t *testing.T) {
 					require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f))
 
 					err = reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh", nil)
-					require.ErrorIs(t, err, code.ErrUnknownAddress)
+					require.ErrorIs(t, err, code.ErrUnknownAddress())
 				},
 			},
 			{
@@ -273,7 +273,7 @@ func TestSender(t *testing.T) {
 					require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
 					err = reg.CodeSender().SendVerificationCode(ctx, f, "email", "not-tracked@ory.sh")
-					require.ErrorIs(t, err, code.ErrUnknownAddress)
+					require.ErrorIs(t, err, code.ErrUnknownAddress())
 				},
 			},
 		} {

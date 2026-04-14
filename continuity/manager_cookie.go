@@ -23,7 +23,7 @@ import (
 
 var (
 	_               Manager = new(ManagerCookie)
-	ErrNotResumable         = *herodot.ErrBadRequest.WithError("no resumable session found").WithReasonf("The browser does not contain the necessary cookie to resume the session. This is a security violation and was blocked. Please clear your browser's cookies and cache and try again!")
+	ErrNotResumable         = *herodot.ErrBadRequest().WithError("no resumable session found").WithReasonf("The browser does not contain the necessary cookie to resume the session. This is a security violation and was blocked. Please clear your browser's cookies and cache and try again!")
 )
 
 const CookieName = "ory_kratos_continuity"
@@ -99,7 +99,7 @@ func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *
 			ctx,
 			container.ID,
 			time.Now().UTC().Add(o.setExpiresIn).Truncate(time.Second),
-		); err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
+		); err != nil && !errors.Is(err, sqlcon.ErrNoRows()) {
 			return nil, err
 		}
 	} else {
@@ -107,7 +107,7 @@ func (m *ManagerCookie) Continue(ctx context.Context, w http.ResponseWriter, r *
 			return nil, err
 		}
 
-		if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, container.ID); err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
+		if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, container.ID); err != nil && !errors.Is(err, sqlcon.ErrNoRows()) {
 			return nil, err
 		}
 	}
@@ -143,7 +143,7 @@ func (m *ManagerCookie) container(ctx context.Context, w http.ResponseWriter, r 
 		_ = x.SessionUnsetKey(w, r, m.d.ContinuityCookieManager(ctx), CookieName, name)
 	}
 
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		return nil, errors.WithStack(ErrNotResumable.WithDebugf("Resumable ID from cookie could not be found in the datastore: %+v", err))
 	} else if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func (m ManagerCookie) Abort(ctx context.Context, w http.ResponseWriter, r *http
 		return err
 	}
 
-	if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, sid); err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
+	if err := m.d.ContinuityPersister().DeleteContinuitySession(ctx, sid); err != nil && !errors.Is(err, sqlcon.ErrNoRows()) {
 		return errors.WithStack(err)
 	}
 

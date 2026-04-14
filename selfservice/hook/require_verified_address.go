@@ -69,7 +69,7 @@ func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Re
 	// END TODO
 
 	if len(s.Identity.VerifiableAddresses) == 0 {
-		return errors.WithStack(herodot.ErrMisconfiguration.WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."))
+		return errors.WithStack(herodot.ErrMisconfiguration().WithReason("A misconfiguration prevents login. Expected to find a verification address but this identity does not have one assigned."))
 	}
 
 	for _, va := range s.Identity.VerifiableAddresses {
@@ -86,7 +86,7 @@ func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Re
 	// TODO remove once flag is removed.
 	if e.r.Config().UseLegacyRequireVerifiedLoginError(ctx) {
 		span.AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "legacy_require_verified_login_error"))
-		return login.ErrAddressNotVerified
+		return login.ErrAddressNotVerified()
 	}
 	// END TODO
 
@@ -135,7 +135,7 @@ func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Re
 		f.AddContinueWith(continueWith)
 
 		if x.IsJSONRequest(r) {
-			e.r.Writer().WriteErrorCode(w, r, http.StatusForbidden, flow.ErrorWithContinueWith(login.ErrAddressNotVerified, continueWith))
+			e.r.Writer().WriteErrorCode(w, r, http.StatusForbidden, flow.ErrorWithContinueWith(login.ErrAddressNotVerified(), continueWith))
 			return errors.WithStack(login.ErrHookAbortFlow)
 		}
 
@@ -147,5 +147,5 @@ func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Re
 		return errors.WithStack(login.ErrHookAbortFlow)
 	}
 
-	return login.ErrAddressNotVerified
+	return login.ErrAddressNotVerified()
 }

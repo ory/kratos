@@ -390,7 +390,7 @@ func TestRecovery(t *testing.T) {
 			if isAPI || isSPA {
 				require.EqualValuesf(t, http.StatusBadRequest, res.StatusCode, "%s", body)
 				assert.Contains(t, res.Request.URL.String(), recovery.RouteSubmitFlow, "%+v\n\t%s", res.Request, body)
-				assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.Get(body, "error").Raw), nil)
+				assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.Get(body, "error").Raw), nil)
 			} else {
 				assert.EqualValuesf(t, http.StatusOK, res.StatusCode, "%s", body)
 				assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%+v\n\t%s", res.Request, body)

@@ -59,7 +59,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+recovery.RouteInitAPIFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), recovery.RouteInitAPIFlow)
 		assert.EqualValues(t, text.ErrIDAlreadyLoggedIn, gjson.GetBytes(body, "error.id").Str)
-		assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw))
+		assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw))
 	})
 }
 
@@ -141,7 +141,7 @@ func TestInitFlow(t *testing.T) {
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
 			res, body := initAuthenticatedFlow(t, true, false)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+			assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 	})
 
@@ -155,7 +155,7 @@ func TestInitFlow(t *testing.T) {
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
 			res, body := initAuthenticatedFlow(t, false, true)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+			assertx.EqualAsJSON(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 	})
 
@@ -230,7 +230,7 @@ func TestGetFlow(t *testing.T) {
 		setupRecoveryTS(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+recovery.RouteInitBrowserFlow)
 
-		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken().ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
 
 	t.Run("case=valid", func(t *testing.T) {

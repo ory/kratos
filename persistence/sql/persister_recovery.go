@@ -82,7 +82,7 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, fID uuid.UUID, token s
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) (err error) {
 		for _, secret := range p.r.Config().SecretsSession(ctx) {
 			if err = tx.Where("token = ? AND nid = ? AND NOT used AND selfservice_recovery_flow_id = ?", hmacValueWithSecret(token, secret), nid, fID).First(&rt); err != nil {
-				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
+				if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows()) {
 					return err
 				}
 			} else {
@@ -95,7 +95,7 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, fID uuid.UUID, token s
 
 		var ra identity.RecoveryAddress
 		if err := tx.Where("id = ? AND nid = ?", rt.RecoveryAddressID, nid).First(&ra); err != nil {
-			if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows) {
+			if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrNoRows()) {
 				return err
 			}
 		}

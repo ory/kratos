@@ -111,7 +111,7 @@ func TestSession(t *testing.T) {
 		i.NID = x.NewUUID()
 		s, err = testhelpers.NewActiveSession(req, reg, i, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.Nil(t, s)
-		assert.ErrorIs(t, err, session.ErrIdentityDisabled)
+		assert.ErrorIs(t, err, session.ErrIdentityDisabled())
 	})
 
 	t.Run("case=expired", func(t *testing.T) {
@@ -140,7 +140,7 @@ func TestSession(t *testing.T) {
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 
 		s = session.NewInactiveSession()
-		require.ErrorIs(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateInactive}, authAt), session.ErrIdentityDisabled)
+		require.ErrorIs(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateInactive}, authAt), session.ErrIdentityDisabled())
 		assert.False(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Empty(t, s.AuthenticatedAt)

@@ -469,7 +469,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				require.EqualValues(t, http.StatusOK, resp.StatusCode)
 
 				_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeCodeAuth, email)
-				require.NoError(t, err, sqlcon.ErrNoRows)
+				require.NoError(t, err, sqlcon.ErrNoRows())
 
 				s := createLoginFlow(ctx, t, public, tc.apiType, true)
 
@@ -1550,7 +1550,7 @@ func TestCodeLoginWithLoginChallenge(t *testing.T) {
 		r.Header.Add("Content-Type", "application/json")
 
 		_, err := s.Login(httptest.NewRecorder(), r, f, nil)
-		require.ErrorIs(t, err, herodot.ErrBadRequest)
+		require.ErrorIs(t, err, herodot.ErrBadRequest())
 		require.Nil(t, f.HydraLoginRequest)
 	})
 }

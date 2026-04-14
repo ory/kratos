@@ -200,7 +200,7 @@ type getCourierMessage struct {
 func (h *Handler) getCourierMessage(w http.ResponseWriter, r *http.Request) {
 	msgID, err := uuid.FromString(r.PathValue("msgID"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebugf("could not parse parameter {id} as UUID, got %s", r.PathValue("id")))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithError(err.Error()).WithDebugf("could not parse parameter {id} as UUID, got %s", r.PathValue("id")))
 		return
 	}
 

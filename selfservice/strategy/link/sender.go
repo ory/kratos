@@ -65,7 +65,7 @@ func (s *Sender) SendRecoveryLink(ctx context.Context, f *recovery.Flow, via, to
 		Debug("Preparing recovery link.")
 
 	address, err := s.r.IdentityPool().FindRecoveryAddressByValue(ctx, via, to)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		notifyUnknownRecipients := s.r.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
 		s.r.Logger().
 			WithField("via", via).
@@ -123,7 +123,7 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 		Debug("Preparing verification link.")
 
 	address, err := s.r.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		notifyUnknownRecipients := s.r.Config().SelfServiceFlowVerificationNotifyUnknownRecipients(ctx)
 		s.r.Logger().
 			WithField("via", via).

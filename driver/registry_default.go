@@ -744,7 +744,7 @@ func (m *RegistryDefault) GetFlowForTokenExchange(ctx context.Context, flowID uu
 	if err == nil {
 		return rf, nil
 	}
-	if !errors.Is(err, sqlcon.ErrNoRows) {
+	if !errors.Is(err, sqlcon.ErrNoRows()) {
 		return nil, err
 	}
 
@@ -752,11 +752,11 @@ func (m *RegistryDefault) GetFlowForTokenExchange(ctx context.Context, flowID uu
 	if err == nil {
 		return lf, nil
 	}
-	if !errors.Is(err, sqlcon.ErrNoRows) {
+	if !errors.Is(err, sqlcon.ErrNoRows()) {
 		return nil, err
 	}
 
-	return nil, errors.WithStack(sqlcon.ErrNoRows)
+	return nil, errors.WithStack(sqlcon.ErrNoRows())
 }
 func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister { return m.persister }
 func (m *RegistryDefault) RecoveryFlowPersister() recovery.FlowPersister         { return m.persister }

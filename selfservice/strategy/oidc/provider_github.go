@@ -66,7 +66,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, que
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range g.Config().Scope {
 		if !slices.Contains(grantedScopes, check) {
-			return nil, errors.WithStack(ErrScopeMissing)
+			return nil, errors.WithStack(ErrScopeMissing())
 		}
 	}
 
@@ -75,7 +75,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, que
 
 	user, _, err := gh.Users.Get(ctx, "")
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(err).WithReasonf("%s", err))
 	}
 
 	claims := &Claims{
@@ -94,7 +94,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, que
 	if slices.Contains(grantedScopes, "user:email") {
 		emails, _, err := gh.Users.ListEmails(ctx, nil)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
+			return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(err).WithReasonf("%s", err))
 		}
 
 		for k, e := range emails {

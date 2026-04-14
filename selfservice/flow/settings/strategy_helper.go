@@ -45,7 +45,7 @@ func (c *UpdateContext) UpdateIdentity(i *identity.Identity) {
 
 func (c *UpdateContext) GetIdentityToUpdate() (*identity.Identity, error) {
 	if c.toUpdate == nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find a identity to update."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Could not find a identity to update."))
 	}
 	return c.toUpdate, nil
 }
@@ -96,7 +96,7 @@ func ContinuityOptions(p interface{}, i *identity.Identity) []continuity.Manager
 func GetFlowID(r *http.Request) (uuid.UUID, error) {
 	rid := x.ParseUUID(r.URL.Query().Get("flow"))
 	if rid == uuid.Nil {
-		return rid, errors.WithStack(herodot.ErrBadRequest.WithReasonf("The flow query parameter is missing or malformed."))
+		return rid, errors.WithStack(herodot.ErrBadRequest().WithReasonf("The flow query parameter is missing or malformed."))
 	}
 	return rid, nil
 }
@@ -108,7 +108,7 @@ func OnUnauthenticated(reg interface {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handler := session.RedirectOnUnauthenticated(reg.Config().SelfServiceFlowLoginUI(r.Context()).String())
 		if x.IsJSONRequest(r) {
-			handler = session.RespondWithJSONErrorOnAuthenticated(reg.Writer(), herodot.ErrUnauthorized.WithReasonf("A valid Ory Session Cookie or Ory Session Token is missing."))
+			handler = session.RespondWithJSONErrorOnAuthenticated(reg.Writer(), herodot.ErrUnauthorized().WithReasonf("A valid Ory Session Cookie or Ory Session Token is missing."))
 		}
 
 		handler(w, r)

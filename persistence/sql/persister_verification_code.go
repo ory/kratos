@@ -33,7 +33,7 @@ func (p *Persister) CreateVerificationCode(ctx context.Context, params *code.Cre
 	}
 
 	if params.VerifiableAddress == nil {
-		return nil, errors.WithStack(herodot.ErrNotFound.WithReason("can't create a verification code without a verifiable address"))
+		return nil, errors.WithStack(herodot.ErrNotFound().WithReason("can't create a verification code without a verifiable address"))
 	}
 
 	verificationCode.VerifiableAddress = params.VerifiableAddress

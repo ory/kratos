@@ -164,7 +164,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel2)):
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 	default:
-		return nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
+		return nil, nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
 	}
 
 	// We assume an error means the user has no session
@@ -183,7 +183,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 
 		// We can not request an AAL > 1 because we must first verify the first factor.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-			return nil, nil, errors.WithStack(ErrSessionRequiredForHigherAAL)
+			return nil, nil, errors.WithStack(ErrSessionRequiredForHigherAAL())
 		}
 
 		// We are setting refresh to false if no session exists.
@@ -204,13 +204,13 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 
 		// If level is 1 we are not requesting AAL -> we are logged in already.
 		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
-			return nil, sess, errors.WithStack(ErrAlreadyLoggedIn)
+			return nil, sess, errors.WithStack(ErrAlreadyLoggedIn())
 		}
 
 		// We are requesting an assurance level which the session already has. So we are not upgrading the session
 		// in which case we want to return an error.
 		if f.RequestedAAL <= sess.AuthenticatorAssuranceLevel {
-			return nil, sess, errors.WithStack(ErrAlreadyLoggedIn)
+			return nil, sess, errors.WithStack(ErrAlreadyLoggedIn())
 		}
 
 		// Looks like we are requesting an AAL which is higher than what the session has.
@@ -601,10 +601,10 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request)
 	}
 
 	a, sess, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
-	if errors.Is(err, ErrAlreadyLoggedIn) {
+	if errors.Is(err, ErrAlreadyLoggedIn()) {
 		if hydraLoginRequest != nil {
 			if !hydraLoginRequest.GetSkip() {
-				h.d.SelfServiceErrorManager().Forward(ctx, w, r, errors.WithStack(herodot.ErrForbidden.WithReason("ErrAlreadyLoggedIn indicated we can skip login, but Hydra asked us to refresh")))
+				h.d.SelfServiceErrorManager().Forward(ctx, w, r, errors.WithStack(herodot.ErrForbidden().WithReason("ErrAlreadyLoggedIn indicated we can skip login, but Hydra asked us to refresh")))
 				return
 			}
 
@@ -738,13 +738,13 @@ func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request) {
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(ctx, h.d.Config(), RouteInitBrowserFlow, ar.ReturnTo)
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().WithID(text.ErrIDSelfServiceFlowExpired).
 				WithReason("The login flow has expired. Redirect the user to the login flow init endpoint to initialize a new login flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", ar.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().WithID(text.ErrIDSelfServiceFlowExpired).
 			WithReason("The login flow has expired. Call the login flow init API endpoint to initialize a new login flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(ctx), RouteInitAPIFlow).String())))
 		return
@@ -895,7 +895,7 @@ func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 
 		if x.IsJSONRequest(r) || f.Type == flow.TypeAPI {
 			// We are not upgrading AAL, nor are we refreshing. Error!
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, errors.WithStack(ErrAlreadyLoggedIn))
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, errors.WithStack(ErrAlreadyLoggedIn()))
 			return
 		}
 
@@ -905,7 +905,7 @@ func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 		// Only failure scenario here is if we try to upgrade the session to a higher AAL without actually
 		// having a session.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, errors.WithStack(ErrSessionRequiredForHigherAAL))
+			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, errors.WithStack(ErrSessionRequiredForHigherAAL()))
 			return
 		}
 
@@ -955,7 +955,7 @@ continueLogin:
 	}
 
 	if err := h.d.LoginHookExecutor().PostLoginHook(w, r, group, f, i, sess, ""); err != nil {
-		if errors.Is(err, ErrAddressNotVerified) {
+		if errors.Is(err, ErrAddressNotVerified()) {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ct, node.DefaultGroup, errors.WithStack(schema.NewAddressNotVerifiedError()))
 			return
 		}
