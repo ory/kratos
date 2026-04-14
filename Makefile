@@ -88,13 +88,13 @@ test-coverage-next:
 # Generates the SDK
 .PHONY: sdk
 sdk: .bin/ory node_modules
-	go tool swagger generate spec -m -o spec/swagger.json \
+	../../.bin/swagger generate spec -m -o spec/swagger.json \
 		-c github.com/ory/kratos \
 		-c github.com/ory/x/healthx \
 		-c github.com/ory/x/crdbx \
 		-c github.com/ory/x/openapix
 	ory dev swagger sanitize ./spec/swagger.json
-	go tool swagger validate ./spec/swagger.json
+	../../.bin/swagger validate ./spec/swagger.json
 	CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
 		ory dev openapi migrate \
 			--health-path-tags metadata \
