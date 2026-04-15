@@ -8,6 +8,7 @@ linters:
     - ineffassign
     - staticcheck
     - unused
+    - forbidigo
   disable:
     - bodyclose # too many false negatives
 
@@ -19,8 +20,20 @@ linters:
         - G306
         - G704
         - G705
+    forbidigo:
+      forbid:
+        - pattern: "http\\.DefaultClient"
+          msg: "Use reg.HTTPClient(ctx) or httpx.NewResilientClient() — http.DefaultClient bypasses SSRF protection and retry logic."
+        - pattern: "retryablehttp\\.NewClient\\b"
+          msg: "Use httpx.NewResilientClient() — retryablehttp.NewClient() bypasses SSRF protection and registry configuration."
   exclusions:
     rules:
       - linters:
           - staticcheck
         text: "SA1019" # we do use deprecated APIs on purpose sometimes
+      - linters:
+          - forbidigo
+        path: "pkg/(httpclient|client-go)/"
+      - linters:
+          - forbidigo
+        path: "_test\\.go$"

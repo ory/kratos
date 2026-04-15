@@ -17,10 +17,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/password"
@@ -29,6 +31,32 @@ import (
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/httpx"
 )
+
+// testRegistry embeds RegistryDefault and overrides HTTPClient to inject a
+// controllable HTTP client for HIBP-related tests.
+type testRegistry struct {
+	*driver.RegistryDefault
+	cl *retryablehttp.Client
+}
+
+func (r *testRegistry) HTTPClient(_ context.Context, _ ...httpx.ResilientOptions) *retryablehttp.Client {
+	return r.cl
+}
+
+// newTestValidator wires base with a fake HIBP HTTP client and returns the
+// validator along with the fake client for request assertions and stubbing.
+func newTestValidator(t *testing.T, base *driver.RegistryDefault, opts ...httpx.ResilientOptions) (*password.DefaultPasswordValidator, *fakeHttpClient) {
+	t.Helper()
+	fakeClient := NewFakeHTTPClient()
+	cl := httpx.NewResilientClient(append([]httpx.ResilientOptions{
+		httpx.ResilientClientWithMaxRetry(1),
+		httpx.ResilientClientWithConnectionTimeout(time.Millisecond),
+	}, opts...)...)
+	cl.HTTPClient = &fakeClient.Client
+	s, err := password.NewDefaultPasswordValidatorStrategy(&testRegistry{RegistryDefault: base, cl: cl})
+	require.NoError(t, err)
+	return s, fakeClient
+}
 
 func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	t.Parallel()
@@ -93,16 +121,8 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 	t.Run("failure cases", func(t *testing.T) {
 		t.Parallel()
 
-		_, reg := pkg.NewFastRegistryWithMocks(t)
-		s, err := password.NewDefaultPasswordValidatorStrategy(reg)
-		require.NoError(t, err)
-
-		fakeClient := NewFakeHTTPClient()
-		s.Client = httpx.NewResilientClient(
-			httpx.ResilientClientWithMaxRetry(1),
-			httpx.ResilientClientWithConnectionTimeout(time.Millisecond),
-			httpx.ResilientClientWithMaxRetryWait(time.Millisecond))
-		s.Client.HTTPClient = &fakeClient.Client
+		_, base := pkg.NewFastRegistryWithMocks(t)
+		s, fakeClient := newTestValidator(t, base, httpx.ResilientClientWithMaxRetryWait(time.Millisecond))
 
 		t.Run("case=should send request to pwnedpasswords.com", func(t *testing.T) {
 			ctx := contextx.WithConfigValue(t.Context(), config.ViperKeyIgnoreNetworkErrors, false)
@@ -139,12 +159,10 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 		t.Parallel()
 
 		const maxBreaches = 5
-		_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordMaxBreaches, maxBreaches))
-		s, err := password.NewDefaultPasswordValidatorStrategy(reg)
-		require.NoError(t, err)
+		_, base := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordMaxBreaches, maxBreaches))
+		s, fakeClient := newTestValidator(t, base)
 
 		hibpResp := make(chan string, 1)
-		fakeClient := NewFakeHTTPClient()
 		fakeClient.responder = func(req *http.Request) (*http.Response, error) {
 			buffer := bytes.NewBufferString(<-hibpResp)
 			return &http.Response{
@@ -154,8 +172,6 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 				Request:       req,
 			}, nil
 		}
-		s.Client = httpx.NewResilientClient(httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
-		s.Client.HTTPClient = &fakeClient.Client
 
 		hashPw := func(t *testing.T, pw string) string {
 			//#nosec G401 -- sha1 is used for k-anonymity
@@ -271,13 +287,8 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 	testServerURL, err := url.Parse(testServer.URL)
 	require.NoError(t, err)
 
-	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host))
-	s, err := password.NewDefaultPasswordValidatorStrategy(reg)
-	require.NoError(t, err)
-
-	fakeClient := NewFakeHTTPClient()
-	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
-	s.Client.HTTPClient = &fakeClient.Client
+	_, base := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedHost, testServerURL.Host))
+	s, fakeClient := newTestValidator(t, base)
 
 	testServerExpectedCallURL := fmt.Sprintf("https://%s/range/BCBA9", testServerURL.Host)
 
@@ -291,13 +302,8 @@ func TestChangeHaveIBeenPwnedValidationHost(t *testing.T) {
 func TestDisableHaveIBeenPwnedValidationHost(t *testing.T) {
 	t.Parallel()
 
-	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false))
-	s, err := password.NewDefaultPasswordValidatorStrategy(reg)
-	require.NoError(t, err)
-
-	fakeClient := NewFakeHTTPClient()
-	s.Client = httpx.NewResilientClient(httpx.ResilientClientWithMaxRetry(1), httpx.ResilientClientWithConnectionTimeout(time.Millisecond))
-	s.Client.HTTPClient = &fakeClient.Client
+	_, base := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false))
+	s, fakeClient := newTestValidator(t, base)
 
 	t.Run("case=should not send request to test server", func(t *testing.T) {
 		require.NoError(t, s.Validate(t.Context(), "mohutdesub", "damrumukuh"))
