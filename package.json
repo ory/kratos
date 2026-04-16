@@ -10,7 +10,7 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@openapitools/openapi-generator-cli": "2.30.2",
+    "@openapitools/openapi-generator-cli": "2.31.1",
     "yamljs": "0.3.0"
   },
   "devDependencies": {
