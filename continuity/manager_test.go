@@ -124,7 +124,7 @@ func TestManager(t *testing.T) {
 
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 		body := ioutilx.MustReadAll(res.Body)
-		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 
 		require.Len(t, res.Cookies(), 1, "continuing the flow with a broken cookie should instruct the browser to forget it")
 		assert.EqualValues(t, res.Cookies()[0].Name, continuity.CookieName)
@@ -214,7 +214,7 @@ func TestManager(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 		body := ioutilx.MustReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
-		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 	})
 
 	for k, tc := range []persisterTestCase{
@@ -244,7 +244,7 @@ func TestManager(t *testing.T) {
 
 				body := ioutilx.MustReadAll(res.Body)
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 			})
 
 			t.Run("case=pause and resume session", func(t *testing.T) {
@@ -288,7 +288,7 @@ func TestManager(t *testing.T) {
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 				body := ioutilx.MustReadAll(res.Body)
 				t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 			})
 
 			t.Run("case=pause and resume session in the same request", func(t *testing.T) {
@@ -324,7 +324,7 @@ func TestManager(t *testing.T) {
 
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 				body := ioutilx.MustReadAll(res.Body)
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 			})
 		})
 	}

@@ -78,7 +78,7 @@ func PrepareUpdate(d interface {
 			WithField("actual_request_id", f.ID).
 			Debug("Flow ID from continuity manager does not match Flow ID from request.")
 		return c, nil
-	} else if !errors.Is(err, &continuity.ErrNotResumable) {
+	} else if !errors.Is(err, continuity.ErrNotResumable()) {
 		return new(UpdateContext), err
 	}
 

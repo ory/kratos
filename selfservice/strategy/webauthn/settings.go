@@ -221,7 +221,7 @@ func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.Respon
 	}
 
 	if count < 2 && wasPasswordless {
-		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials))
+		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials()))
 	}
 
 	if len(updated) == 0 {
