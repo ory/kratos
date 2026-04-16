@@ -20,7 +20,7 @@ const (
 )
 
 // MessageDispatch represents an attempt of sending a courier message
-// It contains the status of the attempt (failed or successful) and the error if any occured
+// It contains the status of the attempt (failed or successful) and the error if any occurred
 //
 // swagger:model messageDispatch
 type MessageDispatch struct {
