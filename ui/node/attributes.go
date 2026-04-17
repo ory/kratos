@@ -123,11 +123,33 @@ type InputAttributes struct {
 	// MaxLength may contain the input's maximum length.
 	MaxLength int `json:"maxlength,omitempty"`
 
+	// The allowed values for the input when the underlying JSON schema
+	// defines an `enum`. When present, clients should render the field as a
+	// select/dropdown rather than a free-form text input. When absent,
+	// clients continue to render a plain text input, so this field is
+	// backward compatible with UIs that do not look at it.
+	Options []InputAttributesOption `json:"options,omitempty" faker:"-"`
+
 	// NodeType represents this node's types. It is a mirror of `node.type` and
 	// is primarily used to allow compatibility with OpenAPI 3.0.  In this struct it technically always is "input".
 	//
 	// required: true
 	NodeType UiNodeType `json:"node_type"`
+}
+
+// Represents a single selectable value for an input whose JSON schema
+// defined an `enum`. The value is always a scalar JSON type (string, number,
+// or boolean) serialized verbatim from the schema. When present, clients
+// should render the parent input as a select/dropdown.
+//
+// swagger:model uiNodeInputAttributesOption
+type InputAttributesOption struct {
+	// The value that will be submitted when this option is picked.
+	// It is serialized verbatim from the JSON schema `enum` entry, so it is
+	// always a scalar JSON value (string, number, or boolean).
+	//
+	// required: true
+	Value any `json:"value"`
 }
 
 // ImageAttributes represents the attributes of an image node.

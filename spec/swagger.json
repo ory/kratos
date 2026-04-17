@@ -6292,6 +6292,13 @@
           ],
           "x-go-enum-desc": "oryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration\noryWebAuthnLogin WebAuthnTriggersWebAuthnLogin\noryPasskeyLogin WebAuthnTriggersPasskeyLogin\noryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit\noryPasskeyRegistration WebAuthnTriggersPasskeyRegistration\noryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration"
         },
+        "options": {
+          "description": "The allowed values for the input when the underlying JSON schema\ndefines an `enum`. When present, clients should render the field as a\nselect/dropdown rather than a free-form text input. When absent,\nclients continue to render a plain text input, so this field is\nbackward compatible with UIs that do not look at it.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/uiNodeInputAttributesOption"
+          }
+        },
         "pattern": {
           "description": "The input's pattern.",
           "type": "string"
@@ -6321,6 +6328,18 @@
         },
         "value": {
           "description": "The input's value."
+        }
+      }
+    },
+    "uiNodeInputAttributesOption": {
+      "description": "Represents a single selectable value for an input whose JSON schema\ndefined an `enum`. The value is always a scalar JSON type (string, number,\nor boolean) serialized verbatim from the schema. When present, clients\nshould render the parent input as a select/dropdown.",
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "description": "The value that will be submitted when this option is picked.\nIt is serialized verbatim from the JSON schema `enum` entry, so it is\nalways a scalar JSON value (string, number, or boolean)."
         }
       }
     },

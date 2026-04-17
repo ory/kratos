@@ -113,6 +113,7 @@ docs/UiNodeAttributes.md
 docs/UiNodeDivisionAttributes.md
 docs/UiNodeImageAttributes.md
 docs/UiNodeInputAttributes.md
+docs/UiNodeInputAttributesOption.md
 docs/UiNodeMeta.md
 docs/UiNodeScriptAttributes.md
 docs/UiNodeTextAttributes.md
@@ -259,6 +260,7 @@ model_ui_node_attributes.go
 model_ui_node_division_attributes.go
 model_ui_node_image_attributes.go
 model_ui_node_input_attributes.go
+model_ui_node_input_attributes_option.go
 model_ui_node_meta.go
 model_ui_node_script_attributes.go
 model_ui_node_text_attributes.go

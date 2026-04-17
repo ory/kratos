@@ -239,6 +239,7 @@ Class | Method | HTTP request | Description
  - [UiNodeDivisionAttributes](docs/UiNodeDivisionAttributes.md)
  - [UiNodeImageAttributes](docs/UiNodeImageAttributes.md)
  - [UiNodeInputAttributes](docs/UiNodeInputAttributes.md)
+ - [UiNodeInputAttributesOption](docs/UiNodeInputAttributesOption.md)
  - [UiNodeMeta](docs/UiNodeMeta.md)
  - [UiNodeScriptAttributes](docs/UiNodeScriptAttributes.md)
  - [UiNodeTextAttributes](docs/UiNodeTextAttributes.md)
