@@ -5,7 +5,6 @@ package registration
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/gofrs/uuid"
 	"go.opentelemetry.io/otel/attribute"
@@ -22,6 +21,7 @@ import (
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/kratos/x/redir"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -161,13 +161,17 @@ func (s *ErrorHandler) WriteFlowError(
 		return
 	}
 	if codes, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); group == node.OpenIDConnectGroup && f.Type == flow.TypeAPI && hasCode {
-		returnTo, err := url.Parse(f.ReturnTo)
+		returnTo, err := redir.SecureRedirectTo(r,
+			s.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()),
+			f.SecureRedirectToOpts(r.Context(), s.d)...,
+		)
 		if err != nil {
 			s.forward(w, r, f, errors.WithStack(err))
 			return
 		}
 		q := returnTo.Query()
 		q.Set("code", codes.ReturnToCode)
+		q.Set("flow", f.ID.String())
 		returnTo.RawQuery = q.Encode()
 		http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 		return
