@@ -6,7 +6,7 @@
         "uppercased@ory.sh"
       ],
       "config": {},
-      "version": 0
+      "version": 1
     }
   },
   "schema_id": "customer",

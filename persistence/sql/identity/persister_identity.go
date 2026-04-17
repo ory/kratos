@@ -6,7 +6,6 @@ package identity
 import (
 	"cmp"
 	"context"
-	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"maps"
@@ -119,10 +118,22 @@ func (p *IdentityPersister) ListRecoveryAddresses(ctx context.Context, page, ite
 	return a, nil
 }
 
-func stringToLowerTrim(match string) string {
-	return strings.ToLower(strings.TrimSpace(match))
+// PreferExactMatch returns the element from results whose value (extracted by getValue)
+// matches originalValue. If no exact match exists, the first element is returned.
+// Used by IN(normalized, original) queries to prefer the non-normalized match.
+func PreferExactMatch[T any](results []T, originalValue string, getValue func(T) string) T {
+	for _, r := range results {
+		if getValue(r) == originalValue {
+			return r
+		}
+	}
+	return results[0]
 }
 
+// NormalizeIdentifier takes a credential type to determine the type of
+// formatting to apply to the 'match' string. Password, Code, and
+// WebAuthn types perform graceful normalization which include lower
+// casing for email formats.
 func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	switch ct {
 	case identity.CredentialsTypeLookup:
@@ -135,7 +146,7 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 		// OIDC credentials are case-sensitive
 		return match
 	case identity.CredentialsTypePassword, identity.CredentialsTypeCodeAuth, identity.CredentialsTypeWebAuthn:
-		return stringToLowerTrim(match)
+		return x.GracefulNormalization(match)
 	default:
 		return match
 	}
@@ -147,36 +158,72 @@ func (p *IdentityPersister) FindIdentityByCredentialIdentifier(ctx context.Conte
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
-	var find struct {
+	var res []struct {
 		IdentityID uuid.UUID `db:"identity_id"`
+		Identifier string    `db:"identifier"`
 	}
 
+	var normalizedIdentifier string
 	if !caseSensitive {
-		identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+		normalizedIdentifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+	} else {
+		normalizedIdentifier = identifier
 	}
 
 	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).RawQuery(`
-SELECT ic.identity_id
+
+	// Query with both normalized and non-normalized
+	// identifiers for backward compatibility.
+	// LIMIT is 1 when both forms are identical, 2 when they differ.
+	limit := 1
+	if normalizedIdentifier != identifier {
+		limit = 2
+	}
+	err = p.GetConnection(ctx).RawQuery(`
+SELECT ic.identity_id, ici.identifier
 FROM identity_credentials ic
 INNER JOIN identity_credential_identifiers ici
-	ON ic.id = ici.identity_credential_id
-WHERE ici.identifier = ?
+ON ic.id = ici.identity_credential_id
+WHERE ici.identifier IN (?,?)
 AND ic.nid = ?
 AND ici.nid = ?
-LIMIT 1`,
+LIMIT ?`,
+		normalizedIdentifier,
 		identifier,
 		nid,
 		nid,
-	).First(&find); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, sqlcon.HandleError(err)
-		}
-
+		limit,
+	).All(&res)
+	if err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return p.GetIdentity(ctx, find.IdentityID, expand)
+	if len(res) == 0 {
+		return nil, sqlcon.HandleError(sqlcon.ErrNoRows())
+	}
+
+	result := PreferExactMatch(res, identifier, func(r struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+		Identifier string    `db:"identifier"`
+	}) string {
+		return r.Identifier
+	})
+	if len(res) > 1 {
+		for _, r := range res {
+			if r.IdentityID != result.IdentityID {
+				p.r.Logger().Warnf("Possible duplicate identities with IDs [%q, %q]", result.IdentityID, r.IdentityID)
+				break
+			}
+		}
+	}
+
+	// Record result count for observability
+	span.SetAttributes(
+		attribute.String("identity.id", result.IdentityID.String()),
+		attribute.Int("identity.results", len(res)),
+	)
+
+	return p.GetIdentity(ctx, result.IdentityID, expand)
 }
 
 func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (_ *identity.Identity, _ *identity.Credentials, err error) {
@@ -187,43 +234,72 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 
 	nid := p.NetworkID(ctx)
 
-	var find struct {
+	var res []struct {
 		IdentityID uuid.UUID `db:"identity_id"`
+		Identifier string    `db:"identifier"`
 	}
 
 	// Force case-insensitivity and trimming for identifiers
-	match = NormalizeIdentifier(ct, match)
+	normalizedMatch := NormalizeIdentifier(ct, match)
 
 	credentialTypeID, err := FindIdentityCredentialsTypeByName(p.GetConnection(ctx), ct)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// Query with both normalized and non-normalized
+	// identifiers for backward compatibility.
+	// LIMIT is 1 when both forms are identical, 2 when they differ.
+	limit := 1
+	if normalizedMatch != match {
+		limit = 2
+	}
 	if err := p.GetConnection(ctx).RawQuery(`
 			SELECT
-				ic.identity_id
+				ic.identity_id, ici.identifier
 			FROM identity_credentials ic
 					INNER JOIN identity_credential_identifiers ici
 					ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ?
-			WHERE ici.identifier = ?
+			WHERE ici.identifier IN (?, ?)
 			AND ic.nid = ?
 			AND ici.nid = ?
-			LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
+			LIMIT ?`,
 		credentialTypeID,
+		normalizedMatch,
 		match,
 		nid,
 		nid,
-	).First(&find); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
-		}
-
+		limit,
+	).All(&res); err != nil {
 		return nil, nil, sqlcon.HandleError(err)
 	}
 
-	span.SetAttributes(attribute.String("identity.id", find.IdentityID.String()))
+	if len(res) == 0 {
+		return nil, nil, sqlcon.HandleError(sqlcon.ErrNoRows())
+	}
 
-	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
+	result := PreferExactMatch(res, match, func(r struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+		Identifier string    `db:"identifier"`
+	}) string {
+		return r.Identifier
+	})
+	if len(res) > 1 {
+		for _, r := range res {
+			if r.IdentityID != result.IdentityID {
+				p.r.Logger().Warnf("Possible duplicate identities with IDs [%q, %q]", result.IdentityID, r.IdentityID)
+				break
+			}
+		}
+	}
+
+	// Record result count for observability
+	span.SetAttributes(
+		attribute.String("identity.id", result.IdentityID.String()),
+		attribute.Int("identity.results", len(res)),
+	)
+
+	i, err := p.GetIdentityConfidential(ctx, result.IdentityID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -532,7 +608,7 @@ func diffAssociations[T differ](fromDatabase, updateTo []T) (unchanged, toCreate
 	return
 }
 
-func (p *IdentityPersister) normalizeAllAddressess(ctx context.Context, identities ...*identity.Identity) {
+func (p *IdentityPersister) normalizeAllAddresses(ctx context.Context, identities ...*identity.Identity) {
 	for _, id := range identities {
 		p.normalizeRecoveryAddresses(ctx, id)
 		p.normalizeVerifiableAddresses(ctx, id)
@@ -545,7 +621,7 @@ func (p *IdentityPersister) normalizeVerifiableAddresses(ctx context.Context, id
 
 		v.IdentityID = id.ID
 		v.NID = p.NetworkID(ctx)
-		v.Value = stringToLowerTrim(v.Value)
+		v.Value = x.GracefulNormalization(v.Value)
 		v.Via = cmp.Or(v.Via, identity.AddressTypeEmail)
 		if len(v.Status) == 0 {
 			if v.Verified {
@@ -571,7 +647,7 @@ func (p *IdentityPersister) normalizeRecoveryAddresses(ctx context.Context, id *
 	for k := range id.RecoveryAddresses {
 		id.RecoveryAddresses[k].IdentityID = id.ID
 		id.RecoveryAddresses[k].NID = p.NetworkID(ctx)
-		id.RecoveryAddresses[k].Value = stringToLowerTrim(id.RecoveryAddresses[k].Value)
+		id.RecoveryAddresses[k].Value = x.GracefulNormalization(id.RecoveryAddresses[k].Value)
 		id.RecoveryAddresses[k].Via = cmp.Or(id.RecoveryAddresses[k].Via, identity.AddressTypeEmail)
 	}
 }
@@ -692,7 +768,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			createdIdentities = identities
 		}
 
-		p.normalizeAllAddressess(ctx, createdIdentities...)
+		p.normalizeAllAddresses(ctx, createdIdentities...)
 
 		if err = p.createVerifiableAddresses(ctx, tx, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &partialErr) {
@@ -1206,7 +1282,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 		}
 
 		var identityCreds map[identity.CredentialsType]identity.Credentials
-		p.normalizeAllAddressess(ctx, i)
+		p.normalizeAllAddresses(ctx, i)
 		if o.FromDatabase() != nil {
 			if o.FromDatabase().ID != i.ID {
 				return errors.New("mismatched identity ID: this is a bug")
@@ -1240,11 +1316,28 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			if c, found := creds[i.ID]; found {
 				identityCreds = c
 			}
+
+			if len(identityCreds) > 0 {
+				// Create temporary identity to run migrations
+				tempIdentity := &identity.Identity{
+					ID:          i.ID,
+					Credentials: identityCreds,
+				}
+				if err := identity.UpgradeCredentials(tempIdentity); err != nil {
+					return err
+				}
+				identityCreds = tempIdentity.Credentials
+			}
 		}
 
 		oldCredentials := make([]identity.Credentials, 0, len(identityCreds))
 		for _, cred := range identityCreds {
 			oldCredentials = append(oldCredentials, cred)
+		}
+
+		// Upgrade incoming credentials to ensure proper comparison with upgraded DB credentials
+		if err := identity.UpgradeCredentials(i); err != nil {
+			return err
 		}
 
 		// Convert new credentials map to slice
@@ -1385,14 +1478,27 @@ func (p *IdentityPersister) FindVerifiableAddressByValue(ctx context.Context, vi
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindVerifiableAddressByValue",
 		trace.WithAttributes(
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
-	var address identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", p.NetworkID(ctx), via, stringToLowerTrim(value)).First(&address); err != nil {
+	normalized := x.GracefulNormalization(value)
+	limit := 1
+	if normalized != value {
+		limit = 2
+	}
+	var addresses []identity.VerifiableAddress
+	if err := p.GetConnection(ctx).RawQuery(
+		"SELECT * FROM identity_verifiable_addresses WHERE nid = ? AND via = ? AND value IN (?,?) LIMIT ?",
+		p.NetworkID(ctx), via, value, normalized, limit,
+	).All(&addresses); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return &address, nil
+	if len(addresses) == 0 {
+		return nil, sqlcon.HandleError(sqlcon.ErrNoRows())
+	}
+
+	addr := PreferExactMatch(addresses, value, func(a identity.VerifiableAddress) string { return a.Value })
+	return &addr, nil
 }
 
 func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via, value string) (_ *identity.RecoveryAddress, err error) {
@@ -1401,12 +1507,25 @@ func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via,
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
-	var address identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", p.NetworkID(ctx), via, stringToLowerTrim(value)).First(&address); err != nil {
+	normalized := x.GracefulNormalization(value)
+	limit := 1
+	if normalized != value {
+		limit = 2
+	}
+	var addresses []identity.RecoveryAddress
+	if err := p.GetConnection(ctx).RawQuery(
+		"SELECT * FROM identity_recovery_addresses WHERE nid = ? AND via = ? AND value IN (?,?) LIMIT ?",
+		p.NetworkID(ctx), via, value, normalized, limit,
+	).All(&addresses); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return &address, nil
+	if len(addresses) == 0 {
+		return nil, sqlcon.HandleError(sqlcon.ErrNoRows())
+	}
+
+	addr := PreferExactMatch(addresses, value, func(a identity.RecoveryAddress) string { return a.Value })
+	return &addr, nil
 }
 
 // FindAllRecoveryAddressesForIdentityByRecoveryAddressValue returns all
@@ -1434,11 +1553,12 @@ FROM identity_recovery_addresses A
 JOIN identity_recovery_addresses B
 ON A.identity_id = B.identity_id
 AND A.nid = B.nid
-WHERE B.value = ?
+WHERE B.value IN (?,?)
 AND A.nid = ?
 LIMIT 10
 		`,
-		stringToLowerTrim(anyRecoveryAddress),
+		x.GracefulNormalization(anyRecoveryAddress),
+		anyRecoveryAddress,
 		p.NetworkID(ctx),
 	).
 		All(&recoveryAddresses)
@@ -1492,7 +1612,7 @@ func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address
 	defer otelx.End(span, &err)
 
 	address.NID = p.NetworkID(ctx)
-	address.Value = stringToLowerTrim(address.Value)
+	address.Value = x.GracefulNormalization(address.Value)
 	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), address, updateColumns...)
 }
 

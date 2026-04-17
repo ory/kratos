@@ -50,6 +50,31 @@ export async function createIdentityWithEmail(request: APIRequestContext) {
   }
 }
 
+export async function createIdentityWithPhoneAndPassword(
+  request: APIRequestContext,
+  phone: string,
+  password: string,
+  schemaId = "sms-password",
+) {
+  return {
+    identity: await createIdentity(request, {
+      schema_id: schemaId,
+      traits: {
+        phone,
+      },
+      credentials: {
+        password: {
+          config: {
+            password,
+          },
+        },
+      },
+    }),
+    phone,
+    password,
+  }
+}
+
 export async function createIdentityWithPassword(request: APIRequestContext) {
   const email = faker.internet.email({ provider: "ory.sh" })
   const password = faker.internet.password()

@@ -2,7 +2,7 @@
   "credentials": {
     "password": {
       "type": "password",
-      "version": 0
+      "version": 1
     }
   },
   "external_id": "external-id-Batch-Import-0",

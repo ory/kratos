@@ -74,6 +74,11 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			URL:    urlx.ParseOrPanic("file://./stub/handler/multiple_emails.schema.json"),
 			RawURL: "file://./stub/identity-2.schema.json",
 		}
+		phoneEmailSchema := schema.Schema{
+			ID:     "phoneIdentifier",
+			URL:    urlx.ParseOrPanic("file://./stub/phone.schema.json"),
+			RawURL: "file://./stub/phone.schema.json",
+		}
 		ctx := contextx.WithConfigValues(ctx, map[string]any{
 			config.ViperKeyPublicBaseURL: exampleServerURL.String(),
 			config.ViperKeyIdentitySchemas: []config.Schema{
@@ -92,6 +97,10 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				{
 					ID:  multipleEmailsSchema.ID,
 					URL: multipleEmailsSchema.RawURL,
+				},
+				{
+					ID:  phoneEmailSchema.ID,
+					URL: phoneEmailSchema.RawURL,
 				},
 			},
 		})
@@ -245,6 +254,183 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 				require.Len(t, actual.VerifiableAddresses, 1)
 				assertx.EqualAsJSONExcept(t, expected.VerifiableAddresses, actual.VerifiableAddresses, []string{"0.updated_at", "0.created_at"})
+			})
+		})
+
+		t.Run("case=phone number backward compatibility", func(t *testing.T) {
+			// Clean up identities after test to prevent pollution of subsequent tests
+			t.Cleanup(func() {
+				require.NoError(t, p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE nid = ? AND schema_id = ?", nid, phoneEmailSchema.ID).Exec())
+			})
+
+			// Test backward compatibility: simulating the upgrade path for legacy phone credentials
+			nonNormalizedPhone := "+49 176 671 11 638"
+			normalizedPhone := "+4917667111638"
+
+			t.Run("new identities get normalized credentials from the start", func(t *testing.T) {
+				// Create identity through validation (simulates user registration)
+				newIdentity := identity.NewIdentity(phoneEmailSchema.ID)
+				newIdentity.Traits = identity.Traits(`{"phone":"` + nonNormalizedPhone + `","name":"john doe"}`)
+				require.NoError(t, m.ValidateIdentity(ctx, newIdentity, new(identity.ManagerOptions)))
+				require.NoError(t, p.CreateIdentity(ctx, newIdentity))
+
+				// Verify it was created with normalized credentials from the start
+				created, err := p.GetIdentityConfidential(ctx, newIdentity.ID)
+				require.NoError(t, err)
+
+				// Should have normalized credentials
+				if cred, ok := created.Credentials[identity.CredentialsTypePassword]; ok {
+					require.Contains(t, cred.Identifiers, normalizedPhone, "New identity should have normalized phone")
+				}
+
+				// Should be findable by normalized phone
+				found, cred, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, normalizedPhone)
+				require.NoError(t, err)
+				require.NotNil(t, found)
+				require.Equal(t, newIdentity.ID, found.ID)
+				require.NotNil(t, cred)
+			})
+
+			t.Run("legacy identities are upgraded in memory when loaded", func(t *testing.T) {
+				// Use different phone numbers to avoid conflict with first sub-test
+				legacyNonNormalizedPhone := "+49 30 1234 5678"
+				legacyNormalizedPhone := "+493012345678"
+
+				// Simulate legacy data: create identity with version 0 credential using raw SQL
+				// This is necessary because CreateIdentity now normalizes identifiers at persistence layer
+				var credTypes []identity.CredentialsTypeTable
+				require.NoError(t, p.GetConnection(ctx).All(&credTypes))
+				var passwordCredType identity.CredentialsTypeTable
+				for _, ct := range credTypes {
+					if ct.Name == identity.CredentialsTypePassword {
+						passwordCredType = ct
+						break
+					}
+				}
+
+				legacyID := x.NewUUID()
+				credID := x.NewUUID()
+				identifierID := x.NewUUID()
+				now := time.Now()
+				traits := sqlxx.JSONRawMessage(`{"phone":"` + legacyNonNormalizedPhone + `","name":"jane doe"}`)
+
+				// Cleanup
+				t.Cleanup(func() {
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credential_identifiers WHERE identity_credential_id = ?", credID).Exec()
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credentials WHERE id = ?", credID).Exec()
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", legacyID).Exec()
+				})
+
+				// Insert legacy identity with raw SQL
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+					legacyID, nid, phoneEmailSchema.ID, traits, now, now, identity.StateActive,
+				).Exec())
+
+				// Insert version 0 credential
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credentials (id, identity_id, nid, identity_credential_type_id, created_at, updated_at, config, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					credID, legacyID, nid, passwordCredType.ID, now, now, sqlxx.JSONRawMessage(`{"hashed_password":"$2a$10$..."}`), 0,
+				).Exec())
+
+				// Insert NON-NORMALIZED identifier only
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					identifierID, legacyID, credID, nid, legacyNonNormalizedPhone, now, now, passwordCredType.ID,
+				).Exec())
+
+				// Load the identity - this triggers UpgradeCredentials in memory
+				loaded, err := p.GetIdentityConfidential(ctx, legacyID)
+				require.NoError(t, err)
+				require.Equal(t, 1, loaded.Credentials[identity.CredentialsTypePassword].Version, "Should be upgraded in memory")
+
+				// In-memory upgrade adds normalized identifier
+				identifiers := loaded.Credentials[identity.CredentialsTypePassword].Identifiers
+				require.Len(t, identifiers, 1, "Should have single identifier in memory")
+				require.Contains(t, identifiers, legacyNormalizedPhone)
+
+				// Can find by non-normalized phone (what's in DB)
+				found, cred, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, legacyNonNormalizedPhone)
+				require.NoError(t, err, "Should find by non-normalized phone")
+				require.NotNil(t, found)
+				require.Equal(t, legacyID, found.ID)
+				require.NotNil(t, cred)
+			})
+
+			t.Run("post-migration: legacy data normalized in DB", func(t *testing.T) {
+				// Simulates the state after running `kratos migrate normalize-phone-numbers`:
+				// Legacy data has been normalized in the DB, and all lookups should work with any input format.
+				legacyNonNormalizedPhone := "+49 176 12345678"
+				legacyNormalizedPhone := "+4917612345678"
+
+				var credTypes []identity.CredentialsTypeTable
+				require.NoError(t, p.GetConnection(ctx).All(&credTypes))
+				var passwordCredType identity.CredentialsTypeTable
+				for _, ct := range credTypes {
+					if ct.Name == identity.CredentialsTypePassword {
+						passwordCredType = ct
+						break
+					}
+				}
+
+				legacyID := x.NewUUID()
+				credID := x.NewUUID()
+				identifierID := x.NewUUID()
+				now := time.Now()
+				traits := sqlxx.JSONRawMessage(`{"phone":"` + legacyNonNormalizedPhone + `","name":"migrated user"}`)
+
+				t.Cleanup(func() {
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credential_identifiers WHERE identity_credential_id = ?", credID).Exec()
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credentials WHERE id = ?", credID).Exec()
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", legacyID).Exec()
+				})
+
+				// Step 1: Insert legacy identity with non-normalized phone (pre-migration state)
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+					legacyID, nid, phoneEmailSchema.ID, traits, now, now, identity.StateActive,
+				).Exec())
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credentials (id, identity_id, nid, identity_credential_type_id, created_at, updated_at, config, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					credID, legacyID, nid, passwordCredType.ID, now, now, sqlxx.JSONRawMessage(`{"hashed_password":"$2a$10$..."}`), 0,
+				).Exec())
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					identifierID, legacyID, credID, nid, legacyNonNormalizedPhone, now, now, passwordCredType.ID,
+				).Exec())
+
+				// Step 2: Simulate migration — normalize the identifier in DB (what the CLI tool does)
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"UPDATE identity_credential_identifiers SET identifier = ? WHERE id = ?",
+					legacyNormalizedPhone, identifierID,
+				).Exec())
+
+				// Step 3: Verify lookups work with both formats after migration
+				// Find by E.164 (normalized) — should match the migrated DB value
+				found, cred, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, legacyNormalizedPhone)
+				require.NoError(t, err, "should find migrated identity by E.164 phone")
+				require.Equal(t, legacyID, found.ID)
+				require.NotNil(t, cred)
+
+				// Find by original non-normalized format — IN query normalizes input, matches migrated DB value
+				found2, cred2, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, legacyNonNormalizedPhone)
+				require.NoError(t, err, "should find migrated identity by non-normalized phone (IN query normalizes)")
+				require.Equal(t, legacyID, found2.ID)
+				require.NotNil(t, cred2)
+
+				// Find by yet another format variant — also normalizes to same E.164
+				found3, _, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, "+49 17612345678")
+				require.NoError(t, err, "should find migrated identity by different format variant")
+				require.Equal(t, legacyID, found3.ID)
+
+				// Also test FindIdentityByCredentialIdentifier
+				found4, err := p.FindIdentityByCredentialIdentifier(ctx, legacyNormalizedPhone, false, identity.ExpandDefault)
+				require.NoError(t, err, "should find migrated identity by E.164 via FindIdentityByCredentialIdentifier")
+				require.Equal(t, legacyID, found4.ID)
+
+				found5, err := p.FindIdentityByCredentialIdentifier(ctx, legacyNonNormalizedPhone, false, identity.ExpandDefault)
+				require.NoError(t, err, "should find migrated identity by non-normalized via FindIdentityByCredentialIdentifier")
+				require.Equal(t, legacyID, found5.ID)
 			})
 		})
 
@@ -1106,6 +1292,291 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			})
 		})
 
+		t.Run("case=find identity by phone number credential identifier with backward compatibility", func(t *testing.T) {
+			// Use unique phone numbers to avoid conflicts with other tests
+			nonNormalizedPhone := "+44 20 7946 0958"
+			normalizedPhone := "+442079460958"
+
+			t.Run("upgraded identity with both identifiers via raw SQL", func(t *testing.T) {
+				// This test simulates a legacy identity that has been upgraded and persisted,
+				// so it has BOTH non-normalized and normalized identifiers in the database.
+				// This is the expected state after a user with legacy data logs in and updates settings.
+
+				// Get credential type metadata
+				var credTypes []identity.CredentialsTypeTable
+				require.NoError(t, p.GetConnection(ctx).All(&credTypes))
+				var passwordCredType identity.CredentialsTypeTable
+				for _, ct := range credTypes {
+					if ct.Name == identity.CredentialsTypePassword {
+						passwordCredType = ct
+						break
+					}
+				}
+
+				legacyID := x.NewUUID()
+				credID := x.NewUUID()
+				identifierID1 := x.NewUUID()
+				identifierID2 := x.NewUUID()
+				now := time.Now()
+
+				// Cleanup after test
+				t.Cleanup(func() {
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credential_identifiers WHERE identity_credential_id = ?", credID).Exec()
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credentials WHERE id = ?", credID).Exec()
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", legacyID).Exec()
+				})
+
+				// Insert identity with raw SQL
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+					legacyID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+				).Exec())
+
+				// Insert credential (version 1 after upgrade)
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credentials (id, identity_id, nid, identity_credential_type_id, created_at, updated_at, config, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					credID, legacyID, nid, passwordCredType.ID, now, now, sqlxx.JSONRawMessage(`{"foo":"bar"}`), 1,
+				).Exec())
+
+				// Insert BOTH identifiers (simulating post-upgrade state)
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					identifierID1, legacyID, credID, nid, nonNormalizedPhone, now, now, passwordCredType.ID,
+				).Exec())
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					identifierID2, legacyID, credID, nid, normalizedPhone, now, now, passwordCredType.ID,
+				).Exec())
+
+				// Test 1: Find with non-normalized phone
+				actualNonNorm, err := p.FindIdentityByCredentialIdentifier(ctx, nonNormalizedPhone, false, identity.ExpandDefault)
+				require.NoError(t, err, "should find upgraded identity with non-normalized phone")
+				require.Equal(t, legacyID, actualNonNorm.ID)
+
+				// Test 2: Find with normalized phone
+				actualNorm, err := p.FindIdentityByCredentialIdentifier(ctx, normalizedPhone, false, identity.ExpandDefault)
+				require.NoError(t, err, "should find upgraded identity with normalized phone")
+				require.Equal(t, legacyID, actualNorm.ID)
+
+				// Test 3: Case sensitive should only match exact
+				actualCaseSens, err := p.FindIdentityByCredentialIdentifier(ctx, nonNormalizedPhone, true, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Equal(t, legacyID, actualCaseSens.ID)
+
+				// Test 4: Case sensitive with normalized should also match exact
+				actualCaseSensNorm, err := p.FindIdentityByCredentialIdentifier(ctx, normalizedPhone, true, identity.ExpandDefault)
+				require.NoError(t, err)
+				require.Equal(t, legacyID, actualCaseSensNorm.ID)
+			})
+
+			t.Run("new identity with normalized phone can be found with both formats", func(t *testing.T) {
+				// Create a new identity with normalized phone (simulating post-normalization data)
+				newIdentity := passwordIdentity("", normalizedPhone)
+				newIdentity.Traits = identity.Traits(`{}`)
+				newIdentity.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{normalizedPhone}, // Only normalized identifier
+					Config:      newIdentity.Credentials[identity.CredentialsTypePassword].Config,
+					Version:     1,
+				}
+
+				require.NoError(t, p.CreateIdentity(ctx, newIdentity))
+				createdIDs = append(createdIDs, newIdentity.ID)
+
+				// Test 1: Find with normalized phone (exact match in DB)
+				actualNorm, err := p.FindIdentityByCredentialIdentifier(ctx, normalizedPhone, false, identity.ExpandDefault)
+				require.NoError(t, err, "should find new identity with normalized phone")
+				require.Equal(t, newIdentity.ID, actualNorm.ID)
+
+				// Test 2: Find with non-normalized phone (gets normalized, then matches)
+				actualNonNorm, err := p.FindIdentityByCredentialIdentifier(ctx, nonNormalizedPhone, false, identity.ExpandDefault)
+				require.NoError(t, err, "should find new identity with non-normalized phone (gets normalized)")
+				require.Equal(t, newIdentity.ID, actualNonNorm.ID)
+			})
+		})
+
+		t.Run("case=find identity by credential identifier prefers exact match when multiple records exist", func(t *testing.T) {
+			// This test verifies that when multiple identities match (one with normalized,
+			// another with non-normalized), the function returns the one with exact match.
+			// Use unique phone numbers to avoid conflicts with other tests
+			nonNormalizedPhone := "+1 555-111-2222"
+			normalizedPhone := "+15551112222"
+
+			// Get credential type metadata
+			var credTypes []identity.CredentialsTypeTable
+			require.NoError(t, p.GetConnection(ctx).All(&credTypes))
+			var passwordCredType identity.CredentialsTypeTable
+			for _, ct := range credTypes {
+				if ct.Name == identity.CredentialsTypePassword {
+					passwordCredType = ct
+					break
+				}
+			}
+
+			// Create first identity with normalized phone number
+			normalizedID := x.NewUUID()
+			normalizedCredID := x.NewUUID()
+			normalizedIdentifierID := x.NewUUID()
+			now := time.Now()
+
+			// Cleanup after test - will be executed in reverse order
+			t.Cleanup(func() {
+				_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credential_identifiers WHERE identity_credential_id = ?", normalizedCredID).Exec()
+				_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credentials WHERE id = ?", normalizedCredID).Exec()
+				_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", normalizedID).Exec()
+			})
+
+			// Insert first identity with normalized phone
+			require.NoError(t, p.GetConnection(ctx).RawQuery(
+				"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+				normalizedID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+			).Exec())
+
+			require.NoError(t, p.GetConnection(ctx).RawQuery(
+				"INSERT INTO identity_credentials (id, identity_id, nid, identity_credential_type_id, created_at, updated_at, config, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+				normalizedCredID, normalizedID, nid, passwordCredType.ID, now, now, sqlxx.JSONRawMessage(`{"foo":"bar"}`), 1,
+			).Exec())
+
+			require.NoError(t, p.GetConnection(ctx).RawQuery(
+				"INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+				normalizedIdentifierID, normalizedID, normalizedCredID, nid, normalizedPhone, now, now, passwordCredType.ID,
+			).Exec())
+
+			// Create second identity with non-normalized phone number
+			nonNormalizedID := x.NewUUID()
+			nonNormalizedCredID := x.NewUUID()
+			nonNormalizedIdentifierID := x.NewUUID()
+
+			// Update cleanup to include second identity
+			t.Cleanup(func() {
+				_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credential_identifiers WHERE identity_credential_id = ?", nonNormalizedCredID).Exec()
+				_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credentials WHERE id = ?", nonNormalizedCredID).Exec()
+				_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", nonNormalizedID).Exec()
+			})
+
+			// Insert second identity with non-normalized phone
+			require.NoError(t, p.GetConnection(ctx).RawQuery(
+				"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+				nonNormalizedID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+			).Exec())
+
+			require.NoError(t, p.GetConnection(ctx).RawQuery(
+				"INSERT INTO identity_credentials (id, identity_id, nid, identity_credential_type_id, created_at, updated_at, config, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+				nonNormalizedCredID, nonNormalizedID, nid, passwordCredType.ID, now, now, sqlxx.JSONRawMessage(`{"foo":"bar"}`), 1,
+			).Exec())
+
+			require.NoError(t, p.GetConnection(ctx).RawQuery(
+				"INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+				nonNormalizedIdentifierID, nonNormalizedID, nonNormalizedCredID, nid, nonNormalizedPhone, now, now, passwordCredType.ID,
+			).Exec())
+
+			// Test: Query with non-normalized phone should return the identity with exact match
+			// Even though both identities match (one has normalized, other has non-normalized),
+			// the function should prefer the exact match
+			actual, err := p.FindIdentityByCredentialIdentifier(ctx, nonNormalizedPhone, false, identity.ExpandDefault)
+			require.NoError(t, err, "should find identity with exact non-normalized phone match")
+			require.Equal(t, nonNormalizedID, actual.ID, "should return identity with exact match (non-normalized phone)")
+			require.NotEqual(t, normalizedID, actual.ID, "should not return identity with only normalized match")
+		})
+
+		t.Run("case=FindByCredentialsIdentifier with phone number backward compatibility", func(t *testing.T) {
+			t.Run("upgraded identity with both identifiers via raw SQL", func(t *testing.T) {
+				// Use unique phone numbers for this test
+				nonNormalizedPhone := "+1 555-987-6543"
+				normalizedPhone := "+15559876543"
+				// This test simulates a legacy identity that has been upgraded and persisted
+				// Get credential type metadata
+				var credTypes []identity.CredentialsTypeTable
+				require.NoError(t, p.GetConnection(ctx).All(&credTypes))
+				var passwordCredType identity.CredentialsTypeTable
+				for _, ct := range credTypes {
+					if ct.Name == identity.CredentialsTypePassword {
+						passwordCredType = ct
+						break
+					}
+				}
+
+				legacyID := x.NewUUID()
+				credID := x.NewUUID()
+				identifierID1 := x.NewUUID()
+				identifierID2 := x.NewUUID()
+				now := time.Now()
+
+				// Cleanup after test
+				t.Cleanup(func() {
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credential_identifiers WHERE identity_credential_id = ?", credID).Exec()
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_credentials WHERE id = ?", credID).Exec()
+					_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", legacyID).Exec()
+				})
+
+				// Insert identity with raw SQL
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+					legacyID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+				).Exec())
+
+				// Insert credential (version 1 after upgrade)
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credentials (id, identity_id, nid, identity_credential_type_id, created_at, updated_at, config, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					credID, legacyID, nid, passwordCredType.ID, now, now, sqlxx.JSONRawMessage(`{"foo":"bar"}`), 1,
+				).Exec())
+
+				// Insert BOTH identifiers (simulating post-upgrade state)
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					identifierID1, legacyID, credID, nid, nonNormalizedPhone, now, now, passwordCredType.ID,
+				).Exec())
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					"INSERT INTO identity_credential_identifiers (id, identity_id, identity_credential_id, nid, identifier, created_at, updated_at, identity_credential_type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+					identifierID2, legacyID, credID, nid, normalizedPhone, now, now, passwordCredType.ID,
+				).Exec())
+
+				// Test 1: Find with non-normalized phone
+				actualNonNorm, cred, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, nonNormalizedPhone)
+				require.NoError(t, err, "should find upgraded identity with non-normalized phone")
+				require.Equal(t, legacyID, actualNonNorm.ID)
+				require.NotNil(t, cred)
+
+				// Test 2: Find with normalized phone
+				actualNorm, cred, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, normalizedPhone)
+				require.NoError(t, err, "should find upgraded identity with normalized phone")
+				require.Equal(t, legacyID, actualNorm.ID)
+				require.NotNil(t, cred)
+			})
+
+			t.Run("new identity with normalized phone", func(t *testing.T) {
+				// Use different phone numbers to avoid conflicts with previous test
+				// Using UK format which normalizes reliably
+				nonNormalizedPhone := "+44 161 496 0123"
+				normalizedPhone := "+441614960123"
+
+				// Create new identity with normalized phone
+				newIdentity := passwordIdentity("", normalizedPhone)
+				newIdentity.Traits = identity.Traits(`{}`)
+				newIdentity.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{normalizedPhone},
+					Config:      newIdentity.Credentials[identity.CredentialsTypePassword].Config,
+					Version:     1,
+				}
+
+				require.NoError(t, p.CreateIdentity(ctx, newIdentity))
+				createdIDs = append(createdIDs, newIdentity.ID)
+
+				// Test 1: Find with normalized phone (exact match)
+				actualNorm, cred, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, normalizedPhone)
+				require.NoError(t, err)
+				require.Equal(t, newIdentity.ID, actualNorm.ID)
+				require.NotNil(t, cred)
+
+				// Test 2: Find with non-normalized phone (gets normalized)
+				actualNonNorm, cred, err := p.FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, nonNormalizedPhone)
+				require.NoError(t, err)
+				require.Equal(t, newIdentity.ID, actualNonNorm.ID)
+				require.NotNil(t, cred)
+			})
+		})
+
 		t.Run("case=find identity by its credentials respects cases", func(t *testing.T) {
 			baseEmail := randx.MustString(16, randx.AlphaLowerNum)
 			caseSensitive := baseEmail + "@ory.sh"
@@ -1162,8 +1633,8 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("case=find identity by its credentials case insensitive", func(t *testing.T) {
-			identifier := x.NewUUID().String()
-			expected := passwordIdentity("", strings.ToUpper(identifier))
+			identifier := strings.ToUpper(x.NewUUID().String())
+			expected := passwordIdentity("", identifier)
 			expected.Traits = identity.Traits(`{}`)
 
 			require.NoError(t, p.CreateIdentity(ctx, expected))
@@ -1354,6 +1825,143 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 			})
+
+			t.Run("case=find verifiable address by phone number with normalization", func(t *testing.T) {
+				// Use unique phone numbers to avoid conflicts with other tests
+				nonNormalizedPhone := "+1 650-253-0000"
+				normalizedPhone := "+16502530000"
+
+				t.Run("create with normalized phone and find with both formats", func(t *testing.T) {
+					var i identity.Identity
+					require.NoError(t, faker.FakeData(&i))
+
+					// Create identity with normalized phone
+					address := identity.NewVerifiableAddress(normalizedPhone, i.ID, identity.AddressTypeSMS)
+					i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
+
+					require.NoError(t, p.CreateIdentity(ctx, &i))
+					createdIDs = append(createdIDs, i.ID)
+
+					// Test 1: Find with normalized phone (exact match in DB)
+					actualNorm, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeSMS, normalizedPhone)
+					require.NoError(t, err, "should find verifiable address with normalized phone")
+					assert.Equal(t, normalizedPhone, actualNorm.Value)
+					assert.Equal(t, identity.AddressTypeSMS, actualNorm.Via)
+
+					// Test 2: Find with non-normalized phone (gets normalized, then matches)
+					actualNonNorm, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeSMS, nonNormalizedPhone)
+					require.NoError(t, err, "should find verifiable address with non-normalized phone (gets normalized)")
+					assert.Equal(t, normalizedPhone, actualNonNorm.Value)
+					assert.Equal(t, actualNorm.ID, actualNonNorm.ID, "should return same address")
+				})
+
+				t.Run("create with non-normalized phone and find with both formats", func(t *testing.T) {
+					// Use different phone number for this test
+					nonNormPhone2 := "+44 20 7946 0958"
+					normPhone2 := "+442079460958"
+
+					var i identity.Identity
+					require.NoError(t, faker.FakeData(&i))
+
+					// Create identity with non-normalized phone
+					// Note: CreateIdentity will normalize the phone during creation
+					address := identity.NewVerifiableAddress(nonNormPhone2, i.ID, identity.AddressTypeSMS)
+					i.VerifiableAddresses = append(i.VerifiableAddresses, *address)
+
+					require.NoError(t, p.CreateIdentity(ctx, &i))
+					createdIDs = append(createdIDs, i.ID)
+
+					// Test 1: Find with non-normalized phone (gets normalized for search)
+					actualNonNorm, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeSMS, nonNormPhone2)
+					require.NoError(t, err, "should find verifiable address with non-normalized phone")
+					assert.Equal(t, normPhone2, actualNonNorm.Value, "stored value should be normalized")
+					assert.Equal(t, identity.AddressTypeSMS, actualNonNorm.Via)
+
+					// Test 2: Find with normalized phone (direct match)
+					actualNorm, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeSMS, normPhone2)
+					require.NoError(t, err, "should find verifiable address with normalized phone")
+					assert.Equal(t, normPhone2, actualNorm.Value)
+					assert.Equal(t, actualNonNorm.ID, actualNorm.ID, "should return same address")
+				})
+
+				t.Run("backward compatibility with legacy non-normalized phone data", func(t *testing.T) {
+					// This test simulates legacy data that was stored before phone normalization was implemented
+					// The database contains a non-normalized phone number
+					legacyPhone := "+1 650-253-0500"
+
+					identityID := x.NewUUID()
+					addressID := x.NewUUID()
+					now := time.Now()
+
+					// Cleanup after test
+					t.Cleanup(func() {
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_verifiable_addresses WHERE id = ?", addressID).Exec()
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", identityID).Exec()
+					})
+
+					// Insert identity with raw SQL
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						identityID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+					).Exec())
+
+					// Insert verifiable address with NON-NORMALIZED phone (legacy data)
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identity_verifiable_addresses (id, identity_id, nid, via, value, verified, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+						addressID, identityID, nid, identity.AddressTypeSMS, legacyPhone, false, identity.VerifiableAddressStatusPending, now, now,
+					).Exec())
+
+					// Test: Find with exact non-normalized phone (what user would enter)
+					// Should find the legacy non-normalized phone data
+					actual, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeSMS, legacyPhone)
+					require.NoError(t, err, "should find legacy non-normalized phone data with non-normalized search")
+					assert.Equal(t, legacyPhone, actual.Value)
+					assert.Equal(t, identity.AddressTypeSMS, actual.Via)
+					assert.Equal(t, addressID, actual.ID)
+				})
+
+				t.Run("post-migration: legacy verifiable address normalized in DB", func(t *testing.T) {
+					legacyPhone := "+1 650-253-0600"
+					normalizedPhone := "+16502530600"
+
+					identityID := x.NewUUID()
+					addressID := x.NewUUID()
+					now := time.Now()
+
+					t.Cleanup(func() {
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_verifiable_addresses WHERE id = ?", addressID).Exec()
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", identityID).Exec()
+					})
+
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						identityID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+					).Exec())
+
+					// Insert with non-normalized phone, then simulate migration
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identity_verifiable_addresses (id, identity_id, nid, via, value, verified, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+						addressID, identityID, nid, identity.AddressTypeSMS, legacyPhone, false, identity.VerifiableAddressStatusPending, now, now,
+					).Exec())
+
+					// Simulate migration: normalize the value in DB
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"UPDATE identity_verifiable_addresses SET value = ? WHERE id = ?",
+						normalizedPhone, addressID,
+					).Exec())
+
+					// Find by E.164
+					actual, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeSMS, normalizedPhone)
+					require.NoError(t, err, "should find migrated verifiable address by E.164")
+					assert.Equal(t, normalizedPhone, actual.Value)
+
+					// Find by original non-normalized format (IN query normalizes input)
+					actual2, err := p.FindVerifiableAddressByValue(ctx, identity.AddressTypeSMS, legacyPhone)
+					require.NoError(t, err, "should find migrated verifiable address by non-normalized phone")
+					assert.Equal(t, normalizedPhone, actual2.Value)
+					assert.Equal(t, actual.ID, actual2.ID)
+				})
+			})
 		})
 
 		t.Run("suite=credential-types", func(t *testing.T) {
@@ -1423,7 +2031,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				}
 
 				for k, expected := range addresses {
-					t.Run("method=FindVerifiableAddressByValue", func(t *testing.T) {
+					t.Run("method=FindRecoveryAddressByValue", func(t *testing.T) {
 						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 							actual, err := p.FindRecoveryAddressByValue(ctx, expected.Via, expected.Value)
 							require.NoError(t, err)
@@ -1562,6 +2170,279 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, strings.ToUpper("recovery.TestPersister.Update-case-insensitive-next@ory.sh"))
 					require.ErrorIs(t, err, sqlcon.ErrNoRows())
+				})
+			})
+
+			t.Run("case=find recovery address by phone number with normalization", func(t *testing.T) {
+				// Use unique phone numbers to avoid conflicts with other tests
+				nonNormalizedPhone := "+1 650-253-0001"
+				normalizedPhone := "+16502530001"
+
+				t.Run("create with normalized phone and find with both formats", func(t *testing.T) {
+					var i identity.Identity
+					require.NoError(t, faker.FakeData(&i))
+					i.Traits = []byte(`{"phone":"` + normalizedPhone + `"}`)
+
+					// Create identity with normalized phone
+					address := identity.NewRecoverySMSAddress(normalizedPhone, i.ID)
+					i.RecoveryAddresses = append(i.RecoveryAddresses, *address)
+
+					require.NoError(t, p.CreateIdentity(ctx, &i))
+					createdIDs = append(createdIDs, i.ID)
+
+					// Test 1: Find with normalized phone (exact match in DB)
+					actualNorm, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeSMS, normalizedPhone)
+					require.NoError(t, err, "should find recovery address with normalized phone")
+					assert.Equal(t, normalizedPhone, actualNorm.Value)
+					assert.Equal(t, identity.AddressTypeSMS, actualNorm.Via)
+
+					// Test 2: Find with non-normalized phone (gets normalized, then matches)
+					actualNonNorm, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeSMS, nonNormalizedPhone)
+					require.NoError(t, err, "should find recovery address with non-normalized phone (gets normalized)")
+					assert.Equal(t, normalizedPhone, actualNonNorm.Value)
+					assert.Equal(t, actualNorm.ID, actualNonNorm.ID, "should return same address")
+				})
+
+				t.Run("create with non-normalized phone and find with both formats", func(t *testing.T) {
+					// Use different phone number for this test
+					nonNormPhone2 := "+44 20 7946 0123"
+					normPhone2 := "+442079460123"
+
+					var i identity.Identity
+					require.NoError(t, faker.FakeData(&i))
+					i.Traits = []byte(`{"phone":"` + nonNormPhone2 + `"}`)
+
+					// Create identity with non-normalized phone
+					// Note: CreateIdentity will normalize the phone during creation
+					address := identity.NewRecoverySMSAddress(nonNormPhone2, i.ID)
+					i.RecoveryAddresses = append(i.RecoveryAddresses, *address)
+
+					require.NoError(t, p.CreateIdentity(ctx, &i))
+					createdIDs = append(createdIDs, i.ID)
+
+					// Test 1: Find with non-normalized phone (gets normalized for search)
+					actualNonNorm, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeSMS, nonNormPhone2)
+					require.NoError(t, err, "should find recovery address with non-normalized phone")
+					assert.Equal(t, normPhone2, actualNonNorm.Value, "stored value should be normalized")
+					assert.Equal(t, identity.AddressTypeSMS, actualNonNorm.Via)
+
+					// Test 2: Find with normalized phone (direct match)
+					actualNorm, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeSMS, normPhone2)
+					require.NoError(t, err, "should find recovery address with normalized phone")
+					assert.Equal(t, normPhone2, actualNorm.Value)
+					assert.Equal(t, actualNonNorm.ID, actualNorm.ID, "should return same address")
+				})
+
+				t.Run("backward compatibility with legacy non-normalized phone data", func(t *testing.T) {
+					// This test simulates legacy data that was stored before phone normalization was implemented
+					// The database contains a non-normalized phone number
+					legacyPhone := "+1 650-253-0600"
+
+					identityID := x.NewUUID()
+					addressID := x.NewUUID()
+					now := time.Now()
+
+					// Cleanup after test
+					t.Cleanup(func() {
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_recovery_addresses WHERE id = ?", addressID).Exec()
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", identityID).Exec()
+					})
+
+					// Insert identity with raw SQL
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						identityID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+					).Exec())
+
+					// Insert recovery address with NON-NORMALIZED phone (legacy data)
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identity_recovery_addresses (id, identity_id, nid, via, value, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						addressID, identityID, nid, identity.AddressTypeSMS, legacyPhone, now, now,
+					).Exec())
+
+					// Test: Find with exact non-normalized phone (what user would enter)
+					// Should find the legacy non-normalized phone data
+					actual, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeSMS, legacyPhone)
+					require.NoError(t, err, "should find legacy non-normalized phone data with non-normalized search")
+					assert.Equal(t, legacyPhone, actual.Value)
+					assert.Equal(t, identity.AddressTypeSMS, actual.Via)
+					assert.Equal(t, addressID, actual.ID)
+				})
+
+				t.Run("post-migration: legacy recovery address normalized in DB", func(t *testing.T) {
+					legacyPhone := "+1 650-253-0700"
+					normalizedPhone := "+16502530700"
+
+					identityID := x.NewUUID()
+					addressID := x.NewUUID()
+					now := time.Now()
+
+					t.Cleanup(func() {
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_recovery_addresses WHERE id = ?", addressID).Exec()
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", identityID).Exec()
+					})
+
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						identityID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+					).Exec())
+
+					// Insert with non-normalized phone, then simulate migration
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identity_recovery_addresses (id, identity_id, nid, via, value, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						addressID, identityID, nid, identity.AddressTypeSMS, legacyPhone, now, now,
+					).Exec())
+
+					// Simulate migration: normalize the value in DB
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"UPDATE identity_recovery_addresses SET value = ? WHERE id = ?",
+						normalizedPhone, addressID,
+					).Exec())
+
+					// Find by E.164
+					actual, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeSMS, normalizedPhone)
+					require.NoError(t, err, "should find migrated recovery address by E.164")
+					assert.Equal(t, normalizedPhone, actual.Value)
+
+					// Find by original non-normalized format
+					actual2, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeSMS, legacyPhone)
+					require.NoError(t, err, "should find migrated recovery address by non-normalized phone")
+					assert.Equal(t, normalizedPhone, actual2.Value)
+					assert.Equal(t, actual.ID, actual2.ID)
+				})
+			})
+
+			t.Run("case=find all recovery addresses by phone number with normalization", func(t *testing.T) {
+				t.Run("create with multiple SMS addresses and find all with normalized phone", func(t *testing.T) {
+					// Use unique phone numbers to avoid conflicts with other tests
+					nonNormalizedPhone1 := "+1 650-253-0100"
+					normalizedPhone1 := "+16502530100"
+					normalizedPhone2 := "+16502530200"
+
+					var i identity.Identity
+					require.NoError(t, faker.FakeData(&i))
+					i.Traits = []byte(`{"phone":"` + normalizedPhone1 + `"}`)
+
+					// Create identity with two SMS recovery addresses
+					address1 := identity.NewRecoverySMSAddress(normalizedPhone1, i.ID)
+					address2 := identity.NewRecoverySMSAddress(normalizedPhone2, i.ID)
+					i.RecoveryAddresses = append(i.RecoveryAddresses, *address1, *address2)
+
+					require.NoError(t, p.CreateIdentity(ctx, &i))
+					createdIDs = append(createdIDs, i.ID)
+
+					// Test 1: Find all addresses using normalized phone1
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, normalizedPhone1)
+					require.NoError(t, err, "should find all recovery addresses with normalized phone")
+					require.Len(t, allAddresses, 2, "should return all recovery addresses for the identity")
+					sortAddresses(allAddresses)
+					assert.Equal(t, normalizedPhone1, allAddresses[0].Value)
+					assert.Equal(t, normalizedPhone2, allAddresses[1].Value)
+					assert.Equal(t, identity.AddressTypeSMS, allAddresses[0].Via)
+					assert.Equal(t, identity.AddressTypeSMS, allAddresses[1].Via)
+
+					// Test 2: Find all addresses using non-normalized phone1 (gets normalized, then matches)
+					allAddresses2, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, nonNormalizedPhone1)
+					require.NoError(t, err, "should find all recovery addresses with non-normalized phone")
+					require.Len(t, allAddresses2, 2, "should return all recovery addresses when querying with non-normalized phone")
+					sortAddresses(allAddresses2)
+					assert.Equal(t, normalizedPhone1, allAddresses2[0].Value)
+					assert.Equal(t, normalizedPhone2, allAddresses2[1].Value)
+
+					// Test 3: Find all addresses using normalized phone2
+					allAddresses3, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, normalizedPhone2)
+					require.NoError(t, err)
+					require.Len(t, allAddresses3, 2, "should return all recovery addresses when querying with second phone")
+					sortAddresses(allAddresses3)
+					assert.Equal(t, normalizedPhone1, allAddresses3[0].Value)
+					assert.Equal(t, normalizedPhone2, allAddresses3[1].Value)
+				})
+
+				t.Run("create with multiple SMS addresses and find all with non-normalized phone", func(t *testing.T) {
+					// Use different phone numbers for this test
+					nonNormPhone1 := "+1 650-253-0300"
+					normPhone1 := "+16502530300"
+					normPhone2 := "+16502530400"
+
+					var i identity.Identity
+					require.NoError(t, faker.FakeData(&i))
+					i.Traits = []byte(`{"phone":"` + nonNormPhone1 + `"}`)
+
+					// Create identity with two SMS recovery addresses
+					// Note: CreateIdentity will normalize both phones during creation
+					address1 := identity.NewRecoverySMSAddress(nonNormPhone1, i.ID)
+					address2 := identity.NewRecoverySMSAddress(normPhone2, i.ID)
+					i.RecoveryAddresses = append(i.RecoveryAddresses, *address1, *address2)
+
+					require.NoError(t, p.CreateIdentity(ctx, &i))
+					createdIDs = append(createdIDs, i.ID)
+
+					// Test 1: Find all addresses using non-normalized phone1 (gets normalized for search)
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, nonNormPhone1)
+					require.NoError(t, err, "should find all recovery addresses with non-normalized phone")
+					require.Len(t, allAddresses, 2, "should return all recovery addresses for the identity")
+					sortAddresses(allAddresses)
+					assert.Equal(t, normPhone1, allAddresses[0].Value, "stored values should be normalized")
+					assert.Equal(t, normPhone2, allAddresses[1].Value)
+					assert.Equal(t, identity.AddressTypeSMS, allAddresses[0].Via)
+					assert.Equal(t, identity.AddressTypeSMS, allAddresses[1].Via)
+
+					// Test 2: Find all addresses using normalized phone1 (direct match)
+					allAddresses2, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, normPhone1)
+					require.NoError(t, err)
+					require.Len(t, allAddresses2, 2, "should return all recovery addresses when querying with normalized phone")
+					sortAddresses(allAddresses2)
+					assert.Equal(t, normPhone1, allAddresses2[0].Value)
+					assert.Equal(t, normPhone2, allAddresses2[1].Value)
+				})
+
+				t.Run("backward compatibility with legacy non-normalized phone data", func(t *testing.T) {
+					// This test simulates legacy data that was stored before phone normalization was implemented
+					// The database contains non-normalized phone numbers
+					//
+					// SECURITY NOTE: This function returns ALL recovery addresses for an identity when ANY ONE matches.
+					// The implementation must ensure it only matches addresses for the SAME identity and doesn't
+					// accidentally return addresses from different identities that might have similar phone numbers.
+					legacyPhone1 := "+1 650-253-0700"
+					legacyPhone2 := "+1 650-253-0800"
+
+					identityID := x.NewUUID()
+					addressID1 := x.NewUUID()
+					addressID2 := x.NewUUID()
+					now := time.Now()
+
+					// Cleanup after test
+					t.Cleanup(func() {
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identity_recovery_addresses WHERE id IN (?, ?)", addressID1, addressID2).Exec()
+						_ = p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE id = ?", identityID).Exec()
+					})
+
+					// Insert identity with raw SQL
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identities (id, nid, schema_id, traits, created_at, updated_at, state) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						identityID, nid, config.DefaultIdentityTraitsSchemaID, sqlxx.JSONRawMessage(`{}`), now, now, identity.StateActive,
+					).Exec())
+
+					// Insert TWO recovery addresses with NON-NORMALIZED phones (legacy data)
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identity_recovery_addresses (id, identity_id, nid, via, value, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						addressID1, identityID, nid, identity.AddressTypeSMS, legacyPhone1, now, now,
+					).Exec())
+					require.NoError(t, p.GetConnection(ctx).RawQuery(
+						"INSERT INTO identity_recovery_addresses (id, identity_id, nid, via, value, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+						addressID2, identityID, nid, identity.AddressTypeSMS, legacyPhone2, now, now,
+					).Exec())
+
+					// Test: Find all addresses with exact non-normalized phone (what user would enter)
+					// Should find all recovery addresses for the identity
+					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, legacyPhone1)
+					require.NoError(t, err, "should find all recovery addresses with non-normalized search")
+					require.Len(t, allAddresses, 2, "should return all recovery addresses for the identity")
+					sortAddresses(allAddresses)
+					assert.Equal(t, legacyPhone1, allAddresses[0].Value)
+					assert.Equal(t, legacyPhone2, allAddresses[1].Value)
+					assert.Equal(t, identity.AddressTypeSMS, allAddresses[0].Via)
+					assert.Equal(t, identity.AddressTypeSMS, allAddresses[1].Via)
 				})
 			})
 		})

@@ -28,7 +28,11 @@ func NewMigrateHandler() *MigrateHandler {
 	return &MigrateHandler{}
 }
 
-func (h *MigrateHandler) getPersister(cmd *cobra.Command, args []string, opts []driver.RegistryOption) (d driver.Registry, err error) {
+func (h *MigrateHandler) getPersister(cmd *cobra.Command, args []string, opts []driver.RegistryOption) (driver.Registry, error) {
+	return getPersister(cmd, args, opts)
+}
+
+func getPersister(cmd *cobra.Command, args []string, opts []driver.RegistryOption) (d driver.Registry, err error) {
 	if flagx.MustGetBool(cmd, "read-from-env") {
 		d, err = driver.NewWithoutInit(
 			cmd.Context(),

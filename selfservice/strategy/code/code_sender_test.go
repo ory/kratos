@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/urlx"
 )
 
@@ -57,8 +58,8 @@ func TestSender(t *testing.T) {
 	// to customers in Germany under current legislation.
 	// This is to protect residents against the potential influx of phone calls
 	// that they may receive should their telephone numbers appear in a movie or film.
-	phoneNumberKnown := "+49-160-555-5762"
-	phoneNumberUnknown := "+49-155-555-4570"
+	phoneNumberKnown := x.NormalizePhoneIdentifier("+49-160-555-5762")
+	phoneNumberUnknown := x.NormalizePhoneIdentifier("+49-155-555-4570")
 	i.Traits = identity.Traits(fmt.Sprintf(`{"email": "tracked@ory.sh", "phone": "%s"}`, phoneNumberKnown))
 	require.NoError(t, reg.IdentityManager().Create(ctx, i))
 

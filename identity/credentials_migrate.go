@@ -6,10 +6,13 @@ package identity
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+
+	"github.com/ory/kratos/x"
 
 	"github.com/pkg/errors"
 )
@@ -33,7 +36,7 @@ func UpgradeWebAuthnCredentials(i *Identity, c *Credentials) (err error) {
 			}
 		}
 
-		var index = -1
+		index := -1
 		var err error
 		gjson.GetBytes(c.Config, "credentials").ForEach(func(_, value gjson.Result) bool {
 			index++
@@ -54,7 +57,8 @@ func UpgradeWebAuthnCredentials(i *Identity, c *Credentials) (err error) {
 	return nil
 }
 
-// UpgradeCredentials migrates a set of older WebAuthn credentials to newer ones.
+// UpgradeCredentials migrates a set of older WebAuthn, Code, and
+// Password credentials to newer ones.
 func UpgradeCredentials(i *Identity) error {
 	for k := range i.Credentials {
 		c := i.Credentials[k]
@@ -62,6 +66,9 @@ func UpgradeCredentials(i *Identity) error {
 			return errors.WithStack(err)
 		}
 		if err := UpgradeCodeCredentials(&c); err != nil {
+			return errors.WithStack(err)
+		}
+		if err := UpgradePasswordCredentials(&c); err != nil {
 			return errors.WithStack(err)
 		}
 		i.Credentials[k] = c
@@ -115,6 +122,26 @@ func UpgradeCodeCredentials(c *Credentials) (err error) {
 			return errors.WithStack(err)
 		}
 
+		c.Version = 1
+	}
+	return nil
+}
+
+// UpgradePasswordCredentials will make a graceful attempt to normalize
+// the format of a credential's identifier. Version is always bumped to v1.
+func UpgradePasswordCredentials(c *Credentials) (err error) {
+	if c.Type != CredentialsTypePassword {
+		return nil
+	}
+
+	if c.Version == 0 {
+		// iterate over identifier values
+		// and normalize format
+		for i := range c.Identifiers {
+			c.Identifiers[i] = x.GracefulNormalization(c.Identifiers[i])
+		}
+		slices.Sort(c.Identifiers)
+		c.Identifiers = slices.Compact(c.Identifiers)
 		c.Version = 1
 	}
 	return nil

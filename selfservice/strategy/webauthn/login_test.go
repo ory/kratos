@@ -634,6 +634,85 @@ func TestCompleteLogin(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("case=should be able to log in with phone number identifier", func(t *testing.T) {
+		// Test backward compatibility with a legacy identity whose credential
+		// identifier is stored in non-normalized form in the database.
+		// Note: AAL2 (MFA) login resolves the identity from the session, not via
+		// credential identifier lookup, so both normalized and non-normalized
+		// identifiers succeed regardless of the DB state.
+		nonNormalizedPhone := "+44 20 7946 0958"
+		normalizedPhone := "+442079460958"
+
+		phoneID := &identity.Identity{
+			Traits: identity.Traits(fmt.Sprintf(`{"phone":"%s"}`, nonNormalizedPhone)),
+		}
+		phoneID.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{
+			Identifiers: []string{nonNormalizedPhone},
+			Config:      loginFixtureSuccessV1Credentials,
+			Type:        identity.CredentialsTypeWebAuthn,
+			Version:     1,
+		})
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), phoneID))
+		t.Cleanup(func() {
+			_ = reg.PrivilegedIdentityPool().DeleteIdentity(context.Background(), phoneID.ID)
+		})
+
+		// CreateIdentity normalizes the credential identifier to E.164 format and
+		// may update the credential version. To simulate a legacy database record
+		// created before normalization was introduced, revert both via raw SQL.
+		require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery(
+			"UPDATE identity_credential_identifiers SET identifier = ? WHERE identity_id = ? AND identifier = ?",
+			nonNormalizedPhone, phoneID.ID, normalizedPhone,
+		).Exec())
+		require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery(
+			"UPDATE identity_credentials SET version = 0 WHERE identity_id = ?",
+			phoneID.ID,
+		).Exec())
+
+		run := func(t *testing.T, spa bool, identifier string) {
+			body, res, f := submitWebAuthnLogin(t, spa, phoneID, loginFixtureSuccessV1Context, func(values url.Values) {
+				values.Set("identifier", identifier)
+				values.Set(node.WebAuthnLogin, string(loginFixtureSuccessV1Response))
+			}, testhelpers.InitFlowWithAAL(identity.AuthenticatorAssuranceLevel2))
+
+			prefix := ""
+			if spa {
+				assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
+				prefix = "session."
+			} else {
+				assert.Contains(t, res.Request.URL.String(), redirTS.URL)
+			}
+
+			assert.True(t, gjson.Get(body, prefix+"active").Bool(), "%s", body)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, gjson.Get(body, prefix+"authenticator_assurance_level").String(), "%s", body)
+			assert.EqualValues(t, phoneID.ID.String(), gjson.Get(body, prefix+"identity.id").String(), "%s", body)
+
+			actualFlow, err := reg.LoginFlowPersister().GetLoginFlow(context.Background(), uuid.FromStringOrNil(f.Id))
+			require.NoError(t, err)
+			assert.Empty(t, gjson.GetBytes(actualFlow.InternalContext, flow.PrefixInternalContextKey(identity.CredentialsTypeWebAuthn, webauthn.InternalContextKeySessionData)))
+		}
+
+		t.Run("identifier=non-normalized", func(t *testing.T) {
+			t.Run("type=browser", func(t *testing.T) {
+				run(t, false, nonNormalizedPhone)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				run(t, true, nonNormalizedPhone)
+			})
+		})
+
+		t.Run("identifier=normalized", func(t *testing.T) {
+			t.Run("type=browser", func(t *testing.T) {
+				run(t, false, normalizedPhone)
+			})
+
+			t.Run("type=spa", func(t *testing.T) {
+				run(t, true, normalizedPhone)
+			})
+		})
+	})
 }
 
 func TestFormHydration(t *testing.T) {

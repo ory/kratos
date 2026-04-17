@@ -7,11 +7,9 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/herodot"
-
 	"github.com/tidwall/sjson"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/otelx"

@@ -150,7 +150,18 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 				},
 			},
 		},
-
+		{
+			description: "valid phone number normalization",
+			doc:         `{"telephoneNumber":"+33 6 12 34 56 78"}`,
+			schema:      "file://./stub/extension/recovery/sms.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "+33612345678",
+					Via:        AddressTypeSMS,
+					IdentityID: iid,
+				},
+			},
+		},
 		{
 			description: "valid phone number, no existing",
 			doc:         `{"telephoneNumber":"+68672098006"}`,
@@ -210,8 +221,15 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 			description: "invalid phone number",
 			doc:         `{"telephoneNumber": "foobar"}`,
 			schema:      "file://./stub/extension/recovery/sms.schema.json",
-			// We get 2 errors: one from the JSON schema `format` validation and one from the Go validation.
-			expectErr: errors.New("I[#/telephoneNumber] S[#/properties/telephoneNumber] validation failed\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"foobar\" is not valid \"tel\"\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"foobar\" is not valid \"tel\""),
+			// We get 2 errors: one from the JSON schema `format` validation and one from the normalization error.
+			expectErr: errors.New("I[#/telephoneNumber] S[#/properties/telephoneNumber] validation failed\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"foobar\" is not valid \"tel\"\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"foobar\" is not valid \"tel\" for \"sms\""),
+		},
+		{
+			description: "phone number that fails normalization",
+			doc:         `{"telephoneNumber": "+1234"}`, // Too short to be a valid E.164 number
+			schema:      "file://./stub/extension/recovery/sms.schema.json",
+			// The JSON schema format validator rejects it, and normalization also fails
+			expectErr: errors.New("I[#/telephoneNumber] S[#/properties/telephoneNumber] validation failed\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"+1234\" is not valid \"tel\"\n  I[#/telephoneNumber] S[#/properties/telephoneNumber/format] \"+1234\" is not valid \"tel\" for \"sms\""),
 		},
 		{
 			description: "break_glass_for_organization preserved on existing recovery address",

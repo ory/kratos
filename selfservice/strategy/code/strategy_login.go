@@ -389,11 +389,13 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 		return nil, nil, errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
 	}
 
-	identifier = x.GracefulNormalization(identifier)
-
 	var addresses []Address
 
 	// Step 1: Get the identity
+	// The raw identifier is passed to findIdentityByIdentifier so that
+	// FindByCredentialsIdentifier can match both the normalized and raw forms
+	// via its IN(normalized, raw) query. This preserves backward compatibility
+	// with legacy database records that store non-normalized identifiers.
 	i, cred, isFallback, err := s.findIdentityByIdentifier(ctx, identifier)
 	if err != nil {
 		if requestedAAL == identity.AuthenticatorAssuranceLevel2 {
@@ -412,7 +414,7 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 					return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 				}
 
-				address, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
+				address, err := s.findIdentifierInVerifiableAddress(session.Identity, x.GracefulNormalization(identifier))
 				if err != nil {
 					return nil, nil, err
 				}

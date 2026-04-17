@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
 )
 
 func init() {
@@ -74,8 +75,12 @@ func (r *SchemaExtensionVerification) Run(ctx jsonschema.ValidationContext, s sc
 
 	var normalized string
 	switch formatString {
-	case "email":
-		normalized = strings.ToLower(strings.TrimSpace(fmt.Sprintf("%s", value)))
+	case "email", "tel":
+		var err error
+		normalized, err = x.NormalizeIdentifier(fmt.Sprintf("%s", value), s.Verification.Via)
+		if err != nil {
+			return ctx.Error("format", "%q can not be normalized for format %q", value, formatString)
+		}
 	default:
 		normalized = strings.TrimSpace(fmt.Sprintf("%s", value))
 	}
