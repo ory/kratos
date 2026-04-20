@@ -111,3 +111,27 @@ func VerifiableAddressesEqual(original, updated []VerifiableAddress) bool {
 		return a.Signature() == b.Signature()
 	})
 }
+
+type VerifiableAddressLike interface {
+	// ToPersistable returns the verifiable address to be persisted.
+	// Returns nil when the change is pending (e.g., via PendingTraitsChange).
+	ToPersistable() (va *VerifiableAddress, isPersistable bool)
+	// Address returns the address value
+	Address() string
+	// Via returns the delivery method
+	DeliveryVia() string
+}
+
+var _ VerifiableAddressLike = &VerifiableAddress{}
+
+func (va *VerifiableAddress) ToPersistable() (*VerifiableAddress, bool) {
+	return va, true
+}
+
+func (va VerifiableAddress) Address() string {
+	return va.Value
+}
+
+func (va VerifiableAddress) DeliveryVia() string {
+	return va.Via
+}

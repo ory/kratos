@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
@@ -221,8 +220,7 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := e.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
-	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
+	if e.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
 

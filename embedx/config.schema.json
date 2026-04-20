@@ -109,6 +109,16 @@
       "additionalProperties": false,
       "required": ["hook", "config"]
     },
+    "selfServiceVerifyNewAddressHook": {
+      "type": "object",
+      "properties": {
+        "hook": {
+          "const": "verify_new_address"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["hook"]
+    },
     "webHookAuthBasicAuthProperties": {
       "properties": {
         "type": {
@@ -750,6 +760,9 @@
               },
               {
                 "$ref": "#/definitions/b2bSSOHook"
+              },
+              {
+                "$ref": "#/definitions/selfServiceVerifyNewAddressHook"
               }
             ]
           },

@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/httpx"
@@ -170,8 +169,7 @@ func (s *Strategy) continueFlow(ctx context.Context, r *http.Request, ctxUpdate 
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
-	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
+	if s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
 

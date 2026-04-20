@@ -53,6 +53,7 @@ type (
 		identity.ManagementProvider
 		identity.PoolProvider
 		identity.PrivilegedPoolProvider
+		identity.PendingTraitsChangePersistenceProvider
 
 		courier.Provider
 

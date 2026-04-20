@@ -10,6 +10,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	stderrors "errors"
 
@@ -22,9 +23,12 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 )
 
 func ErrProtectedFieldModified() *herodot.DefaultError {
@@ -42,6 +46,8 @@ type (
 		ValidationProvider
 		ActiveCredentialsCounterStrategyProvider
 		logrusx.Provider
+		x.TransactionPersistenceProvider
+		PendingTraitsChangePersistenceProvider
 	}
 	ManagementProvider interface {
 		IdentityManager() *Manager
@@ -587,4 +593,58 @@ func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Iden
 		count += current
 	}
 	return count, nil
+}
+
+var ErrConcurrentModification = stderrors.New("concurrent modification detected")
+
+func (m *Manager) ApplyPendingTraitsChange(ctx context.Context, ptc *PendingTraitsChange) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.ApplyPendingTraitsChange")
+	defer otelx.End(span, &err)
+	return m.r.TransactionalPersisterProvider().Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
+		// Detect concurrent modifications inside the transaction.
+		currentIdentity, err := m.r.IdentityPool().GetIdentity(ctx, ptc.IdentityID, ExpandDefault)
+		if err != nil {
+			return err
+		}
+
+		if HashTraits(json.RawMessage(currentIdentity.Traits)) != ptc.OriginalTraitsHash {
+			return ErrConcurrentModification
+		}
+
+		// This is still safe, because the pending_traits_change creation is gated by a privileged session check.
+		// Since the verification flow is "session-less" because the link might open in a different browser, we cannot check privileged session status.
+		opts := []ManagerOption{ManagerAllowWriteProtectedTraits}
+		if err := m.UpdateTraits(ctx, ptc.IdentityID, Traits(ptc.ProposedTraits), opts...); err != nil {
+			return err
+		}
+
+		// Mark the pending change as completed.
+		ptc.Status = PendingTraitsChangeStatusCompleted
+		if err := m.r.PendingTraitsChangePersister().UpdatePendingTraitsChange(ctx, ptc); err != nil {
+			return err
+		}
+
+		// Load the updated identity.
+		i, err := m.r.IdentityPool().GetIdentity(ctx, ptc.IdentityID, ExpandDefault)
+		if err != nil {
+			return err
+		}
+
+		// Mark the new verifiable address as verified.
+		for idx := range i.VerifiableAddresses {
+			a := &i.VerifiableAddresses[idx]
+			if a.Value == ptc.NewAddressValue && a.Via == ptc.NewAddressVia {
+				a.Verified = true
+				verifiedAt := sqlxx.NullTime(time.Now().UTC())
+				a.VerifiedAt = &verifiedAt
+				a.Status = VerifiableAddressStatusCompleted
+				if err := m.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, a, "verified", "verified_at", "status"); err != nil {
+					return err
+				}
+				break
+			}
+		}
+		return nil
+	})
+
 }

@@ -98,6 +98,7 @@ type RegistryDefault struct {
 	hookSessionDestroyer   *hook.SessionDestroyer
 	hookAddressVerifier    *hook.AddressVerifier
 	hookShowVerificationUI *hook.ShowVerificationUIHook
+	hookVerifyNewAddress   *hook.VerifyNewAddress
 
 	identityHandler        *identity.Handler
 	identityValidator      *identity.Validator
@@ -776,6 +777,9 @@ func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersi
 }
 func (m *RegistryDefault) RegistrationCodePersister() code.RegistrationCodePersister {
 	return m.persister
+}
+func (m *RegistryDefault) PendingTraitsChangePersister() identity.PendingTraitsChangePersister {
+	return m.Persister()
 }
 func (m *RegistryDefault) TransactionalPersisterProvider() x.TransactionalPersister {
 	return m.persister

@@ -490,3 +490,24 @@ func (s *ManagerHTTP) ActivateSession(r *http.Request, session *Session, i *iden
 
 	return nil
 }
+
+func (s *ManagerHTTP) IsPrivileged(ctx context.Context, session *Session) bool {
+	if session == nil {
+		return false
+	}
+
+	if session.Identity == nil {
+		return false
+	}
+
+	if session.AuthenticatedAt.IsZero() {
+		return false
+	}
+
+	privilegedSessionLifespan := s.r.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
+	if privilegedSessionLifespan <= 0 {
+		return true
+	}
+
+	return session.AuthenticatedAt.Add(privilegedSessionLifespan).After(time.Now())
+}

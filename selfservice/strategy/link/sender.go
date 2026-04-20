@@ -165,7 +165,9 @@ func (s *Sender) SendVerificationLink(ctx context.Context, f *verification.Flow,
 	if err := s.SendVerificationTokenTo(ctx, f, i, address, token); err != nil {
 		return err
 	}
-	return nil
+
+	address.Status = identity.VerifiableAddressStatusSent
+	return s.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "status")
 }
 
 func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *identity.Identity, address *identity.RecoveryAddress, token *RecoveryToken) error {
@@ -206,12 +208,13 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 		}))
 }
 
-func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Flow, i *identity.Identity, address *identity.VerifiableAddress, token *VerificationToken) error {
+func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Flow, i *identity.Identity, sendable identity.VerifiableAddressLike, token *VerificationToken) error {
+	address, via := sendable.Address(), sendable.DeliveryVia()
 	s.r.Logger().
-		WithField("via", address.Via).
-		WithField("identity_id", address.IdentityID).
+		WithField("via", via).
+		WithField("identity_id", i.ID).
 		WithField("verification_link_id", token.ID).
-		WithSensitiveField("email_address", address.Value).
+		WithSensitiveField("email_address", address).
 		WithSensitiveField("verification_link_token", token.Token).
 		Info("Sending out verification email with verification link.")
 
@@ -232,19 +235,15 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 			"token": {token.Token},
 		}).String()
 
-	if err := s.send(ctx, address.Via, email.NewVerificationValid(s.r,
+	if err := s.send(ctx, via, email.NewVerificationValid(s.r,
 		&email.VerificationValidModel{
-			To:               address.Value,
+			To:               address,
 			VerificationURL:  verificationUrl,
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
 			TransientPayload: transientPayload,
 			ExpiresInMinutes: int(s.r.Config().SelfServiceLinkMethodLifespan(ctx).Minutes()),
 		})); err != nil {
-		return err
-	}
-	address.Status = identity.VerifiableAddressStatusSent
-	if err := s.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "status"); err != nil {
 		return err
 	}
 	return nil

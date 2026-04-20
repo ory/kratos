@@ -169,7 +169,7 @@ func (s *Strategy) continueSettingsFlow(
 			return err
 		}
 
-		if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
+		if !s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 			return errors.WithStack(settings.NewFlowNeedsReAuth())
 		}
 	} else {

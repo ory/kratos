@@ -130,6 +130,11 @@ func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Re
 			return err
 		}
 
+		address.Status = identity.VerifiableAddressStatusSent
+		if err := e.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "status"); err != nil {
+			return err
+		}
+
 		flowURL := verificationFlow.AppendTo(e.r.Config().SelfServiceFlowVerificationUI(ctx)).String()
 		continueWith := flow.NewContinueWithVerificationUI(verificationFlow.ID, address.Value, flowURL)
 		f.AddContinueWith(continueWith)

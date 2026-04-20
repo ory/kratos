@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
@@ -209,47 +211,83 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
 	}
 
-	address := token.VerifiableAddress
-	address.Verified = true
-	verifiedAt := sqlxx.NullTime(time.Now().UTC())
-	address.VerifiedAt = &verifiedAt
-	address.Status = identity.VerifiableAddressStatusCompleted
-	if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); err != nil {
-		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
+	var identityID uuid.UUID
+	var addressVia string
+
+	if token.VerifiableAddress == nil {
+		// Pending-change path: no persisted address — look up by verification flow ID.
+		ptc, ptcErr := s.d.PendingTraitsChangePersister().GetPendingTraitsChangeByVerificationFlow(ctx, f.ID)
+		if ptcErr != nil {
+			if errors.Is(ptcErr, sqlcon.ErrNoRows()) {
+				return s.retryVerificationFlowWithMessage(ctx, w, r, flow.TypeBrowser, text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
+			}
+			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, ptcErr)
+		}
+
+		if err := s.d.IdentityManager().ApplyPendingTraitsChange(ctx, ptc); err != nil {
+			if errors.Is(err, identity.ErrConcurrentModification) {
+				f.UI.Messages.Clear()
+				f.UI.Messages.Add(text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
+				if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
+					return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+				}
+				if x.IsBrowserRequest(r) {
+					http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
+				} else {
+					s.d.Writer().Write(w, r, f)
+				}
+				return errors.WithStack(flow.ErrCompletedByStrategy)
+			}
+			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+		}
+
+		addressVia = ptc.NewAddressVia
+		identityID = ptc.IdentityID
+	} else {
+		// Normal path: update the existing verifiable address directly.
+		address := token.VerifiableAddress
+		address.Verified = true
+		verifiedAt := sqlxx.NullTime(time.Now().UTC())
+		address.VerifiedAt = &verifiedAt
+		address.Status = identity.VerifiableAddressStatusCompleted
+		if err := s.d.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); err != nil {
+			return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
+		}
+
+		addressVia = address.Via
+		identityID = address.IdentityID
 	}
 
-	i, err := s.d.IdentityPool().GetIdentity(ctx, token.VerifiableAddress.IdentityID, identity.ExpandDefault)
+	i, err := s.d.IdentityPool().GetIdentity(ctx, identityID, identity.ExpandDefault)
 	if err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
 	}
 
+	// Remainder is shared between both paths.
 	returnTo := f.ContinueURL(ctx, s.d.Config())
-
-	f.UI.
-		Nodes.
-		Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).
-			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	f.UI = &container.Container{
 		Method: "GET",
 		Action: returnTo.String(),
 	}
-	f.UI.Messages.Clear()
+
 	f.State = flow.StatePassedChallenge
 	// See https://github.com/ory/kratos/issues/1547
 	f.SetCSRFToken(flow.GetCSRFToken(s.d, w, r, f.Type))
-	f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
-	f.UI.
-		Nodes.
-		Append(node.NewAnchorField("continue", returnTo.String(), node.LinkGroup, text.NewInfoNodeLabelContinue()).
-			WithMetaLabel(text.NewInfoNodeLabelContinue()))
+	if addressVia == identity.AddressTypeSMS {
+		f.UI.Messages.Set(text.NewInfoSelfServiceVerificationPhoneSuccessful())
+	} else {
+		f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
+	}
+	f.UI.Nodes.Append(node.NewAnchorField("continue", returnTo.String(), node.LinkGroup, text.NewInfoNodeLabelContinue()).
+		WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
 	}
 
 	if err := s.d.VerificationExecutor().PostVerificationHook(w, r, f, i); err != nil {
-		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
+		return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 	}
 
 	return nil
@@ -310,11 +348,12 @@ func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.Re
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) SendVerificationCode(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) error {
-	token := NewSelfServiceVerificationToken(a, f, s.d.Config().SelfServiceLinkMethodLifespan(ctx))
+func (s *Strategy) SendVerificationCode(ctx context.Context, f *verification.Flow, i *identity.Identity, addressLike identity.VerifiableAddressLike) error {
+	token := NewSelfServiceVerificationToken(addressLike, f, s.d.Config().SelfServiceLinkMethodLifespan(ctx))
+
 	if err := s.d.VerificationTokenPersister().CreateVerificationToken(ctx, token); err != nil {
 		return err
 	}
 
-	return s.d.LinkSender().SendVerificationTokenTo(ctx, f, i, a, token)
+	return s.d.LinkSender().SendVerificationTokenTo(ctx, f, i, addressLike, token)
 }

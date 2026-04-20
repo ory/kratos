@@ -128,6 +128,7 @@ func TestAddressVerifier(t *testing.T) {
 
 		// Must persist the flow first for foreign key constraints
 		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), loginFlow))
+
 		t.Run("json request for unverified address", func(t *testing.T) {
 			// Mock JSON request
 			mockJSONReq := httptest.NewRequest("GET", "http://example.com", nil)

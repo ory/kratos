@@ -368,8 +368,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 	}
 
 	rawCode := GenerateCode()
-	var code *VerificationCode
-	if code, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
+	if _, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,
 		ExpiresIn:         s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
 		VerifiableAddress: address,
@@ -384,7 +383,12 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	return s.SendVerificationCodeTo(ctx, f, i, rawCode, code)
+	if err := s.SendVerificationCodeTo(ctx, f, i, rawCode, address); err != nil {
+		return err
+	}
+
+	address.Status = identity.VerifiableAddressStatusSent
+	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "status")
 }
 
 func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, codeStr string) string {
@@ -396,12 +400,12 @@ func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, c
 		}).String()
 }
 
-func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode) error {
+func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, address identity.VerifiableAddressLike) error {
+	to, via := address.Address(), address.DeliveryVia()
 	s.deps.Logger().
-		WithField("via", code.VerifiableAddress.Via).
+		WithField("via", via).
 		WithField("identity_id", i.ID).
-		WithField("verification_code_id", code.ID).
-		WithSensitiveField("email_address", code.VerifiableAddress.Value).
+		WithSensitiveField("email_address", to).
 		WithSensitiveField("verification_link_token", codeString).
 		Info("Sending out verification email with verification code.")
 
@@ -418,10 +422,10 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 	var t courier.Template
 
 	// TODO: this can likely be abstracted by making templates not specific to the channel they're using
-	switch code.VerifiableAddress.Via {
+	switch via {
 	case identity.ChannelTypeEmail:
 		t = email.NewVerificationCodeValid(s.deps, &email.VerificationCodeValidModel{
-			To:               code.VerifiableAddress.Value,
+			To:               to,
 			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
 			Identity:         model,
 			VerificationCode: codeString,
@@ -431,7 +435,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		})
 	case identity.ChannelTypeSMS:
 		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
-			To:               code.VerifiableAddress.Value,
+			To:               to,
 			VerificationCode: codeString,
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
@@ -439,14 +443,10 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 		})
 	default:
-		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email or sms but got %s", via))
 	}
 
-	if err := s.send(ctx, code.VerifiableAddress.Via, t); err != nil {
-		return err
-	}
-	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
-	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress, "status")
+	return s.send(ctx, via, t)
 }
 
 func (s *Sender) send(ctx context.Context, via string, t courier.Template) error {

@@ -352,7 +352,7 @@ func (s *Strategy) initLinkProvider(ctx context.Context, w http.ResponseWriter, 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
+	if !s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
@@ -404,7 +404,7 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 		Link: provider.Config().ID, FlowID: ctxUpdate.Flow.ID.String(),
 	}
 
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
+	if !s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 
@@ -442,7 +442,7 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 }
 
 func (s *Strategy) unlinkProvider(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p *updateSettingsFlowWithOidcMethod) error {
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
+	if !s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(settings.NewFlowNeedsReAuth()))
 	}
 

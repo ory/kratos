@@ -10,4 +10,5 @@ const (
 	KeyRequireVerifiedAddress = "require_verified_address"
 	KeyVerificationUI         = "show_verification_ui"
 	KeyVerifier               = "verification"
+	KeyVerifyNewAddress       = "verify_new_address"
 )

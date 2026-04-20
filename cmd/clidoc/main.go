@@ -200,6 +200,7 @@ func init() {
 		"NewErrorValidationEmail":                                 text.NewErrorValidationEmail("{value}"),
 		"NewErrorValidationPhone":                                 text.NewErrorValidationPhone("{value}"),
 		"NewErrorValidationIdentityDisabled":                      text.NewErrorValidationIdentityDisabled(),
+		"NewErrorValidationSettingsTooManyAddressChanges":         text.NewErrorValidationSettingsTooManyAddressChanges(),
 	}
 }
 

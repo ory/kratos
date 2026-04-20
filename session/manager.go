@@ -164,6 +164,10 @@ type Manager interface {
 	// all computed values (e.g. authenticator assurance level) and updates the session object but does not store
 	// the session in the database or on the client device.
 	ActivateSession(r *http.Request, session *Session, i *identity.Identity, authenticatedAt time.Time) error
+
+	// IsPrivileged checks if a session can be considered privileged.
+	// https://ory.com/docs/kratos/session-management/session-lifespan#privileged-sessions
+	IsPrivileged(ctx context.Context, session *Session) bool
 }
 
 type ManagementProvider interface {

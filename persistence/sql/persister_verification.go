@@ -91,12 +91,13 @@ func (p *Persister) UseVerificationToken(ctx context.Context, fID uuid.UUID, tok
 			return err
 		}
 
-		var va identity.VerifiableAddress
-		if err := tx.Where("id = ? AND nid = ?", rt.VerifiableAddressID, nid).First(&va); err != nil {
-			return sqlcon.HandleError(err)
+		if rt.VerifiableAddressID.Valid {
+			var va identity.VerifiableAddress
+			if err := tx.Where("id = ? AND nid = ?", rt.VerifiableAddressID.UUID, nid).First(&va); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			rt.VerifiableAddress = &va
 		}
-
-		rt.VerifiableAddress = &va
 
 		//#nosec G201 -- TableName is static
 		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", rt.TableName(ctx)), time.Now().UTC(), rt.ID, nid).Exec()

@@ -196,8 +196,9 @@ const (
 )
 
 const (
-	ErrorValidationSettings ID = 4050000 + iota
-	ErrorValidationSettingsFlowExpired
+	ErrorValidationSettings                      ID = 4050000 + iota
+	ErrorValidationSettingsFlowExpired              // 4050001
+	ErrorValidationSettingsTooManyAddressChanges    // 4050002
 )
 
 const (

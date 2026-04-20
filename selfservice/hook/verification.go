@@ -181,6 +181,11 @@ func (e *Verifier) do(
 			return err
 		}
 
+		address.Status = identity.VerifiableAddressStatusSent
+		if err := e.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "status"); err != nil {
+			return err
+		}
+
 		flowURL := ""
 		if verificationFlow.Type == flow.TypeBrowser {
 			flowURL = verificationFlow.AppendTo(e.r.Config().SelfServiceFlowVerificationUI(ctx)).String()

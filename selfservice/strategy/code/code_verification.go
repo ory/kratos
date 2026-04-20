@@ -89,7 +89,7 @@ type CreateVerificationCodeParams struct {
 	ExpiresIn time.Duration
 
 	// VerifiableAddress is the address to be verified
-	VerifiableAddress *identity.VerifiableAddress
+	VerifiableAddress identity.VerifiableAddressLike
 
 	// FlowID is the id of the current verification flow
 	FlowID uuid.UUID

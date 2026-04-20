@@ -31,7 +31,7 @@ type (
 	}
 	PrimaryStrategy interface {
 		Strategy
-		SendVerificationCode(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress) error
+		SendVerificationCode(context.Context, *Flow, *identity.Identity, identity.VerifiableAddressLike) error
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {

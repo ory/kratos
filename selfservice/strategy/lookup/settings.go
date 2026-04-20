@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 
@@ -156,7 +155,7 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 			return err
 		}
 
-		if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
+		if !s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 			return errors.WithStack(settings.NewFlowNeedsReAuth())
 		}
 	} else {
