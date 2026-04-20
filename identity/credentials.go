@@ -85,15 +85,16 @@ type CredentialsType string
 
 // Please make sure to add all of these values to the test that ensures they are created during migration
 const (
-	CredentialsTypePassword CredentialsType = "password"
-	CredentialsTypeOIDC     CredentialsType = "oidc"
-	CredentialsTypeTOTP     CredentialsType = "totp"
-	CredentialsTypeLookup   CredentialsType = "lookup_secret"
-	CredentialsTypeWebAuthn CredentialsType = "webauthn"
-	CredentialsTypeCodeAuth CredentialsType = "code"
-	CredentialsTypePasskey  CredentialsType = "passkey"
-	CredentialsTypeProfile  CredentialsType = "profile"
-	CredentialsTypeSAML     CredentialsType = "saml"
+	CredentialsTypePassword    CredentialsType = "password"
+	CredentialsTypeOIDC        CredentialsType = "oidc"
+	CredentialsTypeTOTP        CredentialsType = "totp"
+	CredentialsTypeLookup      CredentialsType = "lookup_secret"
+	CredentialsTypeWebAuthn    CredentialsType = "webauthn"
+	CredentialsTypeCodeAuth    CredentialsType = "code"
+	CredentialsTypePasskey     CredentialsType = "passkey"
+	CredentialsTypeProfile     CredentialsType = "profile"
+	CredentialsTypeSAML        CredentialsType = "saml"
+	CredentialsTypeDeviceAuthn CredentialsType = "deviceauthn"
 )
 
 func (c CredentialsType) String() string {
@@ -116,6 +117,8 @@ func (c CredentialsType) ToUiNodeGroup() node.UiNodeGroup {
 		return node.CodeGroup
 	case CredentialsTypePasskey:
 		return node.PasskeyGroup
+	case CredentialsTypeDeviceAuthn:
+		return node.DeviceAuthnGroup
 	default:
 		return node.DefaultGroup
 	}
@@ -130,6 +133,7 @@ var AllCredentialTypes = []CredentialsType{
 	CredentialsTypeWebAuthn,
 	CredentialsTypeCodeAuth,
 	CredentialsTypePasskey,
+	CredentialsTypeDeviceAuthn,
 }
 
 const (
@@ -151,6 +155,7 @@ func ParseCredentialsType(in string) (CredentialsType, bool) {
 		CredentialsTypeCodeAuth,
 		CredentialsTypeRecoveryLink,
 		CredentialsTypeRecoveryCode,
+		CredentialsTypeDeviceAuthn,
 		CredentialsTypePasskey:
 		return t, true
 	}

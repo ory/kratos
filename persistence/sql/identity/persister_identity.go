@@ -145,6 +145,10 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	case identity.CredentialsTypeOIDC, identity.CredentialsTypeSAML:
 		// OIDC credentials are case-sensitive
 		return match
+
+	case identity.CredentialsTypeDeviceAuthn:
+		return match
+
 	case identity.CredentialsTypePassword, identity.CredentialsTypeCodeAuth, identity.CredentialsTypeWebAuthn:
 		return x.GracefulNormalization(match)
 	default:
@@ -1106,6 +1110,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				identity.CredentialsTypeCodeAuth,
 				identity.CredentialsTypeOIDC,
 				identity.CredentialsTypeSAML,
+				identity.CredentialsTypeDeviceAuthn,
 			})
 			if err != nil {
 				return err

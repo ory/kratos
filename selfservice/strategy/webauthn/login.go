@@ -112,7 +112,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 
 func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) error {
 	if f != nil {
-		f.UI.Nodes.ResetNodes("webauth_login")
+		f.UI.Nodes.ResetNodes("webauthn_login")
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}

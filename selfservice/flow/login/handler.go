@@ -240,7 +240,7 @@ preLoginHook:
 				continue
 			default:
 				populateErr = errors.WithStack(
-					x.PseudoPanic.WithReasonf("A login strategy was expected to implement interface AAL1FormHydrator but did not."),
+					x.PseudoPanic.WithReasonf("A login strategy was expected to implement interface AAL1FormHydrator but did not: %s", s.ID()),
 				)
 			}
 		case identity.AuthenticatorAssuranceLevel2:
@@ -257,7 +257,7 @@ preLoginHook:
 				continue
 			default:
 				populateErr = errors.WithStack(
-					x.PseudoPanic.WithReasonf("A login strategy was expected to implement interface AAL2FormHydrator but did not."),
+					x.PseudoPanic.WithReasonf("A login strategy was expected to implement interface AAL2FormHydrator but did not: %s", s.ID()),
 				)
 			}
 		}

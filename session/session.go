@@ -254,6 +254,8 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 				isAAL1 = true
 			case identity.CredentialsTypeWebAuthn:
 				isAAL2 = true
+			case identity.CredentialsTypeDeviceAuthn:
+				isAAL2 = true
 			case identity.CredentialsTypeTOTP:
 				isAAL2 = true
 			case identity.CredentialsTypeLookup:

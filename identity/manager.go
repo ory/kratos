@@ -241,6 +241,11 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 					break
 				}
 			}
+
+			// DeviceAuthn is currently not to be used as a first factor.
+		case CredentialsTypeDeviceAuthn:
+			continue
+
 		case CredentialsTypePasskey:
 			var cfg CredentialsWebAuthnConfig
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {

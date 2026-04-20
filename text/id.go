@@ -33,6 +33,7 @@ const (
 	InfoSelfServiceLoginPasskey                                  // 1010021
 	InfoSelfServiceLoginPassword                                 // 1010022
 	InfoSelfServiceLoginAAL2CodeAddress                          // 1010023
+	InfoSelfServiceLoginDeviceAuthn                              // 1010024
 )
 
 const (
@@ -78,6 +79,8 @@ const (
 	InfoSelfServiceSettingsRemoveWebAuthn
 	InfoSelfServiceSettingsRegisterPasskey
 	InfoSelfServiceSettingsRemovePasskey
+	InfoSelfServiceSettingsRemoveDeviceAuthnKey
+	InfoSelfServiceSettingsDeviceAuthnNonce
 )
 
 const (
@@ -165,6 +168,9 @@ const (
 	ErrorValidationPasswordNewSameAsOld
 	ErrorValidationEmail
 	ErrorValidationPhone
+	ErrorValidationNoDeviceAuthnDevice
+	ErrorValidationWebAuthnVerifierWrong
+	ErrorValidationDeviceAuthnVerifierWrong
 )
 
 const (

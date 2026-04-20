@@ -195,7 +195,15 @@ func NewErrorValidationVerificationNoStrategyFound() *Message {
 func NewInfoSelfServiceLoginWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginWebAuthn,
-		Text: "Sign in with hardware key",
+		Text: "Sign in with a hardware key",
+		Type: Info,
+	}
+}
+
+func NewInfoSelfServiceLoginDeviceAuthn() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginDeviceAuthn,
+		Text: "Sign in with a hardware key",
 		Type: Info,
 	}
 }
@@ -211,7 +219,7 @@ func NewInfoSelfServiceLoginPasskey() *Message {
 func NewInfoSelfServiceContinueLoginWebAuthn() *Message {
 	return &Message{
 		ID:   InfoSelfServiceLoginContinueWebAuthn,
-		Text: "Sign in with hardware key",
+		Text: "Sign in with a hardware key",
 		Type: Info,
 	}
 }

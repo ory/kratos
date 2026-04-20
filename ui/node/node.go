@@ -53,6 +53,7 @@ const (
 	IdentifierFirstGroup UiNodeGroup = "identifier_first"
 	CaptchaGroup         UiNodeGroup = "captcha" // Available in OEL
 	SAMLGroup            UiNodeGroup = "saml"    // Available in OEL
+	DeviceAuthnGroup     UiNodeGroup = "deviceauthn"
 )
 
 func (g UiNodeGroup) String() string {

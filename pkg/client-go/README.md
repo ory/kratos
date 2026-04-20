@@ -160,6 +160,7 @@ Class | Method | HTTP request | Description
  - [CreateRecoveryCodeForIdentityBody](docs/CreateRecoveryCodeForIdentityBody.md)
  - [CreateRecoveryLinkForIdentityBody](docs/CreateRecoveryLinkForIdentityBody.md)
  - [DeleteMySessionsCount](docs/DeleteMySessionsCount.md)
+ - [DeviceAuthnKey](docs/DeviceAuthnKey.md)
  - [ErrorAuthenticatorAssuranceLevelNotSatisfied](docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md)
  - [ErrorBrowserLocationChangeRequired](docs/ErrorBrowserLocationChangeRequired.md)
  - [ErrorFlowReplaced](docs/ErrorFlowReplaced.md)

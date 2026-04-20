@@ -415,7 +415,7 @@ func TestCompleteLogin(t *testing.T) {
 				body, res = testhelpers.LoginMakeRequest(t, false, spa, f, browserClient, values.Encode())
 				checkURL(t, !spa, res)
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-				assert.Equal(t, "The provided authentication code is invalid, please try again.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+				assert.Equal(t, "The provided web authn login is invalid, please try again.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 			}
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -544,7 +544,7 @@ func TestCompleteLogin(t *testing.T) {
 			check := func(t *testing.T, shouldRedirect bool, body string, res *http.Response) {
 				checkURL(t, shouldRedirect, res)
 				assert.NotEmpty(t, gjson.Get(body, "id").String(), "%s", body)
-				assert.Equal(t, "The provided authentication code is invalid, please try again.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+				assert.Equal(t, "The provided web authn login is invalid, please try again.", gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 			}
 
 			t.Run("type=browser", func(t *testing.T) {

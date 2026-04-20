@@ -31,6 +31,7 @@ docs/CreateIdentityBody.md
 docs/CreateRecoveryCodeForIdentityBody.md
 docs/CreateRecoveryLinkForIdentityBody.md
 docs/DeleteMySessionsCount.md
+docs/DeviceAuthnKey.md
 docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md
 docs/ErrorBrowserLocationChangeRequired.md
 docs/ErrorFlowReplaced.md
@@ -181,6 +182,7 @@ model_create_identity_body.go
 model_create_recovery_code_for_identity_body.go
 model_create_recovery_link_for_identity_body.go
 model_delete_my_sessions_count.go
+model_device_authn_key.go
 model_error_authenticator_assurance_level_not_satisfied.go
 model_error_browser_location_change_required.go
 model_error_flow_replaced.go
