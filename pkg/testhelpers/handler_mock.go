@@ -144,6 +144,21 @@ func MockSessionCreateHandlerWithIdentity(t *testing.T, reg mockDeps, i *identit
 	return MockSessionCreateHandlerWithIdentityAndAMR(t, reg, i, ct)
 }
 
+// mockMethodAAL maps a credential type to the AAL a successful login
+// through that method contributes. Mirrors the defaults the real
+// strategies pass to CompletedLoginFor, so tests that only specify the
+// method name get a realistic session AAL.
+func mockMethodAAL(m identity.CredentialsType) identity.AuthenticatorAssuranceLevel {
+	switch m {
+	case identity.CredentialsTypeTOTP,
+		identity.CredentialsTypeWebAuthn,
+		identity.CredentialsTypeLookup:
+		return identity.AuthenticatorAssuranceLevel2
+	default:
+		return identity.AuthenticatorAssuranceLevel1
+	}
+}
+
 func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *identity.Identity, methods []identity.CredentialsType) (http.HandlerFunc, *session.Session) {
 	var sess session.Session
 	require.NoError(t, faker.FakeData(&sess))
@@ -165,7 +180,7 @@ func MockSessionCreateHandlerWithIdentityAndAMR(t *testing.T, reg mockDeps, i *i
 				}
 			}
 		}
-		sess.CompletedLoginFor(m, "")
+		sess.CompletedLoginFor(m, mockMethodAAL(m))
 	}
 
 	sess.SetAuthenticatorAssuranceLevel()

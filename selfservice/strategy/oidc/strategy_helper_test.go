@@ -129,13 +129,34 @@ func createClient(t *testing.T, remote string, redir []string) (id, secret strin
 	return
 }
 
-func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *idTokenClaims, scope *[]string) string {
+// hydraIntegrationState holds pointers to mutable state used by the hydra
+// integration test harness. Tests mutate the referenced values before
+// triggering a login through Kratos, which drives the upstream hydra flow
+// via the login/consent handlers below. All fields are required except
+// acr/amr, which may be nil when a test does not exercise AAL2 carry-over.
+type hydraIntegrationState struct {
+	subject *string
+	claims  *idTokenClaims
+	scope   *[]string
+	// acr, when non-nil and non-empty, is returned as the upstream `acr`
+	// claim on the login accept. The empty string is omitted from the
+	// payload (the harness uses `omitempty` on the wire format).
+	acr *string
+	// amr, when non-nil and non-empty, is returned as the upstream `amr`
+	// claim on the login accept. An empty slice is omitted from the
+	// payload (the harness uses `omitempty` on the wire format).
+	amr *[]string
+}
+
+func newHydraIntegration(t *testing.T, remote *string, state *hydraIntegrationState) string {
 	router := http.NewServeMux()
 
 	type p struct {
 		Subject    string          `json:"subject,omitempty"`
 		Session    json.RawMessage `json:"session,omitempty"`
 		GrantScope []string        `json:"grant_scope,omitempty"`
+		ACR        string          `json:"acr,omitempty"`
+		AMR        []string        `json:"amr,omitempty"`
 	}
 
 	do := func(w http.ResponseWriter, r *http.Request, href string, payload io.Reader) {
@@ -161,30 +182,38 @@ func newHydraIntegration(t *testing.T, remote *string, subject *string, claims *
 
 	router.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
 		require.NotEmpty(t, *remote)
-		require.NotEmpty(t, *subject)
+		require.NotNil(t, state.subject)
+		require.NotEmpty(t, *state.subject)
 
 		challenge := r.URL.Query().Get("login_challenge")
 		require.NotEmpty(t, challenge)
 
+		payload := &p{Subject: *state.subject}
+		if state.acr != nil {
+			payload.ACR = *state.acr
+		}
+		if state.amr != nil {
+			payload.AMR = *state.amr
+		}
+
 		var b bytes.Buffer
-		require.NoError(t, json.NewEncoder(&b).Encode(&p{
-			Subject: *subject,
-		}))
+		require.NoError(t, json.NewEncoder(&b).Encode(payload))
 		href := urlx.MustJoin(*remote, "/admin/oauth2/auth/requests/login/accept") + "?login_challenge=" + challenge
 		do(w, r, href, &b)
 	})
 
 	router.HandleFunc("GET /consent", func(w http.ResponseWriter, r *http.Request) {
 		require.NotEmpty(t, *remote)
-		require.NotNil(t, *scope)
+		require.NotNil(t, state.scope)
+		require.NotNil(t, state.claims)
 
 		challenge := r.URL.Query().Get("consent_challenge")
 		require.NotEmpty(t, challenge)
 
 		var b bytes.Buffer
-		msg, err := json.Marshal(claims)
+		msg, err := json.Marshal(state.claims)
 		require.NoError(t, err)
-		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *scope, Session: msg}))
+		require.NoError(t, json.NewEncoder(&b).Encode(&p{GrantScope: *state.scope, Session: msg}))
 		href := urlx.MustJoin(*remote, "/admin/oauth2/auth/requests/consent/accept") + "?consent_challenge=" + challenge
 		do(w, r, href, &b)
 	})
@@ -236,8 +265,8 @@ func newUI(t *testing.T, reg driver.Registry) *httptest.Server {
 	return ts
 }
 
-func newHydra(t *testing.T, subject *string, claims *idTokenClaims, scope *[]string) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
-	hydraIntegrationTSURL = newHydraIntegration(t, &remoteAdmin, subject, claims, scope)
+func newHydra(t *testing.T, state *hydraIntegrationState) (remoteAdmin, remotePublic, hydraIntegrationTSURL string) {
+	hydraIntegrationTSURL = newHydraIntegration(t, &remoteAdmin, state)
 
 	publicPort, err := freeport.GetFreePort()
 	require.NoError(t, err)

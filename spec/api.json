@@ -2450,6 +2450,17 @@
           "provider": {
             "description": "OIDC or SAML provider id used for authentication",
             "type": "string"
+          },
+          "upstream_acr": {
+            "description": "UpstreamACR is the `acr` claim reported by the upstream OIDC\nprovider, if any. Populated only for OIDC login methods when the\nupstream ID token contained an `acr` claim.",
+            "type": "string"
+          },
+          "upstream_amr": {
+            "description": "UpstreamAMR is the `amr` claim reported by the upstream OIDC\nprovider, if any. Populated only for OIDC login methods when the\nupstream ID token contained an `amr` claim.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "title": "AuthenticationMethod identifies an authentication method",

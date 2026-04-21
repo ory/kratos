@@ -442,7 +442,14 @@ func TestManagerHTTP(t *testing.T) {
 				run := func(t *testing.T, complete []identity.CredentialsType, requested string, i *identity.Identity, expectedError error) {
 					s := session.NewInactiveSession()
 					for _, m := range complete {
-						s.CompletedLoginFor(m, "")
+						aal := identity.AuthenticatorAssuranceLevel1
+						switch m {
+						case identity.CredentialsTypeTOTP,
+							identity.CredentialsTypeWebAuthn,
+							identity.CredentialsTypeLookup:
+							aal = identity.AuthenticatorAssuranceLevel2
+						}
+						s.CompletedLoginFor(m, aal)
 					}
 					require.NoError(t, reg.SessionManager().ActivateSession(req, s, i, time.Now().UTC()))
 					err := reg.SessionManager().DoesSessionSatisfy(ctx, s, requested)
@@ -823,34 +830,16 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
 		},
 		{
-			desc:    "has=aal1, requested=highest, available=aal1, credential=password, legacy=true",
-			matcher: config.HighestAvailableAAL,
-			creds:   []identity.Credentials{password()},
-			withAMR: session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
-		},
-		{
 			desc:    "has=aal1, requested=highest, available=aal1, credential=password+webauth_empty",
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{password(), webAuthEmpty()},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
 		},
 		{
-			desc:    "has=aal1, requested=highest, available=aal1, credential=password+webauth_empty, legacy=true",
-			matcher: config.HighestAvailableAAL,
-			creds:   []identity.Credentials{password(), webAuthEmpty()},
-			withAMR: session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
-		},
-		{
 			desc:    "has=aal1, requested=highest, available=aal1, credential=password+webauth_passwordless",
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{password(), passwordlessWebAuth()},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
-		},
-		{
-			desc:    "has=aal1, requested=highest, available=aal1, credential=password+webauth_passwordless, legacy=true",
-			matcher: config.HighestAvailableAAL,
-			creds:   []identity.Credentials{password(), passwordlessWebAuth()},
-			withAMR: session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
 		},
 		{
 			desc:    "has=aal1, requested=highest, available=aal2, credential=password+webauth_mfa",
@@ -900,13 +889,6 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			errAs:   new(session.ErrAALNotSatisfied),
 		},
 		{
-			desc:    "has=aal1, requested=highest, available=aal2, credential=password+webauth_mfa, legacy=true",
-			matcher: config.HighestAvailableAAL,
-			creds:   []identity.Credentials{password(), mfaWebAuth()},
-			withAMR: session.AuthenticationMethods{{Method: identity.CredentialsTypePassword}},
-			errAs:   new(session.ErrAALNotSatisfied),
-		},
-		{
 			desc:    "has=aal1, requested=highest, available=aal2, credential=password+webauth_mfa",
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{password(), mfaWebAuth()},
@@ -924,12 +906,6 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			matcher: config.HighestAvailableAAL,
 			creds:   []identity.Credentials{password(), mfaWebAuth()},
 			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword], {Method: identity.CredentialsTypeWebAuthn, AAL: identity.AuthenticatorAssuranceLevel2}},
-		},
-		{
-			desc:    "has=aal2, requested=highest, available=aal2, credential=password+webauth_mfa, legacy=true",
-			matcher: config.HighestAvailableAAL,
-			creds:   []identity.Credentials{password(), mfaWebAuth()},
-			withAMR: session.AuthenticationMethods{amrs[identity.CredentialsTypePassword], {Method: identity.CredentialsTypeWebAuthn}},
 		},
 
 		// oidc

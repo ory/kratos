@@ -424,9 +424,11 @@ func (s *Strategy) linkProvider(ctx context.Context, w http.ResponseWriter, r *h
 		ctxUpdate.Session.ID,
 		session.AuthenticationMethod{
 			Method:       s.ID(),
-			AAL:          identity.AuthenticatorAssuranceLevel1,
+			AAL:          provider.Config().AALForClaims(claims),
 			Provider:     provider.Config().ID,
 			Organization: provider.Config().OrganizationID,
+			UpstreamACR:  claims.ACR,
+			UpstreamAMR:  claims.AMR,
 		}); err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}

@@ -64,6 +64,11 @@ func TestStrategy(t *testing.T) {
 		claims  idTokenClaims
 		scope   []string
 	)
+	hydraState := &hydraIntegrationState{
+		subject: &subject,
+		claims:  &claims,
+		scope:   &scope,
+	}
 
 	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(map[string]any{
@@ -78,7 +83,7 @@ func TestStrategy(t *testing.T) {
 		}),
 	)
 
-	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &claims, &scope)
+	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, hydraState)
 	returnTS := newReturnTS(t, reg)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
@@ -104,6 +109,12 @@ func TestStrategy(t *testing.T) {
 		}),
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "forcePKCE", func(c *oidc.Configuration) {
 			c.PKCE = "force"
+		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "aal2-acr", func(c *oidc.Configuration) {
+			c.AAL2ACRValues = []string{"urn:mfa", "urn:strong"}
+		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "aal2-amr", func(c *oidc.Configuration) {
+			c.AAL2AMRValues = []string{"mfa", "otp"}
 		}),
 		oidc.Configuration{
 			Provider:     "generic",
@@ -786,6 +797,75 @@ func TestStrategy(t *testing.T) {
 			require.NoError(t, res.Body.Close())
 
 			assert.Contains(t, string(body), "The authorization code has already been used", "%s", body)
+		})
+	})
+
+	t.Run("case=carries upstream acr/amr into session AAL", func(t *testing.T) {
+		// Reset acr/amr after the subtest so other test cases are unaffected.
+		var upstreamACR string
+		var upstreamAMR []string
+		hydraState.acr = &upstreamACR
+		hydraState.amr = &upstreamAMR
+		t.Cleanup(func() {
+			hydraState.acr = nil
+			hydraState.amr = nil
+		})
+
+		scope = []string{"openid", "offline"}
+
+		// Registers the user through the provider and returns the decoded
+		// session JSON body from the return handler.
+		registerAndReturnSession := func(t *testing.T, providerID, email string) []byte {
+			subject = email
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, providerID)
+			res, body := makeRequest(t, providerID, action, url.Values{})
+			assertIdentity(t, res, body)
+			return body
+		}
+
+		t.Run("case=matching acr elevates session to aal2", func(t *testing.T) {
+			upstreamACR = "urn:mfa"
+			upstreamAMR = nil
+			body := registerAndReturnSession(t, "aal2-acr", "aal2-acr-match@ory.sh")
+
+			assert.Equal(t, "aal2", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			assert.Equal(t, "aal2", gjson.GetBytes(body, "authentication_methods.0.aal").String(), "%s", body)
+			assert.Equal(t, "aal2-acr", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			assert.Equal(t, "urn:mfa", gjson.GetBytes(body, "authentication_methods.0.upstream_acr").String(), "%s", body)
+		})
+
+		t.Run("case=mismatching acr stays aal1", func(t *testing.T) {
+			upstreamACR = "urn:basic"
+			upstreamAMR = nil
+			body := registerAndReturnSession(t, "aal2-acr", "aal2-acr-mismatch@ory.sh")
+
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authentication_methods.0.aal").String(), "%s", body)
+			assert.Equal(t, "urn:basic", gjson.GetBytes(body, "authentication_methods.0.upstream_acr").String(), "%s", body)
+		})
+
+		t.Run("case=matching amr elevates session to aal2", func(t *testing.T) {
+			upstreamACR = ""
+			upstreamAMR = []string{"pwd", "mfa"}
+			body := registerAndReturnSession(t, "aal2-amr", "aal2-amr-match@ory.sh")
+
+			assert.Equal(t, "aal2", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			assert.Equal(t, "aal2", gjson.GetBytes(body, "authentication_methods.0.aal").String(), "%s", body)
+			assert.Equal(t, "aal2-amr", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			// Upstream amr is persisted for auditing.
+			var gotAMR []string
+			require.NoError(t, json.Unmarshal([]byte(gjson.GetBytes(body, "authentication_methods.0.upstream_amr").Raw), &gotAMR))
+			assert.ElementsMatch(t, []string{"pwd", "mfa"}, gotAMR)
+		})
+
+		t.Run("case=mismatching amr stays aal1", func(t *testing.T) {
+			upstreamACR = ""
+			upstreamAMR = []string{"pwd"}
+			body := registerAndReturnSession(t, "aal2-amr", "aal2-amr-mismatch@ory.sh")
+
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authentication_methods.0.aal").String(), "%s", body)
 		})
 	})
 
@@ -2360,7 +2440,11 @@ func TestPostEndpointRedirect(t *testing.T) {
 		scope   []string
 	)
 
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &hydraIntegrationState{
+		subject: &subject,
+		claims:  &claims,
+		scope:   &scope,
+	})
 
 	publicTS, _, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 

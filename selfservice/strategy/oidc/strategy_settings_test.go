@@ -62,7 +62,11 @@ func TestSettingsStrategy(t *testing.T) {
 		claims  idTokenClaims
 		scope   []string
 	)
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &hydraIntegrationState{
+		subject: &subject,
+		claims:  &claims,
+		scope:   &scope,
+	})
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)

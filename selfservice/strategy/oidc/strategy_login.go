@@ -401,7 +401,14 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	}
 
 	sess := session.NewInactiveSession()
-	sess.CompletedLoginForWithProvider(s.ID(), identity.AuthenticatorAssuranceLevel1, provider.Config().ID, provider.Config().OrganizationID)
+	sess.CompletedLoginForOIDC(
+		s.ID(),
+		provider.Config().AALForClaims(claims),
+		provider.Config().ID,
+		provider.Config().OrganizationID,
+		claims.ACR,
+		claims.AMR,
+	)
 
 	for _, c := range oidcCredentials.Providers {
 		if c.Subject == claims.Subject && c.Provider == provider.Config().ID {

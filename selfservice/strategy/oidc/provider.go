@@ -67,19 +67,29 @@ type Claims struct {
 	Website           string `json:"website,omitempty"`
 	Email             string `json:"email,omitempty"`
 	// ConvertibleBoolean is used as Apple casually sends the email_verified field as a string.
-	EmailVerified       x.ConvertibleBoolean   `json:"email_verified,omitempty"`
-	Gender              string                 `json:"gender,omitempty"`
-	Birthdate           string                 `json:"birthdate,omitempty"`
-	Zoneinfo            string                 `json:"zoneinfo,omitempty"`
-	Locale              Locale                 `json:"locale,omitempty"`
-	PhoneNumber         string                 `json:"phone_number,omitempty"`
-	PhoneNumberVerified bool                   `json:"phone_number_verified,omitempty"`
-	UpdatedAt           int64                  `json:"updated_at,omitempty"`
-	HD                  string                 `json:"hd,omitempty"`
-	Team                string                 `json:"team,omitempty"`
-	Nonce               string                 `json:"nonce,omitempty"`
-	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
-	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`
+	EmailVerified       x.ConvertibleBoolean `json:"email_verified,omitempty"`
+	Gender              string               `json:"gender,omitempty"`
+	Birthdate           string               `json:"birthdate,omitempty"`
+	Zoneinfo            string               `json:"zoneinfo,omitempty"`
+	Locale              Locale               `json:"locale,omitempty"`
+	PhoneNumber         string               `json:"phone_number,omitempty"`
+	PhoneNumberVerified bool                 `json:"phone_number_verified,omitempty"`
+	UpdatedAt           int64                `json:"updated_at,omitempty"`
+	HD                  string               `json:"hd,omitempty"`
+	Team                string               `json:"team,omitempty"`
+	Nonce               string               `json:"nonce,omitempty"`
+	NonceSupported      bool                 `json:"nonce_supported,omitempty"`
+
+	// ACR is the Authentication Context Class Reference reported by the
+	// upstream OIDC provider. See OpenID Connect Core 1.0, Section 2.
+	ACR string `json:"acr,omitempty"`
+
+	// AMR is the list of Authentication Methods References reported by the
+	// upstream OIDC provider. See OpenID Connect Core 1.0, Section 2 and
+	// RFC 8176.
+	AMR []string `json:"amr,omitempty"`
+
+	RawClaims map[string]any `json:"raw_claims,omitempty"`
 }
 
 type Locale string

@@ -718,7 +718,10 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), "", "", f, i); err != nil {
+	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, f, i, session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    identity.AuthenticatorAssuranceLevel1,
+	}); err != nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, s.ID(), s.NodeGroup(), err)
 		return
 	}

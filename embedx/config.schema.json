@@ -578,6 +578,28 @@
             "examples": ["12345678-1234-1234-1234-123456789012"]
           }
         },
+        "aal2_acr_values": {
+          "title": "Upstream acr values that mark the session as AAL2",
+          "description": "List of upstream OIDC `acr` claim values that should elevate the resulting Kratos session to AAL2. If the ID token returned by the upstream provider contains an `acr` claim matching any of these values, the session is marked AAL2. Leave empty to always issue AAL1 sessions for this provider.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": [
+              "urn:mace:incommon:iap:silver",
+              "http://schemas.openid.net/pape/policies/2007/06/multi-factor",
+              "urn:okta:loa:2fa:any"
+            ]
+          }
+        },
+        "aal2_amr_values": {
+          "title": "Upstream amr values that mark the session as AAL2",
+          "description": "List of upstream OIDC `amr` claim values that should elevate the resulting Kratos session to AAL2. If the ID token returned by the upstream provider contains an `amr` array including any of these values, the session is marked AAL2. Values follow RFC 8176 (for example `mfa`, `otp`, `hwk`, `fpt`).",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": ["mfa", "otp", "hwk", "fpt"]
+          }
+        },
         "claims_source": {
           "title": "Claims source",
           "description": "Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`",

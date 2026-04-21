@@ -214,6 +214,21 @@ func (s *Session) CompletedLoginForWithProvider(method identity.CredentialsType,
 	})
 }
 
+// CompletedLoginForOIDC appends an OIDC authentication method to the
+// session and records the upstream `acr` / `amr` claim values for
+// auditing. Use this when the caller has access to the upstream claims;
+// otherwise use CompletedLoginForWithProvider.
+func (s *Session) CompletedLoginForOIDC(method identity.CredentialsType, aal identity.AuthenticatorAssuranceLevel, providerID, organizationID, upstreamACR string, upstreamAMR []string) {
+	s.CompletedLoginForMethod(AuthenticationMethod{
+		Method:       method,
+		AAL:          aal,
+		Provider:     providerID,
+		Organization: organizationID,
+		UpstreamACR:  upstreamACR,
+		UpstreamAMR:  upstreamAMR,
+	})
+}
+
 func (s *Session) AuthenticatedVia(method identity.CredentialsType) bool {
 	for _, authMethod := range s.AMR {
 		if authMethod.Method == method {
@@ -225,8 +240,8 @@ func (s *Session) AuthenticatedVia(method identity.CredentialsType) bool {
 
 func (s *Session) SetAuthenticatorAssuranceLevel() {
 	if len(s.AMR) == 0 {
-		// No AMR is set
 		s.AuthenticatorAssuranceLevel = identity.NoAuthenticatorAssuranceLevel
+		return
 	}
 
 	var isAAL1, isAAL2 bool
@@ -236,40 +251,22 @@ func (s *Session) SetAuthenticatorAssuranceLevel() {
 			isAAL1 = true
 		case identity.AuthenticatorAssuranceLevel2:
 			isAAL2 = true
-		// The following section is a graceful migration from Ory Kratos v0.9.
-		//
-		// TODO remove this section, it is already over 2 years old.
-		case "":
-			// Sessions before Ory Kratos 0.9 did not have the AAL
-			// be part of the AMR.
-			switch amr.Method {
-			case identity.CredentialsTypeRecoveryLink:
-			case identity.CredentialsTypeRecoveryCode:
+			if m := amr.Method; m == identity.CredentialsTypeOIDC || m == identity.CredentialsTypeSAML {
+				// OIDC or SAML can elevate a session to AAL2 on their own
+				// because the upstream provider performed the MFA itself
+				// (carried over via the `acr` / `amr` claims and the provider's
+				// AAL2ACRValues / AAL2AMRValues config).
 				isAAL1 = true
-			case identity.CredentialsTypeOIDC:
-				isAAL1 = true
-			case "v0.6_legacy_session":
-				isAAL1 = true
-			case identity.CredentialsTypePassword:
-				isAAL1 = true
-			case identity.CredentialsTypeWebAuthn:
-				isAAL2 = true
-			case identity.CredentialsTypeDeviceAuthn:
-				isAAL2 = true
-			case identity.CredentialsTypeTOTP:
-				isAAL2 = true
-			case identity.CredentialsTypeLookup:
-				isAAL2 = true
 			}
 		}
 	}
 
 	if isAAL1 && isAAL2 {
 		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel2
-	} else if isAAL1 {
-		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
-	} else if len(s.AMR) > 0 {
-		// A fallback. If an AMR is set, but we did not satisfy the above, gracefully fall back to level 1.
+	} else {
+		// AAL1 covers every other case: single first-factor methods (password,
+		// OIDC without upstream MFA), an unpaired second-factor entry, or only
+		// recovery credentials.
 		s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel1
 	}
 }
@@ -361,6 +358,16 @@ type AuthenticationMethod struct {
 
 	// The Organization id used for authentication
 	Organization string `json:"organization,omitempty"`
+
+	// UpstreamACR is the `acr` claim reported by the upstream OIDC
+	// provider, if any. Populated only for OIDC login methods when the
+	// upstream ID token contained an `acr` claim.
+	UpstreamACR string `json:"upstream_acr,omitempty"`
+
+	// UpstreamAMR is the `amr` claim reported by the upstream OIDC
+	// provider, if any. Populated only for OIDC login methods when the
+	// upstream ID token contained an `amr` claim.
+	UpstreamAMR []string `json:"upstream_amr,omitempty"`
 }
 
 // Scan implements the Scanner interface.

@@ -28,6 +28,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/hook"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 )
 
@@ -68,7 +69,10 @@ func TestRegistrationExecutor(t *testing.T) {
 					for _, callback := range flowCallbacks {
 						callback(regFlow)
 					}
-					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, identity.CredentialsType(strategy), "", "", regFlow, i))
+					_ = handleErr(t, w, r, reg.RegistrationHookExecutor().PostRegistrationHook(w, r, regFlow, i, session.AuthenticationMethod{
+						Method: identity.CredentialsType(strategy),
+						AAL:    identity.AuthenticatorAssuranceLevel1,
+					}))
 				})
 
 				ts := httptest.NewServer(router)

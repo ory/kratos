@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
@@ -377,7 +378,14 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	}
 
 	i.SetCredentials(s.ID(), *creds)
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, rf, i, session.AuthenticationMethod{
+		Method:       s.ID(),
+		AAL:          provider.Config().AALForClaims(claims),
+		Provider:     provider.Config().ID,
+		Organization: provider.Config().OrganizationID,
+		UpstreamACR:  claims.ACR,
+		UpstreamAMR:  claims.AMR,
+	}); err != nil {
 		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
