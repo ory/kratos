@@ -1,4 +1,8 @@
 local claims = std.extVar('claims');
+local identity = std.extVar('identity');
+
+// Keep the website if the user has set one.
+local website = std.get(identity.traits, "website", std.get(claims, "website", ""));
 
 if std.length(claims.sub) == 0 then
   error 'claim sub not set'
@@ -7,7 +11,7 @@ else
     identity: {
       traits: {
         subject: claims.sub,
-        [if "website" in claims then "website" else null]: claims.website,
+        [if website != "" then "website" else null]: website,
         [if "groups" in claims.raw_claims then "groups" else null]: claims.raw_claims.groups,
       },
       metadata_public: {

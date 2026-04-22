@@ -2060,7 +2060,8 @@ func TestStrategy(t *testing.T) {
 
 				assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
 				assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-				assert.Equal(t, "https://updated.example.com", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+				// as per mapper the original website trait should remain unchanged
+				assert.Equal(t, "https://original.example.com", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 				assert.Equal(t, "updated.png", gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
 
 				// Verify metadata_admin was updated by reading the identity from the admin API.

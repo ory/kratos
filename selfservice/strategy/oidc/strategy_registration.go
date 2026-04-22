@@ -441,6 +441,8 @@ func (s *Strategy) EvaluateClaimsMapper(ctx context.Context, claims *Claims, pro
 			return "", nil, err
 		}
 		vm.ExtCode("identity", string(identityCtx))
+	} else {
+		vm.ExtCode("identity", `{"traits": {}, "metadata_public": {}, "metadata_admin": {}}`)
 	}
 
 	evaluated, err = vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jsonnetSnippet.String())
