@@ -47,6 +47,8 @@ type dependencies interface {
 
 	continuity.ManagementProvider
 
+	x.CookieProvider
+
 	errorx.ManagementProvider
 	hash.HashProvider
 

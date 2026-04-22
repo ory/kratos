@@ -380,21 +380,35 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 	}
 
 	cntnr := AuthCodeContainer{}
+
+	var refStore continuity.ContainerReferenceStore
 	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
-		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName,
-			continuity.WithPayload(&cntnr),
-			continuity.WithExpireInsteadOfDelete(time.Minute),
-		); err != nil {
-			return nil, state, nil, err
+		refStore = continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(r.Context()))
+	} else {
+		if !codeMatches(state, tokenCode.InitCode) {
+			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
 		}
+
+		if ic, ok := f.(flow.InternalContexter); ok {
+			refStore = continuity.NewInternalContextReferenceStore(ic)
+		} else {
+			// This should never happen, because all flows implement the InternalContexter interface, but we need to handle this case anyway to avoid panics.
+			return nil, state, &cntnr, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Native flow does not support InternalContext."))
+		}
+	}
+
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, refStore,
+		continuity.WithPayload(&cntnr),
+		continuity.WithExpireInsteadOfDelete(time.Minute),
+	); err != nil {
+		return nil, state, nil, err
+	}
+
+	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
 		if stateParam != cntnr.State {
 			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
 		}
 	} else {
-		// We need to validate the tokenCode here
-		if !codeMatches(state, tokenCode.InitCode) {
-			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
-		}
 		cntnr.State = stateParam
 		cntnr.FlowID = uuid.FromBytesOrNil(state.FlowId).String()
 	}
@@ -538,14 +552,6 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	case *login.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
-		// For API/native flows, the continuity cookie is not available so
-		// cntnr.TransientPayload is empty. Fall back to the value persisted
-		// in InternalContext during Login().
-		if len(a.TransientPayload) == 0 {
-			if tp := gjson.GetBytes(a.GetInternalContext(), "transient_payload"); tp.Exists() {
-				a.TransientPayload = json.RawMessage(tp.Raw)
-			}
-		}
 		a.IdentitySchema = cntnr.IdentitySchema
 		if ff, err := s.ProcessLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if errors.Is(err, flow.ErrCompletedByStrategy) {
@@ -561,14 +567,6 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	case *registration.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
-		// For API/native flows, the continuity cookie is not available so
-		// cntnr.TransientPayload is empty. Fall back to the value persisted
-		// in InternalContext during Register().
-		if len(a.TransientPayload) == 0 {
-			if tp := gjson.GetBytes(a.GetInternalContext(), "transient_payload"); tp.Exists() {
-				a.TransientPayload = json.RawMessage(tp.Raw)
-			}
-		}
 		a.IdentitySchema = cntnr.IdentitySchema
 		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); errors.Is(err, flow.ErrCompletedByStrategy) {
 			return

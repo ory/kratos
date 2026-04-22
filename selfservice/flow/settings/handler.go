@@ -68,6 +68,8 @@ type (
 
 		continuity.ManagementProvider
 
+		x.CookieProvider
+
 		ErrorHandlerProvider
 		FlowPersistenceProvider
 		StrategyProvider
@@ -137,8 +139,9 @@ func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return nil, err
 	}
 
+	cookieStore := continuity.NewCookieReferenceStore(h.d.ContinuityCookieManager(ctx))
 	for _, strategy := range h.d.SettingsStrategies(ctx) {
-		if err := h.d.ContinuityManager().Abort(ctx, w, r, ContinuityKey(strategy.SettingsStrategyID())); err != nil {
+		if err := h.d.ContinuityManager().Abort(ctx, w, r, ContinuityKey(strategy.SettingsStrategyID()), cookieStore); err != nil {
 			return nil, err
 		}
 

@@ -838,8 +838,6 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should apply pending traits change when code is redeemed", func(t *testing.T) {
-		t.Parallel()
-
 		// Create an identity with original traits.
 		pendingID := &identity.Identity{
 			ID:       x.NewUUID(),
@@ -918,8 +916,6 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should reject pending traits change on concurrent modification", func(t *testing.T) {
-		t.Parallel()
-
 		// Create an identity with original traits.
 		concurrentID := &identity.Identity{
 			ID:       x.NewUUID(),

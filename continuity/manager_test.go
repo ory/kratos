@@ -47,11 +47,12 @@ func TestManager(t *testing.T) {
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), i))
 
-	newServer := func(t *testing.T, p continuity.Manager, tc *persisterTestCase) *httptest.Server {
+	newServer := func(t *testing.T, p *continuity.Manager, tc *persisterTestCase) *httptest.Server {
 		writer := herodot.NewJSONWriter(logrusx.New("", ""))
 		router := http.NewServeMux()
 		router.HandleFunc("PUT /{name}", func(w http.ResponseWriter, r *http.Request) {
-			if err := p.Pause(r.Context(), w, r, r.PathValue("name"), tc.ro...); err != nil {
+			store := continuity.NewCookieReferenceStore(reg.ContinuityCookieManager(r.Context()))
+			if _, err := p.Pause(r.Context(), w, r, r.PathValue("name"), store, tc.ro...); err != nil {
 				writer.WriteError(w, r, err)
 				return
 			}
@@ -59,12 +60,13 @@ func TestManager(t *testing.T) {
 		})
 
 		router.HandleFunc("POST /{name}", func(w http.ResponseWriter, r *http.Request) {
-			if err := p.Pause(r.Context(), w, r, r.PathValue("name"), tc.ro...); err != nil {
+			store := continuity.NewCookieReferenceStore(reg.ContinuityCookieManager(r.Context()))
+			if _, err := p.Pause(r.Context(), w, r, r.PathValue("name"), store, tc.ro...); err != nil {
 				writer.WriteError(w, r, err)
 				return
 			}
 
-			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), tc.wo...)
+			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), store, tc.wo...)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -73,7 +75,8 @@ func TestManager(t *testing.T) {
 		})
 
 		router.HandleFunc("GET /{name}", func(w http.ResponseWriter, r *http.Request) {
-			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), tc.ro...)
+			store := continuity.NewCookieReferenceStore(reg.ContinuityCookieManager(r.Context()))
+			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), store, tc.ro...)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -82,7 +85,8 @@ func TestManager(t *testing.T) {
 		})
 
 		router.HandleFunc("DELETE /{name}", func(w http.ResponseWriter, r *http.Request) {
-			err := p.Abort(r.Context(), w, r, r.PathValue("name"))
+			store := continuity.NewCookieReferenceStore(reg.ContinuityCookieManager(r.Context()))
+			err := p.Abort(r.Context(), w, r, r.PathValue("name"), store)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return

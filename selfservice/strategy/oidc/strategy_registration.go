@@ -234,7 +234,15 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
-	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
+
+	var refStore continuity.ContainerReferenceStore
+	if f.Type == flow.TypeAPI {
+		refStore = continuity.NewInternalContextReferenceStore(f)
+	} else {
+		refStore = continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(ctx))
+	}
+
+	if _, err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName, refStore,
 		continuity.WithPayload(&AuthCodeContainer{
 			State:            state,
 			FlowID:           f.ID.String(),
@@ -242,21 +250,15 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			TransientPayload: f.TransientPayload,
 			IdentitySchema:   f.IdentitySchema,
 		}),
-		continuity.WithLifespan(time.Minute*30)); err != nil {
+		continuity.WithLifespan(time.Minute*30),
+	); err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	// For API/native flows, persist TransientPayload in InternalContext so it
-	// survives the OIDC redirect. Browser flows restore it from the continuity
-	// cookie instead, which is not available in native flows because the
-	// callback comes from a different user agent (system browser/webview).
-	if f.Type == flow.TypeAPI && len(f.TransientPayload) > 0 {
-		f.EnsureInternalContext()
-		ic, err := sjson.SetRawBytes(f.InternalContext, "transient_payload", f.TransientPayload)
-		if err != nil {
-			return s.HandleError(ctx, w, r, f, pid, nil, err)
-		}
-		f.InternalContext = ic
+	// Native/API flows have no cookie — the continuity container ID was written to
+	// the flow's in-memory InternalContext. Persist the flow so the callback can
+	// restore it from the database.
+	if f.Type == flow.TypeAPI {
 		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
 			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}

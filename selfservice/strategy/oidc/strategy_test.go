@@ -1051,6 +1051,60 @@ func TestStrategy(t *testing.T) {
 			webhook.AssertTransientPayload(t, transientPayload)
 		})
 
+		t.Run("case=should register with incomplete data mapper on API flow", func(t *testing.T) {
+			subject = "incomplete-data-api@valid.ory.sh"
+			scope = []string{"openid"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://www.ory.com/kratos"
+			claims.traits.groups = []string{"group1", "group2"}
+			claims.metadataPublic.picture = "picture.png"
+			claims.metadataAdmin.phoneNumber = "911"
+
+			t.Run("case=should fail registration on first attempt and succeed on second", func(t *testing.T) {
+				// First attempt with a too-short name trait.
+				f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action := assertFormValues(t, f.ID, "valid")
+
+				res, err := http.Post(action, "application/json", // #nosec G107 -- test code
+					strings.NewReader(`{"method":"oidc","provider":"valid","traits.name":"i"}`))
+				require.NoError(t, err)
+				require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+				var changeLocation flow.BrowserLocationChangeRequiredError
+				require.NoError(t, json.NewDecoder(res.Body).Decode(&changeLocation))
+
+				_, err = testhelpers.NewClientWithCookieJar(t, nil, nil).Get(changeLocation.RedirectBrowserTo)
+				require.NoError(t, err)
+				// The callback redirects back but registration fails due to validation (name too short).
+
+				// Second attempt with valid data on a new flow.
+				f = newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action = assertFormValues(t, f.ID, "valid")
+
+				res, err = http.Post(action, "application/json", // #nosec G107 -- test code
+					strings.NewReader(`{"method":"oidc","provider":"valid","traits.name":"valid-name"}`))
+				require.NoError(t, err)
+				require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+				require.NoError(t, json.NewDecoder(res.Body).Decode(&changeLocation))
+
+				res, err = testhelpers.NewClientWithCookieJar(t, nil, nil).Get(changeLocation.RedirectBrowserTo)
+				require.NoError(t, err)
+
+				returnToCode := res.Request.URL.Query().Get("code")
+				require.NotEmpty(t, returnToCode, "code query param was empty in the return_to URL")
+
+				codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
+					InitCode:     f.SessionTokenExchangeCode,
+					ReturnToCode: returnToCode,
+				})
+				require.NoError(t, err)
+				assert.NotEmpty(t, codeResponse.Token)
+				assert.Equal(t, "valid-name", gjson.GetBytes(codeResponse.Session.Identity.Traits, "name").String())
+				assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(codeResponse.Session.Identity.Traits, "website").String())
+			})
+		})
+
 		t.Run("case=should return exchange code even if already authenticated", func(t *testing.T) {
 			subject = "existing-session-api-code-testing@ory.sh"
 			jar := x.Must(cookiejar.New(nil))

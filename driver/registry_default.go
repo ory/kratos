@@ -107,7 +107,7 @@ type RegistryDefault struct {
 
 	courierHandler *courier.Handler
 
-	continuityManager continuity.Manager
+	continuityManager *continuity.Manager
 
 	schemaHandler *schema.Handler
 
@@ -729,7 +729,7 @@ func (m *RegistryDefault) Courier(ctx context.Context) (courier.Courier, error) 
 	return courier.NewCourier(ctx, m)
 }
 
-func (m *RegistryDefault) ContinuityManager() continuity.Manager {
+func (m *RegistryDefault) ContinuityManager() *continuity.Manager {
 	return m.continuityManager
 }
 
@@ -874,7 +874,7 @@ func (m *RegistryDefault) initCheapMembers() {
 	m.identityManager = identity.NewManager(m)
 	m.sessionManager = session.NewManagerHTTP(m)
 	m.errorManager = errorx.NewManager(m)
-	m.continuityManager = continuity.NewManagerCookie(m)
+	m.continuityManager = continuity.NewManager(m)
 }
 
 type initOnce[T any] struct {

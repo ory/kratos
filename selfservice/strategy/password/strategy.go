@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/x"
 )
 
 var (
@@ -45,6 +46,8 @@ type dependencies interface {
 	jsonnetsecure.VMProvider
 	config.Provider
 	continuity.ManagementProvider
+
+	x.CookieProvider
 
 	errorx.ManagementProvider
 	ValidationProvider

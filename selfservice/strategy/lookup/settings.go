@@ -25,6 +25,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -364,7 +365,10 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithLookupMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
-		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
+		key := settings.ContinuityKey(s.SettingsStrategyID())
+		cookieStore := continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(r.Context()))
+		opts := settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())
+		if _, err := s.d.ContinuityManager().Pause(r.Context(), w, r, key, cookieStore, opts...); err != nil {
 			return err
 		}
 	}

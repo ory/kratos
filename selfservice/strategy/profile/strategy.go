@@ -51,6 +51,8 @@ type (
 
 		continuity.ManagementProvider
 
+		x.CookieProvider
+
 		session.HandlerProvider
 		session.ManagementProvider
 
@@ -244,8 +246,9 @@ func (s *Strategy) hydrateForm(r *http.Request, ar *settings.Flow, traits json.R
 // during a settings request.
 func (s *Strategy) handleSettingsError(ctx context.Context, w http.ResponseWriter, r *http.Request, puc *settings.UpdateContext, traits json.RawMessage, p updateSettingsFlowWithProfileMethod, err error) error {
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) {
-		if err := s.d.ContinuityManager().Pause(ctx, w, r,
+		if _, err := s.d.ContinuityManager().Pause(ctx, w, r,
 			settings.ContinuityKey(s.SettingsStrategyID()),
+			continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(ctx)),
 			settings.ContinuityOptions(p, puc.GetSessionIdentity())...); err != nil {
 			return err
 		}

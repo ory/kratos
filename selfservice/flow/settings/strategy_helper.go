@@ -60,6 +60,7 @@ func (c UpdateContext) GetSessionIdentity() *identity.Identity {
 func PrepareUpdate(d interface {
 	logrusx.Provider
 	continuity.ManagementProvider
+	x.CookieProvider
 }, w http.ResponseWriter, r *http.Request, f *Flow, ss *session.Session, name string, payload UpdatePayload) (*UpdateContext, error) {
 	payload.SetFlowID(f.ID)
 	c := &UpdateContext{Session: ss, Flow: f}
@@ -67,7 +68,8 @@ func PrepareUpdate(d interface {
 		return c, nil
 	}
 
-	if _, err := d.ContinuityManager().Continue(r.Context(), w, r, name, ContinuityOptions(payload, ss.Identity)...); err == nil {
+	cookieStore := continuity.NewCookieReferenceStore(d.ContinuityCookieManager(r.Context()))
+	if _, err := d.ContinuityManager().Continue(r.Context(), w, r, name, cookieStore, ContinuityOptions(payload, ss.Identity)...); err == nil {
 		if payload.GetFlowID() == f.ID {
 			return c, ErrContinuePreviousAction
 		}
