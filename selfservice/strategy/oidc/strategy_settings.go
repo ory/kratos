@@ -389,6 +389,7 @@ func (s *Strategy) initLinkProvider(ctx context.Context, w http.ResponseWriter, 
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
+	s.logSberPKCEAuthorizeDiagnostics(p.Link, ctxUpdate.Flow.ID.String(), state, codeURL, pkce)
 
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))

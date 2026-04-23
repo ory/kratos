@@ -69,7 +69,19 @@ func (s *Strategy) GenerateState(ctx context.Context, p Provider, flow flow.Flow
 	if err != nil {
 		return "", nil, herodot.ErrInternalServerError.WithReason("Unable to encrypt state").WithWrap(err)
 	}
-	return param, PKCEChallenge(&state), nil
+	pkce = PKCEChallenge(&state)
+	if isSberProviderID(p.Config().ID) {
+		s.d.Logger().
+			WithField("oidc_provider", p.Config().ID).
+			WithField("oidc_stage", "state_generation").
+			WithField("flow_id", flow.GetID().String()).
+			WithField("pkce_mode", p.Config().PKCE).
+			WithField("pkce_verifier_present", state.GetPkceVerifier() != "").
+			WithField("pkce_verifier_len", len(state.GetPkceVerifier())).
+			WithField("pkce_challenge_option_count", len(pkce)).
+			Warn("Sber PKCE diagnostics during state generation")
+	}
+	return param, pkce, nil
 }
 
 func codeMatches(s *oidcv1.State, code string) bool {

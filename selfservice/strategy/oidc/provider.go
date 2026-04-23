@@ -77,6 +77,10 @@ type Claims struct {
 	UpdatedAt           int64                  `json:"updated_at,omitempty"`
 	HD                  string                 `json:"hd,omitempty"`
 	Team                string                 `json:"team,omitempty"`
+	City                string                 `json:"city,omitempty"`
+	Address             string                 `json:"address,omitempty"`
+	School              string                 `json:"school,omitempty"`
+	University          string                 `json:"university,omitempty"`
 	Nonce               string                 `json:"nonce,omitempty"`
 	NonceSupported      bool                   `json:"nonce_supported,omitempty"`
 	RawClaims           map[string]interface{} `json:"raw_claims,omitempty"`

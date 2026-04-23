@@ -8,6 +8,7 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
+	"io"
 	"maps"
 	"net/http"
 	"net/url"
@@ -51,6 +52,7 @@ import (
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
+	"github.com/ory/x/randx"
 	"github.com/ory/x/reqlog"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -471,6 +473,8 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	ctx = withFlowID(ctx, req.GetID())
+	r = r.WithContext(ctx)
 
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
 		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
@@ -480,21 +484,61 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 
 	provider, err := s.Provider(ctx, state.ProviderId)
 	if err != nil {
+		s.d.Logger().
+			WithError(err).
+			WithField("oidc_provider", state.ProviderId).
+			WithField("oidc_stage", "provider_config").
+			WithField("flow_id", req.GetID().String()).
+			Error("OIDC provider resolution failed")
 		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 		return
 	}
+	s.d.Logger().
+		WithField("oidc_provider", state.ProviderId).
+		WithField("oidc_stage", "provider_config").
+		WithField("flow_id", req.GetID().String()).
+		Debug("OIDC provider resolved")
 
 	var claims *Claims
 	var et *identity.CredentialsOIDCEncryptedTokens
 	switch p := provider.(type) {
 	case OAuth2Provider:
 		t0 := time.Now()
-		token, err := s.exchangeCode(ctx, p, code, PKCEVerifier(state))
+		pkceOpts := PKCEVerifier(state)
+		s.d.Logger().
+			WithField("oidc_provider", state.ProviderId).
+			WithField("oidc_stage", "token_exchange").
+			WithField("flow_id", req.GetID().String()).
+			Debug("Starting OIDC token exchange")
+		if isSberProviderID(state.ProviderId) {
+			s.d.Logger().
+				WithField("oidc_provider", state.ProviderId).
+				WithField("oidc_stage", "token_exchange").
+				WithField("flow_id", req.GetID().String()).
+				WithField("pkce_verifier_present", state.GetPkceVerifier() != "").
+				WithField("pkce_verifier_len", len(state.GetPkceVerifier())).
+				WithField("pkce_option_count", len(pkceOpts)).
+				Warn("Sber PKCE diagnostics before token exchange")
+		}
+		token, err := s.exchangeCode(ctx, p, code, pkceOpts)
 		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 		if err != nil {
+			s.d.Logger().
+				WithError(err).
+				WithField("oidc_provider", state.ProviderId).
+				WithField("oidc_stage", "token_exchange").
+				WithField("flow_id", req.GetID().String()).
+				WithField("latency_ms", time.Since(t0).Milliseconds()).
+				Error("OIDC token exchange failed")
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
 		}
+		s.d.Logger().
+			WithField("oidc_provider", state.ProviderId).
+			WithField("oidc_stage", "token_exchange").
+			WithField("flow_id", req.GetID().String()).
+			WithField("latency_ms", time.Since(t0).Milliseconds()).
+			Debug("OIDC token exchange succeeded")
 
 		et, err = s.encryptOAuth2Tokens(ctx, token)
 		if err != nil {
@@ -503,11 +547,49 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		}
 
 		t0 = time.Now()
+		s.d.Logger().
+			WithField("oidc_provider", state.ProviderId).
+			WithField("oidc_stage", "userinfo_claims").
+			WithField("flow_id", req.GetID().String()).
+			Debug("Starting OIDC claims retrieval")
 		claims, err = p.Claims(ctx, token, r.URL.Query())
 		reqlog.AccumulateExternalLatency(ctx, time.Since(t0))
 		if err != nil {
+			s.d.Logger().
+				WithError(err).
+				WithField("oidc_provider", state.ProviderId).
+				WithField("oidc_stage", "userinfo_claims").
+				WithField("flow_id", req.GetID().String()).
+				WithField("latency_ms", time.Since(t0).Milliseconds()).
+				Error("OIDC claims retrieval failed")
 			s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 			return
+		}
+		s.d.Logger().
+			WithField("oidc_provider", state.ProviderId).
+			WithField("oidc_stage", "userinfo_claims").
+			WithField("flow_id", req.GetID().String()).
+			WithField("latency_ms", time.Since(t0).Milliseconds()).
+			Debug("OIDC claims retrieval succeeded")
+		if isSberProviderID(state.ProviderId) {
+			t0 = time.Now()
+			if err := s.confirmSberAuthorizationCompleted(ctx, state.ProviderId, token.AccessToken); err != nil {
+				s.d.Logger().
+					WithError(err).
+					WithField("oidc_provider", state.ProviderId).
+					WithField("oidc_stage", "auth_completed").
+					WithField("flow_id", req.GetID().String()).
+					WithField("latency_ms", time.Since(t0).Milliseconds()).
+					Error("OIDC auth completed confirmation failed")
+				s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
+				return
+			}
+			s.d.Logger().
+				WithField("oidc_provider", state.ProviderId).
+				WithField("oidc_stage", "auth_completed").
+				WithField("flow_id", req.GetID().String()).
+				WithField("latency_ms", time.Since(t0).Milliseconds()).
+				Debug("OIDC auth completed confirmation succeeded")
 		}
 	case OAuth1Provider:
 		t0 := time.Now()
@@ -528,9 +610,20 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = claims.Validate(); err != nil {
+		s.d.Logger().
+			WithError(err).
+			WithField("oidc_provider", state.ProviderId).
+			WithField("oidc_stage", "claims_validation").
+			WithField("flow_id", req.GetID().String()).
+			Error("OIDC claims validation failed")
 		s.forwardError(ctx, w, r, req, s.HandleError(ctx, w, r, req, state.ProviderId, nil, err))
 		return
 	}
+	s.d.Logger().
+		WithField("oidc_provider", state.ProviderId).
+		WithField("oidc_stage", "claims_validation").
+		WithField("flow_id", req.GetID().String()).
+		Debug("OIDC claims validation succeeded")
 
 	span.SetAttributes(attribute.StringSlice("claims", slices.Collect(maps.Keys(claims.RawClaims))))
 
@@ -616,7 +709,55 @@ func (s *Strategy) exchangeCode(ctx context.Context, provider OAuth2Provider, co
 
 	client := s.d.HTTPClient(ctx)
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, client.HTTPClient)
+	if flowID, ok := flowIDFromContext(ctx); ok && isSberProviderID(provider.Config().ID) {
+		ctx = withSberFlowID(ctx, flowID)
+	}
 	return te.Exchange(ctx, code, opts...)
+}
+
+type flowIDContextKey struct{}
+
+func withFlowID(ctx context.Context, flowID uuid.UUID) context.Context {
+	if flowID == uuid.Nil {
+		return ctx
+	}
+	return context.WithValue(ctx, flowIDContextKey{}, flowID)
+}
+
+func flowIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	if ctx == nil {
+		return uuid.Nil, false
+	}
+	flowID, ok := ctx.Value(flowIDContextKey{}).(uuid.UUID)
+	return flowID, ok && flowID != uuid.Nil
+}
+
+func (s *Strategy) logSberPKCEAuthorizeDiagnostics(providerID, flowID, state, codeURL string, pkceOpts []oauth2.AuthCodeOption) {
+	if !isSberProviderID(providerID) {
+		return
+	}
+
+	fields := s.d.Logger().
+		WithField("oidc_provider", providerID).
+		WithField("oidc_stage", "authorize_redirect").
+		WithField("flow_id", flowID).
+		WithField("pkce_option_count", len(pkceOpts)).
+		WithField("state_present", state != "").
+		WithField("authorize_url", codeURL)
+
+	parsedURL, err := url.Parse(codeURL)
+	if err != nil {
+		fields.WithError(err).Warn("Sber PKCE diagnostics: failed to parse authorize URL")
+		return
+	}
+
+	query := parsedURL.Query()
+	fields.
+		WithField("authorize_has_code_challenge", query.Get("code_challenge") != "").
+		WithField("authorize_code_challenge_method", query.Get("code_challenge_method")).
+		WithField("authorize_has_state", query.Get("state") != "").
+		WithField("authorize_redirect_uri", query.Get("redirect_uri")).
+		Warn("Sber PKCE diagnostics before provider redirect")
 }
 
 func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(provider string, providerId string) *text.Message) error {
@@ -656,6 +797,10 @@ func (s *Strategy) Provider(ctx context.Context, id string) (Provider, error) {
 }
 
 func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, err error) {
+	if s.redirectSberFailureIfEligible(ctx, w, r) {
+		return
+	}
+
 	switch ff := f.(type) {
 	case *login.Flow:
 		s.d.LoginFlowErrorHandler().WriteFlowError(w, r, ff, s.ID(), s.NodeGroup(), err)
@@ -672,6 +817,33 @@ func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *h
 	default:
 		panic(errors.Errorf("unexpected type: %T", ff))
 	}
+}
+
+func (s *Strategy) redirectSberFailureIfEligible(ctx context.Context, w http.ResponseWriter, r *http.Request) bool {
+	providerID := r.PathValue("provider")
+	if !isSberProviderID(providerID) {
+		return false
+	}
+	if x.IsJSONRequest(r) {
+		return false
+	}
+
+	target := sberOIDCFailureRedirectURL(s.d.Config().SelfServiceBrowserDefaultReturnTo(ctx))
+	http.Redirect(w, r, target, http.StatusSeeOther)
+	return true
+}
+
+func sberOIDCFailureRedirectURL(base *url.URL) string {
+	if base == nil {
+		return "/api/auth/oidc/failure"
+	}
+
+	u := *base
+	u.Path = "/api/auth/oidc/failure"
+	u.RawQuery = ""
+	u.Fragment = ""
+
+	return u.String()
 }
 
 func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, usedProviderID string, traits []byte, err error) error {
@@ -840,6 +1012,75 @@ func (s *Strategy) CompletedAuthenticationMethod(context.Context) session.Authen
 		Method: s.ID(),
 		AAL:    identity.AuthenticatorAssuranceLevel1,
 	}
+}
+
+func (s *Strategy) confirmSberAuthorizationCompleted(ctx context.Context, providerID string, accessToken string) error {
+	if accessToken == "" {
+		return errors.WithStack(herodot.ErrUpstreamError.WithReasonf("sber auth completed failed: missing access token"))
+	}
+
+	endpoint := sberAuthCompletedURL(providerID)
+	requestID := randx.MustString(32, []rune("0123456789ABCDEF"))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
+	}
+	req.Header.Set("authorization", "Bearer "+accessToken)
+	req.Header.Set("rquid", requestID)
+
+	cl := s.d.HTTPClient(ctx).HTTPClient
+	if cl.Transport == nil {
+		cl.Transport = http.DefaultTransport
+	}
+	mtlsTransport, mtlsCertPath, mtlsKeyPath, mtlsBaseType, mtlsErr := withSberMTLS(cl.Transport)
+	cl.Transport = mtlsTransport
+	fields := s.d.Logger().
+		WithField("oidc_provider", providerID).
+		WithField("oidc_stage", "auth_completed").
+		WithField("sber_debug_version", sberTokenDebugVersion).
+		WithField("request_id", requestID).
+		WithField("auth_completed_url", endpoint).
+		WithField("mtls_cert_path", mtlsCertPath).
+		WithField("mtls_key_path", mtlsKeyPath).
+		WithField("mtls_base_transport_type", mtlsBaseType)
+	if mtlsErr != nil {
+		fields.WithError(mtlsErr).Error("Failed to attach mTLS certificate for Sber auth completed request")
+	} else {
+		fields.Debug("Attached mTLS certificate for Sber auth completed request")
+	}
+
+	resp, err := cl.Do(req)
+	if err != nil {
+		return errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode == http.StatusNoContent {
+		return nil
+	}
+
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+	bodyFragment := safeBodyForLog(body, maxUpstreamBodyLogBytes)
+	s.d.Logger().
+		WithField("oidc_provider", providerID).
+		WithField("oidc_stage", "auth_completed").
+		WithField("request_id", requestID).
+		WithField("auth_completed_url", endpoint).
+		WithField("http_status", resp.StatusCode).
+		WithField("response_body_fragment", bodyFragment).
+		Error("OIDC auth completed failed with upstream response")
+
+	return errors.WithStack(
+		herodot.ErrUpstreamError.WithReasonf(
+			"sber auth completed failed: stage=auth_completed provider=%s request_id=%s endpoint=%s http_status=%d response=%q",
+			providerID,
+			requestID,
+			endpoint,
+			resp.StatusCode,
+			bodyFragment,
+		),
+	)
 }
 
 func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {

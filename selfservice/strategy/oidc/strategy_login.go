@@ -206,6 +206,11 @@ func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *Claims,
 		return false, err
 	}
 
+	evaluated, err = applySberClaimsToMapperTraitsOutput(provider.Config().ID, claims, evaluated)
+	if err != nil {
+		return false, err
+	}
+
 	// Save the current state for comparison.
 	oldTraits := json.RawMessage(i.Traits)
 	oldMetadataPublic := json.RawMessage(i.MetadataPublic)
@@ -228,6 +233,11 @@ func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *Claims,
 		return false, err
 	}
 	i.Traits = mergedTraits
+
+	i.Traits, err = applySberClaimsToIdentityTraitsBytes(provider.Config().ID, claims, i.Traits)
+	if err != nil {
+		return false, err
+	}
 
 	// Only update metadata if the mapper explicitly outputs the key. When the
 	// mapper omits metadata_public or metadata_admin (common for mappers
@@ -301,6 +311,8 @@ func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *Claims,
 		}
 	}
 
+	s.debugLogSberTraitsVersusUserinfo(provider.Config().ID, claims, i.Traits, i.ID, "login_after_oidc_traits")
+
 	changed = !jsonEqual(oldTraits, json.RawMessage(i.Traits)) ||
 		!jsonEqual(oldMetadataPublic, json.RawMessage(i.MetadataPublic)) ||
 		!jsonEqual(oldMetadataAdmin, json.RawMessage(i.MetadataAdmin)) ||
@@ -320,7 +332,25 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processLogin")
 	defer otelx.End(span, &err)
 
-	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject))
+	subjects := sberAllSubjects(claims)
+	if len(subjects) == 0 {
+		subjects = []string{claims.Subject}
+	}
+
+	var (
+		i *identity.Identity
+		c *identity.Credentials
+	)
+	for _, subject := range subjects {
+		i, c, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, subject))
+		if err == nil {
+			claims.Subject = subject
+			break
+		}
+		if !errors.Is(err, sqlcon.ErrNoRows) {
+			break
+		}
+	}
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows) {
 			var verdict ConflictingIdentityVerdict
@@ -542,6 +572,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	if err != nil {
 		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
+	s.logSberPKCEAuthorizeDiagnostics(pid, f.ID.String(), state, codeURL, pkce)
 
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))

@@ -226,6 +226,8 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"fedcm-test":  NewProviderTestFedcm,
 	"amazon":      NewProviderAmazon,
 	"uaepass":     NewProviderUAEPass,
+	"sber":        NewProviderSber,
+	"sber-ift":    NewProviderSberIft,
 }
 
 func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {

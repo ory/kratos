@@ -270,6 +270,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
+	s.logSberPKCEAuthorizeDiagnostics(pid, f.ID.String(), state, codeURL, pkce)
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
 	} else {
@@ -394,8 +395,13 @@ func (s *Strategy) EvaluateClaimsMapper(ctx context.Context, claims *Claims, pro
 		return "", nil, err
 	}
 
+	claimsExt, err := claimsMapperExt(claims)
+	if err != nil {
+		return "", nil, err
+	}
+
 	var jsonClaims bytes.Buffer
-	if err = json.NewEncoder(&jsonClaims).Encode(claims); err != nil {
+	if err = json.NewEncoder(&jsonClaims).Encode(claimsExt); err != nil {
 		return "", nil, err
 	}
 
@@ -443,14 +449,60 @@ func (s *Strategy) EvaluateClaimsMapper(ctx context.Context, claims *Claims, pro
 	return evaluated, jsonClaims.Bytes(), nil
 }
 
+func claimsMapperExt(claims *Claims) (map[string]interface{}, error) {
+	if claims == nil {
+		return map[string]interface{}{}, nil
+	}
+
+	raw, err := json.Marshal(claims)
+	if err != nil {
+		return nil, err
+	}
+
+	var ext map[string]interface{}
+	if err := json.Unmarshal(raw, &ext); err != nil {
+		return nil, err
+	}
+
+	for k, v := range ext {
+		alias := toUpperCamel(k)
+		if _, exists := ext[alias]; !exists {
+			ext[alias] = v
+		}
+	}
+
+	return ext, nil
+}
+
+func toUpperCamel(in string) string {
+	parts := strings.Split(in, "_")
+	for i, p := range parts {
+		if p == "" {
+			continue
+		}
+		parts[i] = strings.ToUpper(p[:1]) + p[1:]
+	}
+	return strings.Join(parts, "")
+}
+
 func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer, schema flow.IdentitySchema) (_ *identity.Identity, _ []VerifiedAddress, err error) {
 	evaluated, _, err := s.EvaluateClaimsMapper(ctx, claims, provider, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	evaluated, err = applySberClaimsToMapperTraitsOutput(provider.Config().ID, claims, evaluated)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	i := identity.NewIdentity(schema.ID(ctx, s.d.Config()))
 	if err = s.setTraits(provider, container, evaluated, i); err != nil {
+		return nil, nil, err
+	}
+
+	i.Traits, err = applySberClaimsToIdentityTraitsBytes(provider.Config().ID, claims, i.Traits)
+	if err != nil {
 		return nil, nil, err
 	}
 
@@ -466,6 +518,8 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 	if err != nil {
 		return nil, nil, err
 	}
+
+	s.debugLogSberTraitsVersusUserinfo(provider.Config().ID, claims, i.Traits, i.ID, "registration_after_oidc_traits")
 
 	if orgID, parseErr := uuid.FromString(provider.Config().OrganizationID); parseErr == nil {
 		i.OrganizationID = uuid.NullUUID{UUID: orgID, Valid: true}
@@ -547,4 +601,33 @@ func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress
 	}
 
 	return nil, nil
+}
+
+// debugLogSberTraitsVersusUserinfo пишет в лог строки из userinfo (Claims) и JSON traits перед созданием/обновлением идентичности в хранилище.
+func (s *Strategy) debugLogSberTraitsVersusUserinfo(providerID string, claims *Claims, traits []byte, identityID uuid.UUID, stage string) {
+	if claims == nil || !isSberProviderID(providerID) {
+		return
+	}
+
+	upstream := map[string]string{
+		"given_name":         claims.GivenName,
+		"family_name":        claims.FamilyName,
+		"email":              claims.Email,
+		"middle_name":        claims.MiddleName,
+		"preferred_username": claims.PreferredUsername,
+		"name":               claims.Name,
+	}
+
+	l := s.d.Logger().
+		WithField("oidc_provider", providerID).
+		WithField("oidc_traits_log_stage", stage).
+		WithField("userinfo_given_name_all_upper", isAllUpperText(claims.GivenName)).
+		WithField("userinfo_family_name_all_upper", isAllUpperText(claims.FamilyName)).
+		WithField("userinfo_email_all_upper", isAllUpperText(claims.Email)).
+		WithSensitiveField("oidc_userinfo_pii", upstream).
+		WithSensitiveField("identity_traits_json", traits)
+	if identityID != uuid.Nil {
+		l = l.WithField("identity_id", identityID)
+	}
+	l.Info("OIDC Сбер: userinfo и traits перед сохранением идентичности (сравнение регистра)")
 }
