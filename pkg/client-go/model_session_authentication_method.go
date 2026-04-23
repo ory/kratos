@@ -24,12 +24,16 @@ type SessionAuthenticationMethod struct {
 	Aal *AuthenticatorAssuranceLevel `json:"aal,omitempty"`
 	// When the authentication challenge was completed.
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	// The method used in this authenticator. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile saml CredentialsTypeSAML link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
+	// The method used in this authenticator. password CredentialsTypePassword oidc CredentialsTypeOIDC totp CredentialsTypeTOTP lookup_secret CredentialsTypeLookup webauthn CredentialsTypeWebAuthn code CredentialsTypeCodeAuth passkey CredentialsTypePasskey profile CredentialsTypeProfile saml CredentialsTypeSAML deviceauthn CredentialsTypeDeviceAuthn link_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself. code_recovery CredentialsTypeRecoveryCode
 	Method *string `json:"method,omitempty"`
 	// The Organization id used for authentication
 	Organization *string `json:"organization,omitempty"`
 	// OIDC or SAML provider id used for authentication
-	Provider             *string `json:"provider,omitempty"`
+	Provider *string `json:"provider,omitempty"`
+	// UpstreamACR is the `acr` claim reported by the upstream OIDC provider, if any. Populated only for OIDC login methods when the upstream ID token contained an `acr` claim.
+	UpstreamAcr *string `json:"upstream_acr,omitempty"`
+	// UpstreamAMR is the `amr` claim reported by the upstream OIDC provider, if any. Populated only for OIDC login methods when the upstream ID token contained an `amr` claim.
+	UpstreamAmr          []string `json:"upstream_amr,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -212,6 +216,70 @@ func (o *SessionAuthenticationMethod) SetProvider(v string) {
 	o.Provider = &v
 }
 
+// GetUpstreamAcr returns the UpstreamAcr field value if set, zero value otherwise.
+func (o *SessionAuthenticationMethod) GetUpstreamAcr() string {
+	if o == nil || IsNil(o.UpstreamAcr) {
+		var ret string
+		return ret
+	}
+	return *o.UpstreamAcr
+}
+
+// GetUpstreamAcrOk returns a tuple with the UpstreamAcr field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SessionAuthenticationMethod) GetUpstreamAcrOk() (*string, bool) {
+	if o == nil || IsNil(o.UpstreamAcr) {
+		return nil, false
+	}
+	return o.UpstreamAcr, true
+}
+
+// HasUpstreamAcr returns a boolean if a field has been set.
+func (o *SessionAuthenticationMethod) HasUpstreamAcr() bool {
+	if o != nil && !IsNil(o.UpstreamAcr) {
+		return true
+	}
+
+	return false
+}
+
+// SetUpstreamAcr gets a reference to the given string and assigns it to the UpstreamAcr field.
+func (o *SessionAuthenticationMethod) SetUpstreamAcr(v string) {
+	o.UpstreamAcr = &v
+}
+
+// GetUpstreamAmr returns the UpstreamAmr field value if set, zero value otherwise.
+func (o *SessionAuthenticationMethod) GetUpstreamAmr() []string {
+	if o == nil || IsNil(o.UpstreamAmr) {
+		var ret []string
+		return ret
+	}
+	return o.UpstreamAmr
+}
+
+// GetUpstreamAmrOk returns a tuple with the UpstreamAmr field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *SessionAuthenticationMethod) GetUpstreamAmrOk() ([]string, bool) {
+	if o == nil || IsNil(o.UpstreamAmr) {
+		return nil, false
+	}
+	return o.UpstreamAmr, true
+}
+
+// HasUpstreamAmr returns a boolean if a field has been set.
+func (o *SessionAuthenticationMethod) HasUpstreamAmr() bool {
+	if o != nil && !IsNil(o.UpstreamAmr) {
+		return true
+	}
+
+	return false
+}
+
+// SetUpstreamAmr gets a reference to the given []string and assigns it to the UpstreamAmr field.
+func (o *SessionAuthenticationMethod) SetUpstreamAmr(v []string) {
+	o.UpstreamAmr = v
+}
+
 func (o SessionAuthenticationMethod) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -236,6 +304,12 @@ func (o SessionAuthenticationMethod) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.Provider) {
 		toSerialize["provider"] = o.Provider
+	}
+	if !IsNil(o.UpstreamAcr) {
+		toSerialize["upstream_acr"] = o.UpstreamAcr
+	}
+	if !IsNil(o.UpstreamAmr) {
+		toSerialize["upstream_amr"] = o.UpstreamAmr
 	}
 
 	for key, value := range o.AdditionalProperties {
@@ -264,6 +338,8 @@ func (o *SessionAuthenticationMethod) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "method")
 		delete(additionalProperties, "organization")
 		delete(additionalProperties, "provider")
+		delete(additionalProperties, "upstream_acr")
+		delete(additionalProperties, "upstream_amr")
 		o.AdditionalProperties = additionalProperties
 	}
 

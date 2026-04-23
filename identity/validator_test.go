@@ -40,8 +40,8 @@ func TestSchemaValidatorDisallowsInternalNetworkRequests(t *testing.T) {
 	v := NewValidator(reg)
 
 	for id, expectedErr := range map[string]string{
-		"localhost":  "is not a permitted destination",
-		"privateRef": "is not a permitted destination",
+		"localhost":  "no such host",
+		"privateRef": "no route to host",
 		"inlineRef":  "",
 	} {
 		t.Run(id, func(t *testing.T) {

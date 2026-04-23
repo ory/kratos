@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/urlx"
 )
 
@@ -40,7 +41,7 @@ func TestSender(t *testing.T) {
 	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/default.schema.json")),
 		configx.WithValues(map[string]any{
-			config.ViperKeyPublicBaseURL:                                  "https://www.ory.sh/",
+			config.ViperKeyPublicBaseURL:                                  "https://www.ory.com/",
 			config.ViperKeyCourierSMTPURL:                                 "smtp://foo@bar@dev.null/",
 			config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients:     true,
 			config.ViperKeySelfServiceVerificationNotifyUnknownRecipients: true,
@@ -49,7 +50,7 @@ func TestSender(t *testing.T) {
 
 	conf.MustSet(ctx, config.ViperKeyWebhookHeaderAllowlist, []string{"user-agent", "X-CUSTOM-HEADER"})
 
-	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 
@@ -57,8 +58,8 @@ func TestSender(t *testing.T) {
 	// to customers in Germany under current legislation.
 	// This is to protect residents against the potential influx of phone calls
 	// that they may receive should their telephone numbers appear in a movie or film.
-	phoneNumberKnown := "+49-160-555-5762"
-	phoneNumberUnknown := "+49-155-555-4570"
+	phoneNumberKnown := x.NormalizePhoneIdentifier("+49-160-555-5762")
+	phoneNumberUnknown := x.NormalizePhoneIdentifier("+49-155-555-4570")
 	i.Traits = identity.Traits(fmt.Sprintf(`{"email": "tracked@ory.sh", "phone": "%s"}`, phoneNumberKnown))
 	require.NoError(t, reg.IdentityManager().Create(ctx, i))
 
@@ -76,7 +77,7 @@ func TestSender(t *testing.T) {
 			header.Add("X-Custom-header", "x-custom header 2")
 			header.Add("some-other-header", "some-other-value")
 			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "tracked@ory.sh", header))
-			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh", header), code.ErrUnknownAddress)
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh", header), code.ErrUnknownAddress())
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -146,7 +147,7 @@ func TestSender(t *testing.T) {
 			header.Add("X-Custom-header", "x-custom header 2")
 			header.Add("some-other-header", "some-other-value")
 			require.NoError(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberKnown, header))
-			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberUnknown, header), code.ErrUnknownAddress)
+			require.ErrorIs(t, reg.CodeSender().SendRecoveryCode(ctx, f, "sms", phoneNumberUnknown, header), code.ErrUnknownAddress())
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -157,7 +158,7 @@ func TestSender(t *testing.T) {
 
 			assert.EqualValues(t, phoneNumberKnown, messages[0].Recipient)
 			assert.Contains(t, messages[0].Body, "Your recovery code is:")
-			assert.Contains(t, messages[0].Body, "@www.ory.sh #")
+			assert.Contains(t, messages[0].Body, "@www.ory.com #")
 
 			assert.Regexp(t, testhelpers.CodeRegex, messages[0].Body)
 		})
@@ -194,7 +195,7 @@ func TestSender(t *testing.T) {
 			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
 			require.NoError(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "tracked@ory.sh"))
-			require.ErrorIs(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress)
+			require.ErrorIs(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "not-tracked@ory.sh"), code.ErrUnknownAddress())
 		}
 
 		t.Run("case=with default templates", func(t *testing.T) {
@@ -258,7 +259,7 @@ func TestSender(t *testing.T) {
 					require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(ctx, f))
 
 					err = reg.CodeSender().SendRecoveryCode(ctx, f, "email", "not-tracked@ory.sh", nil)
-					require.ErrorIs(t, err, code.ErrUnknownAddress)
+					require.ErrorIs(t, err, code.ErrUnknownAddress())
 				},
 			},
 			{
@@ -273,7 +274,7 @@ func TestSender(t *testing.T) {
 					require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
 
 					err = reg.CodeSender().SendVerificationCode(ctx, f, "email", "not-tracked@ory.sh")
-					require.ErrorIs(t, err, code.ErrUnknownAddress)
+					require.ErrorIs(t, err, code.ErrUnknownAddress())
 				},
 			},
 		} {

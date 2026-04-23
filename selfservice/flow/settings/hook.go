@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
@@ -221,17 +220,16 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 	}
 
 	options := []identity.ManagerOption{identity.ManagerExposeValidationErrorsForInternalTypeAssertion}
-	ttl := e.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
-	if ctxUpdate.Session.AuthenticatedAt.Add(ttl).After(time.Now()) {
+	if e.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
 
 	if err := e.d.IdentityManager().Update(ctx, i, options...); err != nil {
-		if errors.Is(err, identity.ErrProtectedFieldModified) {
+		if errors.Is(err, identity.ErrProtectedFieldModified()) {
 			e.d.Logger().WithError(err).Debug("Modifying protected field requires re-authentication.")
 			return errors.WithStack(NewFlowNeedsReAuth())
 		}
-		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+		if errors.Is(err, sqlcon.ErrUniqueViolation()) {
 			return schema.NewDuplicateCredentialsError(err)
 		}
 		return err

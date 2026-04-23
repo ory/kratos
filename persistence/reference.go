@@ -40,6 +40,7 @@ type Provider interface {
 type Persister interface {
 	continuity.Persister
 	identity.PrivilegedPool
+	identity.PendingTraitsChangePersister
 	registration.FlowPersister
 	login.FlowPersister
 	settings.FlowPersister

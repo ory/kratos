@@ -78,6 +78,7 @@ type (
 		identity.ManagementProvider
 		identity.PoolProvider
 		identity.PrivilegedPoolProvider
+		identity.PendingTraitsChangePersistenceProvider
 
 		courier.Provider
 
@@ -160,7 +161,7 @@ func (s *Strategy) CountActiveMultiFactorCredentials(ctx context.Context, cc map
 
 	var conf identity.CredentialsCode
 	if err := json.Unmarshal(creds.Config, &conf); err != nil {
-		return 0, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to unmarshal credentials config: %s", err))
+		return 0, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to unmarshal credentials config: %s", err))
 	}
 
 	// If no addresses configured, return 0
@@ -229,7 +230,7 @@ func (s *Strategy) PopulateMethod(r *http.Request, f flow.Flow) error {
 	case flow.StatePassedChallenge:
 		fallthrough
 	default:
-		return errors.WithStack(herodot.ErrBadRequest.WithReason("received an unexpected flow state"))
+		return errors.WithStack(herodot.ErrBadRequest().WithReason("received an unexpected flow state"))
 	}
 
 	// no matter the flow type or state we need to set the CSRF token
@@ -396,7 +397,7 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 			backNode = nodeRegistrationSelectCredentialsNode()
 		}
 	default:
-		return errors.WithStack(herodot.ErrBadRequest.WithReason("received an unexpected flow type"))
+		return errors.WithStack(herodot.ErrBadRequest().WithReason("received an unexpected flow type"))
 	}
 
 	// Hidden field Required for the re-send code button
@@ -470,7 +471,7 @@ func (s *Strategy) FindCodeAddresses(ctx context.Context, sess *session.Session,
 	} else {
 		value := gjson.GetBytes(sess.Identity.Traits, via).String()
 		if value == "" {
-			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("No value found for trait %s in the current identity.", via))
+			return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("No value found for trait %s in the current identity.", via))
 		}
 
 		// TODO Remove this normalization once the via parameter is deprecated.
@@ -492,7 +493,7 @@ func (s *Strategy) FindCodeAddresses(ctx context.Context, sess *session.Session,
 			return item.To == value
 		})
 		if !found {
-			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("You can only reference a trait that matches a verification email address in the via parameter, or a registered credential."))
+			return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("You can only reference a trait that matches a verification email address in the via parameter, or a registered credential."))
 		}
 
 		return []Address{address}, nil

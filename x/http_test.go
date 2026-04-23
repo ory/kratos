@@ -24,8 +24,8 @@ import (
 )
 
 func TestWithBaseURL(t *testing.T) {
-	ctx := WithBaseURL(context.Background(), urlx.ParseOrPanic("https://www.ory.sh/"))
-	assert.EqualValues(t, "https://www.ory.sh/", BaseURLFromContext(ctx).String())
+	ctx := WithBaseURL(context.Background(), urlx.ParseOrPanic("https://www.ory.com/"))
+	assert.EqualValues(t, "https://www.ory.com/", BaseURLFromContext(ctx).String())
 	assert.Nil(t, BaseURLFromContext(context.Background()))
 }
 
@@ -50,18 +50,18 @@ func TestAcceptToRedirectOrJSON(t *testing.T) {
 
 		t.Run("regular payload", func(t *testing.T) {
 			w := httptest.NewRecorder()
-			SendFlowCompletedAsRedirectOrJSON(w, r, wr, json.RawMessage(`{"foo":"bar"}`), "https://www.ory.sh/redir")
+			SendFlowCompletedAsRedirectOrJSON(w, r, wr, json.RawMessage(`{"foo":"bar"}`), "https://www.ory.com/redir")
 			loc, err := w.Result().Location()
 			require.NoError(t, err)
-			assert.Equal(t, "https://www.ory.sh/redir", loc.String())
+			assert.Equal(t, "https://www.ory.com/redir", loc.String())
 		})
 
 		t.Run("error payload", func(t *testing.T) {
 			w := httptest.NewRecorder()
-			SendFlowCompletedAsRedirectOrJSON(w, r, wr, errors.New("foo"), "https://www.ory.sh/redir")
+			SendFlowCompletedAsRedirectOrJSON(w, r, wr, errors.New("foo"), "https://www.ory.com/redir")
 			loc, err := w.Result().Location()
 			require.NoError(t, err)
-			assert.Equal(t, "https://www.ory.sh/redir", loc.String())
+			assert.Equal(t, "https://www.ory.com/redir", loc.String())
 		})
 	})
 
@@ -72,7 +72,7 @@ func TestAcceptToRedirectOrJSON(t *testing.T) {
 		t.Run("regular payload", func(t *testing.T) {
 			msg := json.RawMessage(`{"foo":"bar"}`)
 			w := httptest.NewRecorder()
-			SendFlowCompletedAsRedirectOrJSON(w, r, wr, msg, "https://www.ory.sh/redir")
+			SendFlowCompletedAsRedirectOrJSON(w, r, wr, msg, "https://www.ory.com/redir")
 			_, err := w.Result().Location()
 			require.ErrorIs(t, err, http.ErrNoLocation)
 
@@ -81,9 +81,9 @@ func TestAcceptToRedirectOrJSON(t *testing.T) {
 		})
 
 		t.Run("error payload", func(t *testing.T) {
-			ee := errors.WithStack(herodot.ErrBadRequest)
+			ee := errors.WithStack(herodot.ErrBadRequest())
 			w := httptest.NewRecorder()
-			SendFlowCompletedAsRedirectOrJSON(w, r, wr, ee, "https://www.ory.sh/redir")
+			SendFlowCompletedAsRedirectOrJSON(w, r, wr, ee, "https://www.ory.com/redir")
 			_, err := w.Result().Location()
 			require.ErrorIs(t, err, http.ErrNoLocation)
 

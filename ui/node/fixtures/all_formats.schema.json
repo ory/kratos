@@ -61,6 +61,32 @@
       "pattern": "foo.*",
       "test_expected_type": "text",
       "test_expected_pattern": true
+    },
+    "enumString": {
+      "type": "string",
+      "enum": ["one", "two", "three"],
+      "test_expected_type": "text",
+      "test_expected_options": ["one", "two", "three"]
+    },
+    "enumNumber": {
+      "type": "number",
+      "enum": [1, 2.5, 3],
+      "test_expected_type": "number",
+      "test_expected_options": [1, 2.5, 3]
+    },
+    "enumBoolean": {
+      "type": "boolean",
+      "enum": [true, false],
+      "test_expected_type": "checkbox",
+      "test_expected_options": [true, false]
+    },
+    "enumEmail": {
+      "type": "string",
+      "format": "email",
+      "enum": ["admin@example.com", "user@example.com"],
+      "test_expected_type": "email",
+      "test_expected_autocomplete": "email",
+      "test_expected_options": ["admin@example.com", "user@example.com"]
     }
   }
 }

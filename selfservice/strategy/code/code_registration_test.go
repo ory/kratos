@@ -29,17 +29,16 @@ func TestRegistrationCode(t *testing.T) {
 		}
 	}
 
-	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 	t.Run("method=Validate", func(t *testing.T) {
 		t.Parallel()
 
-		t.Run("case=returns error if flow is expired", func(t *testing.T) {
+		t.Run("case=returns error if code is expired", func(t *testing.T) {
 			f, err := registration.NewFlow(conf, -time.Hour, "", req, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(-time.Hour, f)
-			expected := new(flow.ExpiredError)
-			require.ErrorAs(t, c.Validate(), &expected)
+			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound())
 		})
 		t.Run("case=returns no error if flow is not expired", func(t *testing.T) {
 			f, err := registration.NewFlow(conf, time.Hour, "", req, flow.TypeBrowser)
@@ -58,7 +57,7 @@ func TestRegistrationCode(t *testing.T) {
 				Time:  time.Now(),
 				Valid: true,
 			}
-			require.ErrorIs(t, c.Validate(), code.ErrCodeAlreadyUsed)
+			require.ErrorIs(t, c.Validate(), code.ErrCodeAlreadyUsed())
 		})
 
 		t.Run("case=returns no error if flow has not been used", func(t *testing.T) {
@@ -74,7 +73,7 @@ func TestRegistrationCode(t *testing.T) {
 
 		t.Run("case=returns error if flow is nil", func(t *testing.T) {
 			var c *code.RegistrationCode
-			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound)
+			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound())
 		})
 	})
 }

@@ -31,7 +31,7 @@ type (
 	}
 	PrimaryStrategy interface {
 		Strategy
-		SendVerificationCode(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress) error
+		SendVerificationCode(context.Context, *Flow, *identity.Identity, identity.VerifiableAddressLike) error
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {
@@ -55,7 +55,7 @@ func (s Strategies) ActiveStrategies(id string) (active Strategies, primary Prim
 	}
 
 	if primary == nil {
-		return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("unable to find strategy for %s have %v", id, ids))
+		return nil, nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("unable to find strategy for %s have %v", id, ids))
 	}
 
 	return activeStrategies, primary, nil

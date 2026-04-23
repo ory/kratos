@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 
@@ -26,6 +25,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -156,7 +156,7 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 			return err
 		}
 
-		if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
+		if !s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 			return errors.WithStack(settings.NewFlowNeedsReAuth())
 		}
 	} else {
@@ -220,7 +220,7 @@ func (s *Strategy) continueSettingsFlowReveal(ctx context.Context, ctxUpdate *se
 	}
 
 	if !hasLookup {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Can not reveal lookup codes because you have none."))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("Can not reveal lookup codes because you have none."))
 	}
 
 	_, cred, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), ctxUpdate.Session.IdentityID.String())
@@ -230,7 +230,7 @@ func (s *Strategy) continueSettingsFlowReveal(ctx context.Context, ctxUpdate *se
 
 	var creds identity.CredentialsLookupConfig
 	if err := json.Unmarshal(cred.Config, &creds); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode lookup codes from JSON.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode lookup codes from JSON.").WithDebug(err.Error()))
 	}
 
 	for _, n := range allSettingsNodes {
@@ -282,7 +282,7 @@ func (s *Strategy) continueSettingsFlowRegenerate(ctx context.Context, ctxUpdate
 func (s *Strategy) continueSettingsFlowConfirm(ctx context.Context, ctxUpdate *settings.UpdateContext) error {
 	codes := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyRegenerated)).Array()
 	if len(codes) != numCodes {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("You must (re-)generate recovery backup codes before you can save them."))
 	}
 
 	rc := make([]identity.RecoveryCode, len(codes))
@@ -292,7 +292,7 @@ func (s *Strategy) continueSettingsFlowConfirm(ctx context.Context, ctxUpdate *s
 
 	co, err := json.Marshal(&identity.CredentialsLookupConfig{RecoveryCodes: rc})
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode totp options to JSON: %s", err))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode totp options to JSON: %s", err))
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)
@@ -365,7 +365,10 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 func (s *Strategy) handleSettingsError(w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithLookupMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
-		if err := s.d.ContinuityManager().Pause(r.Context(), w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
+		key := settings.ContinuityKey(s.SettingsStrategyID())
+		cookieStore := continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(r.Context()))
+		opts := settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())
+		if _, err := s.d.ContinuityManager().Pause(r.Context(), w, r, key, cookieStore, opts...); err != nil {
 			return err
 		}
 	}

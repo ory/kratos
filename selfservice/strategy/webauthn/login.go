@@ -78,12 +78,12 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(r.Context()))
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to initiate WebAuth.").WithDebug(err.Error()))
 	}
 
 	options, sessionData, err := web.BeginLogin(webauthnx.NewUser(conf.UserHandle, webAuthCreds, web.Config))
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to initiate WebAuth login.").WithDebug(err.Error()))
 	}
 
 	// Remove the WebAuthn URL from the internal context now that it is set!
@@ -112,7 +112,7 @@ func (s *Strategy) populateLoginMethod(r *http.Request, sr *login.Flow, i *ident
 
 func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, err error) error {
 	if f != nil {
-		f.UI.Nodes.ResetNodes("webauth_login")
+		f.UI.Nodes.ResetNodes("webauthn_login")
 		if f.Type == flow.TypeBrowser {
 			f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 		}
@@ -205,7 +205,7 @@ func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter,
 	}
 
 	if p.Identifier == "" {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReason("identifier is required")))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest().WithReason("identifier is required")))
 	}
 
 	i, _, err = s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), p.Identifier)
@@ -264,22 +264,22 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 
 	var o identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().WithReason("The WebAuthn credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)))
 	}
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
 
 	webAuthnResponse, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(p.Login))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
 	}
 
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData)).Raw), &webAuthnSess); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 
 	webAuthCreds := o.Credentials.ToWebAuthnFiltered(aal, &webAuthnResponse.Response.AuthenticatorData.Flags)
@@ -299,7 +299,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().WithReason("Could not update flow").WithDebug(err.Error())))
 	}
 
 	return i, nil

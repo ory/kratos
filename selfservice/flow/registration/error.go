@@ -21,6 +21,7 @@ import (
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/kratos/x/redir"
 
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/text"
@@ -33,11 +34,15 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var (
-	ErrHookAbortFlow        = errors.New("aborted registration hook execution")
-	ErrAlreadyLoggedIn      = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
-	ErrRegistrationDisabled = herodot.ErrBadRequest.WithID(text.ErrIDSelfServiceFlowDisabled).WithError("registration flow disabled").WithReason("Registration is not allowed because it was disabled.")
-)
+var ErrHookAbortFlow = errors.New("aborted registration hook execution")
+
+func ErrAlreadyLoggedIn() *herodot.DefaultError {
+	return herodot.ErrBadRequest().WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus registration is not possible.")
+}
+
+func ErrRegistrationDisabled() *herodot.DefaultError {
+	return herodot.ErrBadRequest().WithID(text.ErrIDSelfServiceFlowDisabled).WithError("registration flow disabled").WithReason("Registration is not allowed because it was disabled.")
+}
 
 type (
 	errorHandlerDependencies interface {
@@ -155,8 +160,20 @@ func (s *ErrorHandler) WriteFlowError(
 		http.Redirect(w, r, f.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(r.Context())).String(), http.StatusFound)
 		return
 	}
-	if _, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); group == node.OpenIDConnectGroup && f.Type == flow.TypeAPI && hasCode {
-		http.Redirect(w, r, f.ReturnTo, http.StatusSeeOther)
+	if codes, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID); group == node.OpenIDConnectGroup && f.Type == flow.TypeAPI && hasCode {
+		returnTo, err := redir.SecureRedirectTo(r,
+			s.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()),
+			f.SecureRedirectToOpts(r.Context(), s.d)...,
+		)
+		if err != nil {
+			s.forward(w, r, f, errors.WithStack(err))
+			return
+		}
+		q := returnTo.Query()
+		q.Set("code", codes.ReturnToCode)
+		q.Set("flow", f.ID.String())
+		returnTo.RawQuery = q.Encode()
+		http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 		return
 	}
 

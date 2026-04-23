@@ -14,6 +14,13 @@ import (
 
 const DisableFormField = "disableFormField"
 
+// maxEnumOptions caps how many `enum` values a single identity-schema
+// property may surface as a selectable option on a UI node. The cap bounds
+// the size of flow responses when an operator (accidentally or otherwise)
+// declares a very large enum, so a single misconfigured schema cannot
+// inflate every active registration/settings/login flow on a tenant.
+const maxEnumOptions = 500
+
 func toFormType(n string, i interface{}) UiNodeInputAttributeType {
 	switch n {
 	case nosurfx.CSRFTokenName:
@@ -204,6 +211,18 @@ func NewInputFieldFromSchema(name string, group UiNodeGroup, p jsonschemax.Path,
 		attr.Autocomplete = InputAttributeAutocompleteUrl
 	case "regex":
 		attr.Type = InputAttributeTypeText
+	}
+
+	// Enum values become selectable options. The presence of options is the
+	// signal for consumers to render a dropdown instead of a free-form input.
+	// Cap the number of options to keep a pathological schema from inflating
+	// every flow response.
+	if len(p.Enum) > 0 {
+		n := min(len(p.Enum), maxEnumOptions)
+		attr.Options = make([]InputAttributesOption, n)
+		for i, v := range p.Enum[:n] {
+			attr.Options[i] = InputAttributesOption{Value: v}
+		}
 	}
 
 	// Other properties

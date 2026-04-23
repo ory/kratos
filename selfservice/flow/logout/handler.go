@@ -240,8 +240,8 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	sess, err := h.d.SessionPersister().GetSessionByToken(r.Context(), p.SessionToken, session.ExpandNothing, identity.ExpandNothing)
 	if err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
-			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
+		if errors.Is(err, sqlcon.ErrNoRows()) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden().WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
 			return
 		}
 
@@ -250,8 +250,8 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
-			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
+		if errors.Is(err, sqlcon.ErrNoRows()) {
+			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden().WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
 			return
 		}
 
@@ -310,7 +310,7 @@ type updateLogoutFlow struct {
 // with browsers (Chrome, Firefox, ...). For API clients you can
 // call the `/self-service/logout/api` URL directly with the Ory Session Token.
 //
-// More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.sh/docs/next/kratos/self-service/flows/user-logout).
+// More information can be found at [Ory Kratos User Logout Documentation](https://www.ory.com/docs/next/kratos/self-service/flows/user-logout).
 //
 //	Produces:
 //	- application/json
@@ -327,7 +327,7 @@ type updateLogoutFlow struct {
 func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request) {
 	expected := r.URL.Query().Get("token")
 	if len(expected) == 0 {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReason("Please include a token in the URL query.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest().WithReason("Please include a token in the URL query.")))
 		return
 	}
 
@@ -341,7 +341,7 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if sess.LogoutToken != expected {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrForbidden.WithReason("Unable to log out because the logout token in the URL query does not match the session cookie.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrForbidden().WithReason("Unable to log out because the logout token in the URL query does not match the session cookie.")))
 		return
 	}
 

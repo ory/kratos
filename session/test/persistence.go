@@ -98,7 +98,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				t.Run("on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.GetSession(ctx, expected.ID, session.ExpandEverything)
-					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+					assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 			})
 
@@ -110,7 +110,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 				t.Run("on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing, identity.ExpandDefault)
-					assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+					assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 			})
 
@@ -366,7 +366,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.DeleteSession(ctx, expected.ID)
-				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				_, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 				assert.NoError(t, err)
@@ -374,7 +374,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			require.NoError(t, p.DeleteSession(ctx, expected.ID))
 			_, err := p.GetSession(ctx, expected.ID, session.ExpandNothing)
-			assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+			assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 		})
 
 		t.Run("case=delete session by token", func(t *testing.T) {
@@ -386,7 +386,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.DeleteSessionByToken(ctx, expected.Token)
-				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				_, err = p.GetSessionByToken(ctx, expected.Token, session.ExpandNothing, identity.ExpandDefault)
 				assert.NoError(t, err)
@@ -411,7 +411,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.RevokeSessionByToken(ctx, expected.Token)
-				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 				require.NoError(t, err)
@@ -439,7 +439,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.RevokeSessionById(ctx, expected.ID)
-				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 				require.NoError(t, err)
@@ -565,7 +565,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
 				err := other.DeleteSessionsByIdentity(ctx, expected2.IdentityID)
-				assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+				assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				_, err = p.GetSession(ctx, expected1.ID, session.ExpandNothing)
 				require.NoError(t, err)
@@ -594,12 +594,12 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			_, err := p.GetSession(ctx, sid1, session.ExpandEverything)
 			require.NoError(t, err)
 			_, err = p.GetSession(ctx, sid2, session.ExpandNothing)
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 			_, err = p.GetSessionByToken(ctx, t1, session.ExpandNothing, identity.ExpandDefault)
 			require.NoError(t, err)
 			_, err = p.GetSessionByToken(ctx, t2, session.ExpandNothing, identity.ExpandDefault)
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 		})
 
 		t.Run("extend session lifespan but min time is not yet reached", func(t *testing.T) {
@@ -653,7 +653,7 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 			for range 10 {
 				g.Go(func() error {
 					err := p.ExtendSession(ctx, expected.ID)
-					if errors.Is(err, sqlcon.ErrNoRows) {
+					if errors.Is(err, sqlcon.ErrNoRows()) {
 						foundExpectedCockroachError.Store(true)
 						return nil
 					}

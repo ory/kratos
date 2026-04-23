@@ -6,13 +6,12 @@ package identity
 import (
 	"cmp"
 	"context"
-	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"maps"
 	"sort"
 	"strings"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -119,10 +118,22 @@ func (p *IdentityPersister) ListRecoveryAddresses(ctx context.Context, page, ite
 	return a, nil
 }
 
-func stringToLowerTrim(match string) string {
-	return strings.ToLower(strings.TrimSpace(match))
+// PreferExactMatch returns the element from results whose value (extracted by getValue)
+// matches originalValue. If no exact match exists, the first element is returned.
+// Used by IN(normalized, original) queries to prefer the non-normalized match.
+func PreferExactMatch[T any](results []T, originalValue string, getValue func(T) string) T {
+	for _, r := range results {
+		if getValue(r) == originalValue {
+			return r
+		}
+	}
+	return results[0]
 }
 
+// NormalizeIdentifier takes a credential type to determine the type of
+// formatting to apply to the 'match' string. Password, Code, and
+// WebAuthn types perform graceful normalization which include lower
+// casing for email formats.
 func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	switch ct {
 	case identity.CredentialsTypeLookup:
@@ -134,8 +145,12 @@ func NormalizeIdentifier(ct identity.CredentialsType, match string) string {
 	case identity.CredentialsTypeOIDC, identity.CredentialsTypeSAML:
 		// OIDC credentials are case-sensitive
 		return match
+
+	case identity.CredentialsTypeDeviceAuthn:
+		return match
+
 	case identity.CredentialsTypePassword, identity.CredentialsTypeCodeAuth, identity.CredentialsTypeWebAuthn:
-		return stringToLowerTrim(match)
+		return x.GracefulNormalization(match)
 	default:
 		return match
 	}
@@ -147,36 +162,72 @@ func (p *IdentityPersister) FindIdentityByCredentialIdentifier(ctx context.Conte
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
-	var find struct {
+	var res []struct {
 		IdentityID uuid.UUID `db:"identity_id"`
+		Identifier string    `db:"identifier"`
 	}
 
+	var normalizedIdentifier string
 	if !caseSensitive {
-		identifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+		normalizedIdentifier = NormalizeIdentifier(identity.CredentialsTypePassword, identifier)
+	} else {
+		normalizedIdentifier = identifier
 	}
 
 	nid := p.NetworkID(ctx)
-	if err := p.GetConnection(ctx).RawQuery(`
-SELECT ic.identity_id
+
+	// Query with both normalized and non-normalized
+	// identifiers for backward compatibility.
+	// LIMIT is 1 when both forms are identical, 2 when they differ.
+	limit := 1
+	if normalizedIdentifier != identifier {
+		limit = 2
+	}
+	err = p.GetConnection(ctx).RawQuery(`
+SELECT ic.identity_id, ici.identifier
 FROM identity_credentials ic
 INNER JOIN identity_credential_identifiers ici
-	ON ic.id = ici.identity_credential_id
-WHERE ici.identifier = ?
+ON ic.id = ici.identity_credential_id
+WHERE ici.identifier IN (?,?)
 AND ic.nid = ?
 AND ici.nid = ?
-LIMIT 1`,
+LIMIT ?`,
+		normalizedIdentifier,
 		identifier,
 		nid,
 		nid,
-	).First(&find); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, sqlcon.HandleError(err)
-		}
-
+		limit,
+	).All(&res)
+	if err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return p.GetIdentity(ctx, find.IdentityID, expand)
+	if len(res) == 0 {
+		return nil, sqlcon.HandleError(sqlcon.ErrNoRows())
+	}
+
+	result := PreferExactMatch(res, identifier, func(r struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+		Identifier string    `db:"identifier"`
+	}) string {
+		return r.Identifier
+	})
+	if len(res) > 1 {
+		for _, r := range res {
+			if r.IdentityID != result.IdentityID {
+				p.r.Logger().Warnf("Possible duplicate identities with IDs [%q, %q]", result.IdentityID, r.IdentityID)
+				break
+			}
+		}
+	}
+
+	// Record result count for observability
+	span.SetAttributes(
+		attribute.String("identity.id", result.IdentityID.String()),
+		attribute.Int("identity.results", len(res)),
+	)
+
+	return p.GetIdentity(ctx, result.IdentityID, expand)
 }
 
 func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct identity.CredentialsType, match string) (_ *identity.Identity, _ *identity.Credentials, err error) {
@@ -187,48 +238,79 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 
 	nid := p.NetworkID(ctx)
 
-	var find struct {
+	var res []struct {
 		IdentityID uuid.UUID `db:"identity_id"`
+		Identifier string    `db:"identifier"`
 	}
 
 	// Force case-insensitivity and trimming for identifiers
-	match = NormalizeIdentifier(ct, match)
+	normalizedMatch := NormalizeIdentifier(ct, match)
 
+	credentialTypeID, err := FindIdentityCredentialsTypeByName(p.GetConnection(ctx), ct)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Query with both normalized and non-normalized
+	// identifiers for backward compatibility.
+	// LIMIT is 1 when both forms are identical, 2 when they differ.
+	limit := 1
+	if normalizedMatch != match {
+		limit = 2
+	}
 	if err := p.GetConnection(ctx).RawQuery(`
-		SELECT
-			ic.identity_id
-		FROM identity_credentials ic
-				INNER JOIN identity_credential_types ict
-					ON ic.identity_credential_type_id = ict.id
-				INNER JOIN identity_credential_identifiers ici
-					ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ict.id
-		WHERE ici.identifier = ?
-		AND ic.nid = ?
-		AND ici.nid = ?
-		AND ict.name = ?
-		LIMIT 1`, // pop doesn't understand how to add a limit clause to this query
+			SELECT
+				ic.identity_id, ici.identifier
+			FROM identity_credentials ic
+					INNER JOIN identity_credential_identifiers ici
+					ON ic.id = ici.identity_credential_id AND ici.identity_credential_type_id = ?
+			WHERE ici.identifier IN (?, ?)
+			AND ic.nid = ?
+			AND ici.nid = ?
+			LIMIT ?`,
+		credentialTypeID,
+		normalizedMatch,
 		match,
 		nid,
 		nid,
-		ct,
-	).First(&find); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil, sqlcon.HandleError(err) // herodot.ErrNotFound.WithTrace(err).WithReasonf(`No identity matching credentials identifier "%s" could be found.`, match)
-		}
-
+		limit,
+	).All(&res); err != nil {
 		return nil, nil, sqlcon.HandleError(err)
 	}
 
-	span.SetAttributes(attribute.String("identity.id", find.IdentityID.String()))
+	if len(res) == 0 {
+		return nil, nil, sqlcon.HandleError(sqlcon.ErrNoRows())
+	}
 
-	i, err := p.GetIdentityConfidential(ctx, find.IdentityID)
+	result := PreferExactMatch(res, match, func(r struct {
+		IdentityID uuid.UUID `db:"identity_id"`
+		Identifier string    `db:"identifier"`
+	}) string {
+		return r.Identifier
+	})
+	if len(res) > 1 {
+		for _, r := range res {
+			if r.IdentityID != result.IdentityID {
+				p.r.Logger().Warnf("Possible duplicate identities with IDs [%q, %q]", result.IdentityID, r.IdentityID)
+				break
+			}
+		}
+	}
+
+	// Record result count for observability
+	span.SetAttributes(
+		attribute.String("identity.id", result.IdentityID.String()),
+		attribute.Int("identity.results", len(res)),
+	)
+
+	i, err := p.GetIdentityConfidential(ctx, result.IdentityID)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	creds, ok := i.GetCredentials(ct)
 	if !ok {
-		return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type \"%s\". This is a bug in the code.", ct))
+		return nil, nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("The SQL adapter failed to return the appropriate credentials_type \"%s\". This is a bug in the code.", ct))
 	}
 
 	return i, creds, nil
@@ -330,7 +412,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, ident
 			identifier = NormalizeIdentifier(cred.Type, identifier)
 
 			if identifier == "" {
-				return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf(
+				return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf(
 					"Unable to create identity credentials with missing or empty identifier."))
 			}
 
@@ -530,7 +612,7 @@ func diffAssociations[T differ](fromDatabase, updateTo []T) (unchanged, toCreate
 	return
 }
 
-func (p *IdentityPersister) normalizeAllAddressess(ctx context.Context, identities ...*identity.Identity) {
+func (p *IdentityPersister) normalizeAllAddresses(ctx context.Context, identities ...*identity.Identity) {
 	for _, id := range identities {
 		p.normalizeRecoveryAddresses(ctx, id)
 		p.normalizeVerifiableAddresses(ctx, id)
@@ -543,7 +625,7 @@ func (p *IdentityPersister) normalizeVerifiableAddresses(ctx context.Context, id
 
 		v.IdentityID = id.ID
 		v.NID = p.NetworkID(ctx)
-		v.Value = stringToLowerTrim(v.Value)
+		v.Value = x.GracefulNormalization(v.Value)
 		v.Via = cmp.Or(v.Via, identity.AddressTypeEmail)
 		if len(v.Status) == 0 {
 			if v.Verified {
@@ -569,7 +651,7 @@ func (p *IdentityPersister) normalizeRecoveryAddresses(ctx context.Context, id *
 	for k := range id.RecoveryAddresses {
 		id.RecoveryAddresses[k].IdentityID = id.ID
 		id.RecoveryAddresses[k].NID = p.NetworkID(ctx)
-		id.RecoveryAddresses[k].Value = stringToLowerTrim(id.RecoveryAddresses[k].Value)
+		id.RecoveryAddresses[k].Value = x.GracefulNormalization(id.RecoveryAddresses[k].Value)
 		id.RecoveryAddresses[k].Via = cmp.Or(id.RecoveryAddresses[k].Via, identity.AddressTypeEmail)
 	}
 }
@@ -690,7 +772,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 			createdIdentities = identities
 		}
 
-		p.normalizeAllAddressess(ctx, createdIdentities...)
+		p.normalizeAllAddresses(ctx, createdIdentities...)
 
 		if err = p.createVerifiableAddresses(ctx, tx, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &partialErr) {
@@ -739,7 +821,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities ...
 
 			for _, ident := range identities {
 				if info, ok := failedIdentityIDs[ident.ID]; ok {
-					partialErr.AddFailedIdentity(ident, sqlcon.ErrUniqueViolation)
+					partialErr.AddFailedIdentity(ident, sqlcon.ErrUniqueViolation())
 					if info.created {
 						idsToBeRemoved = append(idsToBeRemoved, ident.ID)
 					}
@@ -1028,6 +1110,7 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 				identity.CredentialsTypeCodeAuth,
 				identity.CredentialsTypeOIDC,
 				identity.CredentialsTypeSAML,
+				identity.CredentialsTypeDeviceAuthn,
 			})
 			if err != nil {
 				return err
@@ -1204,7 +1287,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 		}
 
 		var identityCreds map[identity.CredentialsType]identity.Credentials
-		p.normalizeAllAddressess(ctx, i)
+		p.normalizeAllAddresses(ctx, i)
 		if o.FromDatabase() != nil {
 			if o.FromDatabase().ID != i.ID {
 				return errors.New("mismatched identity ID: this is a bug")
@@ -1238,11 +1321,28 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			if c, found := creds[i.ID]; found {
 				identityCreds = c
 			}
+
+			if len(identityCreds) > 0 {
+				// Create temporary identity to run migrations
+				tempIdentity := &identity.Identity{
+					ID:          i.ID,
+					Credentials: identityCreds,
+				}
+				if err := identity.UpgradeCredentials(tempIdentity); err != nil {
+					return err
+				}
+				identityCreds = tempIdentity.Credentials
+			}
 		}
 
 		oldCredentials := make([]identity.Credentials, 0, len(identityCreds))
 		for _, cred := range identityCreds {
 			oldCredentials = append(oldCredentials, cred)
+		}
+
+		// Upgrade incoming credentials to ensure proper comparison with upgraded DB credentials
+		if err := identity.UpgradeCredentials(i); err != nil {
+			return err
 		}
 
 		// Convert new credentials map to slice
@@ -1281,7 +1381,7 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (e
 		return sqlcon.HandleError(err)
 	}
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	span.AddEvent(events.NewIdentityDeleted(ctx, id))
 	return nil
@@ -1328,7 +1428,7 @@ func (p *IdentityPersister) DeleteIdentities(ctx context.Context, ids []uuid.UUI
 		return sqlcon.HandleError(err)
 	}
 	if count != len(ids) {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	return nil
 }
@@ -1383,14 +1483,27 @@ func (p *IdentityPersister) FindVerifiableAddressByValue(ctx context.Context, vi
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindVerifiableAddressByValue",
 		trace.WithAttributes(
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
-	var address identity.VerifiableAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", p.NetworkID(ctx), via, stringToLowerTrim(value)).First(&address); err != nil {
+	normalized := x.GracefulNormalization(value)
+	limit := 1
+	if normalized != value {
+		limit = 2
+	}
+	var addresses []identity.VerifiableAddress
+	if err := p.GetConnection(ctx).RawQuery(
+		"SELECT * FROM identity_verifiable_addresses WHERE nid = ? AND via = ? AND value IN (?,?) LIMIT ?",
+		p.NetworkID(ctx), via, value, normalized, limit,
+	).All(&addresses); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return &address, nil
+	if len(addresses) == 0 {
+		return nil, sqlcon.HandleError(sqlcon.ErrNoRows())
+	}
+
+	addr := PreferExactMatch(addresses, value, func(a identity.VerifiableAddress) string { return a.Value })
+	return &addr, nil
 }
 
 func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via, value string) (_ *identity.RecoveryAddress, err error) {
@@ -1399,12 +1512,25 @@ func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via,
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
-	var address identity.RecoveryAddress
-	if err := p.GetConnection(ctx).Where("nid = ? AND via = ? AND value = ?", p.NetworkID(ctx), via, stringToLowerTrim(value)).First(&address); err != nil {
+	normalized := x.GracefulNormalization(value)
+	limit := 1
+	if normalized != value {
+		limit = 2
+	}
+	var addresses []identity.RecoveryAddress
+	if err := p.GetConnection(ctx).RawQuery(
+		"SELECT * FROM identity_recovery_addresses WHERE nid = ? AND via = ? AND value IN (?,?) LIMIT ?",
+		p.NetworkID(ctx), via, value, normalized, limit,
+	).All(&addresses); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return &address, nil
+	if len(addresses) == 0 {
+		return nil, sqlcon.HandleError(sqlcon.ErrNoRows())
+	}
+
+	addr := PreferExactMatch(addresses, value, func(a identity.RecoveryAddress) string { return a.Value })
+	return &addr, nil
 }
 
 // FindAllRecoveryAddressesForIdentityByRecoveryAddressValue returns all
@@ -1426,18 +1552,18 @@ func (p *IdentityPersister) FindAllRecoveryAddressesForIdentityByRecoveryAddress
 	//
 	// This is all done in one query with a self-join.
 	// We also bound the results for safety.
-	err = p.GetConnection(ctx).RawQuery(
-		`
-SELECT A.id, A.via, A.value, A.identity_id, A.created_at, A.updated_at, A.nid
+	err = p.GetConnection(ctx).RawQuery(`
+SELECT A.id, A.via, A.value, A.identity_id, A.created_at, A.updated_at, A.nid, A.break_glass_for_organization
 FROM identity_recovery_addresses A
 JOIN identity_recovery_addresses B
 ON A.identity_id = B.identity_id
 AND A.nid = B.nid
-WHERE B.value = ?
+WHERE B.value IN (?,?)
 AND A.nid = ?
 LIMIT 10
 		`,
-		stringToLowerTrim(anyRecoveryAddress),
+		x.GracefulNormalization(anyRecoveryAddress),
+		anyRecoveryAddress,
 		p.NetworkID(ctx),
 	).
 		All(&recoveryAddresses)
@@ -1476,7 +1602,7 @@ func (p *IdentityPersister) VerifyAddress(ctx context.Context, code string) (err
 	}
 
 	if count == 0 {
-		return sqlcon.HandleError(sqlcon.ErrNoRows)
+		return sqlcon.HandleError(sqlcon.ErrNoRows())
 	}
 
 	return nil
@@ -1491,7 +1617,7 @@ func (p *IdentityPersister) UpdateVerifiableAddress(ctx context.Context, address
 	defer otelx.End(span, &err)
 
 	address.NID = p.NetworkID(ctx)
-	address.Value = stringToLowerTrim(address.Value)
+	address.Value = x.GracefulNormalization(address.Value)
 	return update.Generic(ctx, p.GetConnection(ctx), p.r.Tracer(ctx).Tracer(), address, updateColumns...)
 }
 
@@ -1504,7 +1630,7 @@ func (p *IdentityPersister) validateIdentity(ctx context.Context, i *identity.Id
 
 	if err := p.r.IdentityValidator().ValidateWithRunner(ctx, i); err != nil {
 		if _, ok := errorsx.Cause(err).(*jsonschema.ValidationError); ok {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("%s", err))
+			return errors.WithStack(herodot.ErrBadRequest().WithReasonf("%s", err))
 		}
 		return err
 	}
@@ -1523,66 +1649,92 @@ func (p *IdentityPersister) InjectTraitsSchemaURL(ctx context.Context, i *identi
 	}
 	s, err := ss.GetByID(i.SchemaID)
 	if err != nil {
-		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf(
+		return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf(
 			`The JSON Schema "%s" for this identity's traits could not be found.`, i.SchemaID))
 	}
 	i.SchemaURL = s.SchemaURL(p.r.Config().SelfPublicURL(ctx)).String()
 	return nil
 }
 
-var (
-	credentialTypesID   = sync.Map{}
-	credentialTypesName = sync.Map{}
-)
+type credentialTypesCache struct {
+	byID   map[uuid.UUID]identity.CredentialsType
+	byName map[identity.CredentialsType]uuid.UUID
+}
+
+// credentialTypesCachePtr holds the loaded cache. It is nil until the first
+// successful load. Reads and writes are lock-free (atomic.Pointer).
+// In the rare case where multiple goroutines see a nil pointer simultaneously,
+// they each load from the database independently and store the result; the
+// last store wins, but all results are identical. After the first successful
+// store, all subsequent calls take the fast path.
+var credentialTypesCachePtr atomic.Pointer[credentialTypesCache]
+
+// ensureCredentialTypesLoaded loads the credential type mappings from the
+// database on the first successful call. If the load fails the pointer stays
+// nil and the next call retries, so a transient DB error does not permanently
+// break the process.
+func ensureCredentialTypesLoaded(con *pop.Connection) (*credentialTypesCache, error) {
+	if c := credentialTypesCachePtr.Load(); c != nil {
+		return c, nil
+	}
+	c, err := loadCredentialTypes(con)
+	if err != nil {
+		return nil, err
+	}
+	credentialTypesCachePtr.Store(c)
+	return c, nil
+}
 
 func FindIdentityCredentialsTypeByID(con *pop.Connection, id uuid.UUID) (identity.CredentialsType, error) {
-	result, found := credentialTypesID.Load(id)
-	if !found {
-		if err := loadCredentialTypes(con); err != nil {
-			return "", err
-		}
-
-		result, found = credentialTypesID.Load(id)
+	c, err := ensureCredentialTypesLoaded(con)
+	if err != nil {
+		return "", err
 	}
 
+	result, found := c.byID[id]
 	if !found {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for id %q. This is a bug in the code.", id))
+		return "", errors.WithStack(herodot.ErrInternalServerError().WithReasonf(`No identity credential type id "%s" could be found, this is a code bug.`, id))
 	}
 
-	return result.(identity.CredentialsType), nil
+	return result, nil
 }
 
 func FindIdentityCredentialsTypeByName(con *pop.Connection, ct identity.CredentialsType) (uuid.UUID, error) {
-	result, found := credentialTypesName.Load(ct)
-	if !found {
-		if err := loadCredentialTypes(con); err != nil {
-			return uuid.Nil, err
-		}
-
-		result, found = credentialTypesName.Load(ct)
+	c, err := ensureCredentialTypesLoaded(con)
+	if err != nil {
+		return uuid.Nil, err
 	}
 
+	result, found := c.byName[ct]
 	if !found {
-		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The SQL adapter failed to return the appropriate credentials_type for name %q. This is a bug in the code.", ct))
+		return uuid.Nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf(`No identity credential type "%s" could be found, this is a code bug.`, ct))
 	}
 
-	return result.(uuid.UUID), nil
+	return result, nil
 }
 
-func loadCredentialTypes(con *pop.Connection) (err error) {
+func loadCredentialTypes(con *pop.Connection) (_ *credentialTypesCache, err error) {
 	ctx, span := trace.SpanFromContext(con.Context()).TracerProvider().Tracer("").Start(con.Context(), "persistence.sql.identity.loadCredentialTypes")
 	defer otelx.End(span, &err)
 	_ = ctx
 
 	var tt []identity.CredentialsTypeTable
 	if err := con.WithContext(ctx).All(&tt); err != nil {
-		return sqlcon.HandleError(err)
+		return nil, sqlcon.HandleError(err)
 	}
 
+	if len(tt) == 0 {
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("The SQL adapter failed to return any credentials_type. This is a bug in the code/db."))
+	}
+
+	c := &credentialTypesCache{
+		byID:   make(map[uuid.UUID]identity.CredentialsType, 16),
+		byName: make(map[identity.CredentialsType]uuid.UUID, 16),
+	}
 	for _, t := range tt {
-		credentialTypesID.Store(t.ID, t.Name)
-		credentialTypesName.Store(t.Name, t.ID)
+		c.byID[t.ID] = t.Name
+		c.byName[t.Name] = t.ID
 	}
 
-	return nil
+	return c, nil
 }

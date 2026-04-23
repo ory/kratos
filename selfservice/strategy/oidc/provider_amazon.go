@@ -76,11 +76,11 @@ func (p *ProviderAmazon) validateConfiguration() error {
 	for _, s := range p.config.Scope {
 		if !slices.Contains(amazonSupportedScopes, s) {
 			return errors.WithStack(
-				herodot.ErrMisconfiguration.WithReasonf("scope %s not supported. Supported: %+v", s, amazonSupportedScopes))
+				herodot.ErrMisconfiguration().WithReasonf("scope %s not supported. Supported: %+v", s, amazonSupportedScopes))
 		}
 	}
 	if p.config.PKCE == "auto" {
-		return errors.WithStack(herodot.ErrMisconfiguration.WithReason("pkce:auto is not supported because Amazon does not support PKCE discovery"))
+		return errors.WithStack(herodot.ErrMisconfiguration().WithReason("pkce:auto is not supported because Amazon does not support PKCE discovery"))
 	}
 
 	return nil
@@ -107,26 +107,26 @@ func (p *ProviderAmazon) Claims(ctx context.Context, exchange *oauth2.Token, que
 
 	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, p.amazonProfileURL, nil)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("failed to create HTTP request").WithDetail("url", p.amazonProfileURL).WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("failed to create HTTP request").WithDetail("url", p.amazonProfileURL).WithError(err.Error()))
 	}
 	req.Header.Set("x-amz-access-token", exchange.AccessToken)
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReason("failed to make HTTP request").WithDetail("url", p.amazonProfileURL).WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithReason("failed to make HTTP request").WithDetail("url", p.amazonProfileURL).WithError(err.Error()))
 	}
 	defer func() { _ = resp.Body.Close() }()
 	body := io.LimitReader(resp.Body, 64*1024) // 64 KiB
 
 	if resp.StatusCode != http.StatusOK {
 		rawResponse, _ := io.ReadAll(body)
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReason("non 200 response").WithDetail("url", p.amazonProfileURL).WithDetail("external_error", string(rawResponse)).
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithReason("non 200 response").WithDetail("url", p.amazonProfileURL).WithDetail("external_error", string(rawResponse)).
 			WithDetail("external_status_code", resp.StatusCode))
 	}
 
 	profile := amazonProfileResponse{}
 	if err := json.NewDecoder(body).Decode(&profile); err != nil {
 		rawResponse, _ := io.ReadAll(body)
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithDetail("url", p.amazonProfileURL).WithDetail("raw_response", rawResponse).WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithDetail("url", p.amazonProfileURL).WithDetail("raw_response", rawResponse).WithError(err.Error()))
 	}
 
 	claims := &Claims{

@@ -36,13 +36,13 @@ func TestManager(t *testing.T) {
 	initViper(t, conf)
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/default.schema.json")
 	ctx = contextx.WithConfigValues(ctx, map[string]any{
-		config.ViperKeyPublicBaseURL:                                  "https://www.ory.sh/",
+		config.ViperKeyPublicBaseURL:                                  "https://www.ory.com/",
 		config.ViperKeyCourierSMTPURL:                                 "smtp://foo@bar@dev.null/",
 		config.ViperKeySelfServiceRecoveryNotifyUnknownRecipients:     true,
 		config.ViperKeySelfServiceVerificationNotifyUnknownRecipients: true,
 	})
 
-	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 
 	i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 	i.Traits = identity.Traits(`{"email": "tracked@ory.sh"}`)
@@ -56,8 +56,8 @@ func TestManager(t *testing.T) {
 	}{{
 		d:               "without BaseURL",
 		setupContext:    func(ctx context.Context) context.Context { return ctx },
-		recoveryURL:     "https://www.ory.sh/self-service/recovery?flow=",
-		verificationURL: "https://www.ory.sh/self-service/verification?flow=",
+		recoveryURL:     "https://www.ory.com/self-service/recovery?flow=",
+		verificationURL: "https://www.ory.com/self-service/verification?flow=",
 	}, {
 		d: "with BaseURL",
 		setupContext: func(ctx context.Context) context.Context {

@@ -186,7 +186,7 @@ func (f *Flow) Valid(s *session.Session) error {
 	}
 
 	if f.IdentityID != s.Identity.ID {
-		return errors.WithStack(herodot.ErrForbidden.WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf(
+		return errors.WithStack(herodot.ErrForbidden().WithID(text.ErrIDInitiatedBySomeoneElse).WithReasonf(
 			"The request was initiated by someone else and has been blocked for security reasons. Please go back and try again."))
 	}
 

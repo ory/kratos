@@ -286,7 +286,7 @@ Please note that the values depend on the machine you run the hashing on. If you
 				}
 			}
 
-			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Could not automatically determine good parameters. Have a look at all the measurements taken and select acceptable values yourself. Have a look in the docs for more information: https://www.ory.sh/kratos/docs/debug/performance-out-of-memory-password-hashing-argon2")
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Could not automatically determine good parameters. Have a look at all the measurements taken and select acceptable values yourself. Have a look in the docs for more information: https://www.ory.com/kratos/docs/debug/performance-out-of-memory-password-hashing-argon2")
 			cmdx.PrintTable(cmd, results)
 			return nil
 		},

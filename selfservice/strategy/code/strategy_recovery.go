@@ -96,7 +96,7 @@ type updateRecoveryFlowWithCodeMethod struct {
 	// If the email belongs to a valid account, a recovery email will be sent.
 	//
 	// If you want to notify the email address if the account does not exist, see
-	// the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/account-recovery-password-reset#attempted-recovery-notifications)
+	// the [notify_unknown_recipients flag](https://www.ory.com/docs/kratos/self-service/flows/account-recovery-password-reset#attempted-recovery-notifications)
 	//
 	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
 	//
@@ -206,7 +206,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	if _, err := s.deps.SessionManager().FetchFromRequest(ctx, r); err == nil {
 		// User is already logged in
 		if x.IsJSONRequest(r) {
-			session.RespondWithJSONErrorOnAuthenticated(s.deps.Writer(), recovery.ErrAlreadyLoggedIn)(w, r)
+			session.RespondWithJSONErrorOnAuthenticated(s.deps.Writer(), recovery.ErrAlreadyLoggedIn())(w, r)
 		} else {
 			session.RedirectOnAuthenticated(s.deps)(w, r)
 		}
@@ -297,6 +297,13 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 		f.ContinueWith = append(f.ContinueWith, flow.NewContinueWithSetToken(sess.Token))
 	}
 
+	if f.ShouldSkipSettingsFlow() {
+		if err := redir.SecureContentNegotiationRedirection(w, r, f, f.RequestURL, s.deps.Writer(), s.deps.Config()); err != nil {
+			return errors.WithStack(err)
+		}
+		return errors.WithStack(flow.ErrCompletedByStrategy)
+	}
+
 	sf, err := s.deps.SettingsHandler().NewFlow(ctx, w, r, sess.Identity, sess, f.Type)
 	if err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
@@ -347,7 +354,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 func (s *Strategy) recoveryUseCode(w http.ResponseWriter, r *http.Request, body *recoverySubmitPayload, f *recovery.Flow) error {
 	ctx := r.Context()
 	code, err := s.deps.RecoveryCodePersister().UseRecoveryCode(ctx, f.ID, body.Code)
-	if errors.Is(err, ErrCodeNotFound) {
+	if errors.Is(err, ErrCodeNotFound()) {
 		f.UI.Messages.Clear()
 		f.UI.Messages.Add(text.NewErrorValidationRecoveryCodeInvalidOrAlreadyUsed())
 		if err := s.deps.RecoveryFlowPersister().UpdateRecoveryFlow(ctx, f); err != nil {
@@ -476,7 +483,7 @@ func (s *Strategy) recoveryV2HandleStateAwaitingAddress(r *http.Request, f *reco
 	// Need to retrieve all possible recovery addresses and present a choice.
 	recoveryAddresses, err := s.deps.IdentityPool().FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(r.Context(), body.RecoveryAddress)
 	// Real error.
-	if err != nil && !errors.Is(err, sqlcon.ErrNoRows) {
+	if err != nil && !errors.Is(err, sqlcon.ErrNoRows()) {
 		return err
 	}
 
@@ -595,7 +602,7 @@ func (s *Strategy) recoveryV2HandleStateAwaitingAddressChoice(r *http.Request, f
 		}
 	}
 	if plaintextRecoveryAddress == "" {
-		return herodot.ErrBadRequest.
+		return herodot.ErrBadRequest().
 			WithReason("The selected recovery address is not valid.").
 			WithDebug("The selected recovery address does not match any of the known recovery addresses.")
 	}
@@ -652,7 +659,7 @@ func (s *Strategy) recoveryV2HandleStateConfirmingAddress(r *http.Request, f *re
 	// That way we avoid information exfiltration.
 	// `SendRecoveryCode` will anyway check by itself if the provided address is a known address or not.
 	if err := s.deps.CodeSender().SendRecoveryCode(r.Context(), f, hackyInferChannel(body.RecoveryConfirmAddress), body.RecoveryConfirmAddress, r.Header); err != nil {
-		if !errors.Is(err, ErrUnknownAddress) {
+		if !errors.Is(err, ErrUnknownAddress()) {
 			return err
 		}
 
@@ -777,7 +784,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 
 	f.TransientPayload = body.TransientPayload
 	if err := s.deps.CodeSender().SendRecoveryCode(ctx, f, identity.AddressTypeEmail, body.Email, r.Header); err != nil {
-		if !errors.Is(err, ErrUnknownAddress) {
+		if !errors.Is(err, ErrUnknownAddress()) {
 			return s.HandleRecoveryError(w, r, f, body, err)
 		}
 		// Continue execution

@@ -156,15 +156,14 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		var err error
 		expiresIn, err = time.ParseDuration(p.ExpiresIn)
 		if err != nil {
-			s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.
-				ErrBadRequest.
+			s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().
 				WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.ExpiresIn)))
 			return
 		}
 	}
 
 	if expiresIn <= 0 {
-		s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Value from "expires_in" must result to a future time: %s`, expiresIn)))
+		s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Value from "expires_in" must result to a future time: %s`, expiresIn)))
 		return
 	}
 
@@ -173,7 +172,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 		flowType = *p.FlowType
 	}
 	if !flowType.Valid() {
-		s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Value from "flow_type" is not valid: %q`, flowType)))
+		s.deps.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Value from "flow_type" is not valid: %q`, flowType)))
 		return
 	}
 
@@ -198,7 +197,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 			WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	id, err := s.deps.IdentityPool().GetIdentity(ctx, p.IdentityID, identity.ExpandDefault)
-	if notFoundErr := sqlcon.ErrNoRows; errors.As(err, &notFoundErr) {
+	if notFoundErr := sqlcon.ErrNoRows(); errors.As(err, &notFoundErr) {
 		s.deps.Writer().WriteError(w, r, notFoundErr.WithReasonf("could not find identity"))
 		return
 	} else if err != nil {

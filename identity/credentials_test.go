@@ -39,6 +39,7 @@ func TestParseCredentialsType(t *testing.T) {
 		{"oidc", CredentialsTypeOIDC},
 		{"totp", CredentialsTypeTOTP},
 		{"webauthn", CredentialsTypeWebAuthn},
+		{"deviceauthn", CredentialsTypeDeviceAuthn},
 		{"lookup_secret", CredentialsTypeLookup},
 		{"link_recovery", CredentialsTypeRecoveryLink},
 		{"code_recovery", CredentialsTypeRecoveryCode},

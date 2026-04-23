@@ -88,14 +88,14 @@ func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, qu
 	ctx, client := httpx.SetOAuth2(ctx, d.reg.HTTPClient(ctx), o, exchange)
 	req, err := retryablehttp.NewRequestWithContext(ctx, "GET", identityURL, nil)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("%s", err))
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", "Bearer "+exchange.AccessToken)
 
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(err).WithReasonf("%s", err))
 	}
 	defer func() { _ = res.Body.Close() }()
 
@@ -106,7 +106,7 @@ func (d *ProviderPatreon) Claims(ctx context.Context, exchange *oauth2.Token, qu
 	data := PatreonIdentityResponse{}
 	jsonErr := json.NewDecoder(res.Body).Decode(&data)
 	if jsonErr != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(jsonErr).WithReasonf("%s", jsonErr))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(jsonErr).WithReasonf("%s", jsonErr))
 	}
 
 	claims := &Claims{

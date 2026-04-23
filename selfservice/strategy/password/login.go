@@ -84,13 +84,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	var o identity.CredentialsPassword
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
-		return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)), i.ID)
+		return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)), i.ID)
 	}
 
 	if o.ShouldUsePasswordMigrationHook() {
 		pwHook := s.d.Config().PasswordMigrationHook(ctx)
 		if !pwHook.Enabled {
-			return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Password migration hook is not enabled but password migration is requested.")), i.ID)
+			return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Password migration hook is not enabled but password migration is requested.")), i.ID)
 		}
 
 		migrationHook := hook.NewPasswordMigrationHook(s.d, &pwHook.Config)
@@ -120,7 +120,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, p, errors.WithStack(x.WrapWithIdentityIDError(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error()), i.ID)))
+		return nil, s.handleLoginError(r, f, p, errors.WithStack(x.WrapWithIdentityIDError(herodot.ErrInternalServerError().WithReason("Could not update flow").WithDebug(err.Error()), i.ID)))
 	}
 
 	return i, nil

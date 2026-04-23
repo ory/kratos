@@ -78,7 +78,7 @@ func TestPersister(ctx context.Context, tracer *otelx.Tracer, p persistence.Pers
 						Connection: tx,
 					}
 					err := Create(ctx, conn, addresses)
-					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation())
 					if partial := new(PartialConflictError[identity.VerifiableAddress]); errors.As(err, &partial) {
 						require.NoError(t, partial, "expected no partial error")
 					}
@@ -94,7 +94,7 @@ func TestPersister(ctx context.Context, tracer *otelx.Tracer, p persistence.Pers
 					}
 
 					err := Create(ctx, conn, addresses, WithPartialInserts)
-					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation)
+					assert.ErrorIs(t, err, sqlcon.ErrUniqueViolation())
 
 					if conn.Connection.Dialect.Name() != dbal.DriverMySQL {
 						// MySQL does not support partial errors.

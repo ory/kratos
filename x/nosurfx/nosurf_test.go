@@ -108,11 +108,11 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 
 	t.Run("case=without cookie", func(t *testing.T) {
 		t.Run("source=ajax", func(t *testing.T) {
-			expectError(t, nosurfx.ErrInvalidCSRFTokenAJAXNoCookies, newAjaxFormRequest())
+			expectError(t, nosurfx.ErrInvalidCSRFTokenAJAXNoCookies(), newAjaxFormRequest())
 		})
 
 		t.Run("source=browser", func(t *testing.T) {
-			expectError(t, nosurfx.ErrInvalidCSRFTokenServerNoCookies, newBrowserRequest())
+			expectError(t, nosurfx.ErrInvalidCSRFTokenServerNoCookies(), newBrowserRequest())
 		})
 	})
 
@@ -123,11 +123,11 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newAjaxFormRequest(), nosurfx.ErrInvalidCSRFTokenAJAXCookieMissing)
+			test(t, newAjaxFormRequest(), nosurfx.ErrInvalidCSRFTokenAJAXCookieMissing())
 		})
 
 		t.Run("source=browser", func(t *testing.T) {
-			test(t, newBrowserRequest(), nosurfx.ErrInvalidCSRFTokenServerCookieMissing)
+			test(t, newBrowserRequest(), nosurfx.ErrInvalidCSRFTokenServerCookieMissing())
 		})
 	})
 
@@ -138,15 +138,15 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newAjaxFormRequest(), nosurfx.ErrInvalidCSRFTokenAJAXTokenNotSent)
+			test(t, newAjaxFormRequest(), nosurfx.ErrInvalidCSRFTokenAJAXTokenNotSent())
 		})
 
 		t.Run("source=ajax json", func(t *testing.T) {
-			test(t, newAjaxJSONRequest(), nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch)
+			test(t, newAjaxJSONRequest(), nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch())
 		})
 
 		t.Run("source=browser", func(t *testing.T) {
-			test(t, newBrowserRequest(), nosurfx.ErrInvalidCSRFTokenServerTokenNotSent)
+			test(t, newBrowserRequest(), nosurfx.ErrInvalidCSRFTokenServerTokenNotSent())
 		})
 	})
 
@@ -158,11 +158,11 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 		}
 
 		t.Run("source=ajax", func(t *testing.T) {
-			test(t, newAjaxFormRequest(), nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch)
+			test(t, newAjaxFormRequest(), nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch())
 		})
 
 		t.Run("source=browser", func(t *testing.T) {
-			test(t, newBrowserRequest(), nosurfx.ErrInvalidCSRFTokenServerTokenMismatch)
+			test(t, newBrowserRequest(), nosurfx.ErrInvalidCSRFTokenServerTokenMismatch())
 		})
 	})
 
@@ -178,12 +178,12 @@ func TestNosurfBaseCookieErrorHandler(t *testing.T) {
 		t.Run("source=ajax", func(t *testing.T) {
 			req := httptest.NewRequest("POST", "https://foo/bar", strings.NewReader(url.Values{nosurf.FormFieldName: {"bar"}}.Encode()))
 			req.Header.Set("Sec-Fetch-Mode", "cors")
-			test(t, req, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch)
+			test(t, req, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch())
 		})
 
 		t.Run("source=browser", func(t *testing.T) {
 			req := httptest.NewRequest("POST", "https://foo/bar", strings.NewReader(url.Values{nosurf.FormFieldName: {"bar"}}.Encode()))
-			test(t, req, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch)
+			test(t, req, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch())
 		})
 	})
 }

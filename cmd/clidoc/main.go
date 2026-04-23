@@ -86,6 +86,7 @@ func init() {
 		"NewErrorValidationVerificationCodeInvalidOrAlreadyUsed":  text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(),
 		"NewErrorSystemGeneric":                                   text.NewErrorSystemGeneric("{reason}"),
 		"NewErrorSystemNoAuthenticationMethodsAvailable":          text.NewErrorSystemNoAuthenticationMethodsAvailable(),
+		"NewErrorSystemOrganizationNoSSOProvidersAvailable":       text.NewErrorSystemOrganizationNoSSOProvidersAvailable(),
 		"NewValidationErrorGeneric":                               text.NewValidationErrorGeneric("{reason}"),
 		"NewValidationErrorRequired":                              text.NewValidationErrorRequired("{property}"),
 		"NewErrorValidationMinLength":                             text.NewErrorValidationMinLength(5, 3),
@@ -113,6 +114,8 @@ func init() {
 		"NewErrorValidationDuplicateCredentialsWithHints":         text.NewErrorValidationDuplicateCredentialsWithHints([]string{"{available_credential_types_list}"}, []string{"{available_oidc_providers_list}"}, "{credential_identifier_hint}"),
 		"NewErrorValidationDuplicateCredentialsOnOIDCLink":        text.NewErrorValidationDuplicateCredentialsOnOIDCLink(),
 		"NewErrorValidationTOTPVerifierWrong":                     text.NewErrorValidationTOTPVerifierWrong(),
+		"NewErrorValidationWebAuthnVerifierWrong":                 text.NewErrorValidationWebAuthnVerifierWrong(),
+		"NewErrorValidationDeviceAuthnVerifierWrong":              text.NewErrorValidationDeviceAuthnVerifierWrong(),
 		"NewErrorValidationLookupAlreadyUsed":                     text.NewErrorValidationLookupAlreadyUsed(),
 		"NewErrorValidationLookupInvalid":                         text.NewErrorValidationLookupInvalid(),
 		"NewErrorValidationIdentifierMissing":                     text.NewErrorValidationIdentifierMissing(),
@@ -132,6 +135,7 @@ func init() {
 		"NewInfoLoginVerify":                                      text.NewInfoLoginVerify(),
 		"NewInfoLoginWith":                                        text.NewInfoLoginWith("{provider}", "{providerID}"),
 		"NewInfoLoginWithAndLink":                                 text.NewInfoLoginWithAndLink("{provider}"),
+		"NewErrorValidationNoDeviceAuthnDevice":                   text.NewErrorValidationNoDeviceAuthnDevice(),
 		"NewErrorValidationLoginFlowExpired":                      text.NewErrorValidationLoginFlowExpired(aSecondAgo),
 		"NewErrorValidationLoginNoStrategyFound":                  text.NewErrorValidationLoginNoStrategyFound(),
 		"NewErrorValidationRegistrationNoStrategyFound":           text.NewErrorValidationRegistrationNoStrategyFound(),
@@ -139,6 +143,7 @@ func init() {
 		"NewErrorValidationRecoveryNoStrategyFound":               text.NewErrorValidationRecoveryNoStrategyFound(),
 		"NewErrorValidationVerificationNoStrategyFound":           text.NewErrorValidationVerificationNoStrategyFound(),
 		"NewInfoSelfServiceLoginWebAuthn":                         text.NewInfoSelfServiceLoginWebAuthn(),
+		"NewInfoSelfServiceLoginDeviceAuthn":                      text.NewInfoSelfServiceLoginDeviceAuthn(),
 		"NewInfoRegistration":                                     text.NewInfoRegistration(),
 		"NewInfoRegistrationWith":                                 text.NewInfoRegistrationWith("{provider}", "{providerID}"),
 		"NewInfoRegistrationContinue":                             text.NewInfoRegistrationContinue(),
@@ -195,6 +200,7 @@ func init() {
 		"NewErrorValidationEmail":                                 text.NewErrorValidationEmail("{value}"),
 		"NewErrorValidationPhone":                                 text.NewErrorValidationPhone("{value}"),
 		"NewErrorValidationIdentityDisabled":                      text.NewErrorValidationIdentityDisabled(),
+		"NewErrorValidationSettingsTooManyAddressChanges":         text.NewErrorValidationSettingsTooManyAddressChanges(),
 	}
 }
 

@@ -14,7 +14,7 @@ export type OryKratosConfiguration1 = {
   [k: string]: unknown | undefined
 }
 /**
- * Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion).
+ * Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.com/kratos/docs/concepts/browser-redirect-flow-completion).
  */
 export type RedirectBrowsersToSetURLPerDefault = string
 /**
@@ -42,7 +42,7 @@ export type WebHookConfiguration =
     }
 export type SelfServiceHooks = (SelfServiceWebHook | B2BSSOHook)[]
 /**
- * If set to true will enable [User Registration](https://www.ory.sh/kratos/docs/self-service/flows/user-registration/).
+ * If set to true will enable [User Registration](https://www.ory.com/kratos/docs/self-service/flows/user-registration/).
  */
 export type EnableUserRegistration = boolean
 /**
@@ -70,7 +70,7 @@ export type LoginUIURL = string
  */
 export type LoginFlowStyle = "unified" | "identifier_first"
 /**
- * If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.sh/kratos/docs/self-service/flows/verify-email-account-activation/).
+ * If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.com/kratos/docs/self-service/flows/verify-email-account-activation/).
  */
 export type EnableEmailPhoneVerification = boolean
 /**
@@ -90,7 +90,7 @@ export type VerificationStrategy = "link" | "code"
  */
 export type NotifyUnknownRecipients = boolean
 /**
- * If set to true will enable [Account Recovery](https://www.ory.sh/kratos/docs/self-service/flows/password-reset-account-recovery/).
+ * If set to true will enable [Account Recovery](https://www.ory.com/kratos/docs/self-service/flows/password-reset-account-recovery/).
  */
 export type EnableAccountRecovery = boolean
 /**

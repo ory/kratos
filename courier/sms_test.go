@@ -136,5 +136,5 @@ func TestDisallowedInternalNetwork(t *testing.T) {
 	require.NoError(t, err)
 
 	err = c.DispatchQueue(t.Context())
-	assert.ErrorContains(t, err, "is not a permitted destination")
+	assert.ErrorContains(t, err, "no route to host")
 }

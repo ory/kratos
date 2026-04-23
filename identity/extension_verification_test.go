@@ -330,7 +330,7 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				name:      "phone:must return error for malformed input",
 				schema:    phoneSchemaPath,
 				doc:       `{"phones":["+18004444444","+18004444444","12112112"], "username": "+380634872774"}`,
-				expectErr: errors.New("I[#/phones/2] S[#/properties/phones/items/format] \"12112112\" is not valid \"tel\""),
+				expectErr: errors.New("I[#/phones/2] S[#/properties/phones/items] validation failed\n  I[#/phones/2] S[#/properties/phones/items/format] \"12112112\" is not valid \"tel\"\n  I[#/phones/2] S[#/properties/phones/items/format] \"12112112\" can not be normalized for format \"tel\""),
 			},
 			{
 				name:      "missing format returns an error",
@@ -371,6 +371,20 @@ func TestSchemaExtensionVerification(t *testing.T) {
 				name:   "phone:should parse +16453331111",
 				schema: phoneSchemaPath,
 				doc:    `{"phones":["+16453331111"]}`,
+				expect: []VerifiableAddress{
+					{
+						Value:      "+16453331111",
+						Verified:   false,
+						Status:     VerifiableAddressStatusPending,
+						Via:        ChannelTypeSMS,
+						IdentityID: iid,
+					},
+				},
+			},
+			{
+				name:   "phone:should normalize +1 (645) 333-1111 to +16453331111",
+				schema: phoneSchemaPath,
+				doc:    `{"phones":["+1 (645) 333-1111"]}`,
 				expect: []VerifiableAddress{
 					{
 						Value:      "+16453331111",

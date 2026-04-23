@@ -32,7 +32,7 @@ func TestRecoveryCode(t *testing.T) {
 		}
 	}
 
-	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 	t.Run("method=Validate", func(t *testing.T) {
 		t.Parallel()
 
@@ -41,7 +41,7 @@ func TestRecoveryCode(t *testing.T) {
 			require.NoError(t, err)
 
 			c := newCode(-time.Hour, f)
-			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound)
+			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound())
 		})
 		t.Run("case=expired code does not return flow.ExpiredError", func(t *testing.T) {
 			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
@@ -68,7 +68,7 @@ func TestRecoveryCode(t *testing.T) {
 				Time:  time.Now(),
 				Valid: true,
 			}
-			require.ErrorIs(t, c.Validate(), code.ErrCodeAlreadyUsed)
+			require.ErrorIs(t, c.Validate(), code.ErrCodeAlreadyUsed())
 		})
 
 		t.Run("case=returns no error if flow has not been used", func(t *testing.T) {
@@ -84,7 +84,7 @@ func TestRecoveryCode(t *testing.T) {
 
 		t.Run("case=returns error if flow is nil", func(t *testing.T) {
 			var c *code.RecoveryCode
-			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound)
+			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound())
 		})
 	})
 }

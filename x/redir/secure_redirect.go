@@ -116,7 +116,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 	if o.sourceURL != "" {
 		source, err = url.ParseRequestURI(o.sourceURL)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to parse the original request URL: %s", err))
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReasonf("Unable to parse the original request URL: %s", err))
 		}
 	}
 
@@ -127,7 +127,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 
 	returnTo, err = url.Parse(rawReturnTo)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
+		return nil, errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReasonf("Unable to parse the return_to query parameter as an URL: %s", err))
 	}
 
 	returnTo.Host = cmp.Or(returnTo.Host, o.defaultReturnTo.Host)
@@ -143,7 +143,7 @@ func SecureRedirectTo(r *http.Request, defaultReturnTo *url.URL, opts ...SecureR
 		}
 	}
 
-	return nil, errors.WithStack(herodot.ErrBadRequest.
+	return nil, errors.WithStack(herodot.ErrBadRequest().
 		WithID(text.ErrIDRedirectURLNotAllowed).
 		WithReasonf("Requested return_to URL %q is not allowed.", returnTo),
 	)

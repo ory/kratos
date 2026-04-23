@@ -42,7 +42,7 @@
       "async": true,
       "crossorigin": "anonymous",
       "id": "webauthn_script",
-      "integrity": "sha512-Dg0gN3fy+JoKxRp9Zda/4KYn3SlMdaKjs3fK5g6nDVQ/CVakD1dfMQyvRtJeiAtzSMEFviJbBLcVSrsBPGsFBA==",
+      "integrity": "sha512-pqIG5mt2mWl+AJmNFd+7uMg65uoUEK+bGcMy4dlmHySyzCKTtpHXZCGabSTHj+pNYTSXKFEfKRD3cMnTRU/6hw==",
       "node_type": "script",
       "referrerpolicy": "no-referrer",
       "type": "text/javascript"
@@ -65,7 +65,7 @@
     "meta": {
       "label": {
         "id": 1010008,
-        "text": "Sign in with hardware key",
+        "text": "Sign in with a hardware key",
         "type": "info"
       }
     },

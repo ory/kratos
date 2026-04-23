@@ -38,7 +38,7 @@ func FindCodeAddressCandidates(i *identity.Identity, fallbackEnabled bool) (resu
 		var conf identity.CredentialsCode
 		if len(creds.Config) > 0 {
 			if err := json.Unmarshal(creds.Config, &conf); err != nil {
-				return nil, false, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to unmarshal credentials config: %s", err))
+				return nil, false, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to unmarshal credentials config: %s", err))
 			}
 		}
 

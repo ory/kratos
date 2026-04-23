@@ -84,7 +84,7 @@ func (e *FlowNeedsReAuth) EnhanceJSONError() interface{} {
 
 func NewFlowNeedsReAuth() *FlowNeedsReAuth {
 	return &FlowNeedsReAuth{
-		DefaultError: herodot.ErrForbidden.WithID(text.ErrIDNeedsPrivilegedSession).
+		DefaultError: herodot.ErrForbidden().WithID(text.ErrIDNeedsPrivilegedSession).
 			WithReasonf("The login session is too old and thus not allowed to update these fields. Please re-authenticate."),
 	}
 }

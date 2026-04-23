@@ -46,7 +46,9 @@ func (r *SchemaExtensionCredentials) setIdentifier(ct CredentialsType, value int
 		r.v = make(map[CredentialsType][]string)
 	}
 
-	r.v[ct] = stringslice.Unique(append(r.v[ct], strings.ToLower(fmt.Sprintf("%s", value))))
+	normalized := x.GracefulNormalization(fmt.Sprintf("%s", value))
+
+	r.v[ct] = stringslice.Unique(append(r.v[ct], normalized))
 	cred.Identifiers = r.v[ct]
 	r.i.SetCredentials(ct, *cred)
 }

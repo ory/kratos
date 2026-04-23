@@ -118,8 +118,8 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 		require.NoError(t, err)
 		assert.True(t, changed, "identity should be marked as changed")
 
-		// Verify traits were updated.
-		assert.Contains(t, string(i.Traits), "https://new.example.com")
+		// The mapper keeps the existing website, so only the new group is added.
+		assert.Contains(t, string(i.Traits), "https://old.example.com", "existing website should be preserved")
 		assert.Contains(t, string(i.Traits), "admin")
 	})
 

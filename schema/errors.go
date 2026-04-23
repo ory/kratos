@@ -43,7 +43,18 @@ func NewTOTPVerifierWrongError(instancePtr string) error {
 }
 
 func NewWebAuthnVerifierWrongError(instancePtr string) error {
-	t := text.NewErrorValidationTOTPVerifierWrong()
+	t := text.NewErrorValidationWebAuthnVerifierWrong()
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     t.Text,
+			InstancePtr: instancePtr,
+		},
+		Messages: new(text.Messages).Add(t),
+	})
+}
+
+func NewDeviceAuthnVerifierWrongError(instancePtr string) error {
+	t := text.NewErrorValidationDeviceAuthnVerifierWrong()
 	return errors.WithStack(&ValidationError{
 		ValidationError: &jsonschema.ValidationError{
 			Message:     t.Text,
@@ -262,6 +273,16 @@ func NewNoWebAuthnRegistered() error {
 			InstancePtr: "#/",
 		},
 		Messages: new(text.Messages).Add(text.NewErrorValidationNoWebAuthnDevice()),
+	})
+}
+
+func NewNoDeviceAuthnRegistered() error {
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     `you have no DeviceAuthn device set up`,
+			InstancePtr: "#/",
+		},
+		Messages: new(text.Messages).Add(text.NewErrorValidationNoDeviceAuthnDevice()),
 	})
 }
 

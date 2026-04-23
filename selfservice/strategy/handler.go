@@ -20,7 +20,7 @@ type disabledChecker interface {
 
 func disabledWriter(c disabledChecker, enabled bool, wrap http.HandlerFunc, w http.ResponseWriter, r *http.Request) {
 	if !enabled {
-		c.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(EndpointDisabledMessage))
+		c.Writer().WriteError(w, r, herodot.ErrNotFound().WithReason(EndpointDisabledMessage))
 		return
 	}
 	wrap(w, r)

@@ -20,7 +20,7 @@ import (
 
 const RouteGet = "/self-service/errors"
 
-var stub500, _ = json.Marshal(herodot.ErrInternalServerError.WithReasonf("This is a stub error."))
+var stub500, _ = json.Marshal(herodot.ErrInternalServerError().WithReasonf("This is a stub error."))
 
 type (
 	handlerDependencies interface {
@@ -77,7 +77,7 @@ type getFlowError struct {
 //
 // - `?id=stub:500` - returns a stub 500 (Internal Server Error) error.
 //
-// More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-facing-errors).
+// More information can be found at [Ory Kratos User User Facing Error Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-facing-errors).
 //
 //	Produces:
 //	- application/json

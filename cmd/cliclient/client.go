@@ -12,13 +12,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/hashicorp/go-retryablehttp"
-
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/pflag"
 
 	kratos "github.com/ory/kratos/pkg/httpclient"
+	"github.com/ory/x/httpx"
 )
 
 const (
@@ -71,8 +70,9 @@ func NewClient(cmd *cobra.Command) (*kratos.APIClient, error) {
 	}
 
 	conf := kratos.NewConfiguration()
-	conf.HTTPClient = retryablehttp.NewClient().StandardClient()
-	conf.HTTPClient.Timeout = time.Second * 10
+	conf.HTTPClient = httpx.NewResilientClient(
+		httpx.ResilientClientWithConnectionTimeout(10 * time.Second),
+	).StandardClient()
 	conf.Servers = kratos.ServerConfigurations{{URL: u.String()}}
 	return kratos.NewAPIClient(conf), nil
 }

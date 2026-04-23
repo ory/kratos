@@ -31,23 +31,23 @@ func (c *XChaCha20Poly1305) Encrypt(ctx context.Context, message []byte) (string
 	}
 
 	if len(c.c.SecretsCipher(ctx)) == 0 {
-		return "", errors.WithStack(herodot.ErrMisconfiguration.WithReason("Unable to encrypt message because no cipher secrets were configured."))
+		return "", errors.WithStack(herodot.ErrMisconfiguration().WithReason("Unable to encrypt message because no cipher secrets were configured."))
 	}
 
 	aead, err := chacha20poly1305.NewX(c.c.SecretsCipher(ctx)[0][:])
 	if err != nil {
-		return "", herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to generate key")
+		return "", herodot.ErrInternalServerError().WithWrap(err).WithReason("Unable to generate key")
 	}
 
 	// Make sure the size calculation does not overflow.
 	if len(message) > math.MaxInt-aead.NonceSize()-aead.Overhead() {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("plaintext too large"))
+		return "", errors.WithStack(herodot.ErrInternalServerError().WithReason("plaintext too large"))
 	}
 
 	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(message)+aead.Overhead())
 	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to generate nonce"))
+		return "", errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReason("Unable to generate nonce"))
 	}
 
 	encryptedMsg := aead.Seal(nonce, nonce, message, nil)
@@ -62,22 +62,22 @@ func (c *XChaCha20Poly1305) Decrypt(ctx context.Context, ciphertext string) ([]b
 
 	secrets := c.c.SecretsCipher(ctx)
 	if len(secrets) == 0 {
-		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReason("Unable to decipher the encrypted message because no cipher secrets were configured."))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration().WithReason("Unable to decipher the encrypted message because no cipher secrets were configured."))
 	}
 
 	rawCiphertext, err := hex.DecodeString(ciphertext)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReason("Unable to decode hex encrypted string"))
+		return nil, errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReason("Unable to decode hex encrypted string"))
 	}
 
 	for i := range secrets {
 		aead, err := chacha20poly1305.NewX(secrets[i][:])
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReason("Unable to instantiate chacha20"))
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReason("Unable to instantiate chacha20"))
 		}
 
 		if len(ciphertext) < aead.NonceSize() {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("cipher text too short"))
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("cipher text too short"))
 		}
 
 		nonce, ciphertext := rawCiphertext[:aead.NonceSize()], rawCiphertext[aead.NonceSize():]
@@ -87,5 +87,5 @@ func (c *XChaCha20Poly1305) Decrypt(ctx context.Context, ciphertext string) ([]b
 		}
 	}
 
-	return nil, errors.WithStack(herodot.ErrForbidden.WithReason("Unable to decrypt string"))
+	return nil, errors.WithStack(herodot.ErrForbidden().WithReason("Unable to decrypt string"))
 }

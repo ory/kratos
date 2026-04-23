@@ -72,11 +72,11 @@ func TestSelfServicePreHook(
 			t.Skipf("Skipped because pre-redirect is no longer supported")
 
 			t.Cleanup(SelfServiceHookConfigReset(t, conf))
-			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "redirect", Config: []byte(`{"to": "https://www.ory.sh/"}`)}})
+			conf.MustSet(ctx, configKey, []config.SelfServiceHook{{Name: "redirect", Config: []byte(`{"to": "https://www.ory.com/"}`)}})
 
 			res, _ := makeRequestPre(t, newServer(t))
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assert.EqualValues(t, "https://www.ory.sh/", res.Request.URL.String())
+			assert.EqualValues(t, "https://www.ory.com/", res.Request.URL.String())
 		})
 	}
 }

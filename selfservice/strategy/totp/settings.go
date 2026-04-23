@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"time"
 
 	"github.com/ory/x/otelx"
 
@@ -28,6 +27,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -140,7 +140,7 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 		return err
 	}
 
-	if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
+	if !s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 		return errors.WithStack(settings.NewFlowNeedsReAuth())
 	}
 
@@ -171,16 +171,16 @@ func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ct
 func (s *Strategy) continueSettingsFlowAddTOTP(ctx context.Context, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithTotpMethod) (*identity.Identity, error) {
 	keyURL := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeyURL)).String()
 	if len(keyURL) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Could not find the TOTP key in the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Could not find the TOTP key in the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
 	}
 
 	key, err := otp.NewKeyFromURL(keyURL)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithTrace(err).WithReasonf("Could not decode TOTP key from the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithTrace(err).WithReasonf("Could not decode TOTP key from the internal context. This is a code bug and should be reported to https://github.com/ory/kratos/."))
 	}
 
 	if len(key.Secret()) == 0 {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("TOTP secret is not set. This is a code bug and should be reported to https://github.com/ory/kratos/."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("TOTP secret is not set. This is a code bug and should be reported to https://github.com/ory/kratos/."))
 	}
 
 	if p.ValidationTOTP == "" {
@@ -193,7 +193,7 @@ func (s *Strategy) continueSettingsFlowAddTOTP(ctx context.Context, ctxUpdate *s
 
 	co, err := json.Marshal(&identity.CredentialsTOTPConfig{TOTPURL: key.URL()})
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode totp options to JSON: %s", err))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode totp options to JSON: %s", err))
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.Identity.ID)
@@ -302,7 +302,7 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 func (s *Strategy) handleSettingsError(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithTotpMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
-		if err := s.d.ContinuityManager().Pause(ctx, w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
+		if _, err := s.d.ContinuityManager().Pause(ctx, w, r, settings.ContinuityKey(s.SettingsStrategyID()), continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(ctx)), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
 			return err
 		}
 	}

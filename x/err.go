@@ -47,7 +47,7 @@ var (
 		ReasonField: "The code ended up at a place where it should not have. Please report this as an issue at https://github.com/ory/kratos",
 		CodeField:   http.StatusInternalServerError,
 	}
-	PageTokenInvalid = herodot.ErrBadRequest.WithReason("The page token is invalid, do not craft your own page tokens")
+	PageTokenInvalid = herodot.ErrBadRequest().WithReason("The page token is invalid, do not craft your own page tokens")
 )
 
 func RecoverStatusCode(err error, fallback int) int {

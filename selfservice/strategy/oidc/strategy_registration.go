@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
@@ -207,7 +208,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
-		return errors.WithStack(registration.ErrAlreadyLoggedIn)
+		return errors.WithStack(registration.ErrAlreadyLoggedIn())
 	}
 
 	if p.IDToken != "" {
@@ -233,7 +234,15 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
-	if err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName,
+
+	var refStore continuity.ContainerReferenceStore
+	if f.Type == flow.TypeAPI {
+		refStore = continuity.NewInternalContextReferenceStore(f)
+	} else {
+		refStore = continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(ctx))
+	}
+
+	if _, err := s.d.ContinuityManager().Pause(ctx, w, r, sessionName, refStore,
 		continuity.WithPayload(&AuthCodeContainer{
 			State:            state,
 			FlowID:           f.ID.String(),
@@ -241,21 +250,15 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			TransientPayload: f.TransientPayload,
 			IdentitySchema:   f.IdentitySchema,
 		}),
-		continuity.WithLifespan(time.Minute*30)); err != nil {
+		continuity.WithLifespan(time.Minute*30),
+	); err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
-	// For API/native flows, persist TransientPayload in InternalContext so it
-	// survives the OIDC redirect. Browser flows restore it from the continuity
-	// cookie instead, which is not available in native flows because the
-	// callback comes from a different user agent (system browser/webview).
-	if f.Type == flow.TypeAPI && len(f.TransientPayload) > 0 {
-		f.EnsureInternalContext()
-		ic, err := sjson.SetRawBytes(f.InternalContext, "transient_payload", f.TransientPayload)
-		if err != nil {
-			return s.HandleError(ctx, w, r, f, pid, nil, err)
-		}
-		f.InternalContext = ic
+	// Native/API flows have no cookie — the continuity container ID was written to
+	// the flow's in-memory InternalContext. Persist the flow so the callback can
+	// restore it from the database.
+	if f.Type == flow.TypeAPI {
 		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
 			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
@@ -378,7 +381,14 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 	}
 
 	i.SetCredentials(s.ID(), *creds)
-	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), provider.Config().ID, provider.Config().OrganizationID, rf, i); err != nil {
+	if err := s.d.RegistrationExecutor().PostRegistrationHook(w, r, rf, i, session.AuthenticationMethod{
+		Method:       s.ID(),
+		AAL:          provider.Config().AALForClaims(claims),
+		Provider:     provider.Config().ID,
+		Organization: provider.Config().OrganizationID,
+		UpstreamACR:  claims.ACR,
+		UpstreamAMR:  claims.AMR,
+	}); err != nil {
 		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
@@ -439,6 +449,8 @@ func (s *Strategy) EvaluateClaimsMapper(ctx context.Context, claims *Claims, pro
 			return "", nil, err
 		}
 		vm.ExtCode("identity", string(identityCtx))
+	} else {
+		vm.ExtCode("identity", `{"traits": {}, "metadata_public": {}, "metadata_admin": {}}`)
 	}
 
 	evaluated, err = vm.EvaluateAnonymousSnippet(provider.Config().Mapper, jsonnetSnippet.String())
@@ -537,7 +549,7 @@ func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, pr
 func (s *Strategy) setTraits(provider Provider, container *AuthCodeContainer, evaluated string, i *identity.Identity) error {
 	jsonTraits := gjson.Get(evaluated, "identity.traits")
 	if !jsonTraits.IsObject() {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key identity.traits. Please check your Jsonnet code!"))
 	}
 
 	if container != nil {
@@ -566,7 +578,7 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 
 	metadata := gjson.Get(evaluated, string(m))
 	if metadata.Exists() && !metadata.IsObject() {
-		return errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
+		return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("OpenID Connect Jsonnet mapper did not return an object for key %s. Please check your Jsonnet code!", m))
 	}
 
 	switch m {
@@ -582,12 +594,12 @@ func (s *Strategy) setMetadata(evaluated string, i *identity.Identity, m Metadat
 func (s *Strategy) extractVerifiedAddresses(evaluated string) ([]VerifiedAddress, error) {
 	if verifiedAddresses := gjson.Get(evaluated, VerifiedAddressesKey); verifiedAddresses.Exists() {
 		if !verifiedAddresses.IsArray() {
-			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("OpenID Connect Jsonnet mapper did not return an array for key %s. Please check your Jsonnet code!", VerifiedAddressesKey))
+			return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("OpenID Connect Jsonnet mapper did not return an array for key %s. Please check your Jsonnet code!", VerifiedAddressesKey))
 		}
 
 		var va []VerifiedAddress
 		if err := json.Unmarshal([]byte(verifiedAddresses.Raw), &va); err != nil {
-			return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
+			return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Failed to unmarshal value for key %s. Please check your Jsonnet code!", VerifiedAddressesKey).WithDebugf("%s", err))
 		}
 
 		for i := range va {

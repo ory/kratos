@@ -90,7 +90,7 @@ func (p *Persister) ClearErrorContainers(ctx context.Context, olderThan time.Dur
 
 func encodeSelfServiceErrors(e error) ([]byte, error) {
 	if e == nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithDebug("A nil error was passed to the error manager which is most likely a code bug."))
 	}
 
 	if c := new(herodot.DefaultError); errors.As(e, &c) {
@@ -103,7 +103,7 @@ func encodeSelfServiceErrors(e error) ([]byte, error) {
 
 	enc, err := json.Marshal(e)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Unable to encode error messages.").WithDebug(err.Error()))
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("Unable to encode error messages.").WithDebug(err.Error()))
 	}
 
 	return enc, nil

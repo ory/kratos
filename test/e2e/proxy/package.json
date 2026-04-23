@@ -5,7 +5,8 @@
   "type": "module",
   "main": "index.js",
   "overrides": {
-    "tough-cookie": ">= 4.1.3"
+    "tough-cookie": ">= 4.1.3",
+    "path-to-regexp": "^0.1.13"
   },
   "scripts": {
     "start": "nodemon ./proxy.js"

@@ -16,6 +16,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
   workers: 1,
   reporter: process.env.CI ? [["github"], ["html"], ["list"]] : "html",
+  globalSetup: "./playwright/setup/hydra-global-setup.ts",
 
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -70,19 +71,37 @@ export default defineConfig({
       reuseExistingServer: false,
       url: "http://localhost:4471/health",
     },
+    {
+      // env -u DB: Hydra v2 maps the DB env var to its `db` config key (expects an
+      // object), so any DB=sqlite from the shell would fail Hydra config validation.
+      command: "env -u DB .bin/hydra serve all -c test/e2e/hydra.yml --dev",
+      cwd: "../..",
+      reuseExistingServer: true,
+      url: "http://localhost:4444/health/ready",
+    },
+    {
+      command: "test/e2e/hydra-login-consent/hydra-login-consent",
+      cwd: "../..",
+      reuseExistingServer: true,
+      url: "http://localhost:4446/",
+      env: {
+        PORT: "4446",
+        HYDRA_ADMIN_URL: "http://localhost:4445",
+      },
+    },
   ],
 })
 
 function dbToDsn(): string {
   switch (process.env.DB) {
     case "postgres":
-      return process.env.TEST_DATABASE_POSTGRESQL
+      return process.env.TEST_DATABASE_POSTGRESQL!
     case "cockroach":
-      return process.env.TEST_DATABASE_COCKROACHDB
+      return process.env.TEST_DATABASE_COCKROACHDB!
     case "mysql":
-      return process.env.TEST_DATABASE_MYSQL
+      return process.env.TEST_DATABASE_MYSQL!
     case "sqlite":
-      return process.env.TEST_DATABASE_SQLITE
+      return process.env.TEST_DATABASE_SQLITE!
     default:
       return "memory"
   }

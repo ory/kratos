@@ -123,7 +123,7 @@ func TestCompleteSettings(t *testing.T) {
 			}, id)
 
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
-			assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "reason").String(), body)
+			assert.Equal(t, nosurfx.ErrInvalidCSRFToken().Reason(), gjson.Get(body, "reason").String(), body)
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -133,7 +133,7 @@ func TestCompleteSettings(t *testing.T) {
 			}, id)
 
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+settings.RouteSubmitFlow)
-			assert.Equal(t, nosurfx.ErrInvalidCSRFToken.Reason(), gjson.Get(body, "error.reason").String(), body)
+			assert.Equal(t, nosurfx.ErrInvalidCSRFToken().Reason(), gjson.Get(body, "error.reason").String(), body)
 		})
 	})
 
@@ -192,7 +192,7 @@ func TestCompleteSettings(t *testing.T) {
 
 		checkIdentity := func(t *testing.T) {
 			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypeTOTP, id.ID.String())
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -227,7 +227,7 @@ func TestCompleteSettings(t *testing.T) {
 
 		checkIdentity := func(t *testing.T, id *identity.Identity) {
 			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypeTOTP, id.ID.String())
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 		}
 
 		t.Run("type=api", func(t *testing.T) {
@@ -270,7 +270,7 @@ func TestCompleteSettings(t *testing.T) {
 
 		checkIdentity := func(t *testing.T, id *identity.Identity) {
 			_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypeTOTP, id.ID.String())
-			require.ErrorIs(t, err, sqlcon.ErrNoRows)
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
 		}
 
 		t.Run("type=api", func(t *testing.T) {

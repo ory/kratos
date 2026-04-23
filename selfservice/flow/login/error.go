@@ -5,6 +5,7 @@ package login
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/gofrs/uuid"
 	"go.opentelemetry.io/otel/attribute"
@@ -33,17 +34,25 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var (
-	ErrHookAbortFlow      = errors.New("aborted login hook execution")
-	ErrAlreadyLoggedIn    = herodot.ErrBadRequest.WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
-	ErrAddressNotVerified = herodot.ErrBadRequest.WithID(text.ErrIDAddressNotVerified).WithError("your email or phone address is not yet verified").WithReason("Your account's email or phone address are not verified yet. Please check your email or phone inbox or re-request verification.")
+var ErrHookAbortFlow = errors.New("aborted login hook execution")
 
-	// ErrSessionHasAALAlready is returned when one attempts to upgrade the AAL of an active session which already has that AAL.
-	ErrSessionHasAALAlready = herodot.ErrUnauthorized.WithID(text.ErrIDSessionHasAALAlready).WithError("session has the requested authenticator assurance level already").WithReason("The session has the requested AAL already.")
+func ErrAlreadyLoggedIn() *herodot.DefaultError {
+	return herodot.ErrBadRequest().WithID(text.ErrIDAlreadyLoggedIn).WithError("you are already logged in").WithReason("A valid session was detected and thus login is not possible. Did you forget to set `?refresh=true`?")
+}
 
-	// ErrSessionRequiredForHigherAAL is returned when someone requests AAL2 or AAL3 even though no active session exists yet.
-	ErrSessionRequiredForHigherAAL = herodot.ErrUnauthorized.WithID(text.ErrIDSessionRequiredForHigherAAL).WithError("aal2 and aal3 can only be requested if a session exists already").WithReason("You can not requested a higher AAL (AAL2/AAL3) without an active session.")
-)
+func ErrAddressNotVerified() *herodot.DefaultError {
+	return herodot.ErrBadRequest().WithID(text.ErrIDAddressNotVerified).WithError("your email or phone address is not yet verified").WithReason("Your account's email or phone address are not verified yet. Please check your email or phone inbox or re-request verification.")
+}
+
+// ErrSessionHasAALAlready is returned when one attempts to upgrade the AAL of an active session which already has that AAL.
+func ErrSessionHasAALAlready() *herodot.DefaultError {
+	return herodot.ErrUnauthorized().WithID(text.ErrIDSessionHasAALAlready).WithError("session has the requested authenticator assurance level already").WithReason("The session has the requested AAL already.")
+}
+
+// ErrSessionRequiredForHigherAAL is returned when someone requests AAL2 or AAL3 even though no active session exists yet.
+func ErrSessionRequiredForHigherAAL() *herodot.DefaultError {
+	return herodot.ErrUnauthorized().WithID(text.ErrIDSessionRequiredForHigherAAL).WithError("aal2 and aal3 can only be requested if a session exists already").WithReason("You can not requested a higher AAL (AAL2/AAL3) without an active session.")
+}
 
 type (
 	errorHandlerDependencies interface {
@@ -144,9 +153,17 @@ func (s *ErrorHandler) WriteFlowError(w http.ResponseWriter, r *http.Request, f 
 		return
 	}
 
-	_, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID)
+	codes, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(r.Context(), f.ID)
 	if f.Type == flow.TypeAPI && hasCode && group == node.OpenIDConnectGroup {
-		http.Redirect(w, r, f.ReturnTo, http.StatusSeeOther)
+		returnTo, err := url.Parse(f.ReturnTo)
+		if err != nil {
+			s.forward(w, r, f, errors.WithStack(err))
+			return
+		}
+		q := returnTo.Query()
+		q.Set("code", codes.ReturnToCode)
+		returnTo.RawQuery = q.Encode()
+		http.Redirect(w, r, returnTo.String(), http.StatusSeeOther)
 		return
 	}
 

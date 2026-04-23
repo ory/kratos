@@ -50,7 +50,7 @@ func Generic(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v any,
 	} else if affected, err := result.RowsAffected(); err != nil {
 		return sqlcon.HandleError(err)
 	} else if affected == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 
 	return nil

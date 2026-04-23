@@ -34,6 +34,11 @@ const (
 )
 
 const (
+	DeviceAuthnRemove = "deviceauthn_remove"
+	DeviceAuthnNonce  = "deviceauthn_nonce"
+)
+
+const (
 	PasskeyRegisterTrigger  = "passkey_register_trigger"
 	PasskeyRegister         = "passkey_register"
 	PasskeySettingsRegister = "passkey_settings_register"

@@ -191,16 +191,10 @@ context("Login error messages with code method", () => {
 
         cy.submitCodeForm(app)
 
-        // the react app does not show the error message for 410 errors
-        // it just creates a new flow
-        if (app === "express") {
-          cy.get('[data-testid="ui/message/4010001"]').should(
-            "contain",
-            "The login flow expired",
-          )
-        } else {
-          cy.get(Selectors[app]["identity"]).should("be.visible")
-        }
+        cy.get('[data-testid="ui/message/4010008"]').should(
+          "contain",
+          "The login code is invalid or has already been used",
+        )
 
         cy.noSession()
       })

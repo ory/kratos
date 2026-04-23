@@ -62,6 +62,23 @@ session_id IS NOT NULL`,
 	return e, nil
 }
 
+func (p *Persister) GetExchangerFromCodeAllowPending(ctx context.Context, initCode string, returnToCode string) (e *sessiontokenexchange.Exchanger, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.GetExchangerFromCodeAllowPending")
+	defer otelx.End(span, &err)
+
+	e = new(sessiontokenexchange.Exchanger)
+	conn := p.GetConnection(ctx)
+	if err = conn.Where(`
+nid = ? AND
+init_code = ? AND init_code <> '' AND
+return_to_code = ? AND return_to_code <> ''`,
+		p.NetworkID(ctx), initCode, returnToCode).First(e); err != nil {
+		return nil, sqlcon.HandleError(err)
+	}
+
+	return e, nil
+}
+
 func (p *Persister) UpdateSessionOnExchanger(ctx context.Context, flowID uuid.UUID, sessionID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateSessionOnExchanger")
 	defer otelx.End(span, &err)
@@ -88,7 +105,7 @@ func (p *Persister) CodeForFlow(ctx context.Context, flowID uuid.UUID) (codes *s
 			InitCode:     e.InitCode,
 			ReturnToCode: e.ReturnToCode,
 		}, true, nil
-	case errors.Is(err, sqlcon.ErrNoRows):
+	case errors.Is(err, sqlcon.ErrNoRows()):
 		return nil, false, nil
 	default:
 		return nil, false, err

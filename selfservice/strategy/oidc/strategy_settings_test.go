@@ -52,7 +52,7 @@ func TestSettingsStrategy(t *testing.T) {
 	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/settings.schema.json")),
 		configx.WithValues(map[string]any{
-			config.ViperKeySelfServiceBrowserDefaultReturnTo:                "https://www.ory.sh/kratos",
+			config.ViperKeySelfServiceBrowserDefaultReturnTo:                "https://www.ory.com/kratos",
 			config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter: normalPrivilegedSessionFor,
 		}),
 	)
@@ -62,7 +62,11 @@ func TestSettingsStrategy(t *testing.T) {
 		claims  idTokenClaims
 		scope   []string
 	)
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &hydraIntegrationState{
+		subject: &subject,
+		claims:  &claims,
+		scope:   &scope,
+	})
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
@@ -848,7 +852,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		_, reg := pkg.NewFastRegistryWithMocks(t)
 		ctx := context.Background()
 		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
-		ctx = contextx.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.com/")
 		baseKey := fmt.Sprintf("%s.%s", config.ViperKeySelfServiceStrategyConfig, identity.CredentialsTypeOIDC)
 
 		ctx = contextx.WithConfigValues(ctx, map[string]interface{}{

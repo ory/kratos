@@ -40,7 +40,7 @@ func NewProviderMicrosoft(
 
 func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	if strings.TrimSpace(m.config.Tenant) == "" {
-		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("No Tenant specified for the `microsoft` oidc provider %s", m.config.ID))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("No Tenant specified for the `microsoft` oidc provider %s", m.config.ID))
 	}
 
 	endpointPrefix := "https://login.microsoftonline.com/" + m.config.Tenant
@@ -55,7 +55,7 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {
 	raw, ok := exchange.Extra("id_token").(string)
 	if !ok || len(raw) == 0 {
-		return nil, errors.WithStack(ErrIDTokenMissing)
+		return nil, errors.WithStack(ErrIDTokenMissing())
 	}
 
 	parser := new(jwt.Parser)
@@ -65,14 +65,14 @@ func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, 
 	}
 
 	if _, err := uuid.FromString(unverifiedClaims.TenantID); err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("TenantID claim is not a valid UUID: %s", err))
+		return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("TenantID claim is not a valid UUID: %s", err))
 	}
 
 	issuer := "https://login.microsoftonline.com/" + unverifiedClaims.TenantID + "/v2.0"
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, m.reg.HTTPClient(ctx).HTTPClient)
 	p, err := gooidc.NewProvider(ctx, issuer)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("Unable to initialize OpenID Connect Provider: %s", err))
 	}
 
 	claims, err := m.verifyAndDecodeClaimsWithProvider(ctx, p, raw)
@@ -93,12 +93,12 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 		ctx, client := httpx.SetOAuth2(ctx, m.reg.HTTPClient(ctx), o, exchange)
 		req, err := retryablehttp.NewRequestWithContext(ctx, "GET", "https://graph.microsoft.com/v1.0/me", nil)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("%s", err))
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReasonf("%s", err))
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("Unable to fetch from `https://graph.microsoft.com/v1.0/me`: %s", err))
+			return nil, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("Unable to fetch from `https://graph.microsoft.com/v1.0/me`: %s", err))
 		}
 		defer func() { _ = resp.Body.Close() }()
 
@@ -110,7 +110,7 @@ func (m *ProviderMicrosoft) updateSubject(ctx context.Context, claims *Claims, e
 			ID string `json:"id"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-			return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("Unable to decode JSON from `https://graph.microsoft.com/v1.0/me`: %s", err))
+			return nil, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("Unable to decode JSON from `https://graph.microsoft.com/v1.0/me`: %s", err))
 		}
 
 		claims.Subject = user.ID

@@ -117,7 +117,7 @@ func TestHandleError(t *testing.T) {
 	t.Run("case=error with nil flow defaults to error ui redirect", func(t *testing.T) {
 		t.Cleanup(reset)
 
-		flowError = herodot.ErrInternalServerError.WithReason("system error")
+		flowError = herodot.ErrInternalServerError().WithReason("system error")
 		flowMethod = settings.StrategyProfile
 
 		sse, _ := expectErrorUI(t)
@@ -127,7 +127,7 @@ func TestHandleError(t *testing.T) {
 	t.Run("case=error with nil flow detects application/json", func(t *testing.T) {
 		t.Cleanup(reset)
 
-		flowError = herodot.ErrInternalServerError.WithReason("system error")
+		flowError = herodot.ErrInternalServerError().WithReason("system error")
 		flowMethod = settings.StrategyProfile
 
 		res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -245,7 +245,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				settingsFlow = newFlow(t, time.Minute, tc.t)
-				flowError = herodot.ErrInternalServerError.WithReason("system error")
+				flowError = herodot.ErrInternalServerError().WithReason("system error")
 				flowMethod = settings.StrategyProfile
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -405,7 +405,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			settingsFlow = newFlow(t, time.Minute, flow.TypeBrowser)
-			flowError = herodot.ErrInternalServerError.WithReason("system error")
+			flowError = herodot.ErrInternalServerError().WithReason("system error")
 			flowMethod = settings.StrategyProfile
 
 			sse, _ := expectErrorUI(t)

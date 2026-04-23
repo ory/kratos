@@ -7,11 +7,9 @@ import (
 	"context"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/herodot"
-
 	"github.com/tidwall/sjson"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/x/otelx"
@@ -57,7 +55,7 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 
 	traits, err := sjson.SetRawBytes([]byte(`{}`), "traits", i.Traits)
 	if err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()))
+		return errors.WithStack(herodot.ErrBadRequest().WithError(err.Error()))
 	}
 
 	return v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner))

@@ -13,8 +13,8 @@ import (
 
 func NewMigrateSQLCmd(opts ...driver.RegistryOption) *cobra.Command {
 	c := &cobra.Command{
-		Use:        "sql <database-url>",
-		Deprecated: "Please use `kratos migrate sql` instead.",
+		Use:        "sql [database-url]",
+		Deprecated: "Please use `kratos migrate sql up|down|status` instead.",
 		Short:      "Create SQL schemas and apply migration plans",
 		Long: `Run this command on a fresh SQL installation and when you upgrade Ory Kratos to a new minor version.
 

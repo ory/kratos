@@ -101,7 +101,7 @@ func TestGetFlow(t *testing.T) {
 		_ = setupVerificationUI(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+verification.RouteInitBrowserFlow)
 
-		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken().ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
 
 	t.Run("case=expired", func(t *testing.T) {
@@ -121,7 +121,7 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=expired with return_to", func(t *testing.T) {
-		returnTo := "https://www.ory.sh"
+		returnTo := "https://www.ory.com"
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 		client := testhelpers.NewClientWithCookies(t)

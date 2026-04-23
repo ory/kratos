@@ -121,7 +121,7 @@ func (s *Strategy) findIdentityByIdentifier(ctx context.Context, identifier stri
 	defer otelx.End(span, &err)
 
 	id, cred, err = s.deps.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		// this is a migration for old identities that do not have a code credential
 		// we might be able to do a fallback login since we could not find a credential on this identifier
 		// Case insensitive because we only care about emails.
@@ -247,7 +247,17 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		return nil, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoLoginStrategyResponsible()), false)
 	}
 
-	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected flow state: %s", f.GetState())), false)
+	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unexpected flow state: %s", f.GetState())), false)
+}
+
+// nonOrgFilter excludes strategies that support organization-based authentication.
+// Used in FastLogin1FA to prevent org strategies from contributing to the
+// competing-credential count that decides whether code login should defer.
+var nonOrgFilter = []login.StrategyFilter{
+	func(strategy login.Strategy) bool {
+		s, ok := strategy.(flow.OrganizationImplementor)
+		return !ok || !s.SupportsOrganizations()
+	},
 }
 
 func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (err error) {
@@ -278,7 +288,7 @@ func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login
 	} else if c == 0 {
 		return flow.ErrStrategyNotResponsible
 	} else {
-		for _, strat := range s.deps.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
+		for _, strat := range s.deps.LoginStrategies(ctx, nonOrgFilter...) {
 			if strat, ok := strat.(identity.ActiveCredentialsCounter); !ok || strat.ID() == identity.CredentialsTypeCodeAuth {
 				continue
 			} else {
@@ -379,11 +389,13 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 		return nil, nil, errors.WithStack(schema.NewRequiredError("#/identifier", "identifier"))
 	}
 
-	identifier = x.GracefulNormalization(identifier)
-
 	var addresses []Address
 
 	// Step 1: Get the identity
+	// The raw identifier is passed to findIdentityByIdentifier so that
+	// FindByCredentialsIdentifier can match both the normalized and raw forms
+	// via its IN(normalized, raw) query. This preserves backward compatibility
+	// with legacy database records that store non-normalized identifiers.
 	i, cred, isFallback, err := s.findIdentityByIdentifier(ctx, identifier)
 	if err != nil {
 		if requestedAAL == identity.AuthenticatorAssuranceLevel2 {
@@ -402,7 +414,7 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 					return nil, nil, errors.WithStack(schema.NewNoCodeAuthnCredentials())
 				}
 
-				address, err := s.findIdentifierInVerifiableAddress(session.Identity, identifier)
+				address, err := s.findIdentifierInVerifiableAddress(session.Identity, x.GracefulNormalization(identifier))
 				if err != nil {
 					return nil, nil, err
 				}
@@ -572,7 +584,7 @@ func (s *Strategy) loginVerifyCode(ctx context.Context, f *login.Flow, p *update
 
 	loginCode, err := s.deps.LoginCodePersister().UseLoginCode(ctx, f.ID, i.ID, p.Code)
 	if err != nil {
-		if errors.Is(err, ErrCodeNotFound) {
+		if errors.Is(err, ErrCodeNotFound()) {
 			return nil, schema.NewLoginCodeInvalid()
 		}
 		return nil, errors.WithStack(err)
@@ -634,7 +646,7 @@ func (s *Strategy) verifyAddress(ctx context.Context, i *identity.Identity, veri
 		address.VerifiedAt = new(sqlxx.NullTime(time.Now().UTC()))
 		address.Status = identity.VerifiableAddressStatusCompleted
 		if persistNow {
-			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows) {
+			if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); errors.Is(err, sqlcon.ErrNoRows()) {
 				// This happens when the verified address does not yet exist, for example during registration. In this case we just skip.
 				s.deps.Logger().WithError(err).Warnf("Could not update verifiable address for identity %s.", i.ID)
 				continue

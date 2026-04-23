@@ -130,7 +130,7 @@ func TestSettingsExecutor(t *testing.T) {
 				t.Run("case=use return_to value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
 					conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToServer.URL})
-					testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, "https://www.ory.sh")
+					testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, "https://www.ory.com")
 
 					res, body := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{"return_to": {returnToServer.URL + "/kratos"}})
 					require.Equalf(t, http.StatusOK, res.StatusCode, "%s", body)
@@ -148,7 +148,7 @@ func TestSettingsExecutor(t *testing.T) {
 
 				t.Run("case=use nested config value", func(t *testing.T) {
 					t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
-					testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, "https://www.ory.sh/not-kratos")
+					testhelpers.SelfServiceHookSettingsSetDefaultRedirectTo(t, conf, "https://www.ory.com/not-kratos")
 					testhelpers.SelfServiceHookSettingsSetDefaultRedirectToStrategy(t, conf, strategy, returnToServer.URL+"/kratos")
 
 					res, body := makeRequestPost(t, newServer(t, nil, flow.TypeBrowser), false, url.Values{})

@@ -28,7 +28,7 @@ func NormalizePhoneIdentifier(value string) string {
 
 // NormalizeOtherIdentifier normalizes an identifier that is not an email or phone number.
 func NormalizeOtherIdentifier(value string) string {
-	return strings.TrimSpace(value)
+	return strings.TrimSpace(strings.ToLower(value))
 }
 
 // GracefulNormalization normalizes an identifier based on the format.

@@ -1,0 +1,1 @@
+ALTER TABLE identity_verification_tokens ALTER COLUMN identity_verifiable_address_id DROP NOT NULL;

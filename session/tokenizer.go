@@ -63,11 +63,11 @@ func SetSubjectClaim(claims jwt.MapClaims, session *Session, subjectSource strin
 		claims["sub"] = session.IdentityID.String()
 	case "external_id":
 		if session.Identity.ExternalID == "" {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The session's identity does not have an external ID set, but it is required for the subject claim."))
+			return errors.WithStack(herodot.ErrBadRequest().WithReasonf("The session's identity does not have an external ID set, but it is required for the subject claim."))
 		}
 		claims["sub"] = session.Identity.ExternalID.String()
 	default:
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unknown subject source %q", subjectSource))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unknown subject source %q", subjectSource))
 	}
 	return nil
 }
@@ -90,14 +90,14 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		jwksx.WithHTTPClient(httpClient))
 	if err != nil {
 		if errors.Is(err, jwksx.ErrUnableToFindKeyID) {
-			return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not find key a suitable key for tokenization in the JWKS url."))
+			return errors.WithStack(herodot.ErrBadRequest().WithReasonf("Could not find key a suitable key for tokenization in the JWKS url."))
 		}
 		return err
 	}
 
 	alg := jwt.GetSigningMethod(key.Algorithm())
 	if alg == nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("The JSON Web Key must include a valid \"alg\" parameter but \"%s\" was given.", key.Algorithm()))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("The JSON Web Key must include a valid \"alg\" parameter but \"%s\" was given.", key.Algorithm()))
 	}
 
 	vm, err := s.r.JsonnetVM(ctx)
@@ -124,12 +124,12 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 	if mapper := tpl.ClaimsMapperURL; len(mapper) > 0 {
 		sessionRaw, err := json.Marshal(session)
 		if err != nil {
-			return errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to encode session to JSON."))
+			return errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReasonf("Unable to encode session to JSON."))
 		}
 
 		claimsRaw, err := json.Marshal(&claims)
 		if err != nil {
-			return errors.WithStack(herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to encode claims to JSON."))
+			return errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReasonf("Unable to encode claims to JSON."))
 		}
 
 		vm.ExtCode("session", string(sessionRaw))
@@ -145,7 +145,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 			trace.SpanFromContext(ctx).AddEvent(events.NewJsonnetMappingFailed(
 				ctx, err, jsonnet.Bytes(), evaluated, "", "",
 			))
-			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithDebug(err.Error()).WithReasonf("Unable to execute tokenizer JsonNet."))
+			return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithDebug(err.Error()).WithReasonf("Unable to execute tokenizer JsonNet."))
 		}
 
 		evaluatedClaims := gjson.Get(evaluated, "claims")
@@ -153,11 +153,11 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 			trace.SpanFromContext(ctx).AddEvent(events.NewJsonnetMappingFailed(
 				ctx, err, jsonnet.Bytes(), evaluated, "", "",
 			))
-			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Expected tokenizer JsonNet to return a claims object but it did not."))
+			return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReasonf("Expected tokenizer JsonNet to return a claims object but it did not."))
 		}
 
 		if err := json.Unmarshal([]byte(evaluatedClaims.Raw), &claims); err != nil {
-			return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to encode tokenized claims."))
+			return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReasonf("Unable to encode tokenized claims."))
 		}
 	}
 	if err = SetSubjectClaim(claims, session, tpl.SubjectSource); err != nil {
@@ -166,13 +166,13 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 
 	var privateKey interface{}
 	if err := key.Raw(&privateKey); err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to decode the given private key."))
+		return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReasonf("Unable to decode the given private key."))
 	}
 
 	token.Claims = claims
 	result, err := token.SignedString(privateKey)
 	if err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithWrap(err).WithReasonf("Unable to sign JSON Web Token."))
+		return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReasonf("Unable to sign JSON Web Token."))
 	}
 
 	trace.SpanFromContext(ctx).AddEvent(events.NewSessionJWTIssued(ctx, session.ID, session.IdentityID, tpl.TTL))

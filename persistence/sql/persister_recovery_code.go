@@ -65,7 +65,7 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, flowID uuid.UUID, userP
 
 	var ra identity.RecoveryAddress
 	if err := sqlcon.HandleError(p.GetConnection(ctx).Where("id = ? AND nid = ?", codeRow.RecoveryAddressID, p.NetworkID(ctx)).First(&ra)); err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
+		if errors.Is(err, sqlcon.ErrNoRows()) {
 			// This is ok, it can happen when an administrator initiates account recovery. This works even if the
 			// user has no recovery address!
 		} else {

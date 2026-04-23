@@ -83,7 +83,7 @@ func (s Schemas) GetByID(id string) (*Schema, error) {
 			return ss, nil
 		}
 	}
-	return nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to find JSON Schema ID: %s", id))
+	return nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to find JSON Schema ID: %s", id))
 }
 
 func (s Schemas) Total() int {

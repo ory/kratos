@@ -42,10 +42,12 @@ func TestRecoveryAddress_Hash(t *testing.T) {
 				IdentityID: x.NewUUID(),
 				NID:        x.NewUUID(),
 			},
-		}, {
+		},
+		{
 			name: "empty fields",
 			a:    RecoveryAddress{},
-		}, {
+		},
+		{
 			name: "email constructor",
 			a:    *NewRecoveryEmailAddress("foo@ory.sh", x.NewUUID()),
 		},
@@ -60,9 +62,23 @@ func TestRecoveryAddress_Hash(t *testing.T) {
 				IdentityID: x.NewUUID(),
 				NID:        x.NewUUID(),
 			},
-		}, {
+		},
+		{
 			name: "SMS constructor",
 			a:    *NewRecoverySMSAddress("6502530000", x.NewUUID()),
+		},
+		{
+			name: "break glass for organization",
+			a: RecoveryAddress{
+				ID:                        x.NewUUID(),
+				Value:                     "breakglass@ory.sh",
+				Via:                       AddressTypeEmail,
+				CreatedAt:                 time.Now(),
+				UpdatedAt:                 time.Now(),
+				IdentityID:                x.NewUUID(),
+				NID:                       x.NewUUID(),
+				BreakGlassForOrganization: uuid.NullUUID{UUID: x.NewUUID(), Valid: true},
+			},
 		},
 	}
 
@@ -74,5 +90,4 @@ func TestRecoveryAddress_Hash(t *testing.T) {
 			)
 		})
 	}
-
 }

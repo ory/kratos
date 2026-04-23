@@ -360,7 +360,7 @@ func TestFlowLifecycle(t *testing.T) {
 			t.Run("type=api", func(t *testing.T) {
 				body, res := run(t, flow.TypeAPI, url.Values{"method": {"password"}})
 				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
-				assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn.Reason(), gjson.Get(body, "ui.messages.0.text").String(), body)
+				assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn().Reason(), gjson.Get(body, "ui.messages.0.text").String(), body)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -659,13 +659,13 @@ func TestFlowLifecycle(t *testing.T) {
 			t.Run("case=does not set forced flag on authenticated request without refresh=true", func(t *testing.T) {
 				res, body := initAuthenticatedFlow(t, url.Values{}, true)
 				assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-				assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+				assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 			})
 
 			t.Run("case=does not set forced flag on authenticated request with refresh=false", func(t *testing.T) {
 				res, body := initAuthenticatedFlow(t, url.Values{"refresh": {"false"}}, true)
 				assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-				assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+				assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 			})
 
 			t.Run("case=does set forced flag on authenticated request with refresh=true", func(t *testing.T) {
@@ -791,7 +791,7 @@ func TestFlowLifecycle(t *testing.T) {
 			conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
 			t.Run("case=oauth2 flow init should override return_to to the oauth2 request_url", func(t *testing.T) {
-				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.sh", "https://example.com"})
+				conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{"https://www.ory.com", "https://example.com"})
 				conf.MustSet(ctx, config.ViperKeyOAuth2ProviderOverrideReturnTo, true)
 
 				t.Cleanup(func() {
@@ -817,7 +817,7 @@ func TestFlowLifecycle(t *testing.T) {
 
 				require.NoError(t, res.Body.Close())
 
-				assert.Equal(t, "https://www.ory.sh", gjson.GetBytes(body, "return_to").Value())
+				assert.Equal(t, "https://www.ory.com", gjson.GetBytes(body, "return_to").Value())
 			})
 
 			t.Run("case=invalid oauth2 login challenge returns 400 Bad Request", func(t *testing.T) {
@@ -925,7 +925,7 @@ func TestGetFlow(t *testing.T) {
 		setupLoginUI(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
 
-		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken().ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
 
 	t.Run("case=expired", func(t *testing.T) {

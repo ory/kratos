@@ -181,6 +181,52 @@
       "attributes": {
         "name": "provider",
         "type": "submit",
+        "value": "aal2-acr",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with aal2-acr",
+          "type": "info",
+          "context": {
+            "provider": "aal2-acr",
+            "provider_id": "aal2-acr"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
+        "value": "aal2-amr",
+        "disabled": false,
+        "node_type": "input"
+      },
+      "messages": [],
+      "meta": {
+        "label": {
+          "id": 1040002,
+          "text": "Sign up with aal2-amr",
+          "type": "info",
+          "context": {
+            "provider": "aal2-amr",
+            "provider_id": "aal2-amr"
+          }
+        }
+      }
+    },
+    {
+      "type": "input",
+      "group": "oidc",
+      "attributes": {
+        "name": "provider",
+        "type": "submit",
         "value": "invalid-issuer",
         "disabled": false,
         "node_type": "input"

@@ -50,7 +50,7 @@ func (s Strategies) ActiveStrategies(id string) (active Strategies, primary Stra
 	}
 
 	if primary == nil {
-		return nil, nil, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("unable to find strategy for %s have %v", id, ids))
+		return nil, nil, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("unable to find strategy for %s have %v", id, ids))
 	}
 
 	return active, primary, nil

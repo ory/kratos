@@ -7,10 +7,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	stderrors "errors"
 
@@ -23,13 +23,18 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 )
 
-var ErrProtectedFieldModified = herodot.ErrForbidden.
-	WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because an unprivileged method was used to execute the update. This is either a configuration issue or a bug and should be reported to the system administrator.`)
+func ErrProtectedFieldModified() *herodot.DefaultError {
+	return herodot.ErrForbidden().
+		WithReasonf(`A field was modified that updates one or more credentials-related settings. This action was blocked because an unprivileged method was used to execute the update. This is either a configuration issue or a bug and should be reported to the system administrator.`)
+}
 
 type (
 	managerDependencies interface {
@@ -41,6 +46,8 @@ type (
 		ValidationProvider
 		ActiveCredentialsCounterStrategyProvider
 		logrusx.Provider
+		x.TransactionPersistenceProvider
+		PendingTraitsChangePersistenceProvider
 	}
 	ManagementProvider interface {
 		IdentityManager() *Manager
@@ -91,7 +98,7 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 	}
 
 	if err := m.r.PrivilegedIdentityPool().CreateIdentity(ctx, i); err != nil {
-		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+		if errors.Is(err, sqlcon.ErrUniqueViolation()) {
 			return m.findExistingAuthMethod(ctx, err, i)
 		}
 		return err
@@ -120,7 +127,7 @@ func (m *Manager) ConflictingIdentity(ctx context.Context, i *Identity) (found *
 	// If the conflict is not in the identifiers table, it is coming from the verifiable or recovery address.
 	for _, va := range i.VerifiableAddresses {
 		conflictingAddress, err := m.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, va.Via, va.Value)
-		if errors.Is(err, sqlcon.ErrNoRows) {
+		if errors.Is(err, sqlcon.ErrNoRows()) {
 			continue
 		} else if err != nil {
 			return nil, "", "", err
@@ -138,7 +145,7 @@ func (m *Manager) ConflictingIdentity(ctx context.Context, i *Identity) (found *
 	// Last option: check the recovery address
 	for _, va := range i.RecoveryAddresses {
 		conflictingAddress, err := m.r.PrivilegedIdentityPool().FindRecoveryAddressByValue(ctx, va.Via, va.Value)
-		if errors.Is(err, sqlcon.ErrNoRows) {
+		if errors.Is(err, sqlcon.ErrNoRows()) {
 			continue
 		} else if err != nil {
 			return nil, "", "", err
@@ -153,7 +160,7 @@ func (m *Manager) ConflictingIdentity(ctx context.Context, i *Identity) (found *
 		return found, foundConflictAddress, string(va.Via), nil
 	}
 
-	return nil, "", "", sqlcon.ErrNoRows
+	return nil, "", "", sqlcon.ErrNoRows()
 }
 
 func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identity) (err error) {
@@ -163,7 +170,7 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 
 	found, foundConflictAddress, conflictingAddressType, err := m.ConflictingIdentity(ctx, i)
 	if err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows) {
+		if errors.Is(err, sqlcon.ErrNoRows()) {
 			return &ErrDuplicateCredentials{error: e}
 		}
 		return err
@@ -215,7 +222,7 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 		case CredentialsTypeOIDC:
 			var cfg CredentialsOIDC
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
-				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
+				return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
 			}
 
 			available := make([]string, 0, len(cfg.Providers))
@@ -228,7 +235,7 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 		case CredentialsTypeWebAuthn:
 			var cfg CredentialsWebAuthnConfig
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
-				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
+				return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
 			}
 
 			if duplicateCredErr.IdentifierHint() == "" && len(cred.Identifiers) == 1 {
@@ -240,10 +247,15 @@ func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identi
 					break
 				}
 			}
+
+			// DeviceAuthn is currently not to be used as a first factor.
+		case CredentialsTypeDeviceAuthn:
+			continue
+
 		case CredentialsTypePasskey:
 			var cfg CredentialsWebAuthnConfig
 			if err := json.Unmarshal(cred.Config, &cfg); err != nil {
-				return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
+				return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to JSON decode identity credentials %s for identity %s.", cred.Type, found.ID))
 			}
 
 			if duplicateCredErr.IdentifierHint() == "" && len(cred.Identifiers) == 1 {
@@ -397,7 +409,7 @@ func (m *Manager) CreateIdentities(ctx context.Context, identities []*Identity, 
 			if e, ok := stderrors.AsType[*herodot.DefaultError](err); ok {
 				reason = e.Reason()
 			}
-			createIdentitiesError.AddFailedIdentity(ident, herodot.ErrBadRequest.WithReason(reason).WithWrap(err))
+			createIdentitiesError.AddFailedIdentity(ident, herodot.ErrBadRequest().WithReason(reason).WithWrap(err))
 			continue
 		}
 		validIdentities = append(validIdentities, ident)
@@ -418,22 +430,17 @@ func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, update
 	_, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.requiresPrivilegedAccess")
 	defer otelx.End(span, &err)
 
-	if !o.AllowWriteProtectedTraits {
-		if !CredentialsEqual(updated.Credentials, original.Credentials) {
-			// reset the identity
-			*updated = *original
+	switch {
+	case o.AllowWriteProtectedTraits:
+		return nil
 
-			return errors.WithStack(ErrProtectedFieldModified)
-		}
-
-		if !reflect.DeepEqual(original.VerifiableAddresses, updated.VerifiableAddresses) &&
-			/* prevent nil != []string{} */
-			len(original.VerifiableAddresses)+len(updated.VerifiableAddresses) != 0 {
-			// reset the identity
-			*updated = *original
-			return errors.WithStack(ErrProtectedFieldModified)
-		}
+	case !CredentialsEqual(updated.Credentials, original.Credentials),
+		!VerifiableAddressesEqual(updated.VerifiableAddresses, original.VerifiableAddresses):
+		// reset the identity
+		*updated = *original
+		return errors.WithStack(ErrProtectedFieldModified())
 	}
+
 	return nil
 }
 
@@ -469,7 +476,7 @@ func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID str
 	}
 
 	if !o.AllowWriteProtectedTraits && original.SchemaID != schemaID {
-		return errors.WithStack(ErrProtectedFieldModified)
+		return errors.WithStack(ErrProtectedFieldModified())
 	}
 
 	original.SchemaID = schemaID
@@ -544,7 +551,7 @@ func (m *Manager) ValidateIdentity(ctx context.Context, i *Identity, o *ManagerO
 	if err := m.r.IdentityValidator().Validate(ctx, i); err != nil {
 		var validationErr *jsonschema.ValidationError
 		if errors.As(err, &validationErr) && !o.ExposeValidationErrors {
-			return herodot.ErrBadRequest.WithReasonf("%s", err).WithWrap(err)
+			return herodot.ErrBadRequest().WithReasonf("%s", err).WithWrap(err)
 		}
 		return err
 	}
@@ -586,4 +593,58 @@ func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Iden
 		count += current
 	}
 	return count, nil
+}
+
+var ErrConcurrentModification = stderrors.New("concurrent modification detected")
+
+func (m *Manager) ApplyPendingTraitsChange(ctx context.Context, ptc *PendingTraitsChange) (err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.ApplyPendingTraitsChange")
+	defer otelx.End(span, &err)
+	return m.r.TransactionalPersisterProvider().Transaction(ctx, func(ctx context.Context, connection *pop.Connection) error {
+		// Detect concurrent modifications inside the transaction.
+		currentIdentity, err := m.r.IdentityPool().GetIdentity(ctx, ptc.IdentityID, ExpandDefault)
+		if err != nil {
+			return err
+		}
+
+		if HashTraits(json.RawMessage(currentIdentity.Traits)) != ptc.OriginalTraitsHash {
+			return ErrConcurrentModification
+		}
+
+		// This is still safe, because the pending_traits_change creation is gated by a privileged session check.
+		// Since the verification flow is "session-less" because the link might open in a different browser, we cannot check privileged session status.
+		opts := []ManagerOption{ManagerAllowWriteProtectedTraits}
+		if err := m.UpdateTraits(ctx, ptc.IdentityID, Traits(ptc.ProposedTraits), opts...); err != nil {
+			return err
+		}
+
+		// Mark the pending change as completed.
+		ptc.Status = PendingTraitsChangeStatusCompleted
+		if err := m.r.PendingTraitsChangePersister().UpdatePendingTraitsChange(ctx, ptc); err != nil {
+			return err
+		}
+
+		// Load the updated identity.
+		i, err := m.r.IdentityPool().GetIdentity(ctx, ptc.IdentityID, ExpandDefault)
+		if err != nil {
+			return err
+		}
+
+		// Mark the new verifiable address as verified.
+		for idx := range i.VerifiableAddresses {
+			a := &i.VerifiableAddresses[idx]
+			if a.Value == ptc.NewAddressValue && a.Via == ptc.NewAddressVia {
+				a.Verified = true
+				verifiedAt := sqlxx.NullTime(time.Now().UTC())
+				a.VerifiedAt = &verifiedAt
+				a.Status = VerifiableAddressStatusCompleted
+				if err := m.r.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, a, "verified", "verified_at", "status"); err != nil {
+					return err
+				}
+				break
+			}
+		}
+		return nil
+	})
+
 }

@@ -527,11 +527,11 @@ func TestLoginExecutor(t *testing.T) {
 						},
 					},
 				}, &login.Flow{
-					RequestURL: "https://www.ory.sh/?return_to=https://www.ory.sh/kratos&login_challenge=challenge",
+					RequestURL: "https://www.ory.com/?return_to=https://www.ory.com/kratos&login_challenge=challenge",
 				}),
 				&aalErr,
 			)
-			assert.Equal(t, returnToServer.URL+"/self-service/login/browser?aal=aal2&login_challenge=challenge&return_to=https%3A%2F%2Fwww.ory.sh%2Fkratos", aalErr.RedirectTo)
+			assert.Equal(t, returnToServer.URL+"/self-service/login/browser?aal=aal2&login_challenge=challenge&return_to=https%3A%2F%2Fwww.ory.com%2Fkratos", aalErr.RedirectTo)
 		})
 	})
 }

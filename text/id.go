@@ -33,6 +33,7 @@ const (
 	InfoSelfServiceLoginPasskey                                  // 1010021
 	InfoSelfServiceLoginPassword                                 // 1010022
 	InfoSelfServiceLoginAAL2CodeAddress                          // 1010023
+	InfoSelfServiceLoginDeviceAuthn                              // 1010024
 )
 
 const (
@@ -78,6 +79,8 @@ const (
 	InfoSelfServiceSettingsRemoveWebAuthn
 	InfoSelfServiceSettingsRegisterPasskey
 	InfoSelfServiceSettingsRemovePasskey
+	InfoSelfServiceSettingsRemoveDeviceAuthnKey
+	InfoSelfServiceSettingsDeviceAuthnNonce
 )
 
 const (
@@ -165,6 +168,9 @@ const (
 	ErrorValidationPasswordNewSameAsOld
 	ErrorValidationEmail
 	ErrorValidationPhone
+	ErrorValidationNoDeviceAuthnDevice
+	ErrorValidationWebAuthnVerifierWrong
+	ErrorValidationDeviceAuthnVerifierWrong
 )
 
 const (
@@ -190,8 +196,9 @@ const (
 )
 
 const (
-	ErrorValidationSettings ID = 4050000 + iota
-	ErrorValidationSettingsFlowExpired
+	ErrorValidationSettings                      ID = 4050000 + iota
+	ErrorValidationSettingsFlowExpired              // 4050001
+	ErrorValidationSettingsTooManyAddressChanges    // 4050002
 )
 
 const (
@@ -215,7 +222,8 @@ const (
 )
 
 const (
-	ErrorSystem                                 ID = 5000000 + iota // 5000000
-	ErrorSystemGeneric                                              // 5000001
-	ErrorSystemNoAuthenticationMethodsAvailable                     // 5000002
+	ErrorSystem                                    ID = 5000000 + iota // 5000000
+	ErrorSystemGeneric                                                 // 5000001
+	ErrorSystemNoAuthenticationMethodsAvailable                        // 5000002
+	ErrorSystemOrganizationNoSSOProvidersAvailable                     // 5000003
 )

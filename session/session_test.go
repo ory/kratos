@@ -4,12 +4,14 @@
 package session_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -20,6 +22,71 @@ import (
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 )
+
+func TestAdminSessionMarshal(t *testing.T) {
+	t.Parallel()
+
+	metadataAdmin := []byte(`{"role":"admin"}`)
+	ident := &identity.Identity{
+		MetadataAdmin: metadataAdmin,
+		State:         identity.StateActive,
+	}
+	sess := session.Session{
+		ID:        x.NewUUID(),
+		Active:    true,
+		Identity:  ident,
+		ExpiresAt: time.Now().Add(time.Hour),
+	}
+
+	t.Run("case=regular Session omits metadata_admin", func(t *testing.T) {
+		t.Parallel()
+		b, err := json.Marshal(sess)
+		require.NoError(t, err)
+		assert.False(t, gjson.GetBytes(b, "identity.metadata_admin").Exists())
+		assert.Equal(t, sess.ID.String(), gjson.GetBytes(b, "id").String())
+		assert.True(t, gjson.GetBytes(b, "active").Bool())
+	})
+
+	t.Run("case=AdminSession includes metadata_admin", func(t *testing.T) {
+		t.Parallel()
+		b, err := json.Marshal(session.AdminSession(sess))
+		require.NoError(t, err)
+		assert.Equal(t, `{"role":"admin"}`, gjson.GetBytes(b, "identity.metadata_admin").Raw)
+		assert.Equal(t, sess.ID.String(), gjson.GetBytes(b, "id").String())
+		assert.True(t, gjson.GetBytes(b, "active").Bool())
+	})
+
+	t.Run("case=AdminSession uses runtime active semantics for expired sessions", func(t *testing.T) {
+		t.Parallel()
+
+		expiredSess := session.Session{
+			ID:        x.NewUUID(),
+			Active:    true,
+			Identity:  ident,
+			ExpiresAt: time.Now().Add(-time.Minute),
+		}
+
+		b, err := json.Marshal(session.AdminSession(expiredSess))
+		require.NoError(t, err)
+		assert.Equal(t, `{"role":"admin"}`, gjson.GetBytes(b, "identity.metadata_admin").Raw)
+		assert.Equal(t, expiredSess.ID.String(), gjson.GetBytes(b, "id").String())
+		assert.False(t, gjson.GetBytes(b, "active").Bool())
+	})
+
+	t.Run("case=AdminSessions converts slice", func(t *testing.T) {
+		t.Parallel()
+		sessions := []session.Session{sess, sess}
+		adminSessions := session.AdminSessions(sessions)
+		require.Len(t, adminSessions, 2)
+		for _, as := range adminSessions {
+			b, err := json.Marshal(as)
+			require.NoError(t, err)
+			assert.Equal(t, `{"role":"admin"}`, gjson.GetBytes(b, "identity.metadata_admin").Raw)
+			assert.Equal(t, sess.ID.String(), gjson.GetBytes(b, "id").String())
+			assert.True(t, gjson.GetBytes(b, "active").Bool())
+		}
+	})
+}
 
 func TestSession(t *testing.T) {
 	_, reg := pkg.NewFastRegistryWithMocks(t,
@@ -44,7 +111,7 @@ func TestSession(t *testing.T) {
 		i.NID = x.NewUUID()
 		s, err = testhelpers.NewActiveSession(req, reg, i, authAt, identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 		assert.Nil(t, s)
-		assert.ErrorIs(t, err, session.ErrIdentityDisabled)
+		assert.ErrorIs(t, err, session.ErrIdentityDisabled())
 	})
 
 	t.Run("case=expired", func(t *testing.T) {
@@ -73,7 +140,7 @@ func TestSession(t *testing.T) {
 		assert.Equal(t, authAt, s.AuthenticatedAt)
 
 		s = session.NewInactiveSession()
-		require.ErrorIs(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateInactive}, authAt), session.ErrIdentityDisabled)
+		require.ErrorIs(t, reg.SessionManager().ActivateSession(req, s, &identity.Identity{NID: x.NewUUID(), State: identity.StateInactive}, authAt), session.ErrIdentityDisabled())
 		assert.False(t, s.Active)
 		assert.Equal(t, identity.NoAuthenticatorAssuranceLevel, s.AuthenticatorAssuranceLevel)
 		assert.Empty(t, s.AuthenticatedAt)
@@ -343,6 +410,119 @@ func TestSession(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("case=federated AAL2 carry-over", func(t *testing.T) {
+		// A single OIDC or SAML method tagged AAL2 elevates the
+		// session to AAL2 on its own. This is the upstream-MFA
+		// carry-over path: the provider config matched the upstream
+		// `acr` or `amr` claims, so Ory trusts that the upstream IdP
+		// already performed a second factor. Local methods (password,
+		// TOTP, WebAuthn, lookup, recovery) still need to be paired
+		// with an AAL1 entry to reach AAL2.
+		for _, tc := range []struct {
+			d        string
+			methods  []session.AuthenticationMethod
+			expected identity.AuthenticatorAssuranceLevel
+		}{
+			{
+				d: "single OIDC method with explicit AAL2 is AAL2",
+				methods: []session.AuthenticationMethod{
+					{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel2},
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+			{
+				d: "single SAML method with explicit AAL2 is AAL2",
+				methods: []session.AuthenticationMethod{
+					{Method: identity.CredentialsTypeSAML, AAL: identity.AuthenticatorAssuranceLevel2},
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+			{
+				d: "single password method tagged AAL2 stays AAL1",
+				methods: []session.AuthenticationMethod{
+					{Method: identity.CredentialsTypePassword, AAL: identity.AuthenticatorAssuranceLevel2},
+				},
+				expected: identity.AuthenticatorAssuranceLevel1,
+			},
+			{
+				d: "single WebAuthn method tagged AAL2 stays AAL1",
+				methods: []session.AuthenticationMethod{
+					{Method: identity.CredentialsTypeWebAuthn, AAL: identity.AuthenticatorAssuranceLevel2},
+				},
+				expected: identity.AuthenticatorAssuranceLevel1,
+			},
+			{
+				d: "OIDC AAL2 carry-over plus extra password AAL1 stays AAL2",
+				methods: []session.AuthenticationMethod{
+					{Method: identity.CredentialsTypePassword, AAL: identity.AuthenticatorAssuranceLevel1},
+					{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel2},
+				},
+				expected: identity.AuthenticatorAssuranceLevel2,
+			},
+		} {
+			t.Run("case="+tc.d, func(t *testing.T) {
+				s := session.NewInactiveSession()
+				for _, m := range tc.methods {
+					s.CompletedLoginFor(m.Method, m.AAL)
+				}
+				s.SetAuthenticatorAssuranceLevel()
+				assert.Equal(t, tc.expected, s.AuthenticatorAssuranceLevel)
+			})
+		}
+	})
+
+	t.Run("case=authentication method upstream acr/amr round-trip", func(t *testing.T) {
+		t.Parallel()
+		in := session.AuthenticationMethod{
+			Method:       identity.CredentialsTypeOIDC,
+			AAL:          identity.AuthenticatorAssuranceLevel2,
+			CompletedAt:  time.Now().UTC().Round(time.Second),
+			Provider:     "hydra",
+			Organization: "acme",
+			UpstreamACR:  "urn:mfa",
+			UpstreamAMR:  []string{"pwd", "mfa"},
+		}
+
+		value, err := in.Value()
+		require.NoError(t, err)
+
+		var out session.AuthenticationMethod
+		require.NoError(t, out.Scan(value))
+		assert.Equal(t, in, out)
+
+		// Also round-trip via a list, to exercise the AuthenticationMethods
+		// Scan/Value path used by the sessions table column.
+		methods := session.AuthenticationMethods{in}
+		listValue, err := methods.Value()
+		require.NoError(t, err)
+
+		var outList session.AuthenticationMethods
+		require.NoError(t, outList.Scan(listValue))
+		require.Len(t, outList, 1)
+		assert.Equal(t, in, outList[0])
+	})
+
+	t.Run("case=CompletedLoginForOIDC populates upstream claims", func(t *testing.T) {
+		t.Parallel()
+		s := session.NewInactiveSession()
+		s.CompletedLoginForOIDC(
+			identity.CredentialsTypeOIDC,
+			identity.AuthenticatorAssuranceLevel2,
+			"hydra",
+			"acme",
+			"urn:mfa",
+			[]string{"pwd", "mfa"},
+		)
+		require.Len(t, s.AMR, 1)
+		assert.Equal(t, identity.CredentialsTypeOIDC, s.AMR[0].Method)
+		assert.Equal(t, identity.AuthenticatorAssuranceLevel2, s.AMR[0].AAL)
+		assert.Equal(t, "hydra", s.AMR[0].Provider)
+		assert.Equal(t, "acme", s.AMR[0].Organization)
+		assert.Equal(t, "urn:mfa", s.AMR[0].UpstreamACR)
+		assert.Equal(t, []string{"pwd", "mfa"}, s.AMR[0].UpstreamAMR)
+		assert.False(t, s.AMR[0].CompletedAt.IsZero())
+	})
 
 	t.Run("case=session refresh", func(t *testing.T) {
 		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)

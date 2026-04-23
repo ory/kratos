@@ -30,7 +30,7 @@ type VerificationToken struct {
 
 	// VerifiableAddress links this token to a verification address.
 	// required: true
-	VerifiableAddress *identity.VerifiableAddress `json:"verification_address" belongs_to:"identity_verifiable_addresses" fk_id:"VerificationAddVerifiableAddressIDressID"`
+	VerifiableAddress *identity.VerifiableAddress `json:"verification_address" belongs_to:"identity_verifiable_addresses" fk_id:"identity_verifiable_address_id"`
 
 	// ExpiresAt is the time (UTC) when the token expires.
 	// required: true
@@ -45,7 +45,7 @@ type VerificationToken struct {
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
 	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
 	// VerifiableAddressID is a helper struct field for gobuffalo.pop.
-	VerifiableAddressID uuid.UUID `json:"-" faker:"-" db:"identity_verifiable_address_id"`
+	VerifiableAddressID uuid.NullUUID `json:"-" faker:"-" db:"identity_verifiable_address_id"`
 	// FlowID is a helper struct field for gobuffalo.pop.
 	FlowID uuid.UUID `json:"-" faker:"-" db:"selfservice_verification_flow_id"`
 	NID    uuid.UUID `json:"-" faker:"-" db:"nid"`
@@ -55,16 +55,26 @@ func (VerificationToken) TableName(ctx context.Context) string {
 	return "identity_verification_tokens"
 }
 
-func NewSelfServiceVerificationToken(address *identity.VerifiableAddress, f *verification.Flow, expiresIn time.Duration) *VerificationToken {
+func NewSelfServiceVerificationToken(address identity.VerifiableAddressLike, f *verification.Flow, expiresIn time.Duration) *VerificationToken {
 	now := time.Now().UTC()
-	return &VerificationToken{
-		ID:                x.NewUUID(),
-		Token:             randx.MustString(32, randx.AlphaNum),
-		VerifiableAddress: address,
-		ExpiresAt:         now.Add(expiresIn),
-		IssuedAt:          now,
-		FlowID:            f.ID,
+
+	token := &VerificationToken{
+		ID:        x.NewUUID(),
+		Token:     randx.MustString(32, randx.AlphaNum),
+		ExpiresAt: now.Add(expiresIn),
+		IssuedAt:  now,
+		FlowID:    f.ID,
 	}
+	if address != nil {
+		if va, isPersistable := address.ToPersistable(); isPersistable {
+			token.VerifiableAddress = va
+			token.VerifiableAddressID = uuid.NullUUID{
+				UUID:  va.ID,
+				Valid: true,
+			}
+		}
+	}
+	return token
 }
 
 func (f *VerificationToken) Valid() error {

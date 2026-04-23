@@ -14,7 +14,7 @@ import (
 
 func TestMessageStatusValidity(t *testing.T) {
 	invalid := courier.MessageStatus(0)
-	require.ErrorIs(t, invalid.IsValid(), herodot.ErrBadRequest, "IsValid() should return an error when message status is invalid")
+	require.ErrorIs(t, invalid.IsValid(), herodot.ErrBadRequest(), "IsValid() should return an error when message status is invalid")
 }
 
 func TestToMessageStatus(t *testing.T) {
@@ -32,14 +32,14 @@ func TestToMessageStatus(t *testing.T) {
 	})
 	t.Run("case=should return error for invalid message status str", func(t *testing.T) {
 		result, err := courier.ToMessageStatus("invalid")
-		require.Error(t, err, herodot.ErrBadRequest)
-		require.Error(t, result.IsValid(), herodot.ErrBadRequest)
+		require.Error(t, err, herodot.ErrBadRequest())
+		require.Error(t, result.IsValid(), herodot.ErrBadRequest())
 	})
 }
 
 func TestMessageTypeValidity(t *testing.T) {
 	invalid := courier.MessageType(0)
-	require.ErrorIs(t, invalid.IsValid(), herodot.ErrBadRequest, "IsValid() should return an error when message type is invalid")
+	require.ErrorIs(t, invalid.IsValid(), herodot.ErrBadRequest(), "IsValid() should return an error when message type is invalid")
 }
 
 func TestToMessageType(t *testing.T) {
@@ -55,7 +55,7 @@ func TestToMessageType(t *testing.T) {
 	})
 	t.Run("case=should return error for invalid message type str", func(t *testing.T) {
 		result, err := courier.ToMessageType("invalid")
-		require.ErrorIs(t, err, herodot.ErrBadRequest)
-		require.ErrorIs(t, result.IsValid(), herodot.ErrBadRequest)
+		require.ErrorIs(t, err, herodot.ErrBadRequest())
+		require.ErrorIs(t, result.IsValid(), herodot.ErrBadRequest())
 	})
 }

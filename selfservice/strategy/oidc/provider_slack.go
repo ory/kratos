@@ -67,14 +67,14 @@ func (d *ProviderSlack) Claims(ctx context.Context, exchange *oauth2.Token, quer
 	grantedScopes := stringsx.Splitx(fmt.Sprintf("%s", exchange.Extra("scope")), ",")
 	for _, check := range d.Config().Scope {
 		if !slices.Contains(grantedScopes, check) {
-			return nil, errors.WithStack(ErrScopeMissing)
+			return nil, errors.WithStack(ErrScopeMissing())
 		}
 	}
 
 	api := slack.New(exchange.AccessToken)
 	identity, err := api.GetUserIdentity()
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithWrap(err).WithReasonf("%s", err))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(err).WithReasonf("%s", err))
 	}
 
 	claims := &Claims{

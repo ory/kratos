@@ -22,6 +22,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
@@ -37,6 +38,8 @@ type dependencies interface {
 	config.Provider
 
 	continuity.ManagementProvider
+
+	x.CookieProvider
 
 	errorx.ManagementProvider
 	hash.HashProvider

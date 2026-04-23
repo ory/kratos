@@ -24,7 +24,7 @@ import (
 func encryptState(ctx context.Context, c cipher.Cipher, state *oidcv1.State) (ciphertext string, err error) {
 	m, err := proto.Marshal(state)
 	if err != nil {
-		return "", herodot.ErrInternalServerError.WithReasonf("Unable to marshal state: %s", err)
+		return "", herodot.ErrInternalServerError().WithReasonf("Unable to marshal state: %s", err)
 	}
 	return c.Encrypt(ctx, m)
 }
@@ -32,11 +32,11 @@ func encryptState(ctx context.Context, c cipher.Cipher, state *oidcv1.State) (ci
 func DecryptState(ctx context.Context, c cipher.Cipher, ciphertext string) (*oidcv1.State, error) {
 	plaintext, err := c.Decrypt(ctx, ciphertext)
 	if err != nil {
-		return nil, herodot.ErrBadRequest.WithReasonf("Unable to decrypt state: %s", err)
+		return nil, herodot.ErrBadRequest().WithReasonf("Unable to decrypt state: %s", err)
 	}
 	var state oidcv1.State
 	if err := proto.Unmarshal(plaintext, &state); err != nil {
-		return nil, herodot.ErrBadRequest.WithReasonf("Unable to unmarshal state: %s", err)
+		return nil, herodot.ErrBadRequest().WithReasonf("Unable to unmarshal state: %s", err)
 	}
 	return &state, nil
 }
@@ -67,7 +67,7 @@ func (s *Strategy) GenerateState(ctx context.Context, p Provider, flow flow.Flow
 
 	param, err := encryptState(ctx, s.d.Cipher(ctx), &state)
 	if err != nil {
-		return "", nil, herodot.ErrInternalServerError.WithReason("Unable to encrypt state").WithWrap(err)
+		return "", nil, herodot.ErrInternalServerError().WithReason("Unable to encrypt state").WithWrap(err)
 	}
 	pkce = PKCEChallenge(&state)
 	if isSberProviderID(p.Config().ID) {

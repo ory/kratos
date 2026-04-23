@@ -383,6 +383,21 @@ func NewErrorValidationTOTPVerifierWrong() *Message {
 	}
 }
 
+func NewErrorValidationWebAuthnVerifierWrong() *Message {
+	return &Message{
+		ID:   ErrorValidationWebAuthnVerifierWrong,
+		Text: "The provided web authn login is invalid, please try again.",
+		Type: Error,
+	}
+}
+func NewErrorValidationDeviceAuthnVerifierWrong() *Message {
+	return &Message{
+		ID:   ErrorValidationDeviceAuthnVerifierWrong,
+		Text: "The provided DeviceAuthn signature is invalid.",
+		Type: Error,
+	}
+}
+
 func NewErrorValidationLookupAlreadyUsed() *Message {
 	return &Message{
 		ID:   ErrorValidationLookupAlreadyUsed,
@@ -443,6 +458,14 @@ func NewErrorValidationSuchNoWebAuthnUser() *Message {
 	return &Message{
 		ID:   ErrorValidationSuchNoWebAuthnUser,
 		Text: "This account does not exist or has no security key set up.",
+		Type: Error,
+	}
+}
+
+func NewErrorValidationNoDeviceAuthnDevice() *Message {
+	return &Message{
+		ID:   ErrorValidationNoDeviceAuthnDevice,
+		Text: "You have no DeviceAuthn device set up.",
 		Type: Error,
 	}
 }

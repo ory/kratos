@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/decoderx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -93,7 +95,7 @@ type updateVerificationFlowWithCodeMethod struct {
 	// If the provided address belongs to a valid account, a verification email or SMS will be sent.
 	//
 	// If you want to notify the email address if the account does not exist, see
-	// the [notify_unknown_recipients flag](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)
+	// the [notify_unknown_recipients flag](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation#attempted-verification-notifications)
 	//
 	// If a code was already sent, including this field in the payload will invalidate the sent code and re-send a new code.
 	//
@@ -218,7 +220,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 
 	via := hackyInferChannel(body.Email)
 	if err := s.deps.CodeSender().SendVerificationCode(ctx, f, via, body.Email); err != nil {
-		if !errors.Is(err, ErrUnknownAddress) {
+		if !errors.Is(err, ErrUnknownAddress()) {
 			return s.handleVerificationError(r, f, body, err)
 		}
 		// Continue execution
@@ -249,39 +251,97 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 	return nil
 }
 
+func (s *Strategy) updateVerificationFlowWithMessage(ctx context.Context, w http.ResponseWriter, r *http.Request, f *verification.Flow, message *text.Message) error {
+	f.UI.Messages.Clear()
+	f.UI.Messages.Add(message)
+
+	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
+		return err
+	}
+
+	if x.IsBrowserRequest(r) {
+		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
+	} else {
+		s.deps.Writer().Write(w, r, f)
+	}
+	return nil
+}
+
 func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWriter, r *http.Request, codeString string, f *verification.Flow) error {
 	code, err := s.deps.VerificationCodePersister().UseVerificationCode(ctx, f.ID, codeString)
-	if errors.Is(err, ErrCodeNotFound) {
-		f.UI.Messages.Clear()
-		f.UI.Messages.Add(text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed())
-		if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
+	if errors.Is(err, ErrCodeNotFound()) {
+		if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed()); err != nil {
 			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
-		}
-
-		if x.IsBrowserRequest(r) {
-			http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
-		} else {
-			s.deps.Writer().Write(w, r, f)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	} else if err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 	}
 
-	address := code.VerifiableAddress
-	address.Verified = true
-	verifiedAt := sqlxx.NullTime(time.Now().UTC())
-	address.VerifiedAt = &verifiedAt
-	address.Status = identity.VerifiableAddressStatusCompleted
-	if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); err != nil {
-		return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+	var identityID uuid.UUID
+	var addressVia string
+
+	if code.VerifiableAddress == nil {
+		// Pending-change path: no persisted address — look up by verification flow ID.
+		ptc, ptcErr := s.deps.PendingTraitsChangePersister().GetPendingTraitsChangeByVerificationFlow(ctx, f.ID)
+		if ptcErr != nil {
+			if !errors.Is(ptcErr, sqlcon.ErrNoRows()) {
+				// Some other error occured, we should retry the flow with an error message.
+				return s.retryVerificationFlowWithError(ctx, w, r, f.Type, ptcErr)
+			}
+
+			// The PTC for this verification flow was not found.
+			// Usually, this means the race detection in the PTC creation/deletion logic detected a concurrent modification and deleted the PTC after the code was issued, but before it was used.
+			// In this case, we want to show an "invalid or already used" message.
+			if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed()); err != nil {
+				return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+			}
+
+			return errors.WithStack(flow.ErrCompletedByStrategy)
+		}
+
+		// Security note: the verification flow is unauthenticated by design. The
+		// user clicks a link from email/SMS. The pending change is bound to the
+		// identity via IdentityID, but we cannot validate session ownership at
+		// completion time. The security model relies on:
+		//   1. The verification code is sent to the *new* address (attacker needs inbox access).
+		//   2. The verification flow has a TTL (enforced by the flow handler).
+		//   3. The one-time code is consumed on use (cannot be replayed).
+		// Creation of pending changes is gated by a privileged session check.
+
+		if err := s.deps.IdentityManager().ApplyPendingTraitsChange(ctx, ptc); err != nil {
+			if errors.Is(err, identity.ErrConcurrentModification) {
+				if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed()); err != nil {
+					return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+				}
+				return errors.WithStack(flow.ErrCompletedByStrategy)
+			}
+			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+		}
+
+		addressVia = ptc.NewAddressVia
+		identityID = ptc.IdentityID
+	} else {
+		// Normal path: update the existing verifiable address directly.
+		address := code.VerifiableAddress
+		address.Verified = true
+		verifiedAt := sqlxx.NullTime(time.Now().UTC())
+		address.VerifiedAt = &verifiedAt
+		address.Status = identity.VerifiableAddressStatusCompleted
+		if err := s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "verified", "verified_at", "status"); err != nil {
+			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+		}
+
+		addressVia = address.Via
+		identityID = code.VerifiableAddress.IdentityID
 	}
 
-	i, err := s.deps.IdentityPool().GetIdentity(ctx, code.VerifiableAddress.IdentityID, identity.ExpandDefault)
+	i, err := s.deps.IdentityPool().GetIdentity(ctx, identityID, identity.ExpandDefault)
 	if err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 	}
 
+	// Remainder is shared between both paths.
 	returnTo := f.ContinueURL(ctx, s.deps.Config())
 
 	f.UI = &container.Container{
@@ -290,17 +350,14 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 	}
 
 	f.State = flow.StatePassedChallenge
-	// See https://github.com/ory/kratos/issues/1547
 	f.SetCSRFToken(flow.GetCSRFToken(s.deps, w, r, f.Type))
-	if address.Via == identity.AddressTypeSMS {
+	if addressVia == identity.AddressTypeSMS {
 		f.UI.Messages.Set(text.NewInfoSelfServiceVerificationPhoneSuccessful())
 	} else {
 		f.UI.Messages.Set(text.NewInfoSelfServiceVerificationSuccessful())
 	}
-	f.UI.
-		Nodes.
-		Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).
-			WithMetaLabel(text.NewInfoNodeLabelContinue()))
+	f.UI.Nodes.Append(node.NewAnchorField("continue", returnTo.String(), node.CodeGroup, text.NewInfoNodeLabelContinue()).
+		WithMetaLabel(text.NewInfoNodeLabelContinue()))
 
 	if err := s.deps.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
@@ -380,18 +437,17 @@ func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.Re
 	return errors.WithStack(flow.ErrCompletedByStrategy)
 }
 
-func (s *Strategy) SendVerificationCode(ctx context.Context, f *verification.Flow, i *identity.Identity, a *identity.VerifiableAddress) (err error) {
+func (s *Strategy) SendVerificationCode(ctx context.Context, f *verification.Flow, i *identity.Identity, a identity.VerifiableAddressLike) (err error) {
 	rawCode := GenerateCode()
 
-	code, err := s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
+	if _, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,
 		ExpiresIn:         s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
 		VerifiableAddress: a,
 		FlowID:            f.ID,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
-	return s.deps.CodeSender().SendVerificationCodeTo(ctx, f, i, rawCode, code)
+	return s.deps.CodeSender().SendVerificationCodeTo(ctx, f, i, rawCode, a)
 }

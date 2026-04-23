@@ -5,6 +5,7 @@ package identity
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -103,4 +104,34 @@ func (a VerifiableAddress) GetID() uuid.UUID {
 // Signature returns a unique string representation for the recovery address.
 func (a VerifiableAddress) Signature() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v", a.Value, a.Verified, a.Via, a.Status, a.VerifiedAt, a.IdentityID, a.NID)
+}
+
+func VerifiableAddressesEqual(original, updated []VerifiableAddress) bool {
+	return slices.EqualFunc(original, updated, func(a, b VerifiableAddress) bool {
+		return a.Signature() == b.Signature()
+	})
+}
+
+type VerifiableAddressLike interface {
+	// ToPersistable returns the verifiable address to be persisted.
+	// Returns nil when the change is pending (e.g., via PendingTraitsChange).
+	ToPersistable() (va *VerifiableAddress, isPersistable bool)
+	// Address returns the address value
+	Address() string
+	// Via returns the delivery method
+	DeliveryVia() string
+}
+
+var _ VerifiableAddressLike = &VerifiableAddress{}
+
+func (va *VerifiableAddress) ToPersistable() (*VerifiableAddress, bool) {
+	return va, true
+}
+
+func (va VerifiableAddress) Address() string {
+	return va.Value
+}
+
+func (va VerifiableAddress) DeliveryVia() string {
+	return va.Via
 }

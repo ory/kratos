@@ -557,7 +557,7 @@ func TestRecovery(t *testing.T) {
 				if isAPI || isSPA {
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), recovery.RouteSubmitFlow, "%+v\n\t%s", res.Request, body)
-					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.Get(body, "error").Raw), nil)
+					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.Get(body, "error").Raw), nil)
 				} else {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%+v\n\t%s", res.Request, body)
@@ -1394,7 +1394,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 				if isAPI || isSPA {
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), recovery.RouteSubmitFlow, "%+v\n\t%s", res.Request, body)
-					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.Get(body, "error").Raw), nil)
+					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.Get(body, "error").Raw), nil)
 				} else {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%+v\n\t%s", res.Request, body)
@@ -1453,7 +1453,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					fallthrough
 				case RecoveryClientTypeSPA:
 					body = submitRecoveryCode(t, cl, body, testCase.ClientType, recoveryCode, http.StatusBadRequest)
-					assert.Equal(t, session.ErrIdentityDisabled.Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
+					assert.Equal(t, session.ErrIdentityDisabled().Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
 				default:
 					body = submitRecoveryCode(t, cl, body, testCase.ClientType, recoveryCode, http.StatusOK)
 					assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
@@ -2331,7 +2331,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 				if isAPI || isSPA {
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), recovery.RouteSubmitFlow, "%+v\n\t%s", res.Request, body)
-					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.Get(body, "error").Raw), nil)
+					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.Get(body, "error").Raw), nil)
 				} else {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%+v\n\t%s", res.Request, body)
@@ -2391,7 +2391,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 				case RecoveryClientTypeAPI:
 					fallthrough
 				case RecoveryClientTypeSPA:
-					assert.Equal(t, session.ErrIdentityDisabled.Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
+					assert.Equal(t, session.ErrIdentityDisabled().Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
 				default:
 					assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
 				}
@@ -3097,7 +3097,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 				if isAPI || isSPA {
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), recovery.RouteSubmitFlow, "%+v\n\t%s", res.Request, body)
-					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.Get(body, "error").Raw), nil)
+					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.Get(body, "error").Raw), nil)
 				} else {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%+v\n\t%s", res.Request, body)
@@ -3155,7 +3155,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 				case RecoveryClientTypeAPI:
 					fallthrough
 				case RecoveryClientTypeSPA:
-					assert.Equal(t, session.ErrIdentityDisabled.Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
+					assert.Equal(t, session.ErrIdentityDisabled().Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
 				default:
 					assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
 				}
@@ -3932,7 +3932,7 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 				if isAPI || isSPA {
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), recovery.RouteSubmitFlow, "%+v\n\t%s", res.Request, body)
-					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn, json.RawMessage(gjson.Get(body, "error").Raw), nil)
+					assertx.EqualAsJSONExcept(t, recovery.ErrAlreadyLoggedIn(), json.RawMessage(gjson.Get(body, "error").Raw), nil)
 				} else {
 					assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
 					assert.Contains(t, res.Request.URL.String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%+v\n\t%s", res.Request, body)
@@ -4010,7 +4010,7 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 				case RecoveryClientTypeAPI:
 					fallthrough
 				case RecoveryClientTypeSPA:
-					assert.Equal(t, session.ErrIdentityDisabled.Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
+					assert.Equal(t, session.ErrIdentityDisabled().Reason(), gjson.Get(body, "error.reason").String(), "%s", spew.Sdump(body))
 				default:
 					assert.Equal(t, text.NewErrorValidationIdentityDisabled().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", spew.Sdump(body))
 				}

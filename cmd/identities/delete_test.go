@@ -37,7 +37,7 @@ func TestDeleteCmd(t *testing.T) {
 
 		// expect identity to be deleted
 		_, err := reg.Persister().GetIdentity(context.Background(), i.ID, identity.ExpandNothing)
-		assert.True(t, errors.Is(err, sqlcon.ErrNoRows))
+		assert.True(t, errors.Is(err, sqlcon.ErrNoRows()))
 	})
 
 	t.Run("case=deletes three identities", func(t *testing.T) {

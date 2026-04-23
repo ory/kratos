@@ -46,7 +46,7 @@ func (lt State) IsValid() error {
 
 // Identity represents an Ory Kratos identity
 //
-// An [identity](https://www.ory.sh/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
+// An [identity](https://www.ory.com/docs/kratos/concepts/identity-user-model) represents a (human) user in Ory.
 //
 // swagger:model identity
 type Identity struct {
@@ -210,7 +210,7 @@ func (i *Identity) SetCredentialsWithConfig(t CredentialsType, c Credentials, co
 
 	c.Config, err = json.Marshal(conf)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode %s credentials to JSON: %s", t, err))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode %s credentials to JSON: %s", t, err))
 	}
 
 	c.Type = t
@@ -278,7 +278,7 @@ func (i *Identity) ParseCredentials(t CredentialsType, config any) (*Credentials
 		return &c, nil
 	}
 
-	return nil, herodot.ErrNotFound.WithReasonf("identity does not have credential type %s", t)
+	return nil, herodot.ErrNotFound().WithReasonf("identity does not have credential type %s", t)
 }
 
 func (i *Identity) CopyWithoutCredentials() *Identity {
@@ -300,16 +300,16 @@ func (i *Identity) MergeOIDCCredentials(t CredentialsType, newCreds Credentials)
 
 	var conf CredentialsOIDC
 	if err = json.Unmarshal(creds.Config, &conf); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode old %s credentials from JSON: %s", creds.Config, err))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode old %s credentials from JSON: %s", creds.Config, err))
 	}
 
 	var newConf CredentialsOIDC
 	if err = json.Unmarshal(newCreds.Config, &newConf); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode new %s credentials from JSON: %s", newCreds.Config, err))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode new %s credentials from JSON: %s", newCreds.Config, err))
 	}
 
 	if len(newConf.Providers) != 1 {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected exactly one provider to merge credentials."))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected exactly one provider to merge credentials."))
 	}
 	newProvider := newConf.Providers[0]
 
@@ -430,7 +430,7 @@ func (i WithCredentialsNoConfigAndAdminMetadataInJSON) MarshalJSON() ([]byte, er
 func (i *Identity) Validate() error {
 	expected := i.NID
 	if expected == uuid.Nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReason("Received empty nid."))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReason("Received empty nid."))
 	}
 
 	i.RecoveryAddresses = lo.Filter(i.RecoveryAddresses, func(v RecoveryAddress, key int) bool {
@@ -554,7 +554,7 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 func (i *Identity) deleteCredentialPassword() error {
 	cred, ok := i.GetCredentials(CredentialsTypePassword)
 	if !ok {
-		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a password credential but this user has no such credential set up."))
+		return errors.WithStack(herodot.ErrNotFound().WithReasonf("You tried to remove a password credential but this user has no such credential set up."))
 	}
 	cred.Config = []byte("{}")
 	i.SetCredentials(CredentialsTypePassword, *cred)
@@ -566,13 +566,13 @@ func (i *Identity) deleteCredentialWebAuthFromIdentity() error {
 	if !ok {
 		// This should never happend as it's checked earlier in the code;
 		// But we never know...
-		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a WebAuthn credential but this user has no such credential set up."))
+		return errors.WithStack(herodot.ErrNotFound().WithReasonf("You tried to remove a WebAuthn credential but this user has no such credential set up."))
 	}
 
 	var cc CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &cc); err != nil {
 		// Database has been tampered or the json schema are incompatible (migration issue);
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
 	updated := make([]CredentialWebAuthn, 0)
@@ -590,7 +590,7 @@ func (i *Identity) deleteCredentialWebAuthFromIdentity() error {
 	cc.Credentials = updated
 	message, err := json.Marshal(cc)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
 
 	cred.Config = message
@@ -603,19 +603,19 @@ func (i *Identity) deleteCredentialOIDCSAMLFromIdentity(ct CredentialsType, iden
 	case CredentialsTypeOIDC, CredentialsTypeSAML:
 		// ok
 	default:
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unexpected credential type encountered: got %q, expected [%s, %s]", ct, CredentialsTypeOIDC, CredentialsTypeSAML))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unexpected credential type encountered: got %q, expected [%s, %s]", ct, CredentialsTypeOIDC, CredentialsTypeSAML))
 	}
 	if identifierToDelete == "" {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You must provide an identifier to delete this credential."))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("You must provide an identifier to delete this credential."))
 	}
 	_, hasOIDC := i.GetCredentials(ct)
 	if !hasOIDC {
-		return errors.WithStack(herodot.ErrNotFound.WithReasonf("You tried to remove a %s credential but this user has no such credential set up.", ct))
+		return errors.WithStack(herodot.ErrNotFound().WithReasonf("You tried to remove a %s credential but this user has no such credential set up.", ct))
 	}
 	var oidcConfig CredentialsOIDC
 	creds, err := i.ParseCredentials(ct, &oidcConfig)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
 	updatedIdentifiers := make([]string, 0, len(oidcConfig.Providers))
@@ -630,12 +630,12 @@ func (i *Identity) deleteCredentialOIDCSAMLFromIdentity(ct CredentialsType, iden
 		updatedProviders = append(updatedProviders, cfg)
 	}
 	if !found {
-		return errors.WithStack(herodot.ErrNotFound.WithReasonf("The identifier `%s` was not found among OIDC credentials.", identifierToDelete))
+		return errors.WithStack(herodot.ErrNotFound().WithReasonf("The identifier `%s` was not found among OIDC credentials.", identifierToDelete))
 	}
 	creds.Identifiers = updatedIdentifiers
 	creds.Config, err = json.Marshal(&CredentialsOIDC{Providers: updatedProviders})
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
 	i.Credentials[ct] = *creds
 	return nil

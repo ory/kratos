@@ -21,6 +21,14 @@ func NewErrorValidationSettingsFlowExpired(expiredAt time.Time) *Message {
 	}
 }
 
+func NewErrorValidationSettingsTooManyAddressChanges() *Message {
+	return &Message{
+		ID:   ErrorValidationSettingsTooManyAddressChanges,
+		Text: "You can only change one address at a time. Please update each address separately.",
+		Type: Error,
+	}
+}
+
 func NewInfoSelfServiceSettingsTOTPQRCode() *Message {
 	return &Message{
 		ID:   InfoSelfServiceSettingsTOTPQRCode,

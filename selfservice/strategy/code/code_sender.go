@@ -61,7 +61,9 @@ type (
 	}
 )
 
-var ErrUnknownAddress = herodot.ErrNotFound.WithReason("recovery requested for unknown address")
+func ErrUnknownAddress() *herodot.DefaultError {
+	return herodot.ErrNotFound().WithReason("recovery requested for unknown address")
+}
 
 func NewSender(deps senderDependencies) *Sender {
 	return &Sender{deps: deps}
@@ -211,7 +213,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to
 		Debug("Preparing recovery code.")
 
 	address, err := s.deps.IdentityPool().FindRecoveryAddressByValue(ctx, via, to)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx)
 		s.deps.Logger().
 			WithField("via", via).
@@ -238,7 +240,7 @@ func (s *Sender) SendRecoveryCode(ctx context.Context, f *recovery.Flow, via, to
 		})); err != nil {
 			return err
 		}
-		return errors.WithStack(ErrUnknownAddress)
+		return errors.WithStack(ErrUnknownAddress())
 	} else if err != nil {
 		// DB error
 		return err
@@ -318,7 +320,7 @@ func (s *Sender) SendRecoveryCodeTo(ctx context.Context, i *identity.Identity, c
 			UserRequestHeaders: hook.RemoveDisallowedHeaders(requestHeader, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 		})
 	default:
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.RecoveryAddress.Via))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email or sms but got %s", code.RecoveryAddress.Via))
 	}
 
 	return s.send(ctx, code.RecoveryAddress.Via, t)
@@ -336,7 +338,7 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		Debug("Preparing verification code.")
 
 	address, err := s.deps.IdentityPool().FindVerifiableAddressByValue(ctx, via, to)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		notifyUnknownRecipients := s.deps.Config().SelfServiceFlowVerificationNotifyUnknownRecipients(ctx)
 		s.deps.Logger().
 			WithField("via", via).
@@ -359,15 +361,14 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		})); err != nil {
 			return err
 		}
-		return errors.WithStack(ErrUnknownAddress)
+		return errors.WithStack(ErrUnknownAddress())
 
 	} else if err != nil {
 		return err
 	}
 
 	rawCode := GenerateCode()
-	var code *VerificationCode
-	if code, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
+	if _, err = s.deps.VerificationCodePersister().CreateVerificationCode(ctx, &CreateVerificationCodeParams{
 		RawCode:           rawCode,
 		ExpiresIn:         s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
 		VerifiableAddress: address,
@@ -382,7 +383,12 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 		return err
 	}
 
-	return s.SendVerificationCodeTo(ctx, f, i, rawCode, code)
+	if err := s.SendVerificationCodeTo(ctx, f, i, rawCode, address); err != nil {
+		return err
+	}
+
+	address.Status = identity.VerifiableAddressStatusSent
+	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "status")
 }
 
 func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, codeStr string) string {
@@ -394,12 +400,12 @@ func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, c
 		}).String()
 }
 
-func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, code *VerificationCode) error {
+func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flow, i *identity.Identity, codeString string, address identity.VerifiableAddressLike) error {
+	to, via := address.Address(), address.DeliveryVia()
 	s.deps.Logger().
-		WithField("via", code.VerifiableAddress.Via).
+		WithField("via", via).
 		WithField("identity_id", i.ID).
-		WithField("verification_code_id", code.ID).
-		WithSensitiveField("email_address", code.VerifiableAddress.Value).
+		WithSensitiveField("email_address", to).
 		WithSensitiveField("verification_link_token", codeString).
 		Info("Sending out verification email with verification code.")
 
@@ -416,10 +422,10 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 	var t courier.Template
 
 	// TODO: this can likely be abstracted by making templates not specific to the channel they're using
-	switch code.VerifiableAddress.Via {
+	switch via {
 	case identity.ChannelTypeEmail:
 		t = email.NewVerificationCodeValid(s.deps, &email.VerificationCodeValidModel{
-			To:               code.VerifiableAddress.Value,
+			To:               to,
 			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
 			Identity:         model,
 			VerificationCode: codeString,
@@ -429,7 +435,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		})
 	case identity.ChannelTypeSMS:
 		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
-			To:               code.VerifiableAddress.Value,
+			To:               to,
 			VerificationCode: codeString,
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
@@ -437,14 +443,10 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 		})
 	default:
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email or sms but got %s", code.VerifiableAddress.Via))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email or sms but got %s", via))
 	}
 
-	if err := s.send(ctx, code.VerifiableAddress.Via, t); err != nil {
-		return err
-	}
-	code.VerifiableAddress.Status = identity.VerifiableAddressStatusSent
-	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, code.VerifiableAddress, "status")
+	return s.send(ctx, via, t)
 }
 
 func (s *Sender) send(ctx context.Context, via string, t courier.Template) error {
@@ -457,7 +459,7 @@ func (s *Sender) send(ctx context.Context, via string, t courier.Template) error
 
 		t, ok := t.(courier.EmailTemplate)
 		if !ok {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected email template but got %T", t))
+			return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email template but got %T", t))
 		}
 
 		_, err = c.QueueEmail(ctx, t)
@@ -470,7 +472,7 @@ func (s *Sender) send(ctx context.Context, via string, t courier.Template) error
 
 		t, ok := t.(courier.SMSTemplate)
 		if !ok {
-			return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected sms template but got %T", t))
+			return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected sms template but got %T", t))
 		}
 
 		_, err = c.QueueSMS(ctx, t)

@@ -20,9 +20,13 @@ var _ MappedNullable = &IdentityWithCredentials{}
 
 // IdentityWithCredentials Create Identity and Import Credentials
 type IdentityWithCredentials struct {
-	Oidc                 *IdentityWithCredentialsOidc     `json:"oidc,omitempty"`
-	Password             *IdentityWithCredentialsPassword `json:"password,omitempty"`
-	Saml                 *IdentityWithCredentialsSaml     `json:"saml,omitempty"`
+	LookupSecret         *AdminIdentityImportCredentialsLookupSecret `json:"lookup_secret,omitempty"`
+	Oidc                 *IdentityWithCredentialsOidc                `json:"oidc,omitempty"`
+	Passkey              *IdentityWithCredentialsPasskey             `json:"passkey,omitempty"`
+	Password             *IdentityWithCredentialsPassword            `json:"password,omitempty"`
+	Saml                 *IdentityWithCredentialsSaml                `json:"saml,omitempty"`
+	Totp                 *IdentityWithCredentialsTotp                `json:"totp,omitempty"`
+	Webauthn             *IdentityWithCredentialsWebAuthn            `json:"webauthn,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
 
@@ -43,6 +47,38 @@ func NewIdentityWithCredentials() *IdentityWithCredentials {
 func NewIdentityWithCredentialsWithDefaults() *IdentityWithCredentials {
 	this := IdentityWithCredentials{}
 	return &this
+}
+
+// GetLookupSecret returns the LookupSecret field value if set, zero value otherwise.
+func (o *IdentityWithCredentials) GetLookupSecret() AdminIdentityImportCredentialsLookupSecret {
+	if o == nil || IsNil(o.LookupSecret) {
+		var ret AdminIdentityImportCredentialsLookupSecret
+		return ret
+	}
+	return *o.LookupSecret
+}
+
+// GetLookupSecretOk returns a tuple with the LookupSecret field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityWithCredentials) GetLookupSecretOk() (*AdminIdentityImportCredentialsLookupSecret, bool) {
+	if o == nil || IsNil(o.LookupSecret) {
+		return nil, false
+	}
+	return o.LookupSecret, true
+}
+
+// HasLookupSecret returns a boolean if a field has been set.
+func (o *IdentityWithCredentials) HasLookupSecret() bool {
+	if o != nil && !IsNil(o.LookupSecret) {
+		return true
+	}
+
+	return false
+}
+
+// SetLookupSecret gets a reference to the given AdminIdentityImportCredentialsLookupSecret and assigns it to the LookupSecret field.
+func (o *IdentityWithCredentials) SetLookupSecret(v AdminIdentityImportCredentialsLookupSecret) {
+	o.LookupSecret = &v
 }
 
 // GetOidc returns the Oidc field value if set, zero value otherwise.
@@ -75,6 +111,38 @@ func (o *IdentityWithCredentials) HasOidc() bool {
 // SetOidc gets a reference to the given IdentityWithCredentialsOidc and assigns it to the Oidc field.
 func (o *IdentityWithCredentials) SetOidc(v IdentityWithCredentialsOidc) {
 	o.Oidc = &v
+}
+
+// GetPasskey returns the Passkey field value if set, zero value otherwise.
+func (o *IdentityWithCredentials) GetPasskey() IdentityWithCredentialsPasskey {
+	if o == nil || IsNil(o.Passkey) {
+		var ret IdentityWithCredentialsPasskey
+		return ret
+	}
+	return *o.Passkey
+}
+
+// GetPasskeyOk returns a tuple with the Passkey field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityWithCredentials) GetPasskeyOk() (*IdentityWithCredentialsPasskey, bool) {
+	if o == nil || IsNil(o.Passkey) {
+		return nil, false
+	}
+	return o.Passkey, true
+}
+
+// HasPasskey returns a boolean if a field has been set.
+func (o *IdentityWithCredentials) HasPasskey() bool {
+	if o != nil && !IsNil(o.Passkey) {
+		return true
+	}
+
+	return false
+}
+
+// SetPasskey gets a reference to the given IdentityWithCredentialsPasskey and assigns it to the Passkey field.
+func (o *IdentityWithCredentials) SetPasskey(v IdentityWithCredentialsPasskey) {
+	o.Passkey = &v
 }
 
 // GetPassword returns the Password field value if set, zero value otherwise.
@@ -141,6 +209,70 @@ func (o *IdentityWithCredentials) SetSaml(v IdentityWithCredentialsSaml) {
 	o.Saml = &v
 }
 
+// GetTotp returns the Totp field value if set, zero value otherwise.
+func (o *IdentityWithCredentials) GetTotp() IdentityWithCredentialsTotp {
+	if o == nil || IsNil(o.Totp) {
+		var ret IdentityWithCredentialsTotp
+		return ret
+	}
+	return *o.Totp
+}
+
+// GetTotpOk returns a tuple with the Totp field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityWithCredentials) GetTotpOk() (*IdentityWithCredentialsTotp, bool) {
+	if o == nil || IsNil(o.Totp) {
+		return nil, false
+	}
+	return o.Totp, true
+}
+
+// HasTotp returns a boolean if a field has been set.
+func (o *IdentityWithCredentials) HasTotp() bool {
+	if o != nil && !IsNil(o.Totp) {
+		return true
+	}
+
+	return false
+}
+
+// SetTotp gets a reference to the given IdentityWithCredentialsTotp and assigns it to the Totp field.
+func (o *IdentityWithCredentials) SetTotp(v IdentityWithCredentialsTotp) {
+	o.Totp = &v
+}
+
+// GetWebauthn returns the Webauthn field value if set, zero value otherwise.
+func (o *IdentityWithCredentials) GetWebauthn() IdentityWithCredentialsWebAuthn {
+	if o == nil || IsNil(o.Webauthn) {
+		var ret IdentityWithCredentialsWebAuthn
+		return ret
+	}
+	return *o.Webauthn
+}
+
+// GetWebauthnOk returns a tuple with the Webauthn field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *IdentityWithCredentials) GetWebauthnOk() (*IdentityWithCredentialsWebAuthn, bool) {
+	if o == nil || IsNil(o.Webauthn) {
+		return nil, false
+	}
+	return o.Webauthn, true
+}
+
+// HasWebauthn returns a boolean if a field has been set.
+func (o *IdentityWithCredentials) HasWebauthn() bool {
+	if o != nil && !IsNil(o.Webauthn) {
+		return true
+	}
+
+	return false
+}
+
+// SetWebauthn gets a reference to the given IdentityWithCredentialsWebAuthn and assigns it to the Webauthn field.
+func (o *IdentityWithCredentials) SetWebauthn(v IdentityWithCredentialsWebAuthn) {
+	o.Webauthn = &v
+}
+
 func (o IdentityWithCredentials) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -151,14 +283,26 @@ func (o IdentityWithCredentials) MarshalJSON() ([]byte, error) {
 
 func (o IdentityWithCredentials) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
+	if !IsNil(o.LookupSecret) {
+		toSerialize["lookup_secret"] = o.LookupSecret
+	}
 	if !IsNil(o.Oidc) {
 		toSerialize["oidc"] = o.Oidc
+	}
+	if !IsNil(o.Passkey) {
+		toSerialize["passkey"] = o.Passkey
 	}
 	if !IsNil(o.Password) {
 		toSerialize["password"] = o.Password
 	}
 	if !IsNil(o.Saml) {
 		toSerialize["saml"] = o.Saml
+	}
+	if !IsNil(o.Totp) {
+		toSerialize["totp"] = o.Totp
+	}
+	if !IsNil(o.Webauthn) {
+		toSerialize["webauthn"] = o.Webauthn
 	}
 
 	for key, value := range o.AdditionalProperties {
@@ -182,9 +326,13 @@ func (o *IdentityWithCredentials) UnmarshalJSON(data []byte) (err error) {
 	additionalProperties := make(map[string]interface{})
 
 	if err = json.Unmarshal(data, &additionalProperties); err == nil {
+		delete(additionalProperties, "lookup_secret")
 		delete(additionalProperties, "oidc")
+		delete(additionalProperties, "passkey")
 		delete(additionalProperties, "password")
 		delete(additionalProperties, "saml")
+		delete(additionalProperties, "totp")
+		delete(additionalProperties, "webauthn")
 		o.AdditionalProperties = additionalProperties
 	}
 

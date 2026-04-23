@@ -16,14 +16,14 @@ import (
 
 // Pagination Request Parameters
 //
-// For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+// For details on pagination please head over to the [pagination documentation](https://www.ory.com/docs/ecosystem/api-design#pagination).
 //
 // swagger:model keysetPaginationRequestParameters
 type RequestParameters struct {
 	// Items per Page
 	//
 	// This is the number of items per page to return.
-	// For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+	// For details on pagination please head over to the [pagination documentation](https://www.ory.com/docs/ecosystem/api-design#pagination).
 	//
 	// required: false
 	// in: query
@@ -35,7 +35,7 @@ type RequestParameters struct {
 	// Next Page Token
 	//
 	// The next page token.
-	// For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+	// For details on pagination please head over to the [pagination documentation](https://www.ory.com/docs/ecosystem/api-design#pagination).
 	//
 	// required: false
 	// in: query
@@ -47,7 +47,7 @@ type RequestParameters struct {
 // The `Link` HTTP header contains multiple links (`first`, `next`) formatted as:
 // `<https://{project-slug}.projects.oryapis.com/admin/sessions?page_size=250&page_token=>; rel="first"`
 //
-// For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+// For details on pagination please head over to the [pagination documentation](https://www.ory.com/docs/ecosystem/api-design#pagination).
 //
 // swagger:model keysetPaginationResponseHeaders
 type ResponseHeaders struct {
@@ -114,7 +114,7 @@ func ParseQueryParams(keys [][32]byte, q url.Values) ([]Option, error) {
 func ParsePageToken(keys [][32]byte, raw string) (t PageToken, err error) {
 	for i := range keys {
 		err = errors.WithStack(t.decrypt(&keys[i], raw))
-		if errors.Is(err, ErrInvalidPaginationToken) {
+		if errors.Is(err, ErrInvalidPaginationToken()) {
 			continue
 		}
 		// either we successfully decrypted the token, or we got an error that is not ErrInvalidPaginationToken, in both cases we should return immediately

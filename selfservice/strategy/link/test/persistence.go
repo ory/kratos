@@ -86,7 +86,7 @@ func TestPersister(ctx context.Context, p interface {
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.UseRecoveryToken(ctx, f.ID, expected.Token)
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 
 				actual, err := p.UseRecoveryToken(ctx, f.ID, expected.Token)
@@ -171,7 +171,7 @@ func TestPersister(ctx context.Context, p interface {
 				t.Run("not work on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.UseVerificationToken(ctx, f.ID, expected.Token)
-					require.ErrorIs(t, err, sqlcon.ErrNoRows)
+					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 				})
 
 				actual, err := p.UseVerificationToken(ctx, f.ID, expected.Token)

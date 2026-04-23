@@ -70,7 +70,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	t.Run("does redirect to default on authenticated request", func(t *testing.T) {
 		body, res := testhelpers.MockMakeAuthenticatedRequest(t, reg, conf, router, testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+registration.RouteInitAPIFlow, nil))
 		assert.Contains(t, res.Request.URL.String(), registration.RouteInitAPIFlow)
-		assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw))
+		assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw))
 	})
 
 	t.Run("does redirect to return_to url on authenticated request", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	t.Run("oauth2 with session and skip=false is redirected to login", func(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
-		fakeHydra.RequestURL = "https://www.ory.sh/oauth2/auth?audience=&client_id=foo&login_verifier="
+		fakeHydra.RequestURL = "https://www.ory.com/oauth2/auth?audience=&client_id=foo&login_verifier="
 		fakeHydra.Skip = false
 
 		client := testhelpers.NewClientWithCookies(t)
@@ -97,7 +97,7 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		conf.MustSet(ctx, config.ViperKeyOAuth2ProviderURL, "https://fake-hydra")
 
 		fakeHydra.Skip = true
-		fakeHydra.RequestURL = "https://www.ory.sh/oauth2/auth?audience=&client_id=foo&login_verifier="
+		fakeHydra.RequestURL = "https://www.ory.com/oauth2/auth?audience=&client_id=foo&login_verifier="
 
 		client := testhelpers.NewClientWithCookies(t)
 		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -253,7 +253,7 @@ func TestInitFlow(t *testing.T) {
 		t.Run("case=fails on authenticated request", func(t *testing.T) {
 			res, body := initAuthenticatedFlow(t, true, false)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 	})
 
@@ -286,7 +286,7 @@ func TestInitFlow(t *testing.T) {
 			res, body := initAuthenticatedFlow(t, false, true)
 			assert.NotContains(t, res.Request.URL.String(), returnToTS.URL)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+			assertx.EqualAsJSON(t, registration.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 
 		t.Run("case=relative redirect when self-service registration ui is a relative URL", func(t *testing.T) {
@@ -351,13 +351,13 @@ func TestDisabledFlow(t *testing.T) {
 		t.Run("case=init fails when flow disabled", func(t *testing.T) {
 			res, body := makeRequest(t, registration.RouteInitAPIFlow, false)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 
 		t.Run("case=get flow fails when flow disabled", func(t *testing.T) {
 			res, body := makeRequest(t, registration.RouteGetFlow+"?id="+x.NewUUID().String(), false)
 			require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
-			assert.EqualValues(t, registration.ErrRegistrationDisabled.ReasonField, gjson.GetBytes(body, "reason").String(), "%s", body)
+			assert.EqualValues(t, registration.ErrRegistrationDisabled().ReasonField, gjson.GetBytes(body, "reason").String(), "%s", body)
 		})
 	})
 
@@ -365,13 +365,13 @@ func TestDisabledFlow(t *testing.T) {
 		t.Run("case=init responds with error if flow disabled and SPA", func(t *testing.T) {
 			res, body := makeRequest(t, registration.RouteInitBrowserFlow, true)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 
 		t.Run("case=get flow responds with error if flow disabled and SPA", func(t *testing.T) {
 			res, body := makeRequest(t, registration.RouteGetFlow+"?id="+x.NewUUID().String(), true)
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
 	})
 }
@@ -423,7 +423,7 @@ func TestGetFlow(t *testing.T) {
 		_ = setupRegistrationUI(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 
-		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken.ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
+		assert.EqualValues(t, nosurfx.ErrInvalidCSRFToken().ReasonField, gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})
 
 	t.Run("case=expired", func(t *testing.T) {

@@ -4,13 +4,13 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"net/http"
+	"net/url"
+	"os"
 
 	client "github.com/ory/hydra-client-go/v2"
-
-	"github.com/ory/x/osx"
-	"github.com/ory/x/urlx"
 )
 
 func check(err error) {
@@ -30,7 +30,8 @@ func checkReq(w http.ResponseWriter, err error) bool {
 func main() {
 	router := http.NewServeMux()
 
-	adminURL := urlx.ParseOrPanic(osx.GetenvDefault("HYDRA_ADMIN_URL", "http://localhost:4445"))
+	adminURL, err := url.Parse(cmp.Or(os.Getenv("HYDRA_ADMIN_URL"), "http://localhost:4445"))
+	check(err)
 	cfg := client.NewConfiguration()
 	cfg.Servers = client.ServerConfigurations{
 		{URL: adminURL.String()},
@@ -173,7 +174,7 @@ func main() {
 		http.Redirect(w, r, res.RedirectTo, http.StatusFound)
 	})
 
-	addr := ":" + osx.GetenvDefault("PORT", "4446")
+	addr := ":" + cmp.Or(os.Getenv("PORT"), "4446")
 	//#nosec G112
 	server := &http.Server{Addr: addr, Handler: router}
 	fmt.Printf("Starting web server at %s\n", addr)

@@ -44,7 +44,9 @@ import (
 	"github.com/ory/kratos/x"
 )
 
-var ErrNoAALAvailable = herodot.ErrForbidden.WithReasonf("Unable to detect available authentication methods. Perform account recovery or contact support.")
+func ErrNoAALAvailable() *herodot.DefaultError {
+	return herodot.ErrForbidden().WithReasonf("Unable to detect available authentication methods. Perform account recovery or contact support.")
+}
 
 type (
 	managerHTTPDependencies interface {
@@ -261,7 +263,7 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 		// Don't change this unless you want bad performance down the line (because we constantly are unsure if we have the full data fetched or not).
 		ExpandEverything, identity.ExpandEverything)
 	if err != nil {
-		if errors.Is(err, herodot.ErrNotFound) || errors.Is(err, sqlcon.ErrNoRows) {
+		if errors.Is(err, herodot.ErrNotFound()) || errors.Is(err, sqlcon.ErrNoRows()) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())
 		}
 		return nil, err
@@ -464,7 +466,7 @@ func (s *ManagerHTTP) ActivateSession(r *http.Request, session *Session, i *iden
 	}
 
 	if !i.IsActive() {
-		return errors.WithStack(ErrIdentityDisabled.WithDetail("identity_id", i.ID))
+		return errors.WithStack(ErrIdentityDisabled().WithDetail("identity_id", i.ID))
 	}
 
 	if err := s.r.IdentityManager().RefreshAvailableAAL(ctx, i); err != nil {
@@ -487,4 +489,25 @@ func (s *ManagerHTTP) ActivateSession(r *http.Request, session *Session, i *iden
 	)
 
 	return nil
+}
+
+func (s *ManagerHTTP) IsPrivileged(ctx context.Context, session *Session) bool {
+	if session == nil {
+		return false
+	}
+
+	if session.Identity == nil {
+		return false
+	}
+
+	if session.AuthenticatedAt.IsZero() {
+		return false
+	}
+
+	privilegedSessionLifespan := s.r.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)
+	if privilegedSessionLifespan <= 0 {
+		return true
+	}
+
+	return session.AuthenticatedAt.Add(privilegedSessionLifespan).After(time.Now())
 }

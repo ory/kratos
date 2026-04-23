@@ -458,7 +458,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 
 		_, err = d.SettingsFlowPersister().GetSettingsFlow(context.Background(), x.ParseUUID("a79bfcf1-68ae-49de-8b23-4f96921b8341"))
 		require.Error(t, err)
-		require.ErrorIs(t, err, sqlcon.ErrNoRows)
+		require.ErrorIs(t, err, sqlcon.ErrNoRows())
 	})
 
 	t.Run("suite=down", func(t *testing.T) {

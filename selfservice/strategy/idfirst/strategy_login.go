@@ -78,7 +78,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		/* We are dealing with user input -> lookup should be case-insensitive */ false,
 		expand,
 	)
-	if errors.Is(err, sqlcon.ErrNoRows) {
+	if errors.Is(err, sqlcon.ErrNoRows()) {
 		// If the user is not found, we still want to potentially show the UI for some method. That's why we don't exit here.
 		// We have to mitigate account enumeration. So we continue without setting the identity hint.
 		//

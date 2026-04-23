@@ -37,7 +37,7 @@ import (
 
 func TestVerifier(t *testing.T) {
 	ctx := context.Background()
-	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+	u := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 
 	for _, tc := range []struct {
 		name     string
@@ -82,7 +82,7 @@ func TestVerifier(t *testing.T) {
 						originalFlow := tc.originalFlow()
 						conf, reg := pkg.NewFastRegistryWithMocks(t)
 						testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
-						conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+						conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.com/")
 						conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 						conf.MustSet(ctx, config.ViperKeyUseLegacyShowVerificationUI, enabled)
 
@@ -130,7 +130,7 @@ func TestVerifier(t *testing.T) {
 				originalFlow := tc.originalFlow()
 				conf, reg := pkg.NewFastRegistryWithMocks(t)
 				testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
-				conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+				conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.com/")
 				conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 				h := hook.NewVerifier(reg)
 
@@ -170,7 +170,7 @@ func TestVerifier(t *testing.T) {
 		t.Parallel()
 		conf, reg := pkg.NewFastRegistryWithMocks(t)
 		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.com/")
 		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 		conf.MustSet(ctx, config.ViperKeyUseLegacyShowVerificationUI, true)
 

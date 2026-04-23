@@ -49,6 +49,13 @@ func (m *RegistryDefault) HookShowVerificationUI() *hook.ShowVerificationUIHook 
 	return m.hookShowVerificationUI
 }
 
+func (m *RegistryDefault) HookVerifyNewAddress() *hook.VerifyNewAddress {
+	if m.hookVerifyNewAddress == nil {
+		m.hookVerifyNewAddress = hook.NewVerifyNewAddress(m)
+	}
+	return m.hookVerifyNewAddress
+}
+
 func (m *RegistryDefault) WithHooks(hooks map[string]func(config.SelfServiceHook) interface{}) {
 	m.injectedSelfserviceHooks = hooks
 }
@@ -89,6 +96,10 @@ allHooksLoop:
 			}
 		case hook.KeyVerifier:
 			if h, ok := any(m.HookVerifier()).(T); ok {
+				hooks = append(hooks, h)
+			}
+		case hook.KeyVerifyNewAddress:
+			if h, ok := any(m.HookVerifyNewAddress()).(T); ok {
 				hooks = append(hooks, h)
 			}
 		default:

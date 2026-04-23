@@ -50,7 +50,7 @@ func NewCodeChannel(value string) (CodeChannel, error) {
 	case f.AddCase(string(CodeChannelSMS)):
 		return CodeChannelSMS, nil
 	default:
-		return "", errors.Wrap(ErrInvalidCodeAddressType, f.ToUnknownCaseErr().Error())
+		return "", errors.Wrap(ErrInvalidCodeAddressType(), f.ToUnknownCaseErr().Error())
 	}
 }
 
@@ -70,7 +70,9 @@ type CredentialsCodeAddress struct {
 	Address string `json:"address"`
 }
 
-var ErrInvalidCodeAddressType = herodot.ErrMisconfiguration.WithReasonf("The address type for sending OTP codes is not supported.")
+func ErrInvalidCodeAddressType() *herodot.DefaultError {
+	return herodot.ErrMisconfiguration().WithReasonf("The address type for sending OTP codes is not supported.")
+}
 
 func (c *CredentialsCodeAddress) UnmarshalJSON(data []byte) (err error) {
 	type alias CredentialsCodeAddress

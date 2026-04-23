@@ -41,7 +41,7 @@ func logUpstreamError(l *logrusx.Logger, resp *http.Response) error {
 	}
 
 	l.WithField("response_code", resp.StatusCode).WithField("response_body", string(body)).Error("The upstream OIDC provider returned a non 200 status code.")
-	return errors.WithStack(herodot.ErrUpstreamError.WithReasonf("OpenID Connect provider returned a %d status code but 200 is expected.", resp.StatusCode))
+	return errors.WithStack(herodot.ErrUpstreamError().WithReasonf("OpenID Connect provider returned a %d status code but 200 is expected.", resp.StatusCode))
 }
 
 func extractOAuth2RetrieveError(err error) (statusCode int, safeBodyFragment string, ok bool) {

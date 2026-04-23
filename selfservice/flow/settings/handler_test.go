@@ -231,7 +231,7 @@ func TestHandler(t *testing.T) {
 
 			t.Run("description=settings return_to is persisted through aal2 flow", func(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, config.HighestAvailableAAL)
-				res, _ := initFlow(t, aal2Identity, false, WithInitAuthQuery(url.Values{"return_to": {"https://www.ory.sh"}}))
+				res, _ := initFlow(t, aal2Identity, false, WithInitAuthQuery(url.Values{"return_to": {"https://www.ory.com"}}))
 				assert.Contains(t, res.Request.URL.String(), reg.Config().SelfServiceFlowLoginUI(ctx).String())
 
 				lf, err := reg.LoginFlowPersister().GetLoginFlow(ctx, uuid.FromStringOrNil(res.Request.URL.Query().Get("flow")))
@@ -244,7 +244,7 @@ func TestHandler(t *testing.T) {
 				settingsURL, err := url.Parse(publicTS.URL + settings.RouteInitBrowserFlow)
 				require.NoError(t, err)
 				q := settingsURL.Query()
-				q.Set("return_to", "https://www.ory.sh")
+				q.Set("return_to", "https://www.ory.com")
 				settingsURL.RawQuery = q.Encode()
 
 				assert.Equal(t, settingsURL.String(), reqURL.Query().Get("return_to"))
@@ -321,7 +321,7 @@ func TestHandler(t *testing.T) {
 						identity.CredentialsTypeWebAuthn: {Type: identity.CredentialsTypeWebAuthn, Config: []byte(`{"credentials":[{"is_passwordless":false}]}`), Identifiers: []string{email}},
 					},
 				})
-				res, body := initSPAFlow(t, user1, WithInitAuthQuery(url.Values{"return_to": {"https://www.ory.sh/"}}))
+				res, body := initSPAFlow(t, user1, WithInitAuthQuery(url.Values{"return_to": {"https://www.ory.com/"}}))
 				assert.Equal(t, http.StatusForbidden, res.StatusCode)
 
 				returnToURL := gjson.GetBytes(body, "redirect_browser_to").String()
@@ -334,7 +334,7 @@ func TestHandler(t *testing.T) {
 				require.NoError(t, err)
 
 				q := settingsURL.Query()
-				q.Add("return_to", "https://www.ory.sh/")
+				q.Add("return_to", "https://www.ory.com/")
 				settingsURL.RawQuery = q.Encode()
 
 				assert.Equal(t, settingsURL.String(), reqURL.Query().Get("return_to"))
@@ -424,7 +424,7 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("case=expired with return_to", func(t *testing.T) {
-			returnTo := "https://www.ory.sh"
+			returnTo := "https://www.ory.com"
 			conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnTo})
 
 			client := testhelpers.NewHTTPClientWithArbitrarySessionToken(ctx, t, reg)

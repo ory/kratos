@@ -39,7 +39,7 @@ func (p *Persister) SetContinuitySessionExpiry(ctx context.Context, id uuid.UUID
 		}, "expires_at"); err != nil {
 		return sqlcon.HandleError(err)
 	} else if rows == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func (p *Persister) DeleteContinuitySession(ctx context.Context, id uuid.UUID) (
 			continuity.Container{}.TableName()), id, p.NetworkID(ctx)).ExecWithCount(); err != nil {
 		return sqlcon.HandleError(err)
 	} else if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	return nil
 }

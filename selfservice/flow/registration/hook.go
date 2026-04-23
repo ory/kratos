@@ -105,7 +105,14 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 	return &HookExecutor{d: d}
 }
 
-func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, ct identity.CredentialsType, provider, organizationID string, registrationFlow *Flow, i *identity.Identity) (err error) {
+// PostRegistrationHook finalizes a successful registration. The
+// authMethod argument describes how the user authenticated during
+// registration and is recorded on the resulting session verbatim. For
+// OIDC registrations it carries the upstream acr/amr claims and the
+// provider-computed AAL; for other strategies it is typically
+// `{Method: strategy.ID(), AAL: AuthenticatorAssuranceLevel1}`.
+func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Request, registrationFlow *Flow, i *identity.Identity, authMethod session.AuthenticationMethod) (err error) {
+	ct := authMethod.Method
 	ctx := r.Context()
 	ctx, span := e.d.Tracer(ctx).Tracer().Start(ctx, "HookExecutor.PostRegistrationHook")
 	r = r.WithContext(ctx)
@@ -164,7 +171,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 	// would imply that the identity has to exist already.
 	if err := e.d.IdentityManager().Create(ctx, i); err != nil {
-		if errors.Is(err, sqlcon.ErrUniqueViolation) {
+		if errors.Is(err, sqlcon.ErrUniqueViolation()) {
 			strategy, err := e.d.AllLoginStrategies().Strategy(ct)
 			if err != nil {
 				return err
@@ -180,7 +187,7 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 					registrationFlow,
 					duplicateIdentifier,
 					i.Credentials[ct],
-					provider,
+					authMethod.Provider,
 				); err != nil {
 					return err
 				}
@@ -222,11 +229,10 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 		WithField("identity_id", i.ID).
 		Info("A new identity has registered using self-service registration.")
 
-	span.AddEvent(events.NewRegistrationSucceeded(ctx, registrationFlow.ID, i.ID, string(registrationFlow.Type), ct.String(), provider))
+	span.AddEvent(events.NewRegistrationSucceeded(ctx, registrationFlow.ID, i.ID, string(registrationFlow.Type), ct.String(), authMethod.Provider))
 
 	s := session.NewInactiveSession()
-
-	s.CompletedLoginForWithProvider(ct, identity.AuthenticatorAssuranceLevel1, provider, organizationID)
+	s.CompletedLoginForMethod(authMethod)
 	if err := e.d.SessionManager().ActivateSession(r, s, i, time.Now().UTC()); err != nil {
 		return err
 	}

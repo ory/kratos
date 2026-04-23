@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -447,6 +446,76 @@ func TestLoginCodeStrategy(t *testing.T) {
 				}
 			})
 
+			t.Run("case=should be able to log in with code to sms with legacy non-normalized phone number", func(t *testing.T) {
+				// Test backward compatibility: login with a legacy identity whose credential
+				// identifier is stored in non-normalized form in the database (as it would be
+				// for records created before identifier normalization was introduced).
+				// The raw identifier reaches FindByCredentialsIdentifier, which queries
+				// IN(normalized, raw) — the raw parameter matches the legacy DB record.
+				nonNormalizedPhone := "+1 (415) 555-2671"
+				normalizedPhone := x.GracefulNormalization(nonNormalizedPhone)
+
+				i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+				i.NID = x.NewUUID()
+				i.Traits = identity.Traits(fmt.Sprintf(`{"tos": true, "phone_1": "%s"}`, nonNormalizedPhone))
+				i.Credentials = map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypeCodeAuth: {
+						Type:        identity.CredentialsTypeCodeAuth,
+						Identifiers: []string{nonNormalizedPhone},
+						Version:     0,
+						Config:      sqlxx.JSONRawMessage(`{"address_type": "sms"}`),
+					},
+				}
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentities(ctx, i))
+				t.Cleanup(func() {
+					require.NoError(t, reg.PrivilegedIdentityPool().DeleteIdentity(ctx, i.ID))
+				})
+
+				// CreateIdentities normalizes the credential identifier to E.164 format
+				// but preserves credential version. Revert the identifier via raw SQL
+				// to simulate a legacy database record.
+				require.NoError(t, reg.Persister().GetConnection(ctx).RawQuery(
+					"UPDATE identity_credential_identifiers SET identifier = ? WHERE identity_id = ? AND identifier = ?",
+					nonNormalizedPhone, i.ID, normalizedPhone,
+				).Exec())
+
+				t.Run("login with non-normalized phone", func(t *testing.T) {
+					s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
+
+					// submit phone
+					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+						v.Set("identifier", nonNormalizedPhone)
+					}, false, nil)
+
+					message := testhelpers.CourierExpectMessage(ctx, t, reg, nonNormalizedPhone, "Your login code is:")
+					loginCode := testhelpers.CourierExpectCodeInMessage(t, message, 1)
+					assert.NotEmpty(t, loginCode)
+
+					// Submit OTP
+					state := submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+						v.Set("code", loginCode)
+					}, true, nil)
+					if tc.apiType == ApiTypeSPA {
+						assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(state.body, "continue_with.0.action").String(), "%s", state.body)
+						assert.Contains(t, gjson.Get(state.body, "continue_with.0.redirect_browser_to").String(), conf.SelfServiceBrowserDefaultReturnTo(ctx).String(), "%s", state.body)
+					} else {
+						assert.Empty(t, gjson.Get(state.body, "continue_with").Array(), "%s", state.body)
+					}
+				})
+
+				t.Run("login with normalized phone", func(t *testing.T) {
+					// Login with the normalized (E.164) phone number fails against a legacy
+					// record that only stores the non-normalized identifier. The lookup query
+					// searches for IN(normalizedInput, rawInput), but both resolve to the same
+					// E.164 value, so neither matches the non-normalized DB record.
+					s := createLoginFlowWithIdentity(ctx, t, public, tc.apiType, i)
+					s = submitLogin(ctx, t, s, tc.apiType, func(v *url.Values) {
+						v.Set("identifier", normalizedPhone)
+					}, false, nil)
+					assert.Contains(t, s.body, "4000035", "Should not find the account because the normalized input does not match the legacy non-normalized DB record")
+				})
+			})
+
 			t.Run("case=new identities automatically have login with code", func(t *testing.T) {
 				ctx := context.Background()
 
@@ -470,7 +539,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				require.EqualValues(t, http.StatusOK, resp.StatusCode)
 
 				_, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeCodeAuth, email)
-				require.NoError(t, err, sqlcon.ErrNoRows)
+				require.NoError(t, err, sqlcon.ErrNoRows())
 
 				s := createLoginFlow(ctx, t, public, tc.apiType, true)
 
@@ -660,20 +729,11 @@ func TestLoginCodeStrategy(t *testing.T) {
 					v.Set("identifier", s.identityEmail)
 				}, false, func(t *testing.T, s *state, body string, resp *http.Response) {
 					if tc.apiType == ApiTypeBrowser {
-						// with browser clients we redirect back to the UI with a new flow id as a query parameter
-						require.Equal(t, http.StatusOK, resp.StatusCode)
-						require.Equal(t, conf.SelfServiceFlowLoginUI(ctx).Path, resp.Request.URL.Path)
-						lf, _, err := testhelpers.NewSDKCustomClient(public, s.client).FrontendAPI.GetLoginFlow(ctx).Id(resp.Request.URL.Query().Get("flow")).Execute()
-						require.NoError(t, err)
-						require.EqualValues(t, http.StatusOK, resp.StatusCode)
-
-						body, err := json.Marshal(lf)
-						require.NoError(t, err)
-						assert.Regexpf(t, regexp.MustCompile(`The login flow expired 0\.0\d minutes ago, please try again\.`), gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
+						require.Equal(t, http.StatusOK, resp.StatusCode, "%s", body)
 					} else {
-						require.EqualValues(t, http.StatusGone, resp.StatusCode)
-						assert.Regexpf(t, regexp.MustCompile(`The self-service flow expired 0\.0\d minutes ago, initialize a new one\.`), gjson.Get(body, "error.reason").Str, "%s", body)
+						require.Equal(t, http.StatusBadRequest, resp.StatusCode, "%s", body)
 					}
+					require.Contains(t, gjson.Get(body, "ui.messages").String(), "The login code is invalid or has already been used. Please try again", "%s", body)
 				})
 			})
 
@@ -1560,7 +1620,7 @@ func TestCodeLoginWithLoginChallenge(t *testing.T) {
 		r.Header.Add("Content-Type", "application/json")
 
 		_, err := s.Login(httptest.NewRecorder(), r, f, nil)
-		require.ErrorIs(t, err, herodot.ErrBadRequest)
+		require.ErrorIs(t, err, herodot.ErrBadRequest())
 		require.Nil(t, f.HydraLoginRequest)
 	})
 }

@@ -64,7 +64,7 @@ func (p *PartialConflictError[T]) Unwrap() error {
 	if len(p.Failed) == 0 {
 		return nil
 	}
-	return sqlcon.ErrUniqueViolation
+	return sqlcon.ErrUniqueViolation()
 }
 
 func buildInsertQueryArgs[T any](ctx context.Context, models []*T, opts *createOpts) insertQueryArgs {

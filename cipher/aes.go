@@ -31,12 +31,12 @@ func (a *AES) Encrypt(ctx context.Context, message []byte) (string, error) {
 	}
 
 	if len(a.c.SecretsCipher(ctx)) == 0 {
-		return "", errors.WithStack(herodot.ErrMisconfiguration.WithReason("Unable to encrypt message because no cipher secrets were configured."))
+		return "", errors.WithStack(herodot.ErrMisconfiguration().WithReason("Unable to encrypt message because no cipher secrets were configured."))
 	}
 
 	ciphertext, err := cryptopasta.Encrypt(message, &a.c.SecretsCipher(ctx)[0])
 	if err != nil {
-		return "", errors.WithStack(herodot.ErrForbidden.WithWrap(err))
+		return "", errors.WithStack(herodot.ErrForbidden().WithWrap(err))
 	}
 	return hex.EncodeToString(ciphertext), nil
 }
@@ -51,12 +51,12 @@ func (a *AES) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
 
 	secrets := a.c.SecretsCipher(ctx)
 	if len(secrets) == 0 {
-		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReason("Unable to decipher the encrypted message because no AES secrets were configured."))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration().WithReason("Unable to decipher the encrypted message because no AES secrets were configured."))
 	}
 
 	decode, err := hex.DecodeString(ciphertext)
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithWrap(err))
+		return nil, errors.WithStack(herodot.ErrBadRequest().WithWrap(err))
 	}
 
 	for i := range secrets {
@@ -66,5 +66,5 @@ func (a *AES) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
 		}
 	}
 
-	return nil, errors.WithStack(herodot.ErrForbidden.WithReason("Unable to decipher the encrypted message."))
+	return nil, errors.WithStack(herodot.ErrForbidden().WithReason("Unable to decipher the encrypted message."))
 }

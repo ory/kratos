@@ -836,4 +836,151 @@ func TestVerification(t *testing.T) {
 		assert.Len(t, responseBody.Get("ui.messages").Array(), 1, "%v", responseBody)
 		assert.Equal(t, "The verification code is invalid or has already been used. Please try again.", responseBody.Get("ui.messages.0.text").String(), "%v", responseBody)
 	})
+
+	t.Run("description=should apply pending traits change when code is redeemed", func(t *testing.T) {
+		// Create an identity with original traits.
+		pendingID := &identity.Identity{
+			ID:       x.NewUUID(),
+			Traits:   identity.Traits(`{"email":"original-code@ory.sh"}`),
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				"password": {Type: "password", Identifiers: []string{"original-code@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
+			},
+		}
+		require.NoError(t, reg.IdentityManager().Create(ctx, pendingID, identity.ManagerAllowWriteProtectedTraits))
+
+		// Create a verification flow in StateEmailSent.
+		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+		require.NoError(t, err)
+		f.State = flow.StateEmailSent
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+		// Create a PendingTraitsChange record linked to this flow.
+		ptc := &identity.PendingTraitsChange{
+			ID:                 x.NewUUID(),
+			IdentityID:         pendingID.ID,
+			NewAddressValue:    "changed-code@ory.sh",
+			NewAddressVia:      string(identity.AddressTypeEmail),
+			OriginalTraitsHash: identity.HashTraits(json.RawMessage(pendingID.Traits)),
+			ProposedTraits:     json.RawMessage(`{"email":"changed-code@ory.sh"}`),
+			VerificationFlowID: f.ID,
+			Status:             identity.PendingTraitsChangeStatusPending,
+		}
+		require.NoError(t, reg.PendingTraitsChangePersister().CreatePendingTraitsChange(ctx, ptc))
+
+		// Create a verification code with a nil address ID (pending-change signal).
+		rawCode := code.GenerateCode()
+		_, err = reg.VerificationCodePersister().CreateVerificationCode(ctx, &code.CreateVerificationCodeParams{
+			RawCode:           rawCode,
+			ExpiresIn:         time.Hour,
+			VerifiableAddress: ptc, // PendingTraitsChange implements VerifiableAddressLike; ToPersistable() returns nil address
+			FlowID:            f.ID,
+		})
+		require.NoError(t, err)
+
+		// Submit the code via HTTP POST.
+		cl := testhelpers.NewClientWithCookies(t)
+		action := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+		res, err := cl.PostForm(action, url.Values{
+			"code":       {rawCode},
+			"csrf_token": {nosurfx.FakeCSRFToken},
+		})
+		require.NoError(t, err)
+		body := string(ioutilx.MustReadAll(res.Body))
+		require.NoError(t, res.Body.Close())
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.EqualValues(t, "passed_challenge", gjson.Get(body, "state").String(), "%s", body)
+		assert.EqualValues(t, text.NewInfoSelfServiceVerificationSuccessful().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+
+		// Verify the identity traits were updated.
+		updated, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, pendingID.ID)
+		require.NoError(t, err)
+		assert.EqualValues(t, "changed-code@ory.sh", gjson.GetBytes([]byte(updated.Traits), "email").String())
+
+		// Verify the new address is marked as verified.
+		var foundAddress *identity.VerifiableAddress
+		for idx := range updated.VerifiableAddresses {
+			if updated.VerifiableAddresses[idx].Value == "changed-code@ory.sh" {
+				foundAddress = &updated.VerifiableAddresses[idx]
+				break
+			}
+		}
+		require.NotNil(t, foundAddress, "new address should exist on identity")
+		assert.True(t, foundAddress.Verified)
+		assert.EqualValues(t, identity.VerifiableAddressStatusCompleted, foundAddress.Status)
+
+		// The pending change should no longer be found as "pending" (it was completed).
+		_, ptcErr := reg.PendingTraitsChangePersister().GetPendingTraitsChangeByVerificationFlow(ctx, f.ID)
+		assert.Error(t, ptcErr, "completed PTC should not be returned by the pending-only query")
+	})
+
+	t.Run("description=should reject pending traits change on concurrent modification", func(t *testing.T) {
+		// Create an identity with original traits.
+		concurrentID := &identity.Identity{
+			ID:       x.NewUUID(),
+			Traits:   identity.Traits(`{"email":"original2-code@ory.sh"}`),
+			SchemaID: config.DefaultIdentityTraitsSchemaID,
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				"password": {Type: "password", Identifiers: []string{"original2-code@ory.sh"}, Config: sqlxx.JSONRawMessage(`{"hashed_password":"foo"}`)},
+			},
+		}
+		require.NoError(t, reg.IdentityManager().Create(ctx, concurrentID, identity.ManagerAllowWriteProtectedTraits))
+
+		// Compute traits hash from the original traits.
+		originalHash := identity.HashTraits(json.RawMessage(concurrentID.Traits))
+
+		// Simulate a concurrent modification: update the identity's traits directly.
+		concurrentID.Traits = identity.Traits(`{"email":"concurrent-code@ory.sh"}`)
+		require.NoError(t, reg.IdentityManager().Update(ctx, concurrentID, identity.ManagerAllowWriteProtectedTraits))
+
+		// Create a verification flow in StateEmailSent.
+		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+		require.NoError(t, err)
+		f.State = flow.StateEmailSent
+		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+		// Create a PendingTraitsChange with the OLD traits hash (before concurrent modification).
+		ptc := &identity.PendingTraitsChange{
+			ID:                 x.NewUUID(),
+			IdentityID:         concurrentID.ID,
+			NewAddressValue:    "changed2-code@ory.sh",
+			NewAddressVia:      string(identity.AddressTypeEmail),
+			OriginalTraitsHash: originalHash,
+			ProposedTraits:     json.RawMessage(`{"email":"changed2-code@ory.sh"}`),
+			VerificationFlowID: f.ID,
+			Status:             identity.PendingTraitsChangeStatusPending,
+		}
+		require.NoError(t, reg.PendingTraitsChangePersister().CreatePendingTraitsChange(ctx, ptc))
+
+		// Create a verification code with nil address ID.
+		rawCode := code.GenerateCode()
+		_, err = reg.VerificationCodePersister().CreateVerificationCode(ctx, &code.CreateVerificationCodeParams{
+			RawCode:           rawCode,
+			ExpiresIn:         time.Hour,
+			VerifiableAddress: ptc,
+			FlowID:            f.ID,
+		})
+		require.NoError(t, err)
+
+		// Submit the code via HTTP POST — should be rejected due to concurrent modification.
+		cl := testhelpers.NewClientWithCookies(t)
+		action := public.URL + verification.RouteSubmitFlow + "?flow=" + f.ID.String()
+		res, err := cl.PostForm(action, url.Values{
+			"code":       {rawCode},
+			"csrf_token": {nosurfx.FakeCSRFToken},
+		})
+		require.NoError(t, err)
+		body := string(ioutilx.MustReadAll(res.Body))
+		require.NoError(t, res.Body.Close())
+
+		// Should show the "code invalid" error (concurrent modification detected).
+		assert.Contains(t, body, "The verification code is invalid or has already been used")
+
+		// Identity traits should NOT have been updated.
+		unchanged, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, concurrentID.ID)
+		require.NoError(t, err)
+		assert.EqualValues(t, "concurrent-code@ory.sh", gjson.GetBytes([]byte(unchanged.Traits), "email").String(),
+			"traits should remain at the concurrent value, not the proposed value")
+	})
 }

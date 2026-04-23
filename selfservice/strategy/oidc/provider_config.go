@@ -7,11 +7,13 @@ import (
 	"encoding/json"
 	"maps"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/x/urlx"
 )
 
@@ -180,6 +182,42 @@ type Configuration struct {
 	// - "automatic": re-runs the Jsonnet claims mapper on every OIDC login
 	//   and updates the identity's traits and metadata automatically.
 	UpdateIdentityOnLogin string `json:"update_identity_on_login,omitempty"`
+
+	// AAL2ACRValues lists upstream OIDC `acr` claim values that elevate
+	// the resulting Kratos session to AAL2. When empty, the session AAL
+	// is always AAL1 regardless of the upstream `acr` claim.
+	AAL2ACRValues []string `json:"aal2_acr_values,omitempty"`
+
+	// AAL2AMRValues lists upstream OIDC `amr` claim values that elevate
+	// the resulting Kratos session to AAL2 when any of them appears in
+	// the upstream `amr` array. When empty, `amr` does not influence the
+	// session AAL.
+	AAL2AMRValues []string `json:"aal2_amr_values,omitempty"`
+}
+
+// AALForClaims returns the session AuthenticatorAssuranceLevel that the
+// upstream OIDC response should be mapped to, based on the provider's
+// AAL2ACRValues / AAL2AMRValues allowlists and the ACR / AMR claims
+// reported by the upstream provider.
+//
+// The default is AAL1. AAL2 is only returned when either the upstream
+// `acr` claim matches one of the configured AAL2ACRValues, or at least
+// one of the upstream `amr` entries matches one of the configured
+// AAL2AMRValues. An empty `acr` never matches, even if the allowlist
+// contains an empty string.
+func (c *Configuration) AALForClaims(claims *Claims) identity.AuthenticatorAssuranceLevel {
+	if claims == nil {
+		return identity.AuthenticatorAssuranceLevel1
+	}
+	if claims.ACR != "" && slices.Contains(c.AAL2ACRValues, claims.ACR) {
+		return identity.AuthenticatorAssuranceLevel2
+	}
+	for _, want := range c.AAL2AMRValues {
+		if slices.Contains(claims.AMR, want) {
+			return identity.AuthenticatorAssuranceLevel2
+		}
+	}
+	return identity.AuthenticatorAssuranceLevel1
 }
 
 func (p Configuration) Redir(public *url.URL) string {
@@ -248,5 +286,5 @@ func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider
 			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, maps.Keys(supportedProviders))
 		}
 	}
-	return nil, errors.WithStack(herodot.ErrNotFound.WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
+	return nil, errors.WithStack(herodot.ErrNotFound().WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
 }

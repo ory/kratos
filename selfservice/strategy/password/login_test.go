@@ -88,6 +88,7 @@ func TestCompleteLogin(t *testing.T) {
 		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
 			"migration": "file://./stub/migration.schema.json",
 			"default":   "file://./stub/login.schema.json",
+			"phone":     "file://./stub/phone.schema.json",
 		})),
 	)
 	router := httprouterx.NewTestRouterPublic(t)
@@ -252,7 +253,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
-			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch(),
 				json.RawMessage(actual), "%s", actual)
 		})
 
@@ -263,7 +264,7 @@ func TestCompleteLogin(t *testing.T) {
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, browserClient, values.Encode())
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
-			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch,
+			assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch(),
 				json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 		})
 
@@ -568,7 +569,7 @@ func TestCompleteLogin(t *testing.T) {
 					body := ioutilx.MustReadAll(res.Body)
 
 					assert.EqualValues(t, http.StatusBadRequest, res.StatusCode, "%s", body)
-					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 				})
 
 				t.Run("show UI and hint at username", func(t *testing.T) {
@@ -618,7 +619,7 @@ func TestCompleteLogin(t *testing.T) {
 					body := ioutilx.MustReadAll(res.Body)
 
 					require.EqualValues(t, http.StatusBadRequest, res.StatusCode)
-					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn, json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
+					assertx.EqualAsJSON(t, login.ErrAlreadyLoggedIn(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 				})
 
 				t.Run("show UI and hint at username", func(t *testing.T) {
@@ -658,6 +659,142 @@ func TestCompleteLogin(t *testing.T) {
 				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==identifier)").Exists(), "%s", body)
 				assert.False(t, gjson.GetBytes(body, "ui.nodes.#(attributes.name==password)").Exists(), "%s", body)
 			})
+		})
+	})
+
+	t.Run("should pass with phone number and test normalization", func(t *testing.T) {
+		// Test backward compatibility: login with a legacy identity whose credential
+		// identifier is stored in non-normalized form in the database (as it would be
+		// for records created before identifier normalization was introduced).
+		nonNormalizedPhone := "+49 176 671 11 638"
+		normalizedPhone := "+4917667111638"
+		pwd := "password"
+
+		p, _ := reg.Hasher(t.Context()).Generate(t.Context(), []byte(pwd))
+		iId := x.NewUUID()
+		id := &identity.Identity{
+			ID:       iId,
+			SchemaID: "phone",
+			Traits:   identity.Traits(fmt.Sprintf(`{"phone_number":"%s"}`, nonNormalizedPhone)),
+			Credentials: map[identity.CredentialsType]identity.Credentials{
+				identity.CredentialsTypePassword: {
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{nonNormalizedPhone},
+					Config:      sqlxx.JSONRawMessage(`{"hashed_password":"` + string(p) + `"}`),
+				},
+			},
+			VerifiableAddresses: []identity.VerifiableAddress{
+				{
+					ID:         x.NewUUID(),
+					Value:      nonNormalizedPhone,
+					Verified:   false,
+					CreatedAt:  time.Now(),
+					IdentityID: iId,
+				},
+			},
+		}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), id))
+
+		// CreateIdentity normalizes the credential identifier to E.164 format and
+		// sets credential version to the latest. To simulate a legacy database record
+		// created before normalization was introduced, revert both via raw SQL.
+		require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery(
+			"UPDATE identity_credential_identifiers SET identifier = ? WHERE identity_id = ? AND identifier = ?",
+			nonNormalizedPhone, iId, normalizedPhone,
+		).Exec())
+		require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery(
+			"UPDATE identity_credentials SET version = 0 WHERE identity_id = ?",
+			iId,
+		).Exec())
+
+		t.Run("type=browser/login with non-normalized phone", func(t *testing.T) {
+			browserClient := testhelpers.NewClientWithCookies(t)
+
+			values := func(v url.Values) {
+				v.Set("identifier", nonNormalizedPhone)
+				v.Set("password", pwd)
+			}
+
+			body := testhelpers.SubmitLoginFormCtx(t.Context(), t, false, browserClient, publicTS, values,
+				false, false, http.StatusOK, redirTS.URL)
+
+			assert.Equal(t, nonNormalizedPhone, gjson.Get(body, "identity.traits.phone_number").String(), "%s", body)
+		})
+
+		t.Run("type=browser/login with normalized phone", func(t *testing.T) {
+			// Login with the normalized (E.164) phone number fails against a legacy
+			// record that only stores the non-normalized identifier. The lookup query
+			// searches for IN(normalizedInput, rawInput), but both resolve to the same
+			// E.164 value, so neither matches the non-normalized DB record.
+			browserClient := testhelpers.NewClientWithCookies(t)
+
+			values := func(v url.Values) {
+				v.Set("identifier", normalizedPhone)
+				v.Set("password", pwd)
+			}
+
+			body := testhelpers.SubmitLoginFormCtx(t.Context(), t, false, browserClient, publicTS, values,
+				false, false, http.StatusOK, conf.SelfServiceFlowLoginUI(t.Context()).String())
+
+			assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+		})
+
+		t.Run("type=spa/login with non-normalized phone", func(t *testing.T) {
+			hc := testhelpers.NewClientWithCookies(t)
+
+			values := func(v url.Values) {
+				v.Set("identifier", nonNormalizedPhone)
+				v.Set("password", pwd)
+			}
+
+			body := testhelpers.SubmitLoginFormCtx(t.Context(), t, false, hc, publicTS, values,
+				true, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow)
+
+			assert.Equal(t, nonNormalizedPhone, gjson.Get(body, "session.identity.traits.phone_number").String(), "%s", body)
+			assert.Empty(t, gjson.Get(body, "session_token").String(), "%s", body)
+			assert.Empty(t, gjson.Get(body, "session.token").String(), "%s", body)
+
+			require.NotEmpty(t, hc.Jar.Cookies(urlx.ParseOrPanic(publicTS.URL)), "%+v", hc.Jar)
+		})
+
+		t.Run("type=spa/login with normalized phone", func(t *testing.T) {
+			hc := testhelpers.NewClientWithCookies(t)
+
+			values := func(v url.Values) {
+				v.Set("identifier", normalizedPhone)
+				v.Set("password", pwd)
+			}
+
+			body := testhelpers.SubmitLoginFormCtx(t.Context(), t, false, hc, publicTS, values,
+				true, false, http.StatusBadRequest, publicTS.URL+login.RouteSubmitFlow)
+
+			assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
+		})
+
+		t.Run("type=api/login with non-normalized phone", func(t *testing.T) {
+			values := func(v url.Values) {
+				v.Set("identifier", nonNormalizedPhone)
+				v.Set("password", pwd)
+			}
+
+			body := testhelpers.SubmitLoginFormCtx(t.Context(), t, true, nil, publicTS, values,
+				false, false, http.StatusOK, publicTS.URL+login.RouteSubmitFlow)
+
+			assert.Equal(t, nonNormalizedPhone, gjson.Get(body, "session.identity.traits.phone_number").String(), "%s", body)
+			st := gjson.Get(body, "session_token").String()
+			assert.NotEmpty(t, st, "%s", body)
+		})
+
+		t.Run("type=api/login with normalized phone", func(t *testing.T) {
+			values := func(v url.Values) {
+				v.Set("identifier", normalizedPhone)
+				v.Set("password", pwd)
+			}
+
+			body := testhelpers.SubmitLoginFormCtx(t.Context(), t, true, nil, publicTS, values,
+				false, false, http.StatusBadRequest, publicTS.URL+login.RouteSubmitFlow)
+
+			assert.Equal(t, text.NewErrorValidationInvalidCredentials().Text, gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 		})
 	})
 

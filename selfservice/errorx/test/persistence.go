@@ -39,7 +39,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 		})
 
 		t.Run("case=en- and decode properly", func(t *testing.T) {
-			actualID, err := p.CreateErrorContainer(ctx, "nosurf", herodot.ErrNotFound.WithReason("foobar"))
+			actualID, err := p.CreateErrorContainer(ctx, "nosurf", herodot.ErrNotFound().WithReason("foobar"))
 			require.NoError(t, err)
 
 			actual, err := p.ReadErrorContainer(ctx, actualID)
@@ -49,7 +49,7 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 		})
 
 		t.Run("case=clear", func(t *testing.T) {
-			actualID, err := p.CreateErrorContainer(ctx, "nosurf", herodot.ErrNotFound.WithReason("foobar"))
+			actualID, err := p.CreateErrorContainer(ctx, "nosurf", herodot.ErrNotFound().WithReason("foobar"))
 			require.NoError(t, err)
 
 			_, err = p.ReadErrorContainer(ctx, actualID)
@@ -65,14 +65,14 @@ func TestPersister(ctx context.Context, p persistence.Persister) func(t *testing
 
 		t.Run("case=network", func(t *testing.T) {
 			t.Run("can not read error from another network", func(t *testing.T) {
-				created, err := p.CreateErrorContainer(ctx, "nosurf", herodot.ErrNotFound.WithReason("foobar"))
+				created, err := p.CreateErrorContainer(ctx, "nosurf", herodot.ErrNotFound().WithReason("foobar"))
 				require.NoError(t, err)
 
 				time.Sleep(time.Second + time.Millisecond*500)
 
 				_, other := testhelpers.NewNetwork(t, ctx, p)
 				_, err = other.ReadErrorContainer(ctx, created)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
 				t.Run("can not clear another network", func(t *testing.T) {
 					_, other := testhelpers.NewNetwork(t, ctx, p)

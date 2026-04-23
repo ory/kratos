@@ -40,6 +40,8 @@ type UiNodeInputAttributes struct {
 	Onload *string `json:"onload,omitempty"`
 	// OnLoadTrigger may contain a WebAuthn trigger which should be executed on load.  The trigger maps to a JavaScript function provided by Ory, which triggers actions such as PassKey registration or login. oryWebAuthnRegistration WebAuthnTriggersWebAuthnRegistration oryWebAuthnLogin WebAuthnTriggersWebAuthnLogin oryPasskeyLogin WebAuthnTriggersPasskeyLogin oryPasskeyLoginAutocompleteInit WebAuthnTriggersPasskeyLoginAutocompleteInit oryPasskeyRegistration WebAuthnTriggersPasskeyRegistration oryPasskeySettingsRegistration WebAuthnTriggersPasskeySettingsRegistration
 	OnloadTrigger *string `json:"onloadTrigger,omitempty"`
+	// The allowed values for the input when the underlying JSON schema defines an `enum`. When present, clients should render the field as a select/dropdown rather than a free-form text input. When absent, clients continue to render a plain text input, so this field is backward compatible with UIs that do not look at it.
+	Options []UiNodeInputAttributesOption `json:"options,omitempty"`
 	// The input's pattern.
 	Pattern *string `json:"pattern,omitempty"`
 	// Mark this input field as required.
@@ -370,6 +372,38 @@ func (o *UiNodeInputAttributes) SetOnloadTrigger(v string) {
 	o.OnloadTrigger = &v
 }
 
+// GetOptions returns the Options field value if set, zero value otherwise.
+func (o *UiNodeInputAttributes) GetOptions() []UiNodeInputAttributesOption {
+	if o == nil || IsNil(o.Options) {
+		var ret []UiNodeInputAttributesOption
+		return ret
+	}
+	return o.Options
+}
+
+// GetOptionsOk returns a tuple with the Options field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *UiNodeInputAttributes) GetOptionsOk() ([]UiNodeInputAttributesOption, bool) {
+	if o == nil || IsNil(o.Options) {
+		return nil, false
+	}
+	return o.Options, true
+}
+
+// HasOptions returns a boolean if a field has been set.
+func (o *UiNodeInputAttributes) HasOptions() bool {
+	if o != nil && !IsNil(o.Options) {
+		return true
+	}
+
+	return false
+}
+
+// SetOptions gets a reference to the given []UiNodeInputAttributesOption and assigns it to the Options field.
+func (o *UiNodeInputAttributes) SetOptions(v []UiNodeInputAttributesOption) {
+	o.Options = v
+}
+
 // GetPattern returns the Pattern field value if set, zero value otherwise.
 func (o *UiNodeInputAttributes) GetPattern() string {
 	if o == nil || IsNil(o.Pattern) {
@@ -525,6 +559,9 @@ func (o UiNodeInputAttributes) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.OnloadTrigger) {
 		toSerialize["onloadTrigger"] = o.OnloadTrigger
 	}
+	if !IsNil(o.Options) {
+		toSerialize["options"] = o.Options
+	}
 	if !IsNil(o.Pattern) {
 		toSerialize["pattern"] = o.Pattern
 	}
@@ -591,6 +628,7 @@ func (o *UiNodeInputAttributes) UnmarshalJSON(data []byte) (err error) {
 		delete(additionalProperties, "onclickTrigger")
 		delete(additionalProperties, "onload")
 		delete(additionalProperties, "onloadTrigger")
+		delete(additionalProperties, "options")
 		delete(additionalProperties, "pattern")
 		delete(additionalProperties, "required")
 		delete(additionalProperties, "type")

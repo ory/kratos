@@ -14,6 +14,7 @@ import (
 type FakeStrategy struct{}
 
 var _ Strategy = new(FakeStrategy)
+var _ PrimaryStrategy = new(FakeStrategy)
 
 func (f FakeStrategy) VerificationStrategyID() string {
 	return "fake"
@@ -35,7 +36,7 @@ func (f FakeStrategy) Verify(_ http.ResponseWriter, _ *http.Request, _ *Flow) (e
 	return nil
 }
 
-func (f FakeStrategy) SendVerificationCode(context.Context, *Flow, *identity.Identity, *identity.VerifiableAddress) error {
+func (f FakeStrategy) SendVerificationCode(context.Context, *Flow, *identity.Identity, identity.VerifiableAddressLike) error {
 	return nil
 }
 

@@ -300,7 +300,7 @@ func (s *Strategy) ID() identity.CredentialsType {
 
 func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.UUID, kind oidcv1.FlowKind) (f flow.Flow, err error) {
 	if rid.IsNil() {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
+		return nil, errors.WithStack(herodot.ErrBadRequest().WithReason("The session cookie contains invalid values and the flow could not be executed. Please try again."))
 	}
 
 	switch kind {
@@ -349,11 +349,11 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 	)
 
 	if stateParam == "" {
-		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
+		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the state query parameter.`))
 	}
 	state, err := DecryptState(r.Context(), s.d.Cipher(r.Context()), stateParam)
 	if err != nil {
-		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the state parameter is invalid.`))
+		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the state parameter is invalid.`))
 	}
 
 	if providerFromURL := r.PathValue("provider"); providerFromURL != "" {
@@ -363,12 +363,12 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 			state.ProviderId = providerFromURL
 		} else if state.ProviderId != providerFromURL {
 			// provider in state, but URL with different provider -> something's fishy
-			return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow: provider mismatch between internal state and URL.`))
+			return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow: provider mismatch between internal state and URL.`))
 		}
 	}
 	if state.ProviderId == "" {
 		// weird: provider neither in the state nor in the URL
-		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow: provider could not be retrieved from state nor URL.`))
+		return nil, nil, nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow: provider could not be retrieved from state nor URL.`))
 	}
 
 	f, err := s.validateFlow(r.Context(), r, uuid.FromBytesOrNil(state.FlowId), state.FlowKind)
@@ -382,31 +382,45 @@ func (s *Strategy) ValidateCallback(w http.ResponseWriter, r *http.Request) (flo
 	}
 
 	cntnr := AuthCodeContainer{}
+
+	var refStore continuity.ContainerReferenceStore
 	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
-		if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName,
-			continuity.WithPayload(&cntnr),
-			continuity.WithExpireInsteadOfDelete(time.Minute),
-		); err != nil {
-			return nil, state, nil, err
+		refStore = continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(r.Context()))
+	} else {
+		if !codeMatches(state, tokenCode.InitCode) {
+			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
 		}
+
+		if ic, ok := f.(flow.InternalContexter); ok {
+			refStore = continuity.NewInternalContextReferenceStore(ic)
+		} else {
+			// This should never happen, because all flows implement the InternalContexter interface, but we need to handle this case anyway to avoid panics.
+			return nil, state, &cntnr, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Native flow does not support InternalContext."))
+		}
+	}
+
+	if _, err := s.d.ContinuityManager().Continue(r.Context(), w, r, sessionName, refStore,
+		continuity.WithPayload(&cntnr),
+		continuity.WithExpireInsteadOfDelete(time.Minute),
+	); err != nil {
+		return nil, state, nil, err
+	}
+
+	if f.GetType() == flow.TypeBrowser || !hasSessionTokenCode {
 		if stateParam != cntnr.State {
-			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
+			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the session cookie.`))
 		}
 	} else {
-		// We need to validate the tokenCode here
-		if !codeMatches(state, tokenCode.InitCode) {
-			return nil, state, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the query state parameter does not match the state parameter from the code.`))
-		}
 		cntnr.State = stateParam
 		cntnr.FlowID = uuid.FromBytesOrNil(state.FlowId).String()
 	}
 
 	if errorParam != "" {
-		return f, state, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
+		return f, state, &cntnr, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider returned error "%s": %s`, r.URL.Query().Get("error"), r.URL.Query().Get("error_description")))
 	}
 
 	if codeParam == "" {
-		return f, state, &cntnr, errors.WithStack(herodot.ErrBadRequest.WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
+		return f, state, &cntnr, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to complete OpenID Connect flow because the OpenID Provider did not return the code query parameter.`))
 	}
 
 	return f, state, &cntnr, nil
@@ -631,14 +645,6 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	case *login.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
-		// For API/native flows, the continuity cookie is not available so
-		// cntnr.TransientPayload is empty. Fall back to the value persisted
-		// in InternalContext during Login().
-		if len(a.TransientPayload) == 0 {
-			if tp := gjson.GetBytes(a.GetInternalContext(), "transient_payload"); tp.Exists() {
-				a.TransientPayload = json.RawMessage(tp.Raw)
-			}
-		}
 		a.IdentitySchema = cntnr.IdentitySchema
 		if ff, err := s.ProcessLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
 			if errors.Is(err, flow.ErrCompletedByStrategy) {
@@ -654,14 +660,6 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	case *registration.Flow:
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
-		// For API/native flows, the continuity cookie is not available so
-		// cntnr.TransientPayload is empty. Fall back to the value persisted
-		// in InternalContext during Register().
-		if len(a.TransientPayload) == 0 {
-			if tp := gjson.GetBytes(a.GetInternalContext(), "transient_payload"); tp.Exists() {
-				a.TransientPayload = json.RawMessage(tp.Raw)
-			}
-		}
 		a.IdentitySchema = cntnr.IdentitySchema
 		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); errors.Is(err, flow.ErrCompletedByStrategy) {
 			return
@@ -780,7 +778,7 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 		NewDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
 		s.d.Logger().WithError(err).WithField("config", conf)
-		return nil, errors.WithStack(herodot.ErrMisconfiguration.WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
+		return nil, errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 
 	return &c, nil
@@ -1089,17 +1087,17 @@ func (s *Strategy) confirmSberAuthorizationCompleted(ctx context.Context, provid
 func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, idTokenNonce string) (*Claims, error) {
 	verifier, ok := provider.(IDTokenVerifier)
 	if !ok {
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("The provider %s does not support id_token verification", provider.Config().Provider))
 	}
 	t0 := time.Now()
 	claims, err := verifier.Verify(r.Context(), idToken)
 	reqlog.AccumulateExternalLatency(r.Context(), time.Since(t0))
 	if err != nil {
-		return nil, errors.WithStack(herodot.ErrForbidden.WithReasonf("Could not verify id_token").WithWrap(err).WithError(err.Error()))
+		return nil, errors.WithStack(herodot.ErrForbidden().WithReasonf("Could not verify id_token").WithWrap(err).WithError(err.Error()))
 	}
 
 	if err := claims.Validate(); err != nil {
-		return nil, errors.WithStack(herodot.ErrForbidden.WithReasonf("The id_token claims were invalid").WithWrap(err))
+		return nil, errors.WithStack(herodot.ErrForbidden().WithReasonf("The id_token claims were invalid").WithWrap(err))
 	}
 
 	// First check if the JWT contains the nonce claim.
@@ -1107,17 +1105,17 @@ func (s *Strategy) ProcessIDToken(r *http.Request, provider Provider, idToken, i
 		// If it doesn't, check if the provider supports nonces.
 		if nonceSkipper, ok := verifier.(NonceValidationSkipper); !ok || !nonceSkipper.CanSkipNonce(claims) {
 			// If the provider supports nonces, abort the flow!
-			return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("No nonce was included in the id_token but is required by the provider"))
+			return nil, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("No nonce was included in the id_token but is required by the provider"))
 		}
 		// If the provider does not support nonces, we don't do validation and return the claim.
 		// This case only applies to Apple, as some of their devices do not support nonces.
 		// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/authenticating_users_with_sign_in_with_apple
 	} else if idTokenNonce == "" {
 		// A nonce was present in the JWT token, but no nonce was submitted in the flow
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("No nonce was provided but is required by the provider"))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("No nonce was provided but is required by the provider"))
 	} else if idTokenNonce != claims.Nonce {
 		// The nonce from the JWT token does not match the nonce from the flow.
-		return nil, errors.WithStack(herodot.ErrUpstreamError.WithReasonf("The supplied nonce does not match the nonce from the id_token"))
+		return nil, errors.WithStack(herodot.ErrUpstreamError().WithReasonf("The supplied nonce does not match the nonce from the id_token"))
 	}
 	// Nonce checking was successful
 
@@ -1139,7 +1137,7 @@ func (s *Strategy) linkCredentials(ctx context.Context, i *identity.Identity, to
 
 	var conf identity.CredentialsOIDC
 	creds, err := i.ParseCredentials(s.ID(), &conf)
-	if errors.Is(err, herodot.ErrNotFound) {
+	if errors.Is(err, herodot.ErrNotFound()) {
 		var err error
 		if creds, err = identity.NewOIDCLikeCredentials(tokens, s.ID(), provider, subject, organization); err != nil {
 			return err
@@ -1185,7 +1183,7 @@ func getAuthRedirectURL(ctx context.Context, provider Provider, req ider, state 
 	case OAuth1Provider:
 		return p.AuthURL(ctx, state)
 	default:
-		return "", errors.WithStack(herodot.ErrInternalServerError.WithReasonf("The provider %s does not support the OAuth 2.0 or OAuth 1.0 protocol", provider.Config().Provider))
+		return "", errors.WithStack(herodot.ErrInternalServerError().WithReasonf("The provider %s does not support the OAuth 2.0 or OAuth 1.0 protocol", provider.Config().Provider))
 	}
 }
 

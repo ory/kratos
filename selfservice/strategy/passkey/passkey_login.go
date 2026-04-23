@@ -221,17 +221,17 @@ func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter,
 func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod, _ identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
 	web, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
 
 	webAuthnResponse, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(p.Login))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
 	}
 
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData)).Raw), &webAuthnSess); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError.
+		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().
 			WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 	webAuthnSess.UserID = nil
@@ -249,7 +249,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 	}
 	err = s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().
 			WithReason("Could not load identity credentials").
 			WithWrap(err)), i.ID))
 	}
@@ -261,7 +261,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 
 	var o identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().
 			WithReason("The WebAuthn credentials could not be decoded properly").
 			WithDebug(err.Error()).
 			WithWrap(err)), i.ID))
@@ -284,7 +284,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError.WithReason("Could not update flow").WithDebug(err.Error())), i.ID))
+		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("Could not update flow").WithDebug(err.Error())), i.ID))
 	}
 
 	return i, nil
@@ -333,7 +333,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *log
 		Config:      webAuthn.Config,
 	})
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to initiate passkey login.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to initiate passkey login.").WithDebug(err.Error()))
 	}
 
 	f.InternalContext, err = sjson.SetBytes(

@@ -13,6 +13,7 @@ import (
 	"github.com/ory/jsonschema/v3"
 
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
 )
 
 type SchemaExtensionRecovery struct {
@@ -43,25 +44,15 @@ func (r *SchemaExtensionRecovery) Run(ctx jsonschema.ValidationContext, s schema
 			return ctx.Error("format", "%q is not valid %q", value, formatString)
 		}
 
-		address = NewRecoveryEmailAddress(
-			strings.ToLower(strings.TrimSpace(
-				fmt.Sprintf("%s", value))), r.i.ID)
+		address = NewRecoveryEmailAddress(x.NormalizeEmailIdentifier(fmt.Sprintf("%s", value)), r.i.ID)
 
 	case "sms":
-		formatString := "tel"
-		formatter, ok := jsonschema.Formats[formatString]
-		if !ok {
-			supportedKeys := slices.Collect(maps.Keys(jsonschema.Formats))
-			return ctx.Error("format", "format %q is not supported. Supported formats are [%s]", formatString, strings.Join(supportedKeys, ", "))
+		normalized, err := x.NormalizeIdentifier(fmt.Sprintf("%s", value), s.Recovery.Via)
+		if err != nil {
+			return ctx.Error("format", "%q is not valid \"tel\" for %q", value, s.Recovery.Via)
 		}
 
-		if !formatter(value) {
-			return ctx.Error("format", "%q is not valid %q", value, formatString)
-		}
-
-		address = NewRecoverySMSAddress(
-			strings.TrimSpace(
-				fmt.Sprintf("%s", value)), r.i.ID)
+		address = NewRecoverySMSAddress(normalized, r.i.ID)
 
 	case "":
 		return nil

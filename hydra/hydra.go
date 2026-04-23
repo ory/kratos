@@ -52,12 +52,12 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (sqlxx.NullString
 	if !r.URL.Query().Has("login_challenge") {
 		return "", nil
 	} else if conf.OAuth2ProviderURL(r.Context()) == nil {
-		return "", errors.WithStack(herodot.ErrMisconfiguration.WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
+		return "", errors.WithStack(herodot.ErrMisconfiguration().WithReason("refusing to parse login_challenge query parameter because " + config.ViperKeyOAuth2ProviderURL + " is invalid or unset"))
 	}
 
 	loginChallenge := r.URL.Query().Get("login_challenge")
 	if loginChallenge == "" {
-		return "", errors.WithStack(herodot.ErrBadRequest.WithReason("the login_challenge parameter is present but empty"))
+		return "", errors.WithStack(herodot.ErrBadRequest().WithReason("the login_challenge parameter is present but empty"))
 	}
 
 	return sqlxx.NullString(loginChallenge), nil
@@ -66,7 +66,7 @@ func GetLoginChallengeID(conf *config.Config, r *http.Request) (sqlxx.NullString
 func (h *DefaultHydra) getAdminURL(ctx context.Context) (string, error) {
 	u := h.d.Config().OAuth2ProviderURL(ctx)
 	if u == nil {
-		return "", errors.WithStack(herodot.ErrMisconfiguration.WithReason(config.ViperKeyOAuth2ProviderURL + " is not configured"))
+		return "", errors.WithStack(herodot.ErrMisconfiguration().WithReason(config.ViperKeyOAuth2ProviderURL + " is not configured"))
 	}
 	return u.String(), nil
 }
@@ -109,7 +109,7 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, params AcceptLogi
 
 	resp, r, err := aa.AcceptOAuth2LoginRequest(ctx).LoginChallenge(params.LoginChallenge).AcceptOAuth2LoginRequest(*alr).Execute()
 	if err != nil {
-		innerErr := herodot.ErrInternalServerError.WithWrap(err).WithReasonf("Unable to accept OAuth 2.0 Login Challenge.")
+		innerErr := herodot.ErrInternalServerError().WithWrap(err).WithReasonf("Unable to accept OAuth 2.0 Login Challenge.")
 		if r != nil {
 			innerErr = innerErr.
 				WithDetail("status_code", r.StatusCode).
@@ -133,7 +133,7 @@ func (h *DefaultHydra) AcceptLoginRequest(ctx context.Context, params AcceptLogi
 
 func (h *DefaultHydra) GetLoginRequest(ctx context.Context, loginChallenge string) (*hydraclientgo.OAuth2LoginRequest, error) {
 	if loginChallenge == "" {
-		return nil, errors.WithStack(herodot.ErrBadRequest.WithReason("invalid login_challenge"))
+		return nil, errors.WithStack(herodot.ErrBadRequest().WithReason("invalid login_challenge"))
 	}
 
 	aa, err := h.getAdminAPIClient(ctx)
@@ -145,9 +145,9 @@ func (h *DefaultHydra) GetLoginRequest(ctx context.Context, loginChallenge strin
 	if err != nil {
 		var innerErr *herodot.DefaultError
 		if r == nil || r.StatusCode >= 500 {
-			innerErr = &herodot.ErrInternalServerError
+			innerErr = herodot.ErrInternalServerError()
 		} else {
-			innerErr = &herodot.ErrBadRequest
+			innerErr = herodot.ErrBadRequest()
 		}
 		innerErr = innerErr.WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 		if r != nil {

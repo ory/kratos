@@ -55,7 +55,7 @@ func TestFlowPersister(ctx context.Context, p interface {
 			t.Run("fail to find on other network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRecoveryFlow(ctx, r.ID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -69,7 +69,7 @@ func TestFlowPersister(ctx context.Context, p interface {
 			t.Run("fail to find on other network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRecoveryFlow(ctx, r.ID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 		})
 
@@ -82,7 +82,7 @@ func TestFlowPersister(ctx context.Context, p interface {
 			t.Run("fail to find on other network", func(t *testing.T) {
 				_, p := testhelpers.NewNetwork(t, ctx, p)
 				_, err := p.GetRecoveryFlow(ctx, expected.ID)
-				require.ErrorIs(t, err, sqlcon.ErrNoRows)
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 			})
 
 			actual, err := p.GetRecoveryFlow(ctx, expected.ID)
@@ -119,7 +119,7 @@ func TestFlowPersister(ctx context.Context, p interface {
 
 			t.Run("fail to find on other network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
-				require.ErrorIs(t, other.UpdateRecoveryFlow(ctx, expected), sqlcon.ErrNoRows)
+				require.ErrorIs(t, other.UpdateRecoveryFlow(ctx, expected), sqlcon.ErrNoRows())
 
 				actual, err := p.GetRecoveryFlow(ctx, expected.ID)
 				require.NoError(t, err)

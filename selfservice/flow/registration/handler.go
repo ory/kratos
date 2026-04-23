@@ -79,7 +79,7 @@ func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 
 	public.GET(RouteInitBrowserFlow, h.createBrowserRegistrationFlow)
 	public.GET(RouteInitAPIFlow, h.d.SessionHandler().IsNotAuthenticated(h.createNativeRegistrationFlow,
-		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn))))
+		session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), errors.WithStack(ErrAlreadyLoggedIn()))))
 
 	public.GET(RouteGetFlow, h.getRegistrationFlow)
 
@@ -90,7 +90,7 @@ func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 func (h *Handler) onAuthenticated(w http.ResponseWriter, r *http.Request) {
 	handler := session.RedirectOnAuthenticated(h.d)
 	if x.IsJSONRequest(r) {
-		handler = session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn)
+		handler = session.RespondWithJSONErrorOnAuthenticated(h.d.Writer(), ErrAlreadyLoggedIn())
 	}
 
 	handler(w, r)
@@ -120,7 +120,7 @@ func WithFlowOAuth2LoginChallenge(loginChallenge string) FlowOption {
 
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
 	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
-		return nil, errors.WithStack(ErrRegistrationDisabled)
+		return nil, errors.WithStack(ErrRegistrationDisabled())
 	}
 
 	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRegistrationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)
@@ -134,7 +134,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
 		e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
 		if err != nil {
-			return nil, errors.WithStack(herodot.ErrInternalServerError.WithWrap(err))
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithWrap(err))
 		}
 		f.SessionTokenExchangeCode = e.InitCode
 	}
@@ -216,7 +216,7 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 //
 //	Schemes: http, https
 //
@@ -340,7 +340,7 @@ type createBrowserRegistrationFlow struct {
 //
 // This endpoint is NOT INTENDED for clients that do not have a browser (Chrome, Firefox, ...) as cookies are needed.
 //
-// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 //
 //	Schemes: http, https
 //
@@ -411,7 +411,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 				}
 				returnTo, err := url.Parse(rt)
 				if err != nil {
-					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to parse URL: %s", rt)))
+					h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to parse URL: %s", rt)))
 					return
 				}
 				x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
@@ -433,7 +433,7 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 		}
 
 		if x.IsJSONRequest(r) {
-			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+			h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn()))
 			return
 		}
 
@@ -506,7 +506,7 @@ type getRegistrationFlow struct {
 // - `session_already_available`: The user is already signed in.
 // - `self_service_flow_expired`: The flow is expired and you should request a new one.
 //
-// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 //
 //	Produces:
 //	- application/json
@@ -524,7 +524,7 @@ type getRegistrationFlow struct {
 //	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled()))
 		return
 	}
 
@@ -546,13 +546,13 @@ func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, ar.ReturnTo)
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().WithID(text.ErrIDSelfServiceFlowExpired).
 				WithReason("The registration flow has expired. Redirect the user to the registration flow init endpoint to initialize a new registration flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", ar.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.WithID(text.ErrIDSelfServiceFlowExpired).
+		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().WithID(text.ErrIDSelfServiceFlowExpired).
 			WithReason("The registration flow has expired. Call the registration flow init API endpoint to initialize a new registration flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
@@ -641,7 +641,7 @@ type updateRegistrationFlowBody struct{}
 //   - `browser_location_change_required`: Usually sent when an AJAX request indicates that the browser needs to open a specific URL.
 //     Most likely used in Social Sign In flows.
 //
-// More information can be found at [Ory Kratos User Login](https://www.ory.sh/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.sh/docs/kratos/self-service/flows/user-registration).
+// More information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).
 //
 //	Schemes: http, https
 //
@@ -688,7 +688,7 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 			return
 		}
 
-		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn))
+		h.d.Writer().WriteError(w, r, errors.WithStack(ErrAlreadyLoggedIn()))
 		return
 	}
 
@@ -718,7 +718,10 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, s.ID(), "", "", f, i); err != nil {
+	if err := h.d.RegistrationExecutor().PostRegistrationHook(w, r, f, i, session.AuthenticationMethod{
+		Method: s.ID(),
+		AAL:    identity.AuthenticatorAssuranceLevel1,
+	}); err != nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, s.ID(), s.NodeGroup(), err)
 		return
 	}

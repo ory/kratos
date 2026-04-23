@@ -670,7 +670,7 @@ func TestRegistration(t *testing.T) {
 			//  We set default to phone and select email in InitializeRegistrationFlowViaBrowser
 			conf.MustSet(t.Context(), config.ViperKeyDefaultIdentitySchemaID, "phone")
 
-			conf.MustSet(t.Context(), config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, "https://www.ory.sh")
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceRegistrationAfter+"."+config.DefaultBrowserReturnURL, "https://www.ory.com")
 
 			browserClient := testhelpers.NewClientWithCookies(t)
 
@@ -746,7 +746,7 @@ func TestRegistration(t *testing.T) {
 					}
 
 					identity, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(t.Context(), identity.CredentialsTypePassword, values.Get("traits.email"))
-					require.NoError(t, err, sqlcon.ErrNoRows)
+					require.NoError(t, err, sqlcon.ErrNoRows())
 
 					assert.NotEmpty(t, identity.ID)
 					assert.Equalf(t, values.Get("traits.email"), gjson.GetBytes(identity.Traits, "email").String(), "%s", identity.Traits)

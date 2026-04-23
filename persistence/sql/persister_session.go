@@ -199,8 +199,8 @@ func (p *Persister) ExtendSession(ctx context.Context, sessionID uuid.UUID) (err
 
 			// This is a special case for CockroachDB. If the row is locked, we do not see the session. Therefor we return
 			// a 404 not found error indicating to the user that the session might already be updated by someone else.
-			if errors.Is(err, sqlcon.ErrNoRows) && tx.Dialect.Name() == dbal.DriverCockroachDB {
-				return errors.WithStack(herodot.ErrNotFound.WithReason("The session you are trying to extend is already being extended by another request or does not exist."))
+			if errors.Is(err, sqlcon.ErrNoRows()) && tx.Dialect.Name() == dbal.DriverCockroachDB {
+				return errors.WithStack(herodot.ErrNotFound().WithReason("The session you are trying to extend is already being extended by another request or does not exist."))
 			}
 
 			return sqlcon.HandleError(err)
@@ -241,7 +241,7 @@ func (p *Persister) UpsertSession(ctx context.Context, s *session.Session) (err 
 	if s.Identity != nil {
 		s.IdentityID = s.Identity.ID
 	} else if s.IdentityID.IsNil() {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("cannot upsert session without an identity or identity ID set"))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("cannot upsert session without an identity or identity ID set"))
 	}
 
 	var updated bool
@@ -317,7 +317,7 @@ func (p *Persister) DeleteSession(ctx context.Context, sid uuid.UUID) (err error
 		return sqlcon.HandleError(err)
 	}
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	return nil
 }
@@ -338,7 +338,7 @@ func (p *Persister) DeleteSessionsByIdentity(ctx context.Context, identityID uui
 		return sqlcon.HandleError(err)
 	}
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	return nil
 }
@@ -404,7 +404,7 @@ func (p *Persister) DeleteSessionByToken(ctx context.Context, token string) (err
 		return sqlcon.HandleError(err)
 	}
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	return nil
 }
@@ -425,7 +425,7 @@ func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) (err
 		return sqlcon.HandleError(err)
 	}
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	return nil
 }
@@ -447,7 +447,7 @@ func (p *Persister) RevokeSessionById(ctx context.Context, sID uuid.UUID) (err e
 		return sqlcon.HandleError(err)
 	}
 	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows)
+		return errors.WithStack(sqlcon.ErrNoRows())
 	}
 	return nil
 }

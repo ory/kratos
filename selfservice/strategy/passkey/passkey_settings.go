@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"go.opentelemetry.io/otel/attribute"
 
@@ -26,6 +25,7 @@ import (
 	"github.com/tidwall/sjson"
 
 	"github.com/ory/herodot"
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
@@ -57,7 +57,7 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 		return err
 	}
 
-	if webAuthns, err := s.identityListWebAuthn(id); errors.Is(err, sqlcon.ErrNoRows) {
+	if webAuthns, err := s.identityListWebAuthn(id); errors.Is(err, sqlcon.ErrNoRows()) {
 		// Do nothing
 	} else if err != nil {
 		return err
@@ -151,7 +151,7 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 func (s *Strategy) identityListWebAuthn(id *identity.Identity) (*identity.CredentialsWebAuthnConfig, error) {
 	cred, ok := id.GetCredentials(s.ID())
 	if !ok {
-		return nil, errors.WithStack(sqlcon.ErrNoRows)
+		return nil, errors.WithStack(sqlcon.ErrNoRows())
 	}
 
 	var cc identity.CredentialsWebAuthnConfig
@@ -251,7 +251,7 @@ func (s *Strategy) continueSettingsFlow(
 			return err
 		}
 
-		if ctxUpdate.Session.AuthenticatedAt.Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx)).Before(time.Now()) {
+		if !s.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 			return errors.WithStack(settings.NewFlowNeedsReAuth())
 		}
 	} else {
@@ -276,12 +276,12 @@ func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.Respon
 
 	cred, ok := i.GetCredentials(s.ID())
 	if !ok {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a WebAuthn but you have no WebAuthn set up."))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("You tried to remove a WebAuthn but you have no WebAuthn set up."))
 	}
 
 	var cc identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &cc); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
 	updated := make([]identity.CredentialWebAuthn, 0)
@@ -292,7 +292,7 @@ func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.Respon
 	}
 
 	if len(updated) == len(cc.Credentials) {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("You tried to remove a passkey which does not exist."))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("You tried to remove a passkey which does not exist."))
 	}
 
 	count, err := s.d.IdentityManager().CountActiveFirstFactorCredentials(ctx, i)
@@ -301,7 +301,7 @@ func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.Respon
 	}
 
 	if count < 2 {
-		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials))
+		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, errors.WithStack(webauthnx.ErrNotEnoughCredentials()))
 	}
 
 	if len(updated) == 0 {
@@ -313,7 +313,7 @@ func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.Respon
 	cc.Credentials = updated
 	cred.Config, err = json.Marshal(cc)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
 
 	i.SetCredentials(s.ID(), *cred)
@@ -324,22 +324,22 @@ func (s *Strategy) continueSettingsFlowRemove(ctx context.Context, w http.Respon
 func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasskeyMethod) error {
 	webAuthnSession := gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if !webAuthnSession.IsObject() {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object."))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected WebAuthN in internal context to be an object."))
 	}
 
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(gjson.GetBytes(ctxUpdate.Flow.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData)).Raw), &webAuthnSess); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err))
 	}
 
 	webAuthnResponse, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(p.Register))
 	if err != nil {
-		return errors.WithStack(herodot.ErrBadRequest.WithReasonf("Unable to parse WebAuthn response: %s", err))
+		return errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse WebAuthn response: %s", err))
 	}
 
 	web, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error()))
 	}
 
 	credential, err := web.CreateCredential(&webauthnx.User{
@@ -347,7 +347,7 @@ func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *setti
 		Config: web.Config,
 	}, webAuthnSess, webAuthnResponse)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to create WebAuthn credential: %s", err))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to create WebAuthn credential: %s", err))
 	}
 
 	i, err := s.d.PrivilegedIdentityPool().GetIdentityConfidential(ctx, ctxUpdate.Session.IdentityID)
@@ -359,7 +359,7 @@ func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *setti
 
 	var cc identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &cc); err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
 	credentialWebAuthn := identity.CredentialFromWebAuthn(credential, true)
@@ -367,7 +367,7 @@ func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *setti
 	cc.Credentials = append(cc.Credentials, *credentialWebAuthn)
 	credentialsConfig, err := json.Marshal(cc)
 	if err != nil {
-		return errors.WithStack(herodot.ErrInternalServerError.WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
+		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode identity credentials.").WithDebug(err.Error()))
 	}
 
 	i.UpsertCredentialsConfig(s.ID(), credentialsConfig, 1, identity.WithAdditionalIdentifier(string(webAuthnSess.UserID)))
@@ -416,7 +416,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 func (s *Strategy) handleSettingsError(ctx context.Context, w http.ResponseWriter, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasskeyMethod, err error) error {
 	// Do not pause flow if the flow type is an API flow as we can't save cookies in those flows.
 	if e := new(settings.FlowNeedsReAuth); errors.As(err, &e) && ctxUpdate.Flow != nil && ctxUpdate.Flow.Type == flow.TypeBrowser {
-		if err := s.d.ContinuityManager().Pause(ctx, w, r, settings.ContinuityKey(s.SettingsStrategyID()), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
+		if _, err := s.d.ContinuityManager().Pause(ctx, w, r, settings.ContinuityKey(s.SettingsStrategyID()), continuity.NewCookieReferenceStore(s.d.ContinuityCookieManager(ctx)), settings.ContinuityOptions(p, ctxUpdate.GetSessionIdentity())...); err != nil {
 			return err
 		}
 	}

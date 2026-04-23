@@ -201,13 +201,13 @@ type CourierAPIListCourierMessagesRequest struct {
 	recipient  *string
 }
 
-// Items per Page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+// Items per Page  This is the number of items per page to return. For details on pagination please head over to the [pagination documentation](https://www.ory.com/docs/ecosystem/api-design#pagination).
 func (r CourierAPIListCourierMessagesRequest) PageSize(pageSize int64) CourierAPIListCourierMessagesRequest {
 	r.pageSize = &pageSize
 	return r
 }
 
-// Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.sh/docs/ecosystem/api-design#pagination).
+// Next Page Token  The next page token. For details on pagination please head over to the [pagination documentation](https://www.ory.com/docs/ecosystem/api-design#pagination).
 func (r CourierAPIListCourierMessagesRequest) PageToken(pageToken string) CourierAPIListCourierMessagesRequest {
 	r.pageToken = &pageToken
 	return r

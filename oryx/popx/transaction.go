@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/cockroach-go/v2/crdb"
-	"github.com/jackc/pgconn"
-	pgxconn "github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -71,9 +70,6 @@ func Transaction(ctx context.Context, connection *pop.Connection, callback func(
 			if e := new(pgconn.PgError); errors.As(err, &e) && e.Code == "40001" {
 				continue
 			}
-			if e := new(pgxconn.PgError); errors.As(err, &e) && e.Code == "40001" {
-				continue
-			}
 			return err
 		}
 		return err
@@ -92,7 +88,7 @@ func Transaction(ctx context.Context, connection *pop.Connection, callback func(
 			if err == nil {
 				return nil
 			}
-			if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrConcurrentUpdate) {
+			if !errors.Is(sqlcon.HandleError(err), sqlcon.ErrConcurrentUpdate()) {
 				return err
 			}
 			remaining := time.Until(deadline)

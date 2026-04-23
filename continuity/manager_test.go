@@ -47,11 +47,12 @@ func TestManager(t *testing.T) {
 	i := identity.NewIdentity("")
 	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), i))
 
-	newServer := func(t *testing.T, p continuity.Manager, tc *persisterTestCase) *httptest.Server {
+	newServer := func(t *testing.T, p *continuity.Manager, tc *persisterTestCase) *httptest.Server {
 		writer := herodot.NewJSONWriter(logrusx.New("", ""))
 		router := http.NewServeMux()
 		router.HandleFunc("PUT /{name}", func(w http.ResponseWriter, r *http.Request) {
-			if err := p.Pause(r.Context(), w, r, r.PathValue("name"), tc.ro...); err != nil {
+			store := continuity.NewCookieReferenceStore(reg.ContinuityCookieManager(r.Context()))
+			if _, err := p.Pause(r.Context(), w, r, r.PathValue("name"), store, tc.ro...); err != nil {
 				writer.WriteError(w, r, err)
 				return
 			}
@@ -59,12 +60,13 @@ func TestManager(t *testing.T) {
 		})
 
 		router.HandleFunc("POST /{name}", func(w http.ResponseWriter, r *http.Request) {
-			if err := p.Pause(r.Context(), w, r, r.PathValue("name"), tc.ro...); err != nil {
+			store := continuity.NewCookieReferenceStore(reg.ContinuityCookieManager(r.Context()))
+			if _, err := p.Pause(r.Context(), w, r, r.PathValue("name"), store, tc.ro...); err != nil {
 				writer.WriteError(w, r, err)
 				return
 			}
 
-			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), tc.wo...)
+			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), store, tc.wo...)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -73,7 +75,8 @@ func TestManager(t *testing.T) {
 		})
 
 		router.HandleFunc("GET /{name}", func(w http.ResponseWriter, r *http.Request) {
-			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), tc.ro...)
+			store := continuity.NewCookieReferenceStore(reg.ContinuityCookieManager(r.Context()))
+			c, err := p.Continue(r.Context(), w, r, r.PathValue("name"), store, tc.ro...)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -82,7 +85,8 @@ func TestManager(t *testing.T) {
 		})
 
 		router.HandleFunc("DELETE /{name}", func(w http.ResponseWriter, r *http.Request) {
-			err := p.Abort(r.Context(), w, r, r.PathValue("name"))
+			store := continuity.NewCookieReferenceStore(reg.ContinuityCookieManager(r.Context()))
+			err := p.Abort(r.Context(), w, r, r.PathValue("name"), store)
 			if err != nil {
 				writer.WriteError(w, r, err)
 				return
@@ -124,7 +128,7 @@ func TestManager(t *testing.T) {
 
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 		body := ioutilx.MustReadAll(res.Body)
-		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 
 		require.Len(t, res.Cookies(), 1, "continuing the flow with a broken cookie should instruct the browser to forget it")
 		assert.EqualValues(t, res.Cookies()[0].Name, continuity.CookieName)
@@ -214,7 +218,7 @@ func TestManager(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, res.StatusCode)
 		body := ioutilx.MustReadAll(res.Body)
 		require.NoError(t, res.Body.Close())
-		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+		assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 	})
 
 	for k, tc := range []persisterTestCase{
@@ -244,7 +248,7 @@ func TestManager(t *testing.T) {
 
 				body := ioutilx.MustReadAll(res.Body)
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 			})
 
 			t.Run("case=pause and resume session", func(t *testing.T) {
@@ -288,7 +292,7 @@ func TestManager(t *testing.T) {
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 				body := ioutilx.MustReadAll(res.Body)
 				t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 			})
 
 			t.Run("case=pause and resume session in the same request", func(t *testing.T) {
@@ -324,7 +328,7 @@ func TestManager(t *testing.T) {
 
 				require.Equal(t, http.StatusBadRequest, res.StatusCode)
 				body := ioutilx.MustReadAll(res.Body)
-				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable.ReasonField)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), continuity.ErrNotResumable().ReasonField)
 			})
 		})
 	}

@@ -33,13 +33,15 @@ func (p *Persister) CreateVerificationCode(ctx context.Context, params *code.Cre
 	}
 
 	if params.VerifiableAddress == nil {
-		return nil, errors.WithStack(herodot.ErrNotFound.WithReason("can't create a verification code without a verifiable address"))
+		return nil, errors.WithStack(herodot.ErrNotFound().WithReason("can't create a verification code without a verifiable address"))
 	}
 
-	verificationCode.VerifiableAddress = params.VerifiableAddress
-	verificationCode.VerifiableAddressID = uuid.NullUUID{
-		UUID:  params.VerifiableAddress.ID,
-		Valid: true,
+	// Can be nil when the code is for a pending change, in which case the address doesn't exist yet. See VerifyNewAddress hook.
+	if va, ok := params.VerifiableAddress.ToPersistable(); ok {
+		verificationCode.VerifiableAddress = va
+		verificationCode.VerifiableAddressID = uuid.NullUUID{UUID: va.ID, Valid: true}
+	} else {
+		verificationCode.VerifiableAddressID = uuid.NullUUID{Valid: false}
 	}
 
 	// This should not create the request eagerly because otherwise we might accidentally create an address that isn't
@@ -60,12 +62,13 @@ func (p *Persister) UseVerificationCode(ctx context.Context, flowID uuid.UUID, u
 		return nil, err
 	}
 
-	var va identity.VerifiableAddress
-	if err := p.Connection(ctx).Where("id = ? AND nid = ?", codeRow.VerifiableAddressID, p.NetworkID(ctx)).First(&va); err != nil {
-		// This should fail on not found errors too, because the verifiable address must exist for the flow to work.
-		return nil, sqlcon.HandleError(err)
+	if codeRow.VerifiableAddressID.Valid {
+		var va identity.VerifiableAddress
+		if err := p.Connection(ctx).Where("id = ? AND nid = ?", codeRow.VerifiableAddressID, p.NetworkID(ctx)).First(&va); err != nil {
+			return nil, sqlcon.HandleError(err)
+		}
+		codeRow.VerifiableAddress = &va
 	}
-	codeRow.VerifiableAddress = &va
 
 	return codeRow, nil
 }

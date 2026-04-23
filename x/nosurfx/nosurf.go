@@ -29,21 +29,21 @@ import (
 	"github.com/ory/x/randx"
 )
 
-var (
-	ErrInvalidCSRFToken = herodot.ErrForbidden.
-				WithID(text.ErrIDCSRF).
-				WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
-				WithDetail("docs", "https://www.ory.sh/kratos/docs/debug/csrf").
-				WithReason("Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
-	ErrGone = herodot.DefaultError{
-		CodeField:    http.StatusGone,
-		StatusField:  http.StatusText(http.StatusGone),
-		ReasonField:  "",
-		DebugField:   "",
-		DetailsField: nil,
-		ErrorField:   "The requested resource is no longer available because it has expired or is otherwise invalid.",
+func ErrInvalidCSRFToken() *herodot.DefaultError {
+	return herodot.ErrForbidden().
+		WithID(text.ErrIDCSRF).
+		WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
+		WithDetail("docs", "https://www.ory.sh/kratos/docs/debug/csrf").
+		WithReason("Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
+}
+
+func ErrGone() *herodot.DefaultError {
+	return &herodot.DefaultError{
+		CodeField:   http.StatusGone,
+		StatusField: http.StatusText(http.StatusGone),
+		ErrorField:  "The requested resource is no longer available because it has expired or is otherwise invalid.",
 	}
-)
+}
 
 const (
 	noCookie      = "The HTTP Cookie Header is empty or not set."
@@ -52,25 +52,47 @@ const (
 	tokenMismatch = "The HTTP Cookie Header was set and a CSRF token was sent but they do not match. We recommend deleting all cookies for this domain and retrying the flow."
 )
 
-var (
-	ErrInvalidCSRFTokenAJAX = ErrInvalidCSRFToken.
-				WithDetail("hint", "We detected an AJAX call, please ensure that CORS is enabled and configured correctly, and that your AJAX code sends cookies and has credentials enabled. For further debugging, check your Browser's Network Tab to see what cookies are included or excluded.")
+func ErrInvalidCSRFTokenAJAX() *herodot.DefaultError {
+	return ErrInvalidCSRFToken().
+		WithDetail("hint", "We detected an AJAX call, please ensure that CORS is enabled and configured correctly, and that your AJAX code sends cookies and has credentials enabled. For further debugging, check your Browser's Network Tab to see what cookies are included or excluded.")
+}
 
-	ErrInvalidCSRFTokenAJAXNoCookies     = ErrInvalidCSRFTokenAJAX.WithDetail("reject_reason", noCookie)
-	ErrInvalidCSRFTokenAJAXCookieMissing = ErrInvalidCSRFTokenAJAX.WithDetail("reject_reason", cookieMissing)
-	ErrInvalidCSRFTokenAJAXTokenNotSent  = ErrInvalidCSRFToken.WithDetail("hint", tokenNotSent)
-	ErrInvalidCSRFTokenAJAXTokenMismatch = ErrInvalidCSRFTokenAJAX.WithDetail("reject_reason", tokenMismatch)
-)
+func ErrInvalidCSRFTokenAJAXNoCookies() *herodot.DefaultError {
+	return ErrInvalidCSRFTokenAJAX().WithDetail("reject_reason", noCookie)
+}
 
-var (
-	ErrInvalidCSRFTokenServer = ErrInvalidCSRFToken.
-					WithDetail("hint", "We detected a regular browser or server-side call. To debug browser calls check your Browser's Network Tab to see what cookies are included or excluded. If you are calling from a server ensure that the appropriate cookies are being forwarded and that the SDK method is called correctly.")
+func ErrInvalidCSRFTokenAJAXCookieMissing() *herodot.DefaultError {
+	return ErrInvalidCSRFTokenAJAX().WithDetail("reject_reason", cookieMissing)
+}
 
-	ErrInvalidCSRFTokenServerNoCookies     = ErrInvalidCSRFTokenServer.WithDetail("reject_reason", noCookie)
-	ErrInvalidCSRFTokenServerCookieMissing = ErrInvalidCSRFTokenServer.WithDetail("reject_reason", cookieMissing)
-	ErrInvalidCSRFTokenServerTokenNotSent  = ErrInvalidCSRFToken.WithDetail("hint", tokenNotSent)
-	ErrInvalidCSRFTokenServerTokenMismatch = ErrInvalidCSRFTokenServer.WithDetail("reject_reason", tokenMismatch)
-)
+func ErrInvalidCSRFTokenAJAXTokenNotSent() *herodot.DefaultError {
+	return ErrInvalidCSRFToken().WithDetail("hint", tokenNotSent)
+}
+
+func ErrInvalidCSRFTokenAJAXTokenMismatch() *herodot.DefaultError {
+	return ErrInvalidCSRFTokenAJAX().WithDetail("reject_reason", tokenMismatch)
+}
+
+func ErrInvalidCSRFTokenServer() *herodot.DefaultError {
+	return ErrInvalidCSRFToken().
+		WithDetail("hint", "We detected a regular browser or server-side call. To debug browser calls check your Browser's Network Tab to see what cookies are included or excluded. If you are calling from a server ensure that the appropriate cookies are being forwarded and that the SDK method is called correctly.")
+}
+
+func ErrInvalidCSRFTokenServerNoCookies() *herodot.DefaultError {
+	return ErrInvalidCSRFTokenServer().WithDetail("reject_reason", noCookie)
+}
+
+func ErrInvalidCSRFTokenServerCookieMissing() *herodot.DefaultError {
+	return ErrInvalidCSRFTokenServer().WithDetail("reject_reason", cookieMissing)
+}
+
+func ErrInvalidCSRFTokenServerTokenNotSent() *herodot.DefaultError {
+	return ErrInvalidCSRFToken().WithDetail("hint", tokenNotSent)
+}
+
+func ErrInvalidCSRFTokenServerTokenMismatch() *herodot.DefaultError {
+	return ErrInvalidCSRFTokenServer().WithDetail("reject_reason", tokenMismatch)
+}
 
 type CSRFTokenGeneratorProvider interface {
 	GenerateCSRFToken(r *http.Request) string
@@ -211,14 +233,14 @@ func CSRFErrorReason(r *http.Request, reg interface {
 
 	if len(r.Header.Get("Cookie")) == 0 {
 		if isAjax {
-			return errors.WithStack(ErrInvalidCSRFTokenAJAXNoCookies)
+			return errors.WithStack(ErrInvalidCSRFTokenAJAXNoCookies())
 		}
-		return errors.WithStack(ErrInvalidCSRFTokenServerNoCookies)
+		return errors.WithStack(ErrInvalidCSRFTokenServerNoCookies())
 	} else if _, err := r.Cookie(CSRFCookieName(r.Context(), reg)); errors.Is(err, http.ErrNoCookie) {
 		if isAjax {
-			return errors.WithStack(ErrInvalidCSRFTokenAJAXCookieMissing)
+			return errors.WithStack(ErrInvalidCSRFTokenAJAXCookieMissing())
 		}
-		return errors.WithStack(ErrInvalidCSRFTokenServerCookieMissing)
+		return errors.WithStack(ErrInvalidCSRFTokenServerCookieMissing())
 	}
 
 	// We can't parse the request body here, so we check if the content type is JSON,
@@ -226,16 +248,16 @@ func CSRFErrorReason(r *http.Request, reg interface {
 	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
 		if len(r.Form.Get("csrf_token")+r.Header.Get(nosurf.HeaderName)) == 0 {
 			if isAjax {
-				return errors.WithStack(ErrInvalidCSRFTokenAJAXTokenNotSent)
+				return errors.WithStack(ErrInvalidCSRFTokenAJAXTokenNotSent())
 			}
-			return errors.WithStack(ErrInvalidCSRFTokenServerTokenNotSent)
+			return errors.WithStack(ErrInvalidCSRFTokenServerTokenNotSent())
 		}
 	}
 
 	if isAjax {
-		return errors.WithStack(ErrInvalidCSRFTokenAJAXTokenMismatch)
+		return errors.WithStack(ErrInvalidCSRFTokenAJAXTokenMismatch())
 	}
-	return errors.WithStack(ErrInvalidCSRFTokenServerTokenMismatch)
+	return errors.WithStack(ErrInvalidCSRFTokenServerTokenMismatch())
 }
 
 func CSRFFailureHandler(reg interface {

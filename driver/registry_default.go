@@ -14,6 +14,7 @@ import (
 
 	"github.com/cenkalti/backoff"
 	"github.com/dgraph-io/ristretto/v2"
+	"github.com/gofrs/uuid"
 	"github.com/gorilla/sessions"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lestrrat-go/jwx/jwk"
@@ -33,6 +34,7 @@ import (
 	"github.com/ory/kratos/persistence/sql"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/errorx"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/logout"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -96,6 +98,7 @@ type RegistryDefault struct {
 	hookSessionDestroyer   *hook.SessionDestroyer
 	hookAddressVerifier    *hook.AddressVerifier
 	hookShowVerificationUI *hook.ShowVerificationUIHook
+	hookVerifyNewAddress   *hook.VerifyNewAddress
 
 	identityHandler        *identity.Handler
 	identityValidator      *identity.Validator
@@ -104,7 +107,7 @@ type RegistryDefault struct {
 
 	courierHandler *courier.Handler
 
-	continuityManager continuity.Manager
+	continuityManager *continuity.Manager
 
 	schemaHandler *schema.Handler
 
@@ -357,7 +360,7 @@ nextStrategy:
 					continue nextStrategy
 				}
 			}
-			if m.strategyRegistrationEnabled(ctx, s.ID().String()) {
+			if m.strategyRegistrationEnabled(ctx, s.ID().String()) || supportsOrganizations(strategy) {
 				registrationStrategies = append(registrationStrategies, s)
 			}
 		}
@@ -386,12 +389,21 @@ nextStrategy:
 				}
 			}
 
-			if m.strategyLoginEnabled(ctx, s.ID().String()) {
+			if m.strategyLoginEnabled(ctx, s.ID().String()) || supportsOrganizations(strategy) {
 				loginStrategies = append(loginStrategies, s)
 			}
 		}
 	}
 	return
+}
+
+// supportsOrganizations checks if a strategy implements organization-based authentication.
+// Organization strategies manage their own enablement via provider configuration,
+// not via the strategy-enabled config flag, so they bypass the strategyLoginEnabled /
+// strategyRegistrationEnabled check.
+func supportsOrganizations(s any) bool {
+	o, ok := s.(flow.OrganizationImplementor)
+	return ok && o.SupportsOrganizations()
 }
 
 func (m *RegistryDefault) AllLoginStrategies() login.Strategies {
@@ -717,14 +729,36 @@ func (m *RegistryDefault) Courier(ctx context.Context) (courier.Courier, error) 
 	return courier.NewCourier(ctx, m)
 }
 
-func (m *RegistryDefault) ContinuityManager() continuity.Manager {
+func (m *RegistryDefault) ContinuityManager() *continuity.Manager {
 	return m.continuityManager
 }
 
-func (m *RegistryDefault) Persister() persistence.Persister                      { return m.persister }
-func (m *RegistryDefault) ContinuityPersister() continuity.Persister             { return m.persister }
-func (m *RegistryDefault) IdentityPool() identity.Pool                           { return m.persister }
-func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool       { return m.persister }
+func (m *RegistryDefault) Persister() persistence.Persister                { return m.persister }
+func (m *RegistryDefault) ContinuityPersister() continuity.Persister       { return m.persister }
+func (m *RegistryDefault) IdentityPool() identity.Pool                     { return m.persister }
+func (m *RegistryDefault) PrivilegedIdentityPool() identity.PrivilegedPool { return m.persister }
+func (m *RegistryDefault) FlowForTokenExchange() session.FlowForTokenExchange {
+	return m
+}
+func (m *RegistryDefault) GetFlowForTokenExchange(ctx context.Context, flowID uuid.UUID) (any, error) {
+	rf, err := m.RegistrationFlowPersister().GetRegistrationFlow(ctx, flowID)
+	if err == nil {
+		return rf, nil
+	}
+	if !errors.Is(err, sqlcon.ErrNoRows()) {
+		return nil, err
+	}
+
+	lf, err := m.LoginFlowPersister().GetLoginFlow(ctx, flowID)
+	if err == nil {
+		return lf, nil
+	}
+	if !errors.Is(err, sqlcon.ErrNoRows()) {
+		return nil, err
+	}
+
+	return nil, errors.WithStack(sqlcon.ErrNoRows())
+}
 func (m *RegistryDefault) RegistrationFlowPersister() registration.FlowPersister { return m.persister }
 func (m *RegistryDefault) RecoveryFlowPersister() recovery.FlowPersister         { return m.persister }
 func (m *RegistryDefault) LoginFlowPersister() login.FlowPersister               { return m.persister }
@@ -743,6 +777,9 @@ func (m *RegistryDefault) VerificationCodePersister() code.VerificationCodePersi
 }
 func (m *RegistryDefault) RegistrationCodePersister() code.RegistrationCodePersister {
 	return m.persister
+}
+func (m *RegistryDefault) PendingTraitsChangePersister() identity.PendingTraitsChangePersister {
+	return m.Persister()
 }
 func (m *RegistryDefault) TransactionalPersisterProvider() x.TransactionalPersister {
 	return m.persister
@@ -837,7 +874,7 @@ func (m *RegistryDefault) initCheapMembers() {
 	m.identityManager = identity.NewManager(m)
 	m.sessionManager = session.NewManagerHTTP(m)
 	m.errorManager = errorx.NewManager(m)
-	m.continuityManager = continuity.NewManagerCookie(m)
+	m.continuityManager = continuity.NewManager(m)
 }
 
 type initOnce[T any] struct {

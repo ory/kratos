@@ -36,6 +36,17 @@ import (
 )
 
 type (
+	// FlowForTokenExchange looks up a login or registration flow by ID.
+	// It is used by the token exchange handler to surface flow errors when no
+	// session was created (e.g. because a before-registration webhook rejected
+	// the request).
+	FlowForTokenExchange interface {
+		GetFlowForTokenExchange(ctx context.Context, flowID uuid.UUID) (any, error)
+	}
+	FlowForTokenExchangeProvider interface {
+		FlowForTokenExchange() FlowForTokenExchange
+	}
+
 	handlerDependencies interface {
 		ManagementProvider
 		PersistenceProvider
@@ -45,6 +56,7 @@ type (
 		nosurfx.CSRFProvider
 		config.Provider
 		sessiontokenexchange.PersistenceProvider
+		FlowForTokenExchangeProvider
 		TokenizerProvider
 	}
 	HandlerProvider interface {
@@ -221,7 +233,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 		}
 
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session found.")
-		h.r.Writer().WriteError(w, r, ErrNoSessionFound.WithWrap(err))
+		h.r.Writer().WriteError(w, r, ErrNoSessionFound().WithWrap(err))
 		return
 	}
 
@@ -235,7 +247,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if err != nil {
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("Unable to determine AAL."))
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized().WithWrap(err).WithReasonf("Unable to determine AAL."))
 		return
 	}
 
@@ -309,7 +321,7 @@ type deleteIdentitySessions struct {
 func (h *Handler) deleteIdentitySessions(w http.ResponseWriter, r *http.Request) {
 	iID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithError(err.Error()).WithDebug("could not parse UUID"))
 		return
 	}
 	if err := h.r.SessionPersister().DeleteSessionsByIdentity(r.Context(), iID); err != nil {
@@ -392,7 +404,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request) {
 	activeRaw := r.URL.Query().Get("active")
 	activeBool, err := strconv.ParseBool(activeRaw)
 	if activeRaw != "" && err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter active"))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithError("could not parse parameter active"))
 		return
 	}
 
@@ -404,7 +416,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request) {
 	// Parse request pagination parameters
 	opts, err := keysetpagination.Parse(r.URL.Query(), keysetpagination.NewMapPageToken)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("could not parse parameter page_size"))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithError("could not parse parameter page_size"))
 		return
 	}
 
@@ -413,7 +425,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request) {
 		for _, e := range es {
 			expand, ok := ParseExpandable(e)
 			if !ok {
-				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %s", e)))
+				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Could not parse expand option: %s", e)))
 				return
 			}
 			expandables = append(expandables, expand)
@@ -428,7 +440,7 @@ func (h *Handler) adminListSessions(w http.ResponseWriter, r *http.Request) {
 
 	u := *r.URL
 	keysetpagination.Header(w, &u, nextPage)
-	h.r.Writer().Write(w, r, sess)
+	h.r.Writer().Write(w, r, AdminSessions(sess))
 }
 
 // Session Get Request
@@ -484,7 +496,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 
 	sID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithError(err.Error()).WithDebug("could not parse UUID"))
 		return
 	}
 
@@ -495,7 +507,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 		for _, e := range es {
 			expand, ok := ParseExpandable(e)
 			if !ok {
-				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Could not parse expand option: %s", e)))
+				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Could not parse expand option: %s", e)))
 				return
 			}
 			expandables = append(expandables, expand)
@@ -508,7 +520,7 @@ func (h *Handler) getSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.r.Writer().Write(w, r, sess)
+	h.r.Writer().Write(w, r, AdminSession(*sess))
 }
 
 // List Identity Sessions Parameters
@@ -550,7 +562,7 @@ type disableSession struct {
 func (h *Handler) disableSession(w http.ResponseWriter, r *http.Request) {
 	sID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithError(err.Error()).WithDebug("could not parse UUID"))
 		return
 	}
 
@@ -619,14 +631,14 @@ type listIdentitySessionsResponse struct {
 func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request) {
 	iID, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID")))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithError(err.Error()).WithDebug("could not parse UUID")))
 		return
 	}
 
 	activeRaw := r.URL.Query().Get("active")
 	activeBool, err := strconv.ParseBool(activeRaw)
 	if activeRaw != "" && err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError("could not parse parameter active")))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithError("could not parse parameter active")))
 		return
 	}
 
@@ -643,7 +655,7 @@ func (h *Handler) listIdentitySessions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	x.PaginationHeader(w, *r.URL, total, page, perPage)
-	h.r.Writer().Write(w, r, sess)
+	h.r.Writer().Write(w, r, AdminSessions(sess))
 }
 
 // Deleted Session Count
@@ -697,7 +709,7 @@ func (h *Handler) deleteMySessions(w http.ResponseWriter, r *http.Request) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized().WithWrap(err).WithReasonf("No valid session cookie found."))
 		return
 	}
 
@@ -766,17 +778,17 @@ func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found."))
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized().WithWrap(err).WithReasonf("No valid session cookie found."))
 		return
 	}
 
 	sessionID, err := uuid.FromString(sid)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID"))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithError(err.Error()).WithDebug("could not parse UUID"))
 		return
 	}
 	if sessionID == s.ID {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithError("cannot revoke current session").WithDebug("use the logout flow instead"))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithError("cannot revoke current session").WithDebug("use the logout flow instead"))
 		return
 	}
 
@@ -846,7 +858,7 @@ func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request) {
 	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
 	if err != nil {
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrUnauthorized.WithWrap(err).WithReasonf("No valid session cookie found.")))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrUnauthorized().WithWrap(err).WithReasonf("No valid session cookie found.")))
 		return
 	}
 
@@ -859,7 +871,7 @@ func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if err != nil {
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session cookie found.")
-		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized.WithWrap(err).WithReasonf("Unable to determine AAL."))
+		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized().WithWrap(err).WithReasonf("Unable to determine AAL."))
 		return
 	}
 
@@ -943,7 +955,7 @@ type extendSession struct {
 func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.FromString(r.PathValue("id"))
 	if err != nil {
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest.WithError(err.Error()).WithDebug("could not parse UUID")))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithError(err.Error()).WithDebug("could not parse UUID")))
 		return
 	}
 
@@ -986,7 +998,7 @@ func (h *Handler) IsNotAuthenticated(wrap http.HandlerFunc, onAuthenticated http
 			return
 		}
 
-		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden.WithReason("This endpoint can only be accessed without a login session. Please log out and try again.")))
+		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden().WithReason("This endpoint can only be accessed without a login session. Please log out and try again.")))
 	}
 }
 
@@ -1072,6 +1084,7 @@ type CodeExchangeResponse struct {
 //	  403: errorGeneric
 //	  404: errorGeneric
 //	  410: errorGeneric
+//	  422: errorGeneric
 //	  default: errorGeneric
 //
 //	Extensions:
@@ -1084,13 +1097,31 @@ func (h *Handler) exchangeCode(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if initCode == "" || returnToCode == "" {
-		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest.WithReason(`"init_code" and "return_to_code" query params must be set`))
+		h.r.Writer().WriteError(w, r, herodot.ErrBadRequest().WithReason(`"init_code" and "return_to_code" query params must be set`))
 		return
 	}
 
 	e, err := h.r.SessionTokenExchangePersister().GetExchangerFromCode(ctx, initCode, returnToCode)
 	if err != nil {
-		h.r.Writer().WriteError(w, r, herodot.ErrNotFound.WithReason(`no session yet for this "code"`))
+		// The session might not be set because the flow encountered an error (e.g. a
+		// before-registration webhook rejected the request). Check whether the exchanger
+		// exists without requiring a session and, if so, return the flow with its error
+		// messages so that the client can act on them.
+		pending, pendingErr := h.r.SessionTokenExchangePersister().GetExchangerFromCodeAllowPending(ctx, initCode, returnToCode)
+		if pendingErr != nil {
+			h.r.Logger().WithRequest(r).WithError(pendingErr).Info("Could not look up pending session token exchanger.")
+			h.r.Writer().WriteError(w, r, herodot.ErrNotFound().WithReason(`no session yet for this "code"`))
+			return
+		}
+
+		f, fErr := h.r.FlowForTokenExchange().GetFlowForTokenExchange(ctx, pending.FlowID)
+		if fErr != nil {
+			h.r.Logger().WithRequest(r).WithError(fErr).Info("Could not look up flow for pending session token exchange.")
+			h.r.Writer().WriteError(w, r, herodot.ErrNotFound().WithReason(`no session yet for this "code"`))
+			return
+		}
+
+		h.r.Writer().WriteCode(w, r, http.StatusUnprocessableEntity, f)
 		return
 	}
 

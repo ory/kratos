@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -635,14 +634,11 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 						v.Set("code", registrationCode)
 					}, tc.apiType, func(ctx context.Context, t *testing.T, s *state, body string, resp *http.Response) {
 						if tc.apiType == ApiTypeBrowser {
-							// with browser clients we redirect back to the UI with a new flow id as a query parameter
-							require.Equal(t, http.StatusOK, resp.StatusCode)
-							require.Equal(t, conf.SelfServiceFlowRegistrationUI(ctx).Path, resp.Request.URL.Path)
-							require.NotEqual(t, s.flowID, resp.Request.URL.Query().Get("flow"))
+							require.Equal(t, http.StatusOK, resp.StatusCode, "%s", body)
 						} else {
-							require.Equal(t, http.StatusGone, resp.StatusCode)
-							assert.Regexpf(t, regexp.MustCompile(`The self-service flow expired 0\.0\d minutes ago, initialize a new one\.`), gjson.Get(body, "error.reason").Str, "%s", body)
+							require.Equal(t, http.StatusBadRequest, resp.StatusCode, "%s", body)
 						}
+						require.Contains(t, gjson.Get(body, "ui.messages").String(), "The registration code is invalid or has already been used. Please try again", "%s", body)
 					})
 				})
 			})
@@ -711,7 +707,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 					}
 
 					identity, _, err := reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypeCodeAuth, state.email)
-					require.NoError(t, err, sqlcon.ErrNoRows)
+					require.NoError(t, err, sqlcon.ErrNoRows())
 
 					assert.NotEmpty(t, identity.ID, "%s", identity.ID)
 					assert.Equal(t, state.email, gjson.Get(identity.Traits.String(), "email").String(), "%s", identity.Traits.String())
@@ -885,7 +881,7 @@ func TestCodeRegistrationWithLoginChallenge(t *testing.T) {
 		r.Header.Add("Content-Type", "application/json")
 
 		err := s.Register(httptest.NewRecorder(), r, f, i)
-		require.ErrorIs(t, err, herodot.ErrBadRequest)
+		require.ErrorIs(t, err, herodot.ErrBadRequest())
 		require.Nil(t, f.HydraLoginRequest)
 	})
 }

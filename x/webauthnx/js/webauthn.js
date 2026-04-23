@@ -285,7 +285,7 @@
       .catch((err) => {
         // Calling this again will enable the autocomplete once again.
         if (err instanceof DOMException && err.name === "SecurityError") {
-          console.error(`A security exception occurred while loading Passkeys / WebAuthn. To troubleshoot, please head over to https://www.ory.sh/docs/troubleshooting/passkeys-webauthn-security-error. The original error message is: ${err.message}`)
+          console.error(`A security exception occurred while loading Passkeys / WebAuthn. To troubleshoot, please head over to https://www.ory.com/docs/troubleshooting/passkeys-webauthn-security-error. The original error message is: ${err.message}`)
         } else {
           console.error("[Ory/Passkey] An unknown error occurred while getting passkey credentials", err)
         }

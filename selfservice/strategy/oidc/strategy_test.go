@@ -64,6 +64,11 @@ func TestStrategy(t *testing.T) {
 		claims  idTokenClaims
 		scope   []string
 	)
+	hydraState := &hydraIntegrationState{
+		subject: &subject,
+		claims:  &claims,
+		scope:   &scope,
+	}
 
 	conf, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(map[string]any{
@@ -78,7 +83,7 @@ func TestStrategy(t *testing.T) {
 		}),
 	)
 
-	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, &subject, &claims, &scope)
+	remoteAdmin, remotePublic, hydraIntegrationTSURL := newHydra(t, hydraState)
 	returnTS := newReturnTS(t, reg)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
@@ -104,6 +109,12 @@ func TestStrategy(t *testing.T) {
 		}),
 		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "forcePKCE", func(c *oidc.Configuration) {
 			c.PKCE = "force"
+		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "aal2-acr", func(c *oidc.Configuration) {
+			c.AAL2ACRValues = []string{"urn:mfa", "urn:strong"}
+		}),
+		newOIDCProvider(t, ts, remotePublic, remoteAdmin, "aal2-amr", func(c *oidc.Configuration) {
+			c.AAL2AMRValues = []string{"mfa", "otp"}
 		}),
 		oidc.Configuration{
 			Provider:     "generic",
@@ -789,6 +800,75 @@ func TestStrategy(t *testing.T) {
 		})
 	})
 
+	t.Run("case=carries upstream acr/amr into session AAL", func(t *testing.T) {
+		// Reset acr/amr after the subtest so other test cases are unaffected.
+		var upstreamACR string
+		var upstreamAMR []string
+		hydraState.acr = &upstreamACR
+		hydraState.amr = &upstreamAMR
+		t.Cleanup(func() {
+			hydraState.acr = nil
+			hydraState.amr = nil
+		})
+
+		scope = []string{"openid", "offline"}
+
+		// Registers the user through the provider and returns the decoded
+		// session JSON body from the return handler.
+		registerAndReturnSession := func(t *testing.T, providerID, email string) []byte {
+			subject = email
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, providerID)
+			res, body := makeRequest(t, providerID, action, url.Values{})
+			assertIdentity(t, res, body)
+			return body
+		}
+
+		t.Run("case=matching acr elevates session to aal2", func(t *testing.T) {
+			upstreamACR = "urn:mfa"
+			upstreamAMR = nil
+			body := registerAndReturnSession(t, "aal2-acr", "aal2-acr-match@ory.sh")
+
+			assert.Equal(t, "aal2", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			assert.Equal(t, "aal2", gjson.GetBytes(body, "authentication_methods.0.aal").String(), "%s", body)
+			assert.Equal(t, "aal2-acr", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			assert.Equal(t, "urn:mfa", gjson.GetBytes(body, "authentication_methods.0.upstream_acr").String(), "%s", body)
+		})
+
+		t.Run("case=mismatching acr stays aal1", func(t *testing.T) {
+			upstreamACR = "urn:basic"
+			upstreamAMR = nil
+			body := registerAndReturnSession(t, "aal2-acr", "aal2-acr-mismatch@ory.sh")
+
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authentication_methods.0.aal").String(), "%s", body)
+			assert.Equal(t, "urn:basic", gjson.GetBytes(body, "authentication_methods.0.upstream_acr").String(), "%s", body)
+		})
+
+		t.Run("case=matching amr elevates session to aal2", func(t *testing.T) {
+			upstreamACR = ""
+			upstreamAMR = []string{"pwd", "mfa"}
+			body := registerAndReturnSession(t, "aal2-amr", "aal2-amr-match@ory.sh")
+
+			assert.Equal(t, "aal2", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			assert.Equal(t, "aal2", gjson.GetBytes(body, "authentication_methods.0.aal").String(), "%s", body)
+			assert.Equal(t, "aal2-amr", gjson.GetBytes(body, "authentication_methods.0.provider").String(), "%s", body)
+			// Upstream amr is persisted for auditing.
+			var gotAMR []string
+			require.NoError(t, json.Unmarshal([]byte(gjson.GetBytes(body, "authentication_methods.0.upstream_amr").Raw), &gotAMR))
+			assert.ElementsMatch(t, []string{"pwd", "mfa"}, gotAMR)
+		})
+
+		t.Run("case=mismatching amr stays aal1", func(t *testing.T) {
+			upstreamACR = ""
+			upstreamAMR = []string{"pwd"}
+			body := registerAndReturnSession(t, "aal2-amr", "aal2-amr-mismatch@ory.sh")
+
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authenticator_assurance_level").String(), "%s", body)
+			assert.Equal(t, "aal1", gjson.GetBytes(body, "authentication_methods.0.aal").String(), "%s", body)
+		})
+	})
+
 	t.Run("case=login without registered account", func(t *testing.T) {
 		postRegistrationWebhook := hooktest.NewServer()
 		t.Cleanup(postRegistrationWebhook.Close)
@@ -971,6 +1051,60 @@ func TestStrategy(t *testing.T) {
 			webhook.AssertTransientPayload(t, transientPayload)
 		})
 
+		t.Run("case=should register with incomplete data mapper on API flow", func(t *testing.T) {
+			subject = "incomplete-data-api@valid.ory.sh"
+			scope = []string{"openid"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://www.ory.com/kratos"
+			claims.traits.groups = []string{"group1", "group2"}
+			claims.metadataPublic.picture = "picture.png"
+			claims.metadataAdmin.phoneNumber = "911"
+
+			t.Run("case=should fail registration on first attempt and succeed on second", func(t *testing.T) {
+				// First attempt with a too-short name trait.
+				f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action := assertFormValues(t, f.ID, "valid")
+
+				res, err := http.Post(action, "application/json", // #nosec G107 -- test code
+					strings.NewReader(`{"method":"oidc","provider":"valid","traits.name":"i"}`))
+				require.NoError(t, err)
+				require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+				var changeLocation flow.BrowserLocationChangeRequiredError
+				require.NoError(t, json.NewDecoder(res.Body).Decode(&changeLocation))
+
+				_, err = testhelpers.NewClientWithCookieJar(t, nil, nil).Get(changeLocation.RedirectBrowserTo)
+				require.NoError(t, err)
+				// The callback redirects back but registration fails due to validation (name too short).
+
+				// Second attempt with valid data on a new flow.
+				f = newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+				action = assertFormValues(t, f.ID, "valid")
+
+				res, err = http.Post(action, "application/json", // #nosec G107 -- test code
+					strings.NewReader(`{"method":"oidc","provider":"valid","traits.name":"valid-name"}`))
+				require.NoError(t, err)
+				require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
+
+				require.NoError(t, json.NewDecoder(res.Body).Decode(&changeLocation))
+
+				res, err = testhelpers.NewClientWithCookieJar(t, nil, nil).Get(changeLocation.RedirectBrowserTo)
+				require.NoError(t, err)
+
+				returnToCode := res.Request.URL.Query().Get("code")
+				require.NotEmpty(t, returnToCode, "code query param was empty in the return_to URL")
+
+				codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
+					InitCode:     f.SessionTokenExchangeCode,
+					ReturnToCode: returnToCode,
+				})
+				require.NoError(t, err)
+				assert.NotEmpty(t, codeResponse.Token)
+				assert.Equal(t, "valid-name", gjson.GetBytes(codeResponse.Session.Identity.Traits, "name").String())
+				assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(codeResponse.Session.Identity.Traits, "website").String())
+			})
+		})
+
 		t.Run("case=should return exchange code even if already authenticated", func(t *testing.T) {
 			subject = "existing-session-api-code-testing@ory.sh"
 			jar := x.Must(cookiejar.New(nil))
@@ -1014,6 +1148,57 @@ func TestStrategy(t *testing.T) {
 			loginFlow, err := reg.LoginFlowPersister().GetLoginFlow(ctx, uuid.FromStringOrNil(returnedFlow))
 			require.NoError(t, err)
 			assert.Equal(t, text.InfoSelfServiceLoginLink, loginFlow.UI.Messages[0].ID)
+		})
+
+		t.Run("case=should return flow ID in return_to when registration has missing required traits", func(t *testing.T) {
+			// Use a schema that requires "extra_data" which is NOT mapped by the OIDC jsonnet mapper,
+			// so the registration will fail with a validation error.
+			conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+				{ID: "default", URL: "file://./stub/registration-multi-schema-extra-fields.schema.json"},
+				{ID: "email", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
+				{ID: "phone", URL: "file://./stub/registration-phone.schema.json", SelfserviceSelectable: true},
+				{ID: "extra_data", URL: "file://./stub/registration-multi-schema-extra-fields.schema.json", SelfserviceSelectable: true},
+			})
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeyIdentitySchemas, config.Schemas{
+					{ID: "default", URL: "file://./stub/registration.schema.json"},
+					{ID: "email", URL: "file://./stub/registration.schema.json", SelfserviceSelectable: true},
+					{ID: "phone", URL: "file://./stub/registration-phone.schema.json", SelfserviceSelectable: true},
+					{ID: "extra_data", URL: "file://./stub/registration-multi-schema-extra-fields.schema.json", SelfserviceSelectable: true},
+				})
+			})
+
+			subject = "incomplete-data-api@ory.sh"
+			scope = []string{"openid"}
+			claims = idTokenClaims{}
+			claims.traits.website = "https://www.ory.com/kratos"
+			claims.traits.groups = []string{"group1", "group2"}
+			claims.metadataPublic.picture = "picture.png"
+			claims.metadataAdmin.phoneNumber = "911"
+
+			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+
+			_, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{InitCode: f.SessionTokenExchangeCode})
+			require.Error(t, err)
+
+			action := assertFormValues(t, f.ID, "valid")
+			returnToURL := makeAPICodeFlowRequest(t, "valid", action, nil)
+
+			returnToCode := returnToURL.Query().Get("code")
+			require.NotEmpty(t, returnToCode, "code query param was empty in the return_to URL")
+
+			returnedFlow := returnToURL.Query().Get("flow")
+			require.NotEmpty(t, returnedFlow, "flow query param was empty in the return_to URL")
+
+			// Verify the flow contains validation errors and trait input nodes
+			regFlow, err := reg.RegistrationFlowPersister().GetRegistrationFlow(ctx, uuid.FromStringOrNil(returnedFlow))
+			require.NoError(t, err)
+			assert.Equal(t, f.ID, regFlow.ID, "returned flow ID should match the original registration flow")
+
+			// The flow should have trait input nodes for the "extra_data" field that failed validation
+			body, err := json.Marshal(regFlow.UI)
+			require.NoError(t, err)
+			assert.NotEmpty(t, gjson.GetBytes(body, "nodes.#(attributes.name==traits.extra_data)").Raw, "flow UI should contain a traits.extra_data input node: %s", body)
 		})
 	})
 
@@ -1323,7 +1508,7 @@ func TestStrategy(t *testing.T) {
 			subject = fmt.Sprintf("incomplete-data@%s.ory.sh", tc.name)
 			scope = []string{"openid"}
 			claims = idTokenClaims{}
-			claims.traits.website = "https://www.ory.sh/kratos"
+			claims.traits.website = "https://www.ory.com/kratos"
 			claims.traits.groups = []string{"group1", "group2"}
 			claims.metadataPublic.picture = "picture.png"
 			claims.metadataAdmin.phoneNumber = "911"
@@ -1338,7 +1523,7 @@ func TestStrategy(t *testing.T) {
 					assert.Equal(t, "length must be >= 2, but got 1", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).messages.0.text").String(), "%s", body) // make sure the field is being echoed
 					assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
 					assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
-					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body)  // make sure the field is being echoed
+					assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body) // make sure the field is being echoed
 				})
 
 				t.Run("case=should pass registration with valid data", func(t *testing.T) {
@@ -1346,7 +1531,7 @@ func TestStrategy(t *testing.T) {
 					action := assertFormValues(t, r.ID, tc.provider)
 					res, body := makeRequest(t, tc.provider, action, url.Values{"traits.name": {"valid-name"}})
 					assertIdentity(t, res, body)
-					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+					assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 					assert.Equal(t, "valid-name", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
 					assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
 				})
@@ -1364,7 +1549,7 @@ func TestStrategy(t *testing.T) {
 					assert.Equal(t, "traits.name", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.name").String(), "%s", body)                    // make sure the field is being echoed
 					assert.Equal(t, "traits.extra_data", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.extra_data).attributes.name").String(), "%s", body)        // make sure the field is being echoed
 					assert.Equal(t, "i", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.name).attributes.value").String(), "%s", body)                             // make sure the field is being echoed
-					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body)  // make sure the field is being echoed
+					assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(body, "ui.nodes.#(attributes.name==traits.website).attributes.value").String(), "%s", body) // make sure the field is being echoed
 				})
 
 				t.Run("case=should pass registration with selected schema with valid data", func(t *testing.T) {
@@ -1372,7 +1557,7 @@ func TestStrategy(t *testing.T) {
 					action := assertFormValues(t, r.ID, tc.provider)
 					res, body := makeRequest(t, tc.provider, action, url.Values{"traits.name": {"valid-name-2"}, "traits.extra_data": {"extra-data"}})
 					assertIdentity(t, res, body)
-					assert.Equal(t, "https://www.ory.sh/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+					assert.Equal(t, "https://www.ory.com/kratos", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 					assert.Equal(t, "valid-name-2", gjson.GetBytes(body, "identity.traits.name").String(), "%s", body)
 					assert.Equal(t, "extra-data", gjson.GetBytes(body, "identity.traits.extra_data").String(), "%s", body)
 					assert.Equal(t, "[\"group1\",\"group2\"]", gjson.GetBytes(body, "identity.traits.groups").String(), "%s", body)
@@ -1929,7 +2114,8 @@ func TestStrategy(t *testing.T) {
 
 				assert.Contains(t, res.Request.URL.String(), returnTS.URL, "%s", body)
 				assert.Equal(t, subject, gjson.GetBytes(body, "identity.traits.subject").String(), "%s", body)
-				assert.Equal(t, "https://updated.example.com", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
+				// as per mapper the original website trait should remain unchanged
+				assert.Equal(t, "https://original.example.com", gjson.GetBytes(body, "identity.traits.website").String(), "%s", body)
 				assert.Equal(t, "updated.png", gjson.GetBytes(body, "identity.metadata_public.picture").String(), "%s", body)
 
 				// Verify metadata_admin was updated by reading the identity from the admin API.
@@ -2309,7 +2495,11 @@ func TestPostEndpointRedirect(t *testing.T) {
 		scope   []string
 	)
 
-	remoteAdmin, remotePublic, _ := newHydra(t, &subject, &claims, &scope)
+	remoteAdmin, remotePublic, _ := newHydra(t, &hydraIntegrationState{
+		subject: &subject,
+		claims:  &claims,
+		scope:   &scope,
+	})
 
 	publicTS, _, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
 

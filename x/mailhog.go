@@ -20,8 +20,9 @@ import (
 	"github.com/mailhog/MailHog-Server/monkey"
 	"github.com/mailhog/MailHog-Server/smtp"
 	"github.com/mailhog/data"
-	"github.com/mailhog/storage"
 	"github.com/stretchr/testify/require"
+
+	xmailhog "github.com/ory/x/mailhog"
 )
 
 // StartMailhog starts a MailHog server for testing purposes.
@@ -35,7 +36,7 @@ func StartMailhog(t testing.TB, withChaosMonkey bool) (smtpAddr, apiAddr string)
 	stdlog.Default().SetOutput(io.Discard)
 
 	apiconf := &mailhogconf.Config{
-		Storage:     storage.CreateInMemory(),
+		Storage:     xmailhog.NewInMemory(),
 		MessageChan: make(chan *data.Message),
 	}
 	if withChaosMonkey {

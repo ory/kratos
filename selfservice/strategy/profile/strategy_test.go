@@ -73,7 +73,7 @@ func TestStrategyTraits(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
-	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.sh/")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, "https://www.ory.com/")
 	testhelpers.StrategyEnable(t, conf, identity.CredentialsTypePassword.String(), true)
 	testhelpers.StrategyEnable(t, conf, settings.StrategyProfile, true)
 
@@ -142,7 +142,7 @@ func TestStrategyTraits(t *testing.T) {
 		actual, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserUser1,
 			url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}.Encode())
 		assert.EqualValues(t, http.StatusOK, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
-		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch, json.RawMessage(actual), "%s", actual)
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenServerTokenMismatch(), json.RawMessage(actual), "%s", actual)
 	})
 
 	t.Run("description=should fail to post data if CSRF is invalid/type=spa", func(t *testing.T) {
@@ -153,7 +153,7 @@ func TestStrategyTraits(t *testing.T) {
 		actual, res := testhelpers.SettingsMakeRequest(t, false, true, f, browserUser1,
 			testhelpers.EncodeFormAsJSON(t, true, url.Values{"traits.booly": {"true"}, "csrf_token": {"invalid"}, "method": {"profile"}}))
 		assert.EqualValues(t, http.StatusForbidden, res.StatusCode, "should return a 400 error because CSRF token is not set\n\t%s", actual)
-		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch, json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
+		assertx.EqualAsJSON(t, nosurfx.ErrInvalidCSRFTokenAJAXTokenMismatch(), json.RawMessage(gjson.Get(actual, "error").Raw), "%s", actual)
 	})
 
 	t.Run("description=should not fail because of CSRF token but because of unprivileged/type=api", func(t *testing.T) {

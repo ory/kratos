@@ -496,7 +496,7 @@ func TestManager(t *testing.T) {
 			original.Traits = newTraits("email-update-2@ory.sh", "")
 			err := reg.IdentityManager().Update(t.Context(), original)
 			require.Error(t, err)
-			assert.Equal(t, identity.ErrProtectedFieldModified, errors.Cause(err))
+			assert.Equal(t, identity.ErrProtectedFieldModified(), errors.Cause(err))
 
 			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
@@ -674,7 +674,7 @@ func TestManager(t *testing.T) {
 			err := reg.IdentityManager().UpdateTraits(
 				t.Context(), original.ID, newTraits("email-updatetraits-2@ory.sh", ""))
 			require.Error(t, err)
-			assert.Equal(t, identity.ErrProtectedFieldModified, errors.Cause(err))
+			assert.Equal(t, identity.ErrProtectedFieldModified(), errors.Cause(err))
 
 			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
 			require.NoError(t, err)
@@ -697,6 +697,27 @@ func TestManager(t *testing.T) {
 			updated, err := reg.IdentityPool().GetIdentity(t.Context(), original.ID, identity.ExpandNothing)
 			require.NoError(t, err)
 			assert.NotEqual(t, original.UpdatedAt, updated.UpdatedAt, "UpdatedAt field should be updated")
+		})
+
+		t.Run("case=should update unprotected traits with verified user", func(t *testing.T) {
+			email := x.NewUUID().String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "initial")
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
+
+			// mock successful verification so VerifiedAt is non-nil
+			addr := original.VerifiableAddresses[0]
+			addr.Verified = true
+			addr.VerifiedAt = new(sqlxx.NullTime(time.Now().UTC()))
+			require.NoError(t, reg.PrivilegedIdentityPool().UpdateVerifiableAddress(t.Context(), &addr))
+
+			// UpdateTraits -> SetTraits -> deepcopy.Copy is the path that triggered the bug
+			require.NoError(t, reg.IdentityManager().UpdateTraits(
+				t.Context(), original.ID, newTraits(email, "updated")))
+
+			fromStore, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
+			require.NoError(t, err)
+			assert.JSONEq(t, string(newTraits(email, "updated")), string(fromStore.Traits))
 		})
 	})
 
@@ -764,7 +785,7 @@ func TestManager(t *testing.T) {
 					identity.CredentialsTypePassword: {Identifiers: []string{"no-conflict@example.com"}},
 				},
 			})
-			assert.ErrorIs(t, err, sqlcon.ErrNoRows)
+			assert.ErrorIs(t, err, sqlcon.ErrNoRows())
 			assert.Nil(t, found)
 			assert.Empty(t, foundConflictAddress)
 			assert.Empty(t, addressType)
@@ -815,7 +836,7 @@ func TestManagerNoDefaultNamedSchema(t *testing.T) {
 		config.ViperKeyIdentitySchemas: config.Schemas{
 			{ID: "user_v0", URL: "file://./stub/manager.schema.json"},
 		},
-		config.ViperKeyPublicBaseURL: "https://www.ory.sh/",
+		config.ViperKeyPublicBaseURL: "https://www.ory.com/",
 	}))
 
 	t.Run("case=should create identity with default schema", func(t *testing.T) {

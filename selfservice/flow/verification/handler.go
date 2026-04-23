@@ -149,7 +149,7 @@ type createNativeVerificationFlow struct {
 //
 // This endpoint MUST ONLY be used in scenarios such as native mobile apps (React Native, Objective C, Swift, Java, ...).
 //
-// More information can be found at [Ory Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+// More information can be found at [Ory Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Schemes: http, https
 //
@@ -162,7 +162,7 @@ type createNativeVerificationFlow struct {
 //	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createNativeVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Verification is not allowed because it was disabled.")))
 		return
 	}
 
@@ -199,7 +199,7 @@ type createBrowserVerificationFlow struct {
 //
 // This endpoint is NOT INTENDED for API clients and only works with browsers (Chrome, Firefox, ...).
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Schemes: http, https
 //
@@ -212,7 +212,7 @@ type createBrowserVerificationFlow struct {
 //	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createBrowserVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Verification is not allowed because it was disabled.")))
 		return
 	}
 
@@ -273,7 +273,7 @@ type getVerificationFlow struct {
 //	})
 //	```
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Produces:
 //	- application/json
@@ -290,7 +290,7 @@ type getVerificationFlow struct {
 //	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request) {
 	if !h.d.Config().SelfServiceFlowVerificationEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest.WithReasonf("Verification is not allowed because it was disabled.")))
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Verification is not allowed because it was disabled.")))
 		return
 	}
 
@@ -313,13 +313,13 @@ func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request) {
 		if req.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, req.ReturnTo)
 
-			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.
+			h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().
 				WithReason("The verification flow has expired. Redirect the user to the verification flow init endpoint to initialize a new verification flow.").
 				WithDetail("redirect_to", redirectURL.String()).
 				WithDetail("return_to", req.ReturnTo)))
 			return
 		}
-		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone.
+		h.d.Writer().WriteError(w, r, errors.WithStack(nosurfx.ErrGone().
 			WithReason("The verification flow has expired. Call the verification flow init API endpoint to initialize a new verification flow.").
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String())))
 		return
@@ -395,7 +395,7 @@ type updateVerificationFlowBody struct{}
 //     (if the link was valid) and instructs the user to update their password, or a redirect to the Verification UI URL with
 //     a new Verification Flow ID which contains an error message that the verification link was invalid.
 //
-// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.sh/docs/kratos/self-service/flows/verify-email-account-activation).
+// More information can be found at [Ory Kratos Email and Phone Verification Documentation](https://www.ory.com/docs/kratos/self-service/flows/verify-email-account-activation).
 //
 //	Consumes:
 //	- application/json
@@ -424,8 +424,8 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request)
 
 	ctx := r.Context()
 	f, err := h.d.VerificationFlowPersister().GetVerificationFlow(ctx, rid)
-	if errors.Is(err, sqlcon.ErrNoRows) {
-		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrNotFound.WithReasonf("The verification request could not be found. Please restart the flow.")))
+	if errors.Is(err, sqlcon.ErrNoRows()) {
+		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, errors.WithStack(herodot.ErrNotFound().WithReasonf("The verification request could not be found. Please restart the flow.")))
 		return
 	} else if err != nil {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, nil, node.DefaultGroup, err)
@@ -473,7 +473,7 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request)
 		if flow.HasReachedState(flow.StatePassedChallenge, f.State) && f.OAuth2LoginChallenge.String() != "" {
 			if !f.IdentityID.Valid || !f.SessionID.Valid {
 				h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup,
-					herodot.ErrBadRequest.WithReasonf("No session was found for this flow. Please retry the authentication."))
+					herodot.ErrBadRequest().WithReasonf("No session was found for this flow. Please retry the authentication."))
 				return
 			}
 

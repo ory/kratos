@@ -5,7 +5,7 @@ package node
 
 import (
 	"bytes"
-	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -19,9 +19,12 @@ import (
 )
 
 func TestFieldFromPath(t *testing.T) {
+	t.Parallel()
 
-	var ctx = context.Background()
+	ctx := t.Context()
 	t.Run("all properties are properly transferred", func(t *testing.T) {
+		t.Parallel()
+
 		schema, err := os.ReadFile("./fixtures/all_formats.schema.json")
 		require.NoError(t, err)
 
@@ -46,6 +49,52 @@ func TestFieldFromPath(t *testing.T) {
 			if expectedAutocomplete.Exists() {
 				assert.EqualValues(t, expectedAutocomplete.String(), attr.Autocomplete)
 			}
+
+			expectedOptions := gjson.GetBytes(schema, fmt.Sprintf("properties.%s.test_expected_options", path.Name))
+			if expectedOptions.Exists() {
+				// Compare through JSON so string, number, and boolean
+				// option values all survive the round-trip without relying
+				// on a lossy `%v` coercion.
+				var got []any
+				for _, o := range attr.Options {
+					got = append(got, o.Value)
+				}
+				gotJSON, err := json.Marshal(got)
+				require.NoError(t, err)
+				assert.JSONEq(t, expectedOptions.Raw, string(gotJSON), "field %s", path.Name)
+			} else {
+				assert.Empty(t, attr.Options, "field %s should have no options", path.Name)
+			}
 		}
+	})
+
+	t.Run("caps enum options at maxEnumOptions", func(t *testing.T) {
+		t.Parallel()
+
+		enum := make([]any, maxEnumOptions+50)
+		for i := range enum {
+			enum[i] = fmt.Sprintf("v%d", i)
+		}
+		node := NewInputFieldFromSchema("field", DefaultGroup, jsonschemax.Path{
+			Name: "field",
+			Type: "",
+			Enum: enum,
+		})
+		attr := node.Attributes.(*InputAttributes)
+		assert.Len(t, attr.Options, maxEnumOptions)
+		assert.Equal(t, "v0", attr.Options[0].Value)
+		assert.Equal(t, fmt.Sprintf("v%d", maxEnumOptions-1), attr.Options[maxEnumOptions-1].Value)
+	})
+
+	t.Run("empty enum produces no options", func(t *testing.T) {
+		t.Parallel()
+
+		node := NewInputFieldFromSchema("field", DefaultGroup, jsonschemax.Path{
+			Name: "field",
+			Type: "",
+			Enum: []any{},
+		})
+		attr := node.Attributes.(*InputAttributes)
+		assert.Empty(t, attr.Options)
 	})
 }

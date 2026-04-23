@@ -1,0 +1,2 @@
+DELETE FROM identity_verification_tokens WHERE identity_verifiable_address_id IS NULL;
+ALTER TABLE identity_verification_tokens ALTER COLUMN identity_verifiable_address_id SET NOT NULL;

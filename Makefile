@@ -88,13 +88,13 @@ test-coverage-next:
 # Generates the SDK
 .PHONY: sdk
 sdk: .bin/ory node_modules
-	go tool swagger generate spec -m -o spec/swagger.json \
+	../../.bin/swagger generate spec -m -o spec/swagger.json \
 		-c github.com/ory/kratos \
 		-c github.com/ory/x/healthx \
 		-c github.com/ory/x/crdbx \
 		-c github.com/ory/x/openapix
 	ory dev swagger sanitize ./spec/swagger.json
-	go tool swagger validate ./spec/swagger.json
+	../../.bin/swagger validate ./spec/swagger.json
 	CIRCLE_PROJECT_USERNAME=ory CIRCLE_PROJECT_REPONAME=kratos \
 		ory dev openapi migrate \
 			--health-path-tags metadata \
@@ -153,13 +153,16 @@ quickstart-dev:
 authors:  # updates the AUTHORS file
 	curl --retry 7 --retry-connrefused https://raw.githubusercontent.com/ory/ci/master/authors/authors.sh | env PRODUCT="Ory Kratos" bash
 
+PRETTIER_VERSION=$(shell cat package.json | jq -r '.devDependencies["prettier"] // .dependencies["prettier"]')
+
 # Formats the code
 .PHONY: format
-format: .bin/ory node_modules .bin/buf
+format: .bin/ory .bin/buf
 	.bin/ory dev headers copyright --exclude=gen --exclude=pkg/httpclient --exclude=pkg/client-go --exclude test/e2e/proxy/node_modules --exclude test/e2e/node_modules --exclude node_modules --exclude=oryx
 	go tool goimports -w -local github.com/ory .
-	npm exec -- prettier --write 'test/e2e/**/*{.ts,.js}'
-	npm exec -- prettier --write '.github'
+	@echo "Prettier Version: $(PRETTIER_VERSION)"
+	npx --package=prettier@$(PRETTIER_VERSION)  prettier 'test/e2e/**/*{.ts,.js}' --write
+	npx --package=prettier@$(PRETTIER_VERSION)  prettier '.github' --write
 	.bin/buf format --write
 
 # Build local docker image
