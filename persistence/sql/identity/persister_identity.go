@@ -333,22 +333,23 @@ func (p *IdentityPersister) FindIdentityByWebauthnUserHandle(ctx context.Context
 
 	columns := popx.DBColumns[identity.Identity](&popx.AliasQuoter{Alias: "identities", Quoter: con.Dialect})
 
+	credTypeID, err := FindIdentityCredentialsTypeByName(con, identity.CredentialsTypeWebAuthn)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := con.RawQuery(fmt.Sprintf(`
 SELECT %s
 FROM identities
 INNER JOIN identity_credentials
     ON  identities.id = identity_credentials.identity_id
     AND identities.nid = identity_credentials.nid
-    AND identity_credentials.identity_credential_type_id = (
-        SELECT id
-        FROM identity_credential_types
-        WHERE name = ?
-     )
+    AND identity_credentials.identity_credential_type_id = ?
 WHERE identity_credentials.config ->> '%s' = ? AND identity_credentials.config ->> '%s' IS NOT NULL
   AND identities.nid = ?
 LIMIT 1`, columns,
 		jsonPath, jsonPath),
-		identity.CredentialsTypeWebAuthn,
+		credTypeID,
 		base64.StdEncoding.EncodeToString(userHandle),
 		p.NetworkID(ctx),
 	).First(&id); err != nil {
