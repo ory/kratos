@@ -81,7 +81,7 @@ func (g *ProviderSber) Claims(ctx context.Context, exchange *oauth2.Token, _ url
 	}
 
 	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), o, exchange)
-	userinfoURL := "https://oauth.sber.ru/ru/prod/sberbankid/v2.1/userinfo"
+	userinfoURL := sberUserinfoURL("sber", g.config)
 	stageStart := time.Now()
 	if oauthHTTPClient := client.HTTPClient; oauthHTTPClient != nil {
 		mtlsTransport, mtlsCertPath, mtlsKeyPath, mtlsBaseType, mtlsErr := withSberMTLS(baseRoundTripper(oauthHTTPClient.Transport))
@@ -232,7 +232,7 @@ func (g *ProviderSber) Claims(ctx context.Context, exchange *oauth2.Token, _ url
 		FamilyName:  normalizeNameTitle(user.FamilyName),
 		LastName:    normalizeNameTitle(user.FamilyName),
 		MiddleName:  normalizeNameTitle(user.MiddleName),
-		Email:       user.Email,
+		Email:       normalizeEmailLower(user.Email),
 		PhoneNumber: normalizeRussianMobilePlus79(user.PhoneNumber),
 		Birthdate:   user.BirthDate,
 		Gender:      gender,
@@ -241,6 +241,15 @@ func (g *ProviderSber) Claims(ctx context.Context, exchange *oauth2.Token, _ url
 		Address:     user.Address,
 		School:      user.School,
 		University:  user.University,
+		RawClaims: map[string]interface{}{
+			"sub":          user.Sub,
+			"email":        user.Email,
+			"phone_number": user.PhoneNumber,
+			"given_name":   user.GivenName,
+			"family_name":  user.FamilyName,
+			"middle_name":  user.MiddleName,
+			"birthdate":    user.BirthDate,
+		},
 	}
 
 	g.reg.Logger().

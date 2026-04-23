@@ -52,7 +52,7 @@ func NewProviderSberIft(config *Configuration, reg Dependencies) Provider {
 		reg:         reg,
 		authURL:     authURL,
 		tokenURL:    tokenURL,
-		userinfoURL: "https://oauth-ift.sber.ru/ru/prod/sberbankid/v2.1/userinfo",
+		userinfoURL: sberUserinfoURL("sber-ift", config),
 	}
 }
 
@@ -250,7 +250,7 @@ func (g *ProviderSberIft) Claims(ctx context.Context, exchange *oauth2.Token, _ 
 		FamilyName:  normalizeNameTitle(user.FamilyName),
 		LastName:    normalizeNameTitle(user.FamilyName),
 		MiddleName:  normalizeNameTitle(user.MiddleName),
-		Email:       user.Email,
+		Email:       normalizeEmailLower(user.Email),
 		PhoneNumber: normalizeRussianMobilePlus79(user.PhoneNumber),
 		Birthdate:   user.BirthDate,
 		Gender:      gender,
@@ -259,6 +259,15 @@ func (g *ProviderSberIft) Claims(ctx context.Context, exchange *oauth2.Token, _ 
 		Address:     user.Address,
 		School:      user.School,
 		University:  user.University,
+		RawClaims: map[string]interface{}{
+			"sub":          user.Sub,
+			"email":        user.Email,
+			"phone_number": user.PhoneNumber,
+			"given_name":   user.GivenName,
+			"family_name":  user.FamilyName,
+			"middle_name":  user.MiddleName,
+			"birthdate":    user.BirthDate,
+		},
 	}
 
 	g.reg.Logger().

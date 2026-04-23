@@ -219,7 +219,20 @@ func isSberProviderID(providerID string) bool {
 	return providerID == "sber" || providerID == "sber-ift"
 }
 
-func sberAuthCompletedURL(providerID string) string {
+func sberUserinfoURL(providerID string, cfg *Configuration) string {
+	if cfg != nil && cfg.UserInfoURL != "" {
+		return cfg.UserInfoURL
+	}
+	if providerID == "sber-ift" {
+		return "https://oauth-ift.sber.ru/ru/prod/sberbankid/v2.1/userinfo"
+	}
+	return "https://oauth.sber.ru/ru/prod/sberbankid/v2.1/userinfo"
+}
+
+func sberAuthCompletedURL(providerID string, cfg *Configuration) string {
+	if cfg != nil && cfg.AuthCompletedURL != "" {
+		return cfg.AuthCompletedURL
+	}
 	if providerID == "sber-ift" {
 		return "https://oauth-ift.sber.ru/api/v2/auth/completed"
 	}

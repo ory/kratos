@@ -85,6 +85,14 @@ type Configuration struct {
 	// `provider` is set to `generic`.
 	TokenURL string `json:"token_url"`
 
+	// UserInfoURL overrides the default userinfo endpoint for providers with fixed endpoints
+	// (e.g. sber/sber-ift). Intended for controlled environments and tests.
+	UserInfoURL string `json:"userinfo_url,omitempty"`
+
+	// AuthCompletedURL overrides Sber "auth completed" endpoint.
+	// Intended for controlled environments and tests.
+	AuthCompletedURL string `json:"auth_completed_url,omitempty"`
+
 	// Tenant is the Azure AD Tenant to use for authentication, and must be set when `provider` is set to `microsoft`.
 	// Can be either `common`, `organizations`, `consumers` for a multitenant application or a specific tenant like
 	// `8eaef023-2b34-4da1-9baa-8bc8c9d6a490` or `contoso.onmicrosoft.com`.

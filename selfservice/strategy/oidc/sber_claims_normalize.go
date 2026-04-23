@@ -35,17 +35,7 @@ func normalizeSberBirthdateISO8601(v string) string {
 }
 
 func normalizeRussianMobilePlus79(phone string) (normalized string) {
-	raw := strings.TrimSpace(phone)
-	if raw == "" {
-		return ""
-	}
-
-	cleaned := strings.NewReplacer("(", "", ")", "", " ", "").Replace(raw)
-	if strings.Count(cleaned, "+") > 1 {
-		return ""
-	}
-
-	return cleaned
+	return normalizeRussianMobileE164(phone)
 }
 
 func normalizeNameTitle(s string) string {

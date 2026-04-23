@@ -1019,7 +1019,10 @@ func (s *Strategy) confirmSberAuthorizationCompleted(ctx context.Context, provid
 		return errors.WithStack(herodot.ErrUpstreamError.WithReasonf("sber auth completed failed: missing access token"))
 	}
 
-	endpoint := sberAuthCompletedURL(providerID)
+	endpoint := sberAuthCompletedURL(providerID, nil)
+	if provider, providerErr := s.Provider(ctx, providerID); providerErr == nil && provider != nil {
+		endpoint = sberAuthCompletedURL(providerID, provider.Config())
+	}
 	requestID := randx.MustString(32, []rune("0123456789ABCDEF"))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
