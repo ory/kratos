@@ -61,34 +61,9 @@ var transientPayload = json.RawMessage(`{
 	}
 }`)
 
-func makeConfigurationAndRegistry(t *testing.T) *driver.RegistryDefault {
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
-	conf.MustSet(t.Context(), config.ViperKeyWebhookHeaderAllowlist, []string{
-		"Accept",
-		"Accept-Encoding",
-		"Accept-Language",
-		"Content-Length",
-		"Content-Type",
-		"Origin",
-		"Priority",
-		"Referer",
-		"Sec-Ch-Ua",
-		"Sec-Ch-Ua-Mobile",
-		"Sec-Ch-Ua-Platform",
-		"Sec-Fetch-Dest",
-		"Sec-Fetch-Mode",
-		"Sec-Fetch-Site",
-		"Sec-Fetch-User",
-		"True-Client-Ip",
-		"User-Agent",
-		"Valid-Header",
-	})
-	return reg
-}
-
 type webHookDeps struct {
 	x.BasicRegistry
-	*jsonnetsecure.TestProvider
+	jsonnetsecure.VMProvider
 	config.Provider
 }
 
@@ -96,7 +71,7 @@ func newWebHookDeps(t *testing.T, logger *logrusx.Logger, reg *driver.RegistryDe
 	t.Helper()
 	return &webHookDeps{
 		BasicRegistry: x.BasicRegistry{L: logger, C: reg.HTTPClient(t.Context()), T: otelx.NewNoop()},
-		TestProvider:  jsonnetsecure.NewTestProvider(t),
+		VMProvider:    reg,
 		Provider:      reg,
 	}
 }
@@ -219,6 +194,27 @@ func TestWebHooks(t *testing.T) {
 
 		return body
 	}
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
+	conf.MustSet(t.Context(), config.ViperKeyWebhookHeaderAllowlist, []string{
+		"Accept",
+		"Accept-Encoding",
+		"Accept-Language",
+		"Content-Length",
+		"Content-Type",
+		"Origin",
+		"Priority",
+		"Referer",
+		"Sec-Ch-Ua",
+		"Sec-Ch-Ua-Mobile",
+		"Sec-Ch-Ua-Platform",
+		"Sec-Fetch-Dest",
+		"Sec-Fetch-Mode",
+		"Sec-Fetch-Site",
+		"Sec-Fetch-User",
+		"True-Client-Ip",
+		"User-Agent",
+		"Valid-Header",
+	})
 
 	for _, tc := range []struct {
 		uc           string
@@ -382,7 +378,7 @@ func TestWebHooks(t *testing.T) {
 							whr := &WebHookRequest{}
 							ts := newServer(webHookEndPoint(whr))
 
-							whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+							whDeps := newWebHookDeps(t, logger, reg)
 							wh := hook.NewWebHook(whDeps, &request.Config{
 								Method:      method,
 								URL:         ts.URL + path,
@@ -663,7 +659,7 @@ func TestWebHooks(t *testing.T) {
 					code, res := tc.webHookResponse()
 					ts := newServer(webHookHttpCodeWithBodyEndPoint(t, code, res))
 
-					whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+					whDeps := newWebHookDeps(t, logger, reg)
 					wh := hook.NewWebHook(whDeps, &request.Config{
 						Method:       method,
 						URL:          ts.URL + path,
@@ -699,7 +695,7 @@ func TestWebHooks(t *testing.T) {
 				URL:        &url.URL{Path: "some_end_point"},
 			}
 			ts := newServer(webHookHttpCodeWithBodyEndPoint(t, responseCode, response))
-			whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+			whDeps := newWebHookDeps(t, logger, reg)
 			wh := hook.NewWebHook(whDeps, &request.Config{
 				Method:      "POST",
 				URL:         ts.URL + path,
@@ -807,7 +803,7 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "GET",
 			URL:         ts.URL + path,
@@ -841,7 +837,7 @@ func TestWebHooks(t *testing.T) {
 				Method: http.MethodPost,
 			}
 			f := &settings.Flow{ID: x.NewUUID()}
-			whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+			whDeps := newWebHookDeps(t, logger, reg)
 			wh := hook.NewWebHook(whDeps, &request.Config{
 				Method:      "POST",
 				URL:         ts.URL + path,
@@ -879,7 +875,7 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "POST",
 			URL:         ts.URL + path,
@@ -900,7 +896,7 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "GET",
 			URL:         ts.URL + path,
@@ -925,7 +921,7 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "POST",
 			URL:         "https://i-do-not-exist/",
@@ -963,7 +959,7 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "GET",
 			URL:         ts.URL + path,
@@ -1003,7 +999,7 @@ func TestWebHooks(t *testing.T) {
 			Method: http.MethodPost,
 		}
 		f := &login.Flow{ID: x.NewUUID()}
-		whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+		whDeps := newWebHookDeps(t, logger, reg)
 		wh := hook.NewWebHook(whDeps, &request.Config{
 			Method:      "GET",
 			URL:         ts.URL + path,
@@ -1042,7 +1038,7 @@ func TestWebHooks(t *testing.T) {
 				Method: http.MethodPost,
 			}
 			f := &login.Flow{ID: x.NewUUID()}
-			whDeps := newWebHookDeps(t, logger, makeConfigurationAndRegistry(t))
+			whDeps := newWebHookDeps(t, logger, reg)
 			wh := hook.NewWebHook(whDeps, &request.Config{
 				Method:      "POST",
 				URL:         ts.URL + path,

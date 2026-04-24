@@ -4,7 +4,6 @@
 package pkg
 
 import (
-	"cmp"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -75,8 +74,11 @@ func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*co
 
 // NewRegistryDefaultWithDSN returns a more standard registry without mocks. Good for e2e and advanced integration testing!
 func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionModifier) (*config.Config, *driver.RegistryDefault) {
+	if dsn == "" {
+		dsn = dbal.NewSQLiteTestDatabase(t)
+	}
 	c := NewConfigurationWithDefaults(t, append([]configx.OptionModifier{configx.WithValues(map[string]interface{}{
-		config.ViperKeyDSN:             cmp.Or(dsn, dbal.NewSQLiteTestDatabase(t)),
+		config.ViperKeyDSN:             dsn,
 		"dev":                          true,
 		config.ViperKeySecretsCipher:   []string{randx.MustString(32, randx.AlphaNum)},
 		config.ViperKeySecretsCookie:   []string{randx.MustString(32, randx.AlphaNum)},
@@ -97,7 +99,6 @@ func NewRegistryDefaultWithDSN(t testing.TB, dsn string, opts ...configx.OptionM
 
 	require.EqualValues(t, reg.Persister().NetworkID(t.Context()), actual.ID)
 	require.NotEqual(t, uuid.Nil, reg.Persister().NetworkID(t.Context()))
-	reg.Persister()
 
 	return c, reg
 }
