@@ -9,16 +9,18 @@ import (
 	"github.com/ory/kratos/text"
 	"github.com/ory/x/jsonschemax"
 
-	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/schema"
 )
 
-func GetIdentifierLabelFromSchema(ctx context.Context, schemaURL string) (*text.Message, error) {
+func GetIdentifierLabelFromSchema(ctx context.Context, schemaURL string, disallowRefs bool) (*text.Message, error) {
 	runner, err := schema.NewExtensionRunner(ctx)
 	if err != nil {
 		return nil, err
 	}
-	c := jsonschema.NewCompiler()
+	c, err := schema.NewCompilerWithURL(ctx, schemaURL, disallowRefs)
+	if err != nil {
+		return nil, err
+	}
 	c.ExtractAnnotations = true
 	runner.Register(c)
 

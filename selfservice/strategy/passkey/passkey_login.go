@@ -51,7 +51,7 @@ func (s *Strategy) populateLoginMethodForPasskeys(r *http.Request, loginFlow *lo
 		return err
 	}
 
-	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
+	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String(), s.d.Config().SecurityDisallowRefInIdentitySchemas(r.Context()))
 	if err != nil {
 		return err
 	}

@@ -122,7 +122,7 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 	f.UI.Nodes.RemoveMatching(nodePreviousScreen())
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 
-	nodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil)
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil, s.d.Config().SecurityDisallowRefInIdentitySchemas(r.Context()))
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
-	nodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil)
+	nodes, err := container.NodesFromJSONSchema(r.Context(), node.DefaultGroup, ds.String(), "", nil, s.d.Config().SecurityDisallowRefInIdentitySchemas(r.Context()))
 	if err != nil {
 		return err
 	}

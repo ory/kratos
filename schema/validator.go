@@ -29,12 +29,23 @@ func NewValidator() *Validator {
 }
 
 type validatorOptions struct {
-	e *ExtensionRunner
+	e            *ExtensionRunner
+	disallowRefs bool
 }
 
 func WithExtensionRunner(e *ExtensionRunner) func(*validatorOptions) {
 	return func(o *validatorOptions) {
 		o.e = e
+	}
+}
+
+// WithDisallowRefs toggles the restriction on `$ref` URL schemes. When true,
+// the compiler rejects `$ref` values whose scheme is not `http`, `https`, or
+// `base64`, preventing local-file reads via `file://`. Callers should forward
+// the `security.disallow_ref_in_identity_schemas` config value here.
+func WithDisallowRefs(disallow bool) func(*validatorOptions) {
+	return func(o *validatorOptions) {
+		o.disallowRefs = disallow
 	}
 }
 
@@ -49,18 +60,13 @@ func (v *Validator) Validate(
 		opt(&o)
 	}
 
-	compiler := jsonschema.NewCompiler()
-	resource, err := jsonschema.LoadURL(ctx, href)
+	compiler, err := NewCompilerWithURL(ctx, href, o.disallowRefs)
 	if err != nil {
 		return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Unable to load or parse the JSON schema.").WithWrap(err).WithDebugf("%s", err))
 	}
 
 	if o.e != nil {
 		o.e.Register(compiler)
-	}
-
-	if err := compiler.AddResource(href, resource); err != nil {
-		return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Unable to parse validate JSON object against JSON schema.").WithWrap(err).WithDebugf("%s", err))
 	}
 
 	schema, err := compiler.Compile(ctx, href)

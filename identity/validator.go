@@ -58,7 +58,10 @@ func (v *Validator) ValidateWithRunner(ctx context.Context, i *Identity, runners
 		return errors.WithStack(herodot.ErrBadRequest().WithError(err.Error()))
 	}
 
-	return v.v.Validate(ctx, s.URL.String(), traits, schema.WithExtensionRunner(runner))
+	return v.v.Validate(ctx, s.URL.String(), traits,
+		schema.WithExtensionRunner(runner),
+		schema.WithDisallowRefs(v.d.Config().SecurityDisallowRefInIdentitySchemas(ctx)),
+	)
 }
 
 func (v *Validator) Validate(ctx context.Context, i *Identity) error {

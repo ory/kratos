@@ -14,7 +14,6 @@ import (
 
 	"github.com/ory/x/otelx"
 
-	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/text"
 
@@ -96,9 +95,16 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 		return err
 	}
 
-	// use a schema compiler that disables identifiers
-	schemaCompiler := jsonschema.NewCompiler()
-	nodes, err := container.NodesFromJSONSchema(ctx, node.ProfileGroup, traitsSchema.URL.String(), "", schemaCompiler)
+	// Use a schema compiler that disables identifiers. NewCompilerWithURL
+	// pre-registers the top-level schema via the trusted global loader; the
+	// `security.disallow_ref_in_identity_schemas` flag controls whether
+	// `$ref` resolution rejects the `file` scheme.
+	disallowRefs := s.d.Config().SecurityDisallowRefInIdentitySchemas(ctx)
+	schemaCompiler, err := schema.NewCompilerWithURL(ctx, traitsSchema.URL.String(), disallowRefs)
+	if err != nil {
+		return err
+	}
+	nodes, err := container.NodesFromJSONSchema(ctx, node.ProfileGroup, traitsSchema.URL.String(), "", schemaCompiler, disallowRefs)
 	if err != nil {
 		return err
 	}

@@ -103,10 +103,13 @@ func NewFromStruct(action string, group node.UiNodeGroup, v interface{}, prefix 
 }
 
 // NewFromJSONSchema creates a new Container and populates the fields
-// using the provided JSON Schema.
-func NewFromJSONSchema(ctx context.Context, action string, group node.UiNodeGroup, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (*Container, error) {
+// using the provided JSON Schema. When compiler is nil, disallowRefs toggles
+// the `$ref` scheme restriction on the default compiler; otherwise the
+// caller is responsible for constructing a compiler with the desired
+// restriction.
+func NewFromJSONSchema(ctx context.Context, action string, group node.UiNodeGroup, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler, disallowRefs bool) (*Container, error) {
 	c := New(action)
-	nodes, err := NodesFromJSONSchema(ctx, group, jsonSchemaRef, prefix, compiler)
+	nodes, err := NodesFromJSONSchema(ctx, group, jsonSchemaRef, prefix, compiler, disallowRefs)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +118,17 @@ func NewFromJSONSchema(ctx context.Context, action string, group node.UiNodeGrou
 	return c, nil
 }
 
-func NodesFromJSONSchema(ctx context.Context, group node.UiNodeGroup, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler) (node.Nodes, error) {
+func NodesFromJSONSchema(ctx context.Context, group node.UiNodeGroup, jsonSchemaRef, prefix string, compiler *jsonschema.Compiler, disallowRefs bool) (node.Nodes, error) {
+	if compiler == nil {
+		// When the caller doesn't supply a compiler, we build a default one
+		// ourselves. Apply the caller's disallowRefs preference so the default
+		// doesn't silently downgrade to legacy behavior.
+		var err error
+		compiler, err = schema.NewCompilerWithURL(ctx, jsonSchemaRef, disallowRefs)
+		if err != nil {
+			return nil, err
+		}
+	}
 	paths, err := jsonschemax.ListPaths(ctx, jsonSchemaRef, compiler)
 	if err != nil {
 		return nil, err

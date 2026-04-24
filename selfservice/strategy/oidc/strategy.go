@@ -740,7 +740,7 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 				return err
 			}
 
-			traitNodes, err := container.NodesFromJSONSchema(ctx, group, ds.String(), "", nil)
+			traitNodes, err := container.NodesFromJSONSchema(ctx, group, ds.String(), "", nil, s.d.Config().SecurityDisallowRefInIdentitySchemas(ctx))
 			if err != nil {
 				return err
 			}

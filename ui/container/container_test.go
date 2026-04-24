@@ -201,7 +201,7 @@ func TestContainer(t *testing.T) {
 		} {
 			t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 				actual, err := NewFromJSONSchema(ctx, "action",
-					node.DefaultGroup, tc.ref, tc.prefix, nil)
+					node.DefaultGroup, tc.ref, tc.prefix, nil, false)
 				require.NoError(t, err)
 				assert.Equal(t, "action", actual.Action)
 				assert.EqualValues(t, tc.expect.Messages, actual.Messages)

@@ -302,7 +302,7 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 					WithMetaLabel(text.NewInfoSelfServiceLoginAAL2CodeAddress(string(address.Via), address.To)))
 			}
 		} else {
-			identifierLabel, err := login.GetIdentifierLabelFromSchema(ctx, ds.String())
+			identifierLabel, err := login.GetIdentifierLabelFromSchema(ctx, ds.String(), s.deps.Config().SecurityDisallowRefInIdentitySchemas(ctx))
 			if err != nil {
 				return err
 			}

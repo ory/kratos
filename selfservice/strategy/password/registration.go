@@ -216,7 +216,7 @@ func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.F
 		// This is the legacy code path. In the new code path, the profile method is responsible for hydrating the form
 		// nodes. In the old code path, the password method is responsible for hydrating the form nodes if it is
 		// the only method enabled.
-		nodes, err := container.NodesFromJSONSchema(r.Context(), node.PasswordGroup, ds.String(), "", nil)
+		nodes, err := container.NodesFromJSONSchema(r.Context(), node.PasswordGroup, ds.String(), "", nil, s.d.Config().SecurityDisallowRefInIdentitySchemas(r.Context()))
 		if err != nil {
 			return err
 		}

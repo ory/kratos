@@ -2957,6 +2957,12 @@
               "description": "Mitigate account enumeration by making it harder to figure out if an identifier (email, phone number) exists or not. Enabling this setting degrades user experience. This setting does not mitigate all possible attack vectors yet."
             }
           }
+        },
+        "disallow_ref_in_identity_schemas": {
+          "title": "Disallow external `$ref` resolution in identity schemas",
+          "description": "If true, `$ref` URLs inside identity schemas may not resolve to `file://`, `http://`, or `https://` sources. This blocks server-side file reads (`file://`) and server-side request forgery (`http(s)://`) via malicious identity schemas. Internal JSON-pointer refs (`#/definitions/...`) and self-contained `base64://` refs remain allowed. Leave at the default (false) to preserve existing behavior for operators who intentionally reference external schemas. Ory Network forces this to true.",
+          "type": "boolean",
+          "default": false
         }
       }
     },

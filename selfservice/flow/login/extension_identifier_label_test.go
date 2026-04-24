@@ -150,7 +150,7 @@ func TestGetIdentifierLabelFromSchema(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			label, err := GetIdentifierLabelFromSchema(t.Context(), constructSchema(t, tc.emailConfig, tc.usernameConfig))
+			label, err := GetIdentifierLabelFromSchema(t.Context(), constructSchema(t, tc.emailConfig, tc.usernameConfig), true)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, label)
 		})

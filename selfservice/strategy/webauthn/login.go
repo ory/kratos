@@ -352,7 +352,7 @@ func (s *Strategy) PopulateLoginMethodFirstFactor(r *http.Request, sr *login.Flo
 		return err
 	}
 
-	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String())
+	identifierLabel, err := login.GetIdentifierLabelFromSchema(r.Context(), ds.String(), s.d.Config().SecurityDisallowRefInIdentitySchemas(r.Context()))
 	if err != nil {
 		return err
 	}

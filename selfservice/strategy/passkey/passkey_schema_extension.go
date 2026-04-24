@@ -64,7 +64,10 @@ func (s *Strategy) PasskeyDisplayNameFromSchema(ctx context.Context, schemaURL s
 	if err != nil {
 		return "", err
 	}
-	c := jsonschema.NewCompiler()
+	c, err := schema.NewCompilerWithURL(ctx, schemaURL, s.d.Config().SecurityDisallowRefInIdentitySchemas(ctx))
+	if err != nil {
+		return "", err
+	}
 	c.ExtractAnnotations = true
 	runner.Register(c)
 

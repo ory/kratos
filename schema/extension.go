@@ -96,7 +96,11 @@ func WithCompileRunners(runners ...CompileExtension) ExtensionRunnerOption {
 func NewExtensionRunner(ctx context.Context, opts ...ExtensionRunnerOption) (*ExtensionRunner, error) {
 	var err error
 	r := new(ExtensionRunner)
-	c := jsonschema.NewCompiler()
+	// The extension runner compiles the bundled identity-extension meta
+	// schema, which contains no external refs. The disallow flag has no
+	// effect here, but we pass false to keep behavior strictly equivalent
+	// to the legacy jsonschema.NewCompiler().
+	c := NewCompiler(false)
 
 	if err = embedx.AddSchemaResources(c, embedx.IdentityExtension); err != nil {
 		return nil, errors.WithStack(err)

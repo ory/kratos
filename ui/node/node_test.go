@@ -43,7 +43,7 @@ func TestNodesSort(t *testing.T) {
 	schemaCompiler := jsonschema.NewCompiler()
 	schemaPath := "fixtures/identity.schema.json"
 
-	f, err := container.NewFromJSONSchema(ctx, "/foo", node.DefaultGroup, schemaPath, "", schemaCompiler)
+	f, err := container.NewFromJSONSchema(ctx, "/foo", node.DefaultGroup, schemaPath, "", schemaCompiler, false)
 	require.NoError(t, err)
 
 	f.UpdateNodeValuesFromJSON(json.RawMessage(`{}`), "traits", node.DefaultGroup)
