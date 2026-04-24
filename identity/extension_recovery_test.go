@@ -305,3 +305,46 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 		})
 	}
 }
+
+// TestSchemaExtensionRecovery_PreservesExistingRecordWhenValueIsNotNormalized
+// is a regression test for the same root cause as #11283's verification bug,
+// applied to recovery addresses: identities whose persisted
+// RecoveryAddress.Value is in pre-normalization raw form get their existing
+// record (ID, BreakGlassForOrganization, timestamps) dropped on every
+// re-validation because the extension now emits the E.164-normalized form
+// and has() compares values byte-wise.
+func TestSchemaExtensionRecovery_PreservesExistingRecordWhenValueIsNotNormalized(t *testing.T) {
+	iid := x.NewUUID()
+	existingID := x.NewUUID()
+	breakGlassOrgID := uuid.NullUUID{UUID: x.NewUUID(), Valid: true}
+
+	rawPhone := "+49 0176 67111638"
+	id := &Identity{
+		ID: iid,
+		RecoveryAddresses: []RecoveryAddress{{
+			ID:                        existingID,
+			Value:                     rawPhone,
+			Via:                       AddressTypeSMS,
+			IdentityID:                iid,
+			BreakGlassForOrganization: breakGlassOrgID,
+		}},
+	}
+
+	c := jsonschema.NewCompiler()
+	runner, err := schema.NewExtensionRunner(t.Context())
+	require.NoError(t, err)
+
+	e := NewSchemaExtensionRecovery(id)
+	runner.AddRunner(e).Register(c)
+
+	err = c.MustCompile(t.Context(), "file://./stub/extension/recovery/sms.schema.json").
+		Validate(bytes.NewBufferString(fmt.Sprintf(`{"telephoneNumber":%q}`, rawPhone)))
+	require.NoError(t, err)
+	require.NoError(t, e.Finish())
+
+	require.Len(t, id.RecoveryAddresses, 1)
+	assert.Equal(t, existingID, id.RecoveryAddresses[0].ID,
+		"existing recovery record ID must be retained on re-validation with raw phone")
+	assert.Equal(t, breakGlassOrgID, id.RecoveryAddresses[0].BreakGlassForOrganization,
+		"break_glass_for_organization must be retained on re-validation with raw phone")
+}

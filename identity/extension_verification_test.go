@@ -439,6 +439,54 @@ func mustContainAddress(t *testing.T, expected, actual []VerifiableAddress) {
 	}
 }
 
+// TestSchemaExtensionVerification_PreservesVerifiedWhenExistingValueIsNotNormalized
+// is a regression test for the bug where identities created before phone
+// normalization (#11283) lose their verified status on re-validation because
+// the persisted VerifiableAddress.Value is in raw form but the extension now
+// normalizes the trait to E.164 before comparing.
+//
+// Invariant we rely on: a persisted phone trait that was verified before must
+// stay verified after re-validation, even when the persisted
+// VerifiableAddress.Value is not in E.164 form.
+func TestSchemaExtensionVerification_PreservesVerifiedWhenExistingValueIsNotNormalized(t *testing.T) {
+	iid := x.NewUUID()
+
+	// Trait and existing VerifiableAddress both hold the pre-normalization
+	// raw value (contains an extra leading zero from the national trunk
+	// prefix). Before #11283, the extension trimmed only, so this value was
+	// persisted verbatim. After #11283, the same trait normalizes to
+	// "+4917667111638" -- a value that does not match the persisted
+	// VerifiableAddress.Value.
+	rawPhone := "+49 0176 67111638"
+	id := &Identity{
+		ID: iid,
+		VerifiableAddresses: []VerifiableAddress{{
+			Value:      rawPhone,
+			Verified:   true,
+			Status:     VerifiableAddressStatusCompleted,
+			Via:        ChannelTypeSMS,
+			IdentityID: iid,
+		}},
+	}
+
+	c := jsonschema.NewCompiler()
+	runner, err := schema.NewExtensionRunner(t.Context())
+	require.NoError(t, err)
+
+	e := NewSchemaExtensionVerification(id, time.Minute)
+	runner.AddRunner(e).Register(c)
+
+	err = c.MustCompile(t.Context(), phoneSchemaPath).
+		Validate(bytes.NewBufferString(fmt.Sprintf(`{"username":%q}`, rawPhone)))
+	require.NoError(t, err)
+	require.NoError(t, e.Finish())
+
+	require.Len(t, id.VerifiableAddresses, 1)
+	assert.True(t, id.VerifiableAddresses[0].Verified,
+		"persisted phone must remain verified after re-validation; got %+v",
+		id.VerifiableAddresses[0])
+}
+
 func TestMergeVerifiableAddresses(t *testing.T) {
 	for _, tt := range []struct {
 		name                      string

@@ -120,8 +120,10 @@ func (r *SchemaExtensionVerification) appendAddress(address *VerifiableAddress) 
 }
 
 func has(haystack []VerifiableAddress, needle *VerifiableAddress) *VerifiableAddress {
+	// Normalize both sides so pre-normalization persisted values still match.
+	normalizedNeedle := x.GracefulNormalization(needle.Value)
 	for _, has := range haystack {
-		if has.Value == needle.Value && has.Via == needle.Via {
+		if has.Via == needle.Via && x.GracefulNormalization(has.Value) == normalizedNeedle {
 			return &has
 		}
 	}

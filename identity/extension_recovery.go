@@ -75,8 +75,10 @@ func (r *SchemaExtensionRecovery) Run(ctx jsonschema.ValidationContext, s schema
 }
 
 func (r *SchemaExtensionRecovery) has(haystack []RecoveryAddress, needle *RecoveryAddress) *RecoveryAddress {
+	// Normalize both sides so pre-normalization persisted values still match.
+	normalizedNeedle := x.GracefulNormalization(needle.Value)
 	for _, has := range haystack {
-		if has.Value == needle.Value && has.Via == needle.Via {
+		if has.Via == needle.Via && x.GracefulNormalization(has.Value) == normalizedNeedle {
 			return &has
 		}
 	}
