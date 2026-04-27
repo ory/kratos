@@ -284,7 +284,9 @@ func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *setti
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
 	wc.IsPasswordless = s.d.Config().WebAuthnForPasswordless(ctx)
-	cc.UserHandle = ctxUpdate.Session.IdentityID[:]
+	if len(cc.UserHandle) == 0 {
+		cc.UserHandle = ctxUpdate.Session.IdentityID[:]
+	}
 
 	cc.Credentials = append(cc.Credentials, *wc)
 	co, err := json.Marshal(cc)
