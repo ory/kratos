@@ -195,6 +195,7 @@ const (
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
+	ViperKeyClientSMTPNoPrivateIPRanges                      = "clients.smtp.disallow_private_ip_ranges"
 	ViperKeyWebhookHeaderAllowlist                           = "clients.web_hook.header_allowlist"
 	ViperKeyPreviewDefaultReadConsistencyLevel               = "preview.default_read_consistency_level"
 	ViperKeyVersion                                          = "version"
@@ -320,6 +321,7 @@ type (
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
 		CourierChannels(context.Context) ([]*CourierChannel, error)
+		ClientSMTPNoPrivateIPRanges(ctx context.Context) bool
 	}
 )
 
@@ -645,11 +647,15 @@ func (p *Config) DisableAPIFlowEnforcement(ctx context.Context) bool {
 }
 
 func (p *Config) ClientHTTPNoPrivateIPRanges(ctx context.Context) bool {
-	return p.GetProvider(ctx).Bool(ViperKeyClientHTTPNoPrivateIPRanges)
+	return p.GetProvider(ctx).BoolF(ViperKeyClientHTTPNoPrivateIPRanges, false)
 }
 
 func (p *Config) ClientHTTPPrivateIPExceptionURLs(ctx context.Context) []string {
 	return p.GetProvider(ctx).Strings(ViperKeyClientHTTPPrivateIPExceptionURLs)
+}
+
+func (p *Config) ClientSMTPNoPrivateIPRanges(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeyClientSMTPNoPrivateIPRanges, false)
 }
 
 func (p *Config) SelfServiceFlowRegistrationEnabled(ctx context.Context) bool {

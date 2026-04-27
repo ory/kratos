@@ -13,6 +13,7 @@ replace (
 	// Use the internal httpclient which can be generated in this codebase but mark it as the
 	// official SDK, allowing for the Ory CLI to consume Ory Kratos' CLI commands.
 	github.com/ory/client-go => ./pkg/client-go
+
 	github.com/ory/x => ./oryx
 )
 
@@ -58,7 +59,7 @@ require (
 	github.com/ory/herodot v0.10.9-0.20260330111132-da75ef0fbc22
 	github.com/ory/hydra-client-go/v2 v2.2.1
 	github.com/ory/jsonschema/v3 v3.0.9-0.20250317235931-280c5fc7bf0e
-	github.com/ory/mail/v3 v3.0.0
+	github.com/ory/mail/v3 v3.0.1-0.20260413103059-df54acc74133
 	github.com/ory/nosurf v1.2.7
 	github.com/ory/pop/v6 v6.4.2-0.20260330100515-0277b33f8355
 	github.com/peterhellberg/link v1.2.0

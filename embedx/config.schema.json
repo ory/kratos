@@ -3023,13 +3023,26 @@
             },
             "private_ip_exception_urls": {
               "title": "Add exempt URLs to private IP ranges",
-              "description": "Allows the given URLs to be called despite them being in the private IP range. URLs need to have an exact and case-sensitive match to be excempt.",
+              "description": "Allows the given URLs to be called despite them being in the private IP range. URLs need to have an exact and case-sensitive match to be exempt.",
               "type": "array",
               "items": {
                 "type": "string",
                 "format": "uri-reference"
               },
               "default": []
+            }
+          }
+        },
+        "smtp": {
+          "title": "SMTP client configuration",
+          "description": "Configure how outgoing SMTP calls behave.",
+          "type": "object",
+          "properties": {
+            "disallow_private_ip_ranges": {
+              "title": "Disallow private IP ranges",
+              "description": "Disallow all outgoing SMTP connections to private IP ranges. This feature can help protect against SSRF attacks.",
+              "type": "boolean",
+              "default": false
             }
           }
         },

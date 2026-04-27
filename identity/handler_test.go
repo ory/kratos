@@ -9,9 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -2880,10 +2882,10 @@ func TestHandler(t *testing.T) {
 								// Check results
 								expected := resBefore.Get("credentials").Map()
 								delete(expected, credName)
-								expectedKeys := x.Keys(expected)
+								expectedKeys := slices.Collect(maps.Keys(expected))
 								sort.Strings(expectedKeys)
 								result := resAfter.Get("credentials").Map()
-								resultKeys := x.Keys(result)
+								resultKeys := slices.Collect(maps.Keys(result))
 								sort.Strings(resultKeys)
 								assert.Equal(t, resultKeys, expectedKeys)
 							} else {

@@ -5,6 +5,7 @@ package x
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	stdlog "log"
@@ -76,6 +77,9 @@ func serveSMTP(ctx context.Context, ln net.Listener, cfg *mailhogconf.Config) {
 			return
 		default:
 			conn, err := ln.Accept()
+			if errors.Is(err, net.ErrClosed) {
+				return
+			}
 			if err != nil {
 				fmt.Printf("[SMTP] Error accepting connection: %s\n", err)
 				continue

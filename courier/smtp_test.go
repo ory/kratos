@@ -101,6 +101,35 @@ func TestNewSMTP(t *testing.T) {
 	assert.Equal(t, len(smtpWithCert.TLSConfig.Certificates), 0, "TLS config certificates should be empty")
 }
 
+func TestNotAllowedPrivateIPs(t *testing.T) {
+	smtp, _ := x.StartMailhog(t, false)
+
+	_, reg := pkg.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
+		config.ViperKeyCourierSMTPURL:                            smtp,
+		config.ViperKeyCourierSMTPFrom:                           "test-stub@ory.sh",
+		config.ViperKeyCourierSMTPFromName:                       "Bob",
+		config.ViperKeyCourierSMTPHeaders + ".test-stub-header1": "foo",
+		config.ViperKeyCourierSMTPHeaders + ".test-stub-header2": "bar",
+		config.ViperKeyCourierMessageRetries:                     50,
+		config.ViperKeyClientSMTPNoPrivateIPRanges:               true,
+	}))
+
+	c, err := reg.Courier(t.Context())
+	require.NoError(t, err)
+	c.FailOnDispatchError()
+
+	id, err := c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
+		To:      "test-recipient-1@example.org",
+		Subject: "test-subject-1",
+		Body:    "test-body-1",
+	}))
+	require.NoError(t, err)
+	require.NotZero(t, id)
+
+	err = c.DispatchQueue(t.Context())
+	require.ErrorContains(t, err, "no route to host")
+}
+
 func TestQueueEmail(t *testing.T) {
 	smtp, api := x.StartMailhog(t, true)
 
@@ -111,6 +140,7 @@ func TestQueueEmail(t *testing.T) {
 		config.ViperKeyCourierSMTPHeaders + ".test-stub-header1": "foo",
 		config.ViperKeyCourierSMTPHeaders + ".test-stub-header2": "bar",
 		config.ViperKeyCourierMessageRetries:                     50,
+		config.ViperKeyClientSMTPNoPrivateIPRanges:               false,
 	}))
 
 	c, err := reg.Courier(t.Context())

@@ -81,13 +81,12 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		return err
 	}
 
-	httpClient := s.r.HTTPClient(ctx)
 	key, err := s.r.JWKSFetcher().ResolveKey(
 		ctx,
 		tpl.JWKSURL,
 		jwksx.WithCacheEnabled(),
 		jwksx.WithCacheTTL(time.Hour),
-		jwksx.WithHTTPClient(httpClient))
+		jwksx.WithAllowedSchemes("file", "base64")) // HTTP(S) makes no sense here.
 	if err != nil {
 		if errors.Is(err, jwksx.ErrUnableToFindKeyID) {
 			return errors.WithStack(herodot.ErrBadRequest().WithReasonf("Could not find key a suitable key for tokenization in the JWKS url."))
@@ -135,6 +134,7 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 		vm.ExtCode("session", string(sessionRaw))
 		vm.ExtCode("claims", string(claimsRaw))
 
+		httpClient := s.r.HTTPClient(ctx)
 		fetcher := fetcher.NewFetcher(fetcher.WithClient(httpClient), fetcher.WithCache(s.cache, 60*time.Minute))
 		jsonnet, err := fetcher.FetchContext(ctx, mapper)
 		if err != nil {

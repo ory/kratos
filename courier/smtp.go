@@ -16,6 +16,8 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/x/contextx"
+	"github.com/ory/x/ipx"
 
 	"github.com/gofrs/uuid"
 
@@ -48,12 +50,18 @@ func NewSMTPClient(deps Dependencies, cfg *config.SMTPConfig) (*SMTPClient, erro
 	password, _ := uri.User.Password()
 	port, _ := strconv.ParseInt(uri.Port(), 10, 0)
 
+	dial := ipx.AllowInternalDialFunc
+	if deps.CourierConfig().ClientSMTPNoPrivateIPRanges(contextx.RootContext) {
+		dial = ipx.ProhibitInternalDialFunc
+	}
+
 	dialer := &gomail.Dialer{
 		Host:      uri.Hostname(),
 		Port:      int(port),
 		Username:  uri.User.Username(),
 		Password:  password,
 		LocalName: cfg.LocalName,
+		DialFunc:  dial,
 
 		Timeout:      time.Second * 10,
 		RetryFailure: true,
