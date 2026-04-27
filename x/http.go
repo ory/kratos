@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/golang/gddo/httputil"
 
@@ -61,6 +62,15 @@ func RequestURL(r *http.Request) *url.URL {
 		source.Scheme = proto
 	}
 
+	if prefix := r.Header.Get("X-Forwarded-Prefix"); len(prefix) > 0 {
+		if !hasPathPrefix(source.Path, prefix) {
+			source.Path = joinPathPrefix(prefix, source.Path)
+		}
+		if source.RawPath != "" && !hasPathPrefix(source.RawPath, prefix) {
+			source.RawPath = joinPathPrefix(prefix, source.RawPath)
+		}
+	}
+
 	if source.Scheme == "" {
 		source.Scheme = "https"
 		if r.TLS == nil {
@@ -69,6 +79,30 @@ func RequestURL(r *http.Request) *url.URL {
 	}
 
 	return &source
+}
+
+func hasPathPrefix(path, prefix string) bool {
+	prefix = strings.TrimSuffix(prefix, "/")
+	if prefix == "" {
+		return true
+	}
+
+	return path == prefix || strings.HasPrefix(path, prefix+"/")
+}
+
+func joinPathPrefix(prefix, path string) string {
+	switch {
+	case prefix == "" || prefix == "/":
+		return path
+	case path == "":
+		return prefix
+	case strings.HasSuffix(prefix, "/") && strings.HasPrefix(path, "/"):
+		return prefix + strings.TrimPrefix(path, "/")
+	case !strings.HasSuffix(prefix, "/") && !strings.HasPrefix(path, "/"):
+		return prefix + "/" + path
+	default:
+		return prefix + path
+	}
 }
 
 // SendFlowCompletedAsRedirectOrJSON should be used when a login, registration, ... flow has been completed successfully.

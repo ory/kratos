@@ -39,6 +39,24 @@ func TestRequestURL(t *testing.T) {
 	assert.EqualValues(t, RequestURL(&http.Request{
 		URL: urlx.ParseOrPanic("/foo"), Host: "foobar", Header: http.Header{"X-Forwarded-Host": []string{"notfoobar"}, "X-Forwarded-Proto": {"https"}},
 	}).String(), "https://notfoobar/foo")
+	assert.EqualValues(t, RequestURL(&http.Request{
+		URL:  urlx.ParseOrPanic("/self-service/login/browser?flow=123"),
+		Host: "foobar",
+		Header: http.Header{
+			"X-Forwarded-Host":   []string{"notfoobar"},
+			"X-Forwarded-Proto":  []string{"https"},
+			"X-Forwarded-Prefix": []string{"/.ory/kratos"},
+		},
+	}).String(), "https://notfoobar/.ory/kratos/self-service/login/browser?flow=123")
+	assert.EqualValues(t, RequestURL(&http.Request{
+		URL:  urlx.ParseOrPanic("/.ory/kratos/self-service/login/browser?flow=123"),
+		Host: "foobar",
+		Header: http.Header{
+			"X-Forwarded-Host":   []string{"notfoobar"},
+			"X-Forwarded-Proto":  []string{"https"},
+			"X-Forwarded-Prefix": []string{"/.ory/kratos"},
+		},
+	}).String(), "https://notfoobar/.ory/kratos/self-service/login/browser?flow=123")
 }
 
 func TestAcceptToRedirectOrJSON(t *testing.T) {
