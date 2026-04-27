@@ -46,8 +46,10 @@ type (
 
 		session.HandlerProvider
 		session.ManagementProvider
+		session.PersistenceProvider
 		settings.HandlerProvider
 		settings.FlowPersistenceProvider
+		settings.HookExecutorProvider
 
 		identity.ValidationProvider
 		identity.ManagementProvider

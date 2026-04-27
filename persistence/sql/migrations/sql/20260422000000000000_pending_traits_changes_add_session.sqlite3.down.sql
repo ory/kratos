@@ -1,0 +1,5 @@
+DROP INDEX IF EXISTS identity_pending_traits_changes_nid_origin_settings_flow_id_idx;
+DROP INDEX IF EXISTS identity_pending_traits_changes_nid_session_id_idx;
+
+ALTER TABLE identity_pending_traits_changes DROP COLUMN origin_settings_flow_id;
+ALTER TABLE identity_pending_traits_changes DROP COLUMN session_id;

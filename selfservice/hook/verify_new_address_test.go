@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -128,7 +129,14 @@ func TestVerifyNewAddress(t *testing.T) {
 			},
 		}
 
-		sess := &session.Session{ID: x.NewUUID(), Identity: original, AuthenticatedAt: time.Now()}
+		sess := &session.Session{
+			ID:              x.NewUUID(),
+			Identity:        original,
+			Token:           randx.MustString(12, randx.AlphaLowerNum),
+			LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+			AuthenticatedAt: time.Now(),
+		}
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 		r := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 		r = r.WithContext(ctx)
 		w := httptest.NewRecorder()
@@ -150,6 +158,10 @@ func TestVerifyNewAddress(t *testing.T) {
 		assert.Equal(t, "new@example.com", ptc.NewAddressValue)
 		assert.Equal(t, original.ID, ptc.IdentityID)
 		assert.Equal(t, identity.HashTraits(json.RawMessage(original.Traits)), ptc.OriginalTraitsHash)
+		require.True(t, ptc.SessionID.Valid, "pending change should record the session id")
+		assert.Equal(t, sess.ID, ptc.SessionID.UUID)
+		require.True(t, ptc.OriginSettingsFlowID.Valid, "pending traits change should record the originating settings flow ID")
+		assert.Equal(t, f.ID, ptc.OriginSettingsFlowID.UUID, "originating settings flow ID should match the flow the hook ran in")
 
 		// Verification flow should exist and be in StateEmailSent.
 		vf, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, vfID)
@@ -181,7 +193,14 @@ func TestVerifyNewAddress(t *testing.T) {
 			},
 		}
 
-		sess := &session.Session{ID: x.NewUUID(), Identity: original, AuthenticatedAt: time.Now()}
+		sess := &session.Session{
+			ID:              x.NewUUID(),
+			Identity:        original,
+			Token:           randx.MustString(12, randx.AlphaLowerNum),
+			LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+			AuthenticatedAt: time.Now(),
+		}
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 		r := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 		r = r.WithContext(ctx)
 		w := httptest.NewRecorder()
@@ -249,7 +268,14 @@ func TestVerifyNewAddress(t *testing.T) {
 			},
 		}
 
-		sess := &session.Session{ID: x.NewUUID(), Identity: i, AuthenticatedAt: time.Now()}
+		sess := &session.Session{
+			ID:              x.NewUUID(),
+			Identity:        i,
+			Token:           randx.MustString(12, randx.AlphaLowerNum),
+			LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+			AuthenticatedAt: time.Now(),
+		}
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 		r := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
 		r = r.WithContext(ctx)
 		w := httptest.NewRecorder()

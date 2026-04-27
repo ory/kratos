@@ -111,6 +111,8 @@
     },
     "selfServiceVerifyNewAddressHook": {
       "type": "object",
+      "title": "Verify new address settings hook",
+      "description": "Defers email or phone changes made through the settings profile flow until the new address is verified. The identity's traits are applied only after the user completes a verification flow for the new address.\n\nConfiguration note: do not configure `show_verification_ui` on the same `selfservice.flows.settings.after.profile.hooks` list. `verify_new_address` aborts the settings flow and triggers its own verification, so a `show_verification_ui` hook on the profile list would run twice: once when the settings flow is aborted and again after verification completes. Keep `show_verification_ui` off the `profile` hook list when `verify_new_address` is active.\n\nWhen the pending change is applied, the remaining post-persist hooks on the `profile` list (for example, `web_hook`) run against the updated identity. The pending change is rejected if the session that initiated it has been revoked, expired, or deleted before verification completes.",
       "properties": {
         "hook": {
           "const": "verify_new_address"

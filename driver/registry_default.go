@@ -781,6 +781,7 @@ func (m *RegistryDefault) RegistrationCodePersister() code.RegistrationCodePersi
 func (m *RegistryDefault) PendingTraitsChangePersister() identity.PendingTraitsChangePersister {
 	return m.Persister()
 }
+
 func (m *RegistryDefault) TransactionalPersisterProvider() x.TransactionalPersister {
 	return m.persister
 }

@@ -73,6 +73,7 @@ type (
 		session.ManagementProvider
 		settings.HandlerProvider
 		settings.FlowPersistenceProvider
+		settings.HookExecutorProvider
 
 		identity.ValidationProvider
 		identity.ManagementProvider

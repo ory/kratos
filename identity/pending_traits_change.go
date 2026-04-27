@@ -52,6 +52,20 @@ type PendingTraitsChange struct {
 	// Status is the current state: "pending" or "completed".
 	Status string `json:"status" db:"status"`
 
+	// SessionID is the session that created this pending change. Used at apply
+	// time to verify the session is still active and match it to the current NID.
+	// Nullable: ON DELETE SET NULL in the schema — a NULL value means the
+	// session was revoked or deleted and the pending change must be rejected.
+	SessionID uuid.NullUUID `json:"session_id,omitempty" db:"session_id"`
+
+	// OriginSettingsFlowID is the settings flow that produced this pending
+	// change. Used at apply time to load the real flow for the
+	// settings-post-persist webhook chain. Non-nullable in practice: the
+	// FK is declared ON DELETE CASCADE, so a missing flow deletes the PTC.
+	// A NULL value here means the FK was never set by a malformed writer
+	// and the pending change must be rejected.
+	OriginSettingsFlowID uuid.NullUUID `json:"origin_settings_flow_id,omitempty" db:"origin_settings_flow_id"`
+
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }

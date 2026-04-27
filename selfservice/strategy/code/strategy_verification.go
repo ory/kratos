@@ -16,6 +16,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
@@ -280,23 +281,20 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 
 	var identityID uuid.UUID
 	var addressVia string
+	var ptcIdentity *identity.Identity
 
 	if code.VerifiableAddress == nil {
 		// Pending-change path: no persisted address — look up by verification flow ID.
 		ptc, ptcErr := s.deps.PendingTraitsChangePersister().GetPendingTraitsChangeByVerificationFlow(ctx, f.ID)
 		if ptcErr != nil {
 			if !errors.Is(ptcErr, sqlcon.ErrNoRows()) {
-				// Some other error occured, we should retry the flow with an error message.
 				return s.retryVerificationFlowWithError(ctx, w, r, f.Type, ptcErr)
 			}
-
-			// The PTC for this verification flow was not found.
-			// Usually, this means the race detection in the PTC creation/deletion logic detected a concurrent modification and deleted the PTC after the code was issued, but before it was used.
-			// In this case, we want to show an "invalid or already used" message.
+			// PTC vanished between code issuance and use — show the standard
+			// "invalid or already used" message.
 			if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed()); err != nil {
 				return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 			}
-
 			return errors.WithStack(flow.ErrCompletedByStrategy)
 		}
 
@@ -307,18 +305,21 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 		//   1. The verification code is sent to the *new* address (attacker needs inbox access).
 		//   2. The verification flow has a TTL (enforced by the flow handler).
 		//   3. The one-time code is consumed on use (cannot be replayed).
-		// Creation of pending changes is gated by a privileged session check.
-
-		if err := s.deps.IdentityManager().ApplyPendingTraitsChange(ctx, ptc); err != nil {
-			if errors.Is(err, identity.ErrConcurrentModification) {
+		// Creation of pending changes is gated by a privileged session check;
+		// ApplyPendingTraitsChange revalidates the session atomically with the apply.
+		updatedIdentity, applyErr := s.deps.SettingsHookExecutor().ApplyPendingTraitsChange(ctx, w, r, ptc)
+		if applyErr != nil {
+			if errors.Is(applyErr, identity.ErrConcurrentModification) ||
+				errors.Is(applyErr, settings.ErrPendingTraitsChangeSessionInvalid) {
 				if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed()); err != nil {
 					return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 				}
 				return errors.WithStack(flow.ErrCompletedByStrategy)
 			}
-			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, applyErr)
 		}
 
+		ptcIdentity = updatedIdentity
 		addressVia = ptc.NewAddressVia
 		identityID = ptc.IdentityID
 	} else {
@@ -336,9 +337,14 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 		identityID = code.VerifiableAddress.IdentityID
 	}
 
-	i, err := s.deps.IdentityPool().GetIdentity(ctx, identityID, identity.ExpandDefault)
-	if err != nil {
-		return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+	var i *identity.Identity
+	if ptcIdentity != nil {
+		i = ptcIdentity
+	} else {
+		i, err = s.deps.IdentityPool().GetIdentity(ctx, identityID, identity.ExpandDefault)
+		if err != nil {
+			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+		}
 	}
 
 	// Remainder is shared between both paths.

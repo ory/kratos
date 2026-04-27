@@ -17,6 +17,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
@@ -213,9 +214,9 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 
 	var identityID uuid.UUID
 	var addressVia string
+	var ptcIdentity *identity.Identity
 
 	if token.VerifiableAddress == nil {
-		// Pending-change path: no persisted address — look up by verification flow ID.
 		ptc, ptcErr := s.d.PendingTraitsChangePersister().GetPendingTraitsChangeByVerificationFlow(ctx, f.ID)
 		if ptcErr != nil {
 			if errors.Is(ptcErr, sqlcon.ErrNoRows()) {
@@ -224,8 +225,10 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, ptcErr)
 		}
 
-		if err := s.d.IdentityManager().ApplyPendingTraitsChange(ctx, ptc); err != nil {
-			if errors.Is(err, identity.ErrConcurrentModification) {
+		updatedIdentity, applyErr := s.d.SettingsHookExecutor().ApplyPendingTraitsChange(ctx, w, r, ptc)
+		if applyErr != nil {
+			if errors.Is(applyErr, identity.ErrConcurrentModification) ||
+				errors.Is(applyErr, settings.ErrPendingTraitsChangeSessionInvalid) {
 				f.UI.Messages.Clear()
 				f.UI.Messages.Add(text.NewErrorValidationVerificationTokenInvalidOrAlreadyUsed())
 				if err := s.d.VerificationFlowPersister().UpdateVerificationFlow(ctx, f); err != nil {
@@ -238,9 +241,10 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 				}
 				return errors.WithStack(flow.ErrCompletedByStrategy)
 			}
-			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, applyErr)
 		}
 
+		ptcIdentity = updatedIdentity
 		addressVia = ptc.NewAddressVia
 		identityID = ptc.IdentityID
 	} else {
@@ -258,9 +262,14 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 		identityID = address.IdentityID
 	}
 
-	i, err := s.d.IdentityPool().GetIdentity(ctx, identityID, identity.ExpandDefault)
-	if err != nil {
-		return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
+	var i *identity.Identity
+	if ptcIdentity != nil {
+		i = ptcIdentity
+	} else {
+		i, err = s.d.IdentityPool().GetIdentity(ctx, identityID, identity.ExpandDefault)
+		if err != nil {
+			return s.retryVerificationFlowWithError(ctx, w, r, flow.TypeBrowser, err)
+		}
 	}
 
 	// Remainder is shared between both paths.

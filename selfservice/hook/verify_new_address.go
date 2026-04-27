@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/sjson"
 
@@ -142,14 +143,18 @@ func (e *VerifyNewAddress) execute(
 	}
 
 	// Create PendingTraitsChange record.
+	sessionID := s.ID
+	originFlowID := f.ID
 	ptc := &identity.PendingTraitsChange{
-		IdentityID:         original.ID,
-		NewAddressValue:    addr.Value,
-		NewAddressVia:      addr.Via,
-		OriginalTraitsHash: identity.HashTraits(json.RawMessage(original.Traits)),
-		ProposedTraits:     json.RawMessage(proposed.Traits),
-		VerificationFlowID: verificationFlow.ID,
-		Status:             identity.PendingTraitsChangeStatusPending,
+		IdentityID:           original.ID,
+		SessionID:            uuid.NullUUID{UUID: sessionID, Valid: true},
+		OriginSettingsFlowID: uuid.NullUUID{UUID: originFlowID, Valid: true},
+		NewAddressValue:      addr.Value,
+		NewAddressVia:        addr.Via,
+		OriginalTraitsHash:   identity.HashTraits(json.RawMessage(original.Traits)),
+		ProposedTraits:       json.RawMessage(proposed.Traits),
+		VerificationFlowID:   verificationFlow.ID,
+		Status:               identity.PendingTraitsChangeStatusPending,
 	}
 	if err := e.r.PendingTraitsChangePersister().CreatePendingTraitsChange(ctx, ptc); err != nil {
 		return err
