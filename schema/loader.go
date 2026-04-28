@@ -4,18 +4,21 @@
 package schema
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
 
 	_ "github.com/ory/jsonschema/v3/base64loader"
 	_ "github.com/ory/jsonschema/v3/fileloader"
-	_ "github.com/ory/jsonschema/v3/httploader"
+	"github.com/ory/jsonschema/v3/httploader"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/jsonschema/v3"
+	"github.com/ory/x/httpx"
 )
 
 // loadRefURL resolves the URL of a `$ref` inside a schema. It enforces the
@@ -57,15 +60,53 @@ func NewCompiler(disallowRefs bool) *jsonschema.Compiler {
 // regardless of disallowRefs). See NewCompiler for the semantics of
 // disallowRefs.
 func NewCompilerWithURL(ctx context.Context, schemaURL string, disallowRefs bool) (*jsonschema.Compiler, error) {
+	ctx = ensureGuardedHTTPClient(ctx)
+
 	resource, err := jsonschema.LoadURL(ctx, schemaURL)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	defer func() { _ = resource.Close() }()
 
+	// Read the body with a hard size cap so a malicious schema URL cannot
+	// OOM kratos by returning a multi-GB body.
+	data, err := io.ReadAll(io.LimitReader(resource, MaxSchemaBodyBytes+1))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if len(data) > MaxSchemaBodyBytes {
+		return nil, errors.Errorf("identity schema rejected: body exceeds %d bytes", MaxSchemaBodyBytes)
+	}
+
+	// Decode once for structural prevalidation. The upstream compiler will
+	// decode again from the same bytes — accepting a small CPU duplication
+	// in exchange for the security gate.
+	var doc any
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return nil, errors.WithStack(err)
+	}
+	if err := preValidateSchema(doc); err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	c := NewCompiler(disallowRefs)
-	if err := c.AddResource(schemaURL, resource); err != nil {
+	if err := c.AddResource(schemaURL, bytes.NewReader(data)); err != nil {
 		return nil, errors.WithStack(err)
 	}
 	return c, nil
+}
+
+// ensureGuardedHTTPClient guarantees that the jsonschema httploader will
+// pick up a client whose dialer rejects internal IP ranges. Callers who
+// have already attached a client (typically via the request middleware
+// x.HTTPLoaderContextMiddleware) are unaffected — the existing client is
+// preserved. Callers without a client get a fresh resilient client with
+// `ResilientClientDisallowInternalIPs` applied so that fetches from
+// background paths cannot be steered at IMDS or in-cluster services.
+func ensureGuardedHTTPClient(ctx context.Context) context.Context {
+	if ctx.Value(httploader.ContextKey) != nil {
+		return ctx
+	}
+	return context.WithValue(ctx, httploader.ContextKey,
+		httpx.NewResilientClient(httpx.ResilientClientDisallowInternalIPs()))
 }
