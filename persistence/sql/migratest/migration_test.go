@@ -127,6 +127,7 @@ func testDatabase(t *testing.T, db string, c *pop.Connection) {
 		c, l,
 		popx.WithGoMigrations(gomigrations.All),
 		popx.WithTestdata(t, os.DirFS("./testdata")),
+		popx.WithoutGoldenDatabase(),
 	)
 	require.NoError(t, err)
 
