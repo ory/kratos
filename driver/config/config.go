@@ -193,6 +193,7 @@ const (
 	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
 	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
 	ViperKeyOAuth2ProviderOverrideReturnTo                   = "oauth2_provider.override_return_to"
+	ViperKeyOAuth2ProviderSubjectSource                      = "oauth2_provider.subject_source"
 	ViperKeyClientHTTPNoPrivateIPRanges                      = "clients.http.disallow_private_ip_ranges"
 	ViperKeyClientHTTPPrivateIPExceptionURLs                 = "clients.http.private_ip_exception_urls"
 	ViperKeyClientSMTPNoPrivateIPRanges                      = "clients.smtp.disallow_private_ip_ranges"
@@ -965,6 +966,10 @@ func (p *Config) OAuth2ProviderHeader(ctx context.Context) http.Header {
 
 func (p *Config) OAuth2ProviderOverrideReturnTo(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeyOAuth2ProviderOverrideReturnTo)
+}
+
+func (p *Config) OAuth2ProviderSubjectSource(ctx context.Context) string {
+	return p.GetProvider(ctx).String(ViperKeyOAuth2ProviderSubjectSource)
 }
 
 func (p *Config) OAuth2ProviderURL(ctx context.Context) *url.URL {
