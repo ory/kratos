@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"slices"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -181,7 +182,19 @@ func (h *Handler) importLookupSecretCredentials(_ context.Context, i *Identity, 
 }
 
 func (h *Handler) importTOTPCredentials(_ context.Context, i *Identity, creds *AdminIdentityImportCredentialsTOTP) error {
-	return i.SetCredentialsWithConfig(CredentialsTypeTOTP, Credentials{}, CredentialsTOTPConfig{TOTPURL: creds.Config.TOTPURL})
+	if i.ID == uuid.Nil {
+		generated, err := uuid.NewV4()
+		if err != nil {
+			return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to generate identity ID for TOTP import: %s", err))
+		}
+		i.ID = generated
+	}
+
+	return i.SetCredentialsWithConfig(
+		CredentialsTypeTOTP,
+		Credentials{Identifiers: []string{i.ID.String()}},
+		CredentialsTOTPConfig{TOTPURL: creds.Config.TOTPURL},
+	)
 }
 
 func (h *Handler) ImportPasswordCredentials(ctx context.Context, i *Identity, creds *AdminIdentityImportCredentialsPassword) (err error) {

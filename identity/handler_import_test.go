@@ -715,6 +715,10 @@ func TestImportTOTPCredentials(t *testing.T) {
 	// Setup handler
 	h := &Handler{}
 
+	// Use a fixed identity ID so the credential identifier — and therefore
+	// the snapshot — is deterministic across test runs.
+	identityID := uuid.Must(uuid.FromString("11111111-1111-1111-1111-111111111111"))
+
 	testCases := []struct {
 		name          string
 		setupIdentity func() *Identity
@@ -724,7 +728,7 @@ func TestImportTOTPCredentials(t *testing.T) {
 		{
 			name: "new totp credential",
 			setupIdentity: func() *Identity {
-				return &Identity{}
+				return &Identity{ID: identityID}
 			},
 			credentials: &AdminIdentityImportCredentialsTOTP{
 				Config: AdminIdentityImportCredentialsTOTPConfig{
@@ -739,12 +743,18 @@ func TestImportTOTPCredentials(t *testing.T) {
 				require.NoError(t, json.Unmarshal(creds.Config, &config))
 
 				assert.Equal(t, "otpauth://totp/Example:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example", config.TOTPURL)
+
+				// The identity UUID must be persisted as the credential
+				// identifier so AAL2 TOTP login can locate the credential
+				// via FindByCredentialsIdentifier. See issue: imported TOTP
+				// credentials returning "You have no TOTP device set up."
+				assert.Equal(t, []string{identityID.String()}, creds.Identifiers)
 			},
 		},
 		{
 			name: "update existing totp credential",
 			setupIdentity: func() *Identity {
-				i := &Identity{}
+				i := &Identity{ID: identityID}
 				err := i.SetCredentialsWithConfig(
 					CredentialsTypeTOTP,
 					Credentials{},
@@ -769,6 +779,8 @@ func TestImportTOTPCredentials(t *testing.T) {
 
 				// Should have the new TOTP URL
 				assert.Equal(t, "otpauth://totp/Example:alice@example.com?secret=NEWSECRET&issuer=Example", config.TOTPURL)
+
+				assert.Equal(t, []string{identityID.String()}, creds.Identifiers)
 			},
 		},
 	}

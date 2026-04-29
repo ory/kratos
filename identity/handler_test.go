@@ -1036,13 +1036,21 @@ func TestHandler(t *testing.T) {
 			totpConfig = gjson.GetBytes(actual.Credentials[identity.CredentialsTypeTOTP].Config, "totp_url")
 			assert.Equal(t, "totp://example.com?secret=NBSWY3DPEHPK3PXQ&issuer=ORY", totpConfig.String(), "TOTP secret should be updated correctly")
 
+			// The identity UUID must be persisted as the credential identifier
+			// so AAL2 TOTP login can locate the credential via
+			// FindByCredentialsIdentifier.
+			assert.Equal(t, []string{id}, actual.Credentials[identity.CredentialsTypeTOTP].Identifiers)
+
 			// Verify that the traits were also updated
 			assert.Equal(t, "totp-import-updated@ory.sh", gjson.GetBytes(actual.Traits, "email").String())
 
-			// Check full identity using snapshots
+			// Check full identity using snapshots. The TOTP identifier is excluded
+			// from the snapshot because it equals the random identity UUID and is
+			// already asserted explicitly above.
 			snapshotx.SnapshotT(t, identity.WithCredentialsAndAdminMetadataInJSON(*actual),
 				snapshotx.ExceptPaths("id", "schema_url", "state_changed_at", "created_at", "updated_at",
 					"credentials.totp.created_at", "credentials.totp.updated_at",
+					"credentials.totp.identifiers",
 					"credentials.password.created_at", "credentials.password.updated_at"))
 		})
 

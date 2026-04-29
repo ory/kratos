@@ -7,7 +7,9 @@ import (
 	"bytes"
 	"context"
 	_ "embed"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -47,6 +49,60 @@ func createIdentityWithoutTOTP(ctx context.Context, t *testing.T, reg driver.Reg
 	delete(id.Credentials, identity.CredentialsTypeTOTP)
 	require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(ctx, id))
 	return id
+}
+
+// createIdentityViaAdminImport creates an identity by POSTing to the admin
+// /identities endpoint with imported password and TOTP credentials, mirroring
+// what the admin API does for an external caller. This exercises the
+// handler_import.go importTOTPCredentials code path so we can regress
+// "imported TOTP credentials cannot be used to log in" — see
+// schema.NewNoTOTPDeviceRegistered() in selfservice/strategy/totp/login.go.
+func createIdentityViaAdminImport(ctx context.Context, t *testing.T, reg driver.Registry, adminTS *httptest.Server) (*identity.Identity, string, *otp.Key) {
+	t.Helper()
+
+	identifier := x.NewUUID().String() + "@ory.sh"
+	password := x.NewUUID().String()
+	key, err := totp.NewKey(ctx, "foo", reg)
+	require.NoError(t, err)
+
+	body := identity.CreateIdentityBody{
+		SchemaID: "default",
+		Traits:   []byte(fmt.Sprintf(`{"subject":"%s"}`, identifier)),
+		Credentials: &identity.IdentityWithCredentials{
+			Password: &identity.AdminIdentityImportCredentialsPassword{
+				Config: identity.AdminIdentityImportCredentialsPasswordConfig{
+					Password: password,
+				},
+			},
+			TOTP: &identity.AdminIdentityImportCredentialsTOTP{
+				Config: identity.AdminIdentityImportCredentialsTOTPConfig{
+					TOTPURL: key.URL(),
+				},
+			},
+		},
+	}
+
+	var buf bytes.Buffer
+	require.NoError(t, json.NewEncoder(&buf).Encode(body))
+	req, err := http.NewRequest(http.MethodPost, adminTS.URL+"/identities", &buf)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+	res, err := adminTS.Client().Do(req)
+	require.NoError(t, err)
+	respBody, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equalf(t, http.StatusCreated, res.StatusCode, "%s", respBody)
+
+	id := gjson.GetBytes(respBody, "id").String()
+	require.NotEmpty(t, id)
+
+	identityUUID, err := uuid.FromString(id)
+	require.NoError(t, err)
+
+	created, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(ctx, identityUUID)
+	require.NoError(t, err)
+	return created, password, key
 }
 
 func createIdentity(ctx context.Context, t *testing.T, reg driver.Registry) (*identity.Identity, string, *otp.Key) {
@@ -97,7 +153,7 @@ func TestCompleteLogin(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{redirTS.URL + "/return-to-wherever"})
 
 	router := httprouterx.NewTestRouterPublic(t)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
+	publicTS, adminTS := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
@@ -362,6 +418,36 @@ func TestCompleteLogin(t *testing.T) {
 			assert.EqualValues(t, flow.ContinueWithActionRedirectBrowserToString, gjson.Get(body, "continue_with.0.action").String(), "%s", body)
 			assert.EqualValues(t, returnTo, gjson.Get(body, "continue_with.0.redirect_browser_to").String(), "%s", body)
 		})
+	})
+
+	// Regression test: TOTP credentials created through the admin import
+	// endpoint must be usable for AAL2 login. Previously
+	// importTOTPCredentials did not set Credentials.Identifiers, so no row
+	// was written into identity_credential_identifiers and the login lookup
+	// in selfservice/strategy/totp/login.go failed with
+	// "You have no TOTP device set up.".
+	t.Run("case=should pass AAL2 login for admin-imported TOTP credentials", func(t *testing.T) {
+		id, _, key := createIdentityViaAdminImport(t.Context(), t, reg, adminTS)
+
+		// Sanity: the identity UUID must have been persisted as the credential
+		// identifier — this is what FindByCredentialsIdentifier joins on.
+		creds, ok := id.GetCredentials(identity.CredentialsTypeTOTP)
+		require.True(t, ok)
+		assert.Equal(t, []string{id.ID.String()}, creds.Identifiers)
+
+		code, err := stdtotp.GenerateCode(key.Secret(), time.Now())
+		require.NoError(t, err)
+		payload := func(v url.Values) {
+			v.Set("totp_code", code)
+		}
+
+		body, _ := doAPIFlow(t, payload, id)
+		assert.True(t, gjson.Get(body, "session.active").Bool(), "%s", body)
+		assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2,
+			gjson.Get(body, "session.authenticator_assurance_level").String(), "%s", body)
+		// The original error message must not appear.
+		assert.NotEqual(t, text.NewErrorValidationNoTOTPDevice().Text,
+			gjson.Get(body, "ui.messages.0.text").String(), "%s", body)
 	})
 
 	t.Run("case=should fail because totp can not handle AAL1", func(t *testing.T) {
