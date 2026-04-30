@@ -355,7 +355,7 @@ func TestIsNotAuthenticatedSecurecookie(t *testing.T) {
 
 	ctx := context.Background()
 	conf, reg := pkg.NewFastRegistryWithMocks(t)
-	r := httprouterx.NewTestRouterPublic(t)
+	r := httprouterx.NewRouterPublic()
 	r.GET("/public/with-callback", reg.SessionHandler().IsNotAuthenticated(send(http.StatusOK), send(http.StatusBadRequest)))
 
 	ts := httptest.NewServer(r)
@@ -385,7 +385,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 
 	ctx := context.Background()
 	conf, reg := pkg.NewFastRegistryWithMocks(t)
-	r := httprouterx.NewTestRouterPublic(t)
+	r := httprouterx.NewRouterPublic()
 
 	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
@@ -442,7 +442,7 @@ func TestIsAuthenticated(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := pkg.NewFastRegistryWithMocks(t)
 	reg.WithCSRFHandler(new(nosurfx.FakeCSRFHandler))
-	r := httprouterx.NewTestRouterPublic(t)
+	r := httprouterx.NewRouterPublic()
 
 	h, _ := testhelpers.MockSessionCreateHandler(t, reg)
 	r.GET("/set", h)

@@ -23,7 +23,7 @@ import (
 )
 
 func TestRedirectToPublicAdminRoute(t *testing.T) {
-	pub, adm := httprouterx.NewTestRouterPublic(t), httprouterx.NewTestRouterAdminWithPrefix(t)
+	pub, adm := httprouterx.NewRouterPublic(), httprouterx.NewRouterAdminWithPrefix()
 
 	adminTS := httptest.NewServer(adm)
 	pubTS := httptest.NewServer(pub)

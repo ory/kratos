@@ -240,6 +240,19 @@ func NewLoginCodeSent() *Message {
 	}
 }
 
+// NewLoginCodeSentForAuthenticatedUser is shown on refresh and second factor
+// login flows where the address is bound to the authenticated identity rather
+// than typed by the user. The wording avoids the inaccurate "address you
+// provided" phrasing and the unhelpful "check the spelling" guidance, since
+// the user cannot change the recipient mid-flow.
+func NewLoginCodeSentForAuthenticatedUser() *Message {
+	return &Message{
+		ID:   InfoSelfServiceLoginCodeSentForAuthenticatedUser,
+		Type: Info,
+		Text: "A code was sent to your address. If you didn't receive it, please try again.",
+	}
+}
+
 func NewErrorValidationLoginCodeInvalidOrAlreadyUsed() *Message {
 	return &Message{
 		ID:   ErrorValidationLoginCodeInvalidOrAlreadyUsed,

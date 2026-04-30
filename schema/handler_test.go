@@ -29,7 +29,7 @@ import (
 )
 
 func TestHandler(t *testing.T) {
-	router := httprouterx.NewTestRouterPublic(t)
+	router := httprouterx.NewRouterPublic()
 	ts := contextx.NewConfigurableTestServer(router)
 	t.Cleanup(ts.Close)
 

@@ -878,7 +878,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 						require.NoError(t, err)
 						require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
 						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
-						require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
+						require.EqualValues(t, text.InfoSelfServiceLoginCodeSentForAuthenticatedUser, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
 
 						s := &state{
 							flowID:        f.GetId(),
@@ -1167,7 +1167,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 					require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(body, "state").String(), "%s", body)
 					require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
 					require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
-					require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginCodeSent, "%s", body)
+					require.EqualValues(t, gjson.GetBytes(body, "ui.messages.0.id").Int(), text.InfoSelfServiceLoginCodeSentForAuthenticatedUser, "%s", body)
 
 					snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("ui.nodes.5.attributes.value", "id", "created_at", "expires_at", "updated_at", "issued_at", "request_url", "ui.action"))
 				})
@@ -1217,7 +1217,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 						require.EqualValues(t, flow.StateEmailSent, gjson.GetBytes(body, "state").String(), "%s", body)
 						require.Len(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
 						require.Len(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
-						require.EqualValues(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
+						require.EqualValues(t, text.InfoSelfServiceLoginCodeSentForAuthenticatedUser, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
 
 						snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("ui.nodes.5.attributes.value", "id", "created_at", "expires_at", "updated_at", "issued_at", "request_url", "ui.action"))
 					})
@@ -1241,7 +1241,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 						require.EqualValuesf(t, flow.StateEmailSent, gjson.GetBytes(body, "state").String(), "%s", body)
 						require.Lenf(t, gjson.GetBytes(body, "ui.nodes.#(group==code)").Array(), 1, "%s", body)
 						require.Lenf(t, gjson.GetBytes(body, "ui.messages").Array(), 1, "%s", body)
-						require.EqualValuesf(t, text.InfoSelfServiceLoginCodeSent, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
+						require.EqualValuesf(t, text.InfoSelfServiceLoginCodeSentForAuthenticatedUser, gjson.GetBytes(body, "ui.messages.0.id").Int(), "%s", body)
 
 						snapshotx.SnapshotTJSON(t, body, snapshotx.ExceptPaths("ui.nodes.5.attributes.value", "id", "created_at", "expires_at", "updated_at", "issued_at", "request_url", "ui.action"))
 					})

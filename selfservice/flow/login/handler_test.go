@@ -53,8 +53,8 @@ func TestFlowLifecycle(t *testing.T) {
 	fakeHydra := hydra.NewFake()
 	reg.SetHydra(fakeHydra)
 
-	routerPublic := httprouterx.NewTestRouterPublic(t)
-	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerPublic, httprouterx.NewTestRouterAdminWithPrefix(t))
+	routerPublic := httprouterx.NewRouterPublic()
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, routerPublic, httprouterx.NewRouterAdminWithPrefix())
 	loginTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)
 
 	returnToTS := testhelpers.NewRedirTS(t, "return_to", conf)

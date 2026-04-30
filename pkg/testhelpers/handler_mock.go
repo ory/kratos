@@ -73,9 +73,9 @@ func MockMakeAuthenticatedRequestWithClient(t *testing.T, reg mockDeps, conf *co
 func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, conf *config.Config, router *httprouterx.RouterPublic, req *http.Request, client *http.Client, id *identity.Identity) ([]byte, *http.Response) {
 	set := "/" + uuid.Must(uuid.NewV4()).String() + "/set"
 	if id == nil {
-		router.Handler("GET", set, MockSetSession(t, reg, conf))
+		router.GET(set, MockSetSession(t, reg, conf))
 	} else {
-		router.Handler("GET", set, MockSetSessionWithIdentity(t, reg, conf, id))
+		router.GET(set, MockSetSessionWithIdentity(t, reg, conf, id))
 	}
 
 	MockHydrateCookieClient(t, client, "http://"+req.URL.Host+set+"?"+req.URL.Query().Encode())

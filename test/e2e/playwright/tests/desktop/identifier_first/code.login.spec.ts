@@ -403,7 +403,7 @@ test.describe("second factor", () => {
         if (tc.expectFastLogin) {
           await expect(login.totpInput.input).toBeHidden()
           await expect(
-            page.locator('[data-testid="ui/message/1010014"]'),
+            page.locator('[data-testid="ui/message/1010025"]'),
             "expect code sent message to be shown",
           ).toBeVisible()
           await expect(login.codeSubmit).toBeVisible()

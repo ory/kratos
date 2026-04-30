@@ -49,8 +49,8 @@ func TestCompleteSettings(t *testing.T) {
 		}),
 	)
 
-	router := httprouterx.NewTestRouterPublic(t)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
+	router := httprouterx.NewRouterPublic()
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewRouterAdminWithPrefix())
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewSettingsUIFlowEchoServer(t, reg)

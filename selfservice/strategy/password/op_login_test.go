@@ -45,12 +45,12 @@ func TestOAuth2Provider(t *testing.T) {
 	var testRequireLogin atomic.Bool
 	testRequireLogin.Store(true)
 
-	router := httprouterx.NewTestRouterPublic(t)
-	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
+	router := httprouterx.NewRouterPublic()
+	kratosPublicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewRouterAdminWithPrefix())
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 
-	router.Handler("GET", "/login-ts", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.GET("/login-ts", func(w http.ResponseWriter, r *http.Request) {
 		t.Log("[loginTS] navigated to the login ui")
 		c := r.Context().Value(TestUIConfig).(*testConfig)
 		*c.callTrace = append(*c.callTrace, LoginUI)
@@ -110,9 +110,9 @@ func TestOAuth2Provider(t *testing.T) {
 			t.Log("[loginTS] login flow is ignored here since it will be handled by the code above, we just need to return")
 			return
 		}
-	}))
+	})
 
-	router.Handler("GET", "/consent", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.GET("/consent", func(w http.ResponseWriter, r *http.Request) {
 		t.Log("[consentTS] navigated to the consent ui")
 		c := r.Context().Value(TestUIConfig).(*testConfig)
 		*c.callTrace = append(*c.callTrace, Consent)
@@ -153,7 +153,7 @@ func TestOAuth2Provider(t *testing.T) {
 		resp, err = c.browserClient.Get(completedAcceptRequest.RedirectTo)
 		require.NoError(t, err)
 		require.Equal(t, c.clientAppTS.URL, fmt.Sprintf("%s://%s", resp.Request.URL.Scheme, resp.Request.URL.Host))
-	}))
+	})
 
 	kratosUIMiddleware := negroni.New()
 	kratosUIMiddleware.UseFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {

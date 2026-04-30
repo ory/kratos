@@ -50,8 +50,8 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 	fakeHydra := hydra.NewFake()
 	reg.SetHydra(fakeHydra)
 
-	router := httprouterx.NewTestRouterPublic(t)
-	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
+	router := httprouterx.NewRouterPublic()
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewRouterAdminWithPrefix())
 
 	// Set it first as otherwise it will overwrite the ViperKeySelfServiceBrowserDefaultReturnTo key;
 	returnToTS := testhelpers.NewRedirTS(t, "return_to", conf)
@@ -114,8 +114,8 @@ func TestInitFlow(t *testing.T) {
 	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
 		map[string]interface{}{"enabled": true})
 
-	router := httprouterx.NewTestRouterPublic(t)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
+	router := httprouterx.NewRouterPublic()
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewRouterAdminWithPrefix())
 	registrationTS := testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
 	returnToTS := testhelpers.NewRedirTS(t, "return_to", conf)
 

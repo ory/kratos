@@ -246,7 +246,7 @@ func TestManagerHTTP(t *testing.T) {
 		)
 
 		var s *session.Session
-		rp := httprouterx.NewTestRouterPublic(t)
+		rp := httprouterx.NewRouterPublic()
 		rp.GET("/session/revoke", func(w http.ResponseWriter, r *http.Request) {
 			require.NoError(t, reg.SessionManager().PurgeFromRequest(r.Context(), w, r))
 			w.WriteHeader(http.StatusOK)

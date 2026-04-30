@@ -33,19 +33,19 @@ func TestHandler(t *testing.T) {
 	h := errorx.NewHandler(reg)
 
 	t.Run("case=public authorization", func(t *testing.T) {
-		router := httprouterx.NewTestRouterPublic(t)
+		router := httprouterx.NewRouterPublic()
 		ns := nosurfx.NewTestCSRFHandler(router, reg)
 
 		h.RegisterPublicRoutes(router)
-		router.Handler("GET", "/regen", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		router.GET("/regen", func(w http.ResponseWriter, r *http.Request) {
 			ns.RegenerateToken(w, r)
 			w.WriteHeader(http.StatusNoContent)
-		}))
-		router.Handler("GET", "/set-error", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		})
+		router.GET("/set-error", func(w http.ResponseWriter, r *http.Request) {
 			id, err := reg.SelfServiceErrorPersister().CreateErrorContainer(context.Background(), nosurf.Token(r), herodot.ErrNotFound().WithReason("foobar"))
 			require.NoError(t, err)
 			_, _ = w.Write([]byte(id.String()))
-		}))
+		})
 
 		ts := httptest.NewServer(ns)
 		defer ts.Close()
@@ -73,7 +73,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=stubs", func(t *testing.T) {
-		router := httprouterx.NewTestRouterPublic(t)
+		router := httprouterx.NewRouterPublic()
 		h.RegisterPublicRoutes(router)
 		ts := httptest.NewServer(router)
 		defer ts.Close()
@@ -89,7 +89,7 @@ func TestHandler(t *testing.T) {
 	})
 
 	t.Run("case=errors types", func(t *testing.T) {
-		router := httprouterx.NewTestRouterPublic(t)
+		router := httprouterx.NewRouterPublic()
 		h.RegisterPublicRoutes(router)
 		ts := httptest.NewServer(router)
 		defer ts.Close()

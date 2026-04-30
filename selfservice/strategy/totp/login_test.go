@@ -152,8 +152,8 @@ func TestCompleteLogin(t *testing.T) {
 	redirTS := testhelpers.NewRedirSessionEchoTS(t, reg)
 	conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{redirTS.URL + "/return-to-wherever"})
 
-	router := httprouterx.NewTestRouterPublic(t)
-	publicTS, adminTS := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
+	router := httprouterx.NewRouterPublic()
+	publicTS, adminTS := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewRouterAdminWithPrefix())
 
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	uiTS := testhelpers.NewLoginUIFlowEchoServer(t, reg)

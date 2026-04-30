@@ -179,6 +179,7 @@ func init() {
 		"NewErrorValidationSuchNoWebAuthnUser":                    text.NewErrorValidationSuchNoWebAuthnUser(),
 		"NewRegistrationEmailWithCodeSent":                        text.NewRegistrationEmailWithCodeSent(),
 		"NewLoginCodeSent":                                        text.NewLoginCodeSent(),
+		"NewLoginCodeSentForAuthenticatedUser":                    text.NewLoginCodeSentForAuthenticatedUser(),
 		"NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed":  text.NewErrorValidationRegistrationCodeInvalidOrAlreadyUsed(),
 		"NewErrorValidationLoginCodeInvalidOrAlreadyUsed":         text.NewErrorValidationLoginCodeInvalidOrAlreadyUsed(),
 		"NewErrorValidationNoCodeUser":                            text.NewErrorValidationNoCodeUser(),

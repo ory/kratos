@@ -44,8 +44,8 @@ func TestHandlerRedirectOnAuthenticated(t *testing.T) {
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
 	)
 
-	router := httprouterx.NewTestRouterPublic(t)
-	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
+	router := httprouterx.NewRouterPublic()
+	ts, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewRouterAdminWithPrefix())
 
 	redirTS := testhelpers.NewRedirTS(t, "already authenticated", conf)
 
@@ -74,8 +74,8 @@ func TestInitFlow(t *testing.T) {
 		configx.WithValue(config.ViperKeySelfServiceRecoveryEnabled, true),
 	)
 
-	router := httprouterx.NewTestRouterPublic(t)
-	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewTestRouterAdminWithPrefix(t))
+	router := httprouterx.NewRouterPublic()
+	publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, router, httprouterx.NewRouterAdminWithPrefix())
 	recoveryTS := testhelpers.NewRecoveryUIFlowEchoServer(t, reg)
 
 	assertion := func(body []byte, isForced, isApi bool) {

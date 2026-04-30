@@ -28,7 +28,7 @@ func (c *configProvider) Config() *config.Config {
 func TestNewConfigHashHandler(t *testing.T) {
 	ctx := context.Background()
 	cfg := pkg.NewConfigurationWithDefaults(t)
-	router := httprouterx.NewTestRouterAdmin(t)
+	router := httprouterx.NewRouterAdmin()
 	config.RegisterConfigHashRoute(&configProvider{cfg: cfg}, router)
 	ts := contextx.NewConfigurableTestServer(router)
 	t.Cleanup(ts.Close)

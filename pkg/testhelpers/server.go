@@ -18,7 +18,7 @@ import (
 )
 
 func NewKratosServer(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
-	return NewKratosServerWithRouters(t, reg, httprouterx.NewTestRouterPublic(t), httprouterx.NewTestRouterAdminWithPrefix(t))
+	return NewKratosServerWithRouters(t, reg, httprouterx.NewRouterPublic(), httprouterx.NewRouterAdminWithPrefix())
 }
 
 func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *httptest.Server) {
@@ -27,7 +27,7 @@ func NewKratosServerWithCSRF(t *testing.T, reg driver.Registry) (public, admin *
 }
 
 func NewKratosServerWithCSRFAndRouters(t *testing.T, reg driver.Registry) (public, admin *httptest.Server, rp *httprouterx.RouterPublic, ra *httprouterx.RouterAdmin) {
-	rp, ra = httprouterx.NewTestRouterPublic(t), httprouterx.NewTestRouterAdminWithPrefix(t)
+	rp, ra = httprouterx.NewRouterPublic(), httprouterx.NewRouterAdminWithPrefix()
 	csrfHandler := nosurfx.NewTestCSRFHandler(rp, reg)
 	reg.WithCSRFHandler(csrfHandler)
 

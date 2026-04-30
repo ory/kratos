@@ -346,7 +346,15 @@ func (s *Strategy) populateEmailSentFlow(ctx context.Context, f flow.Flow) error
 	case flow.LoginFlow:
 		route = login.RouteSubmitFlow
 		codeMetaLabel = text.NewInfoNodeLabelLoginCode()
-		message = text.NewLoginCodeSent()
+		// On refresh and second factor flows the recipient address is bound to
+		// the authenticated identity, not typed by the user. Use a message that
+		// reflects that — the standard "address you provided" / "check the
+		// spelling" wording is inaccurate in those cases.
+		if lf, ok := f.(*login.Flow); ok && (lf.Refresh || lf.RequestedAAL == identity.AuthenticatorAssuranceLevel2) {
+			message = text.NewLoginCodeSentForAuthenticatedUser()
+		} else {
+			message = text.NewLoginCodeSent()
+		}
 
 		// preserve the login identifier that was submitted
 		// so we can retry the code flow with the same data
