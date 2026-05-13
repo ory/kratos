@@ -27,6 +27,19 @@ func TestWithBaseURL(t *testing.T) {
 	ctx := WithBaseURL(context.Background(), urlx.ParseOrPanic("https://www.ory.com/"))
 	assert.EqualValues(t, "https://www.ory.com/", BaseURLFromContext(ctx).String())
 	assert.Nil(t, BaseURLFromContext(context.Background()))
+
+	t.Run("preserves scheme", func(t *testing.T) {
+		for _, raw := range []string{"http://localhost:4000", "https://example.com/"} {
+			ctx := WithBaseURL(context.Background(), urlx.ParseOrPanic(raw))
+			assert.EqualValuesf(t, raw, BaseURLFromContext(ctx).String(), "for input %q", raw)
+		}
+	})
+
+	t.Run("BaseURLStringFromContext", func(t *testing.T) {
+		assert.Equal(t, "", BaseURLStringFromContext(context.Background()))
+		assert.Equal(t, "https://www.ory.com/",
+			BaseURLStringFromContext(WithBaseURL(context.Background(), urlx.ParseOrPanic("https://www.ory.com/"))))
+	})
 }
 
 func TestRequestURL(t *testing.T) {

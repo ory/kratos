@@ -18,11 +18,13 @@ type ctxKey struct{}
 
 var baseURLKey ctxKey
 
+// WithBaseURL stores the supplied base URL on the context. The URL's scheme
+// is preserved verbatim — callers that need an https guarantee must enforce
+// it themselves before calling.
 func WithBaseURL(ctx context.Context, baseURL *url.URL) context.Context {
 	if baseURL == nil {
 		return ctx
 	}
-	baseURL.Scheme = "https" // Force https
 	return context.WithValue(ctx, baseURLKey, baseURL)
 }
 
@@ -38,19 +40,28 @@ func BaseURLFromContext(ctx context.Context) *url.URL {
 	return nil
 }
 
-// FlowBaseURL returns the base URL to be used for a self-service flow. It will
-// either take the request URL, or an explicit base URL set in the context.
-func FlowBaseURL(ctx context.Context, flow interface{ GetRequestURL() string }) (*url.URL, error) {
+// BaseURLStringFromContext returns the captured base URL as a string, or an
+// empty string if none is set. Used to copy the captured URL onto a flow
+// row at creation time (where it lives next to the rest of the flow rather
+// than being plumbed via context to every consumer).
+func BaseURLStringFromContext(ctx context.Context) string {
 	if u := BaseURLFromContext(ctx); u != nil {
-		return u, nil
+		return u.String()
 	}
-	u, err := url.Parse(flow.GetRequestURL())
-	if err != nil {
-		return nil, err
-	}
-	u.Path = "/"
+	return ""
+}
 
-	return u, nil
+// CourierBaseURL parses the courier base URL captured on a flow at init time
+// (recovery.Flow.CourierBaseURL / verification.Flow.CourierBaseURL) and
+// returns it as a *url.URL. When the captured value is empty or unparseable,
+// it returns the supplied fallback (typically Config.SelfPublicURL).
+func CourierBaseURL(courierBaseURL string, fallback *url.URL) *url.URL {
+	if courierBaseURL != "" {
+		if u, err := url.Parse(courierBaseURL); err == nil {
+			return u
+		}
+	}
+	return fallback
 }
 
 func RequestURL(r *http.Request) *url.URL {

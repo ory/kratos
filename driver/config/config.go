@@ -28,8 +28,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/publicsuffix"
 
-	"github.com/ory/kratos/x"
-
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/jsonschema/v3/httploader"
@@ -1336,10 +1334,6 @@ func (p *Config) SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx context.Cont
 
 func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeyLinkLifespan, time.Hour)
-}
-
-func (p *Config) SelfServiceLinkMethodBaseURL(ctx context.Context) *url.URL {
-	return cmp.Or(x.BaseURLFromContext(ctx), p.SelfPublicURL(ctx))
 }
 
 func (p *Config) SelfServiceCodeMethodLifespan(ctx context.Context) time.Duration {

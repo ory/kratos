@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
@@ -391,11 +390,11 @@ func (s *Sender) SendVerificationCode(ctx context.Context, f *verification.Flow,
 	return s.deps.PrivilegedIdentityPool().UpdateVerifiableAddress(ctx, address, "status")
 }
 
-func (s *Sender) constructVerificationLink(ctx context.Context, fID uuid.UUID, codeStr string) string {
+func (s *Sender) constructVerificationLink(ctx context.Context, f *verification.Flow, codeStr string) string {
 	return urlx.CopyWithQuery(
-		urlx.AppendPaths(s.deps.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
+		urlx.AppendPaths(x.CourierBaseURL(f.GetCourierBaseURL(), s.deps.Config().SelfPublicURL(ctx)), verification.RouteSubmitFlow),
 		url.Values{
-			"flow": {fID.String()},
+			"flow": {f.ID.String()},
 			"code": {codeStr},
 		}).String()
 }
@@ -426,7 +425,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 	case identity.ChannelTypeEmail:
 		t = email.NewVerificationCodeValid(s.deps, &email.VerificationCodeValidModel{
 			To:               to,
-			VerificationURL:  s.constructVerificationLink(ctx, f.ID, codeString),
+			VerificationURL:  s.constructVerificationLink(ctx, f, codeString),
 			Identity:         model,
 			VerificationCode: codeString,
 			RequestURL:       f.GetRequestURL(),

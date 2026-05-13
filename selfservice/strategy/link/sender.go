@@ -190,7 +190,7 @@ func (s *Sender) SendRecoveryTokenTo(ctx context.Context, f *recovery.Flow, i *i
 	}
 
 	recoveryUrl := urlx.CopyWithQuery(
-		urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), recovery.RouteSubmitFlow),
+		urlx.AppendPaths(x.CourierBaseURL(f.GetCourierBaseURL(), s.r.Config().SelfPublicURL(ctx)), recovery.RouteSubmitFlow),
 		url.Values{
 			"token": {token.Token},
 			"flow":  {f.ID.String()},
@@ -229,7 +229,7 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 	}
 
 	verificationUrl := urlx.CopyWithQuery(
-		urlx.AppendPaths(s.r.Config().SelfServiceLinkMethodBaseURL(ctx), verification.RouteSubmitFlow),
+		urlx.AppendPaths(x.CourierBaseURL(f.GetCourierBaseURL(), s.r.Config().SelfPublicURL(ctx)), verification.RouteSubmitFlow),
 		url.Values{
 			"flow":  {f.ID.String()},
 			"token": {token.Token},

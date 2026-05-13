@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/x/redir"
@@ -65,6 +67,9 @@ type Flow struct {
 	//
 	// required: true
 	RequestURL string `json:"request_url" db:"request_url"`
+
+	// InternalContext stores internal-only data for this flow.
+	InternalContext sqlxx.JSONRawMessage `db:"internal_context" json:"-" faker:"-"`
 
 	// ReturnTo contains the requested return_to URL.
 	ReturnTo string `json:"return_to,omitempty" db:"-"`
@@ -153,6 +158,9 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		CSRFToken: csrf,
 		Type:      ft,
 	}
+	if err := f.setCourierBaseURL(x.BaseURLStringFromContext(r.Context())); err != nil {
+		return nil, err
+	}
 
 	for _, strategy := range strategies {
 		if strategy.IsPrimary() {
@@ -181,15 +189,54 @@ func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Re
 	return nf, nil
 }
 
-func (f *Flow) GetType() flow.Type                   { return f.Type }
-func (f *Flow) GetRequestURL() string                { return f.RequestURL }
-func (Flow) TableName() string                       { return "selfservice_recovery_flows" }
-func (f Flow) GetID() uuid.UUID                      { return f.ID }
-func (f *Flow) GetUI() *container.Container          { return f.UI }
-func (f *Flow) GetState() State                      { return f.State }
-func (Flow) GetFlowName() flow.FlowName              { return flow.RecoveryFlow }
-func (f *Flow) SetState(state State)                 { f.State = state }
-func (f *Flow) GetTransientPayload() json.RawMessage { return f.TransientPayload }
+func (f *Flow) GetType() flow.Type                        { return f.Type }
+func (f *Flow) GetRequestURL() string                     { return f.RequestURL }
+func (Flow) TableName() string                            { return "selfservice_recovery_flows" }
+func (f Flow) GetID() uuid.UUID                           { return f.ID }
+func (f *Flow) GetUI() *container.Container               { return f.UI }
+func (f *Flow) GetState() State                           { return f.State }
+func (Flow) GetFlowName() flow.FlowName                   { return flow.RecoveryFlow }
+func (f *Flow) SetState(state State)                      { f.State = state }
+func (f *Flow) GetTransientPayload() json.RawMessage      { return f.TransientPayload }
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage  { return f.InternalContext }
+func (f *Flow) SetInternalContext(c sqlxx.JSONRawMessage) { f.InternalContext = c }
+
+// EnsureInternalContext initializes InternalContext to an empty JSON object
+// if it is missing or not valid JSON. Mirrors the registration / settings /
+// login flow implementations.
+func (f *Flow) EnsureInternalContext() {
+	if !gjson.ValidBytes(f.InternalContext) {
+		f.InternalContext = []byte("{}")
+	}
+}
+
+// GetCourierBaseURL returns the base URL captured at flow init from the
+// request context, or the empty string when nothing was captured (the email
+// senders then fall back to Config.SelfPublicURL).
+func (f *Flow) GetCourierBaseURL() string {
+	return gjson.GetBytes(f.InternalContext, flow.InternalContextKeyCourierBaseURL).String()
+}
+
+// setCourierBaseURL writes the captured base URL into InternalContext under
+// the well-known key. Empty input is a no-op (preserves the fall-back
+// path). Inputs longer than 8192 bytes are rejected — the same implicit
+// ceiling the dedicated VARCHAR(8192) column used to enforce — so a
+// pathological header cannot bloat the row.
+func (f *Flow) setCourierBaseURL(s string) error {
+	if s == "" {
+		return nil
+	}
+	if len(s) > 8192 {
+		return nil
+	}
+	f.EnsureInternalContext()
+	out, err := sjson.SetBytes(f.InternalContext, flow.InternalContextKeyCourierBaseURL, s)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	f.InternalContext = out
+	return nil
+}
 
 // ShouldSkipSettingsFlow flow returns true iff. `skip_settings` was requested
 // in the URL query parameters.

@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow/verification"
+	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -87,6 +88,35 @@ func TestGetRequestURL(t *testing.T) {
 	assert.Equal(t, expectedURL, f.GetRequestURL())
 }
 
+func TestNewFlow_capturesCourierBaseURL(t *testing.T) {
+	conf := pkg.NewConfigurationWithDefaults(t)
+
+	t.Run("nothing in context", func(t *testing.T) {
+		r := &http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}
+		f, err := verification.NewFlow(conf, time.Hour, "", r, nil, flow.TypeBrowser)
+		require.NoError(t, err)
+		assert.Equal(t, "", f.GetCourierBaseURL())
+	})
+
+	t.Run("BaseURL in request context is copied onto flow", func(t *testing.T) {
+		base := urlx.ParseOrPanic("https://customer.example.com/")
+		r := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
+			WithContext(x.WithBaseURL(context.Background(), base))
+		f, err := verification.NewFlow(conf, time.Hour, "", r, nil, flow.TypeBrowser)
+		require.NoError(t, err)
+		assert.Equal(t, base.String(), f.GetCourierBaseURL())
+	})
+
+	t.Run("http scheme is preserved (not coerced to https)", func(t *testing.T) {
+		base := urlx.ParseOrPanic("http://localhost:4000")
+		r := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
+			WithContext(x.WithBaseURL(context.Background(), base))
+		f, err := verification.NewFlow(conf, time.Hour, "", r, nil, flow.TypeBrowser)
+		require.NoError(t, err)
+		assert.Equal(t, "http://localhost:4000", f.GetCourierBaseURL())
+	})
+}
+
 func TestNewPostHookFlow(t *testing.T) {
 	conf := pkg.NewConfigurationWithDefaults(t)
 	u := &http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"}
@@ -126,6 +156,90 @@ func TestFlowEncodeJSON(t *testing.T) {
 	assert.EqualValues(t, "", gjson.Get(jsonx.TestMarshalJSONString(t, &verification.Flow{RequestURL: "https://foo.bar?foo=bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, &verification.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
 	assert.EqualValues(t, "/bar", gjson.Get(jsonx.TestMarshalJSONString(t, verification.Flow{RequestURL: "https://foo.bar?return_to=/bar"}), "return_to").String())
+}
+
+func TestFromOldFlow_capturesCourierBaseURL(t *testing.T) {
+	conf := pkg.NewConfigurationWithDefaults(t)
+
+	t.Run("uses the new request's context, not the old flow's value", func(t *testing.T) {
+		oldR := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
+			WithContext(x.WithBaseURL(context.Background(), urlx.ParseOrPanic("https://customer.example.com/")))
+		oldF, err := verification.NewFlow(conf, time.Hour, "csrf", oldR, nil, flow.TypeBrowser)
+		require.NoError(t, err)
+		require.Equal(t, "https://customer.example.com/", oldF.GetCourierBaseURL())
+
+		newR := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
+			WithContext(x.WithBaseURL(context.Background(), urlx.ParseOrPanic("http://localhost:4000")))
+		newF, err := verification.FromOldFlow(conf, time.Hour, oldF.CSRFToken, newR, nil, oldF)
+		require.NoError(t, err)
+		assert.Equal(t, "http://localhost:4000", newF.GetCourierBaseURL())
+	})
+
+	t.Run("empty when neither old nor new have a base URL", func(t *testing.T) {
+		r := &http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}
+		oldF, err := verification.NewFlow(conf, time.Hour, "csrf", r, nil, flow.TypeBrowser)
+		require.NoError(t, err)
+		newF, err := verification.FromOldFlow(conf, time.Hour, oldF.CSRFToken, r, nil, oldF)
+		require.NoError(t, err)
+		assert.Equal(t, "", newF.GetCourierBaseURL())
+	})
+}
+
+func TestNewPostHookFlow_capturesCourierBaseURL(t *testing.T) {
+	conf := pkg.NewConfigurationWithDefaults(t)
+
+	// NewPostHookFlow is what the registration → auto-verification chain
+	// calls during the registration submit handler. The verification flow
+	// it creates needs CourierBaseURL captured from the *triggering*
+	// request's context (the registration submit, with the CNAME-aware
+	// X-Ory-Original-Host set by the cloud middleware) — not from the
+	// original flow's RequestURL.
+	t.Run("captures from triggering request context, ignoring original flow's URL", func(t *testing.T) {
+		original := registration.Flow{
+			RequestURL: "https://" + "different.host/bar?return_to=https://elsewhere/path",
+		}
+		r := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
+			WithContext(x.WithBaseURL(context.Background(), urlx.ParseOrPanic("https://customer.example.com/")))
+		f, err := verification.NewPostHookFlow(conf, time.Hour, "csrf", r, nil, &original)
+		require.NoError(t, err)
+		assert.Equal(t, "https://customer.example.com/", f.GetCourierBaseURL())
+	})
+
+	t.Run("preserves http scheme through the post-hook chain", func(t *testing.T) {
+		// Regression test for x.WithBaseURL no longer coercing scheme to
+		// https. The Ory CLI / NextJS proxy case carries http://localhost.
+		original := registration.Flow{RequestURL: "http://foo.com/bar"}
+		r := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
+			WithContext(x.WithBaseURL(context.Background(), urlx.ParseOrPanic("http://localhost:4000")))
+		f, err := verification.NewPostHookFlow(conf, time.Hour, "csrf", r, nil, &original)
+		require.NoError(t, err)
+		assert.Equal(t, "http://localhost:4000", f.GetCourierBaseURL())
+	})
+
+	t.Run("empty when triggering request has no base URL", func(t *testing.T) {
+		original := registration.Flow{RequestURL: "http://foo.com/bar"}
+		r := &http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}
+		f, err := verification.NewPostHookFlow(conf, time.Hour, "csrf", r, nil, &original)
+		require.NoError(t, err)
+		assert.Equal(t, "", f.GetCourierBaseURL())
+	})
+}
+
+// TestCourierBaseURLStoredInInternalContext locks down the storage
+// location: the captured base URL must land in InternalContext under
+// flow.InternalContextKeyCourierBaseURL, not in a dedicated column. If a
+// future refactor moves it elsewhere, this fails — separately from the
+// getter contract.
+func TestCourierBaseURLStoredInInternalContext(t *testing.T) {
+	conf := pkg.NewConfigurationWithDefaults(t)
+
+	r := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
+		WithContext(x.WithBaseURL(context.Background(), urlx.ParseOrPanic("https://customer.example.com/")))
+	f, err := verification.NewFlow(conf, time.Hour, "csrf", r, nil, flow.TypeBrowser)
+	require.NoError(t, err)
+
+	got := gjson.GetBytes(f.InternalContext, flow.InternalContextKeyCourierBaseURL).String()
+	assert.Equal(t, "https://customer.example.com/", got)
 }
 
 func TestFromOldFlow(t *testing.T) {
