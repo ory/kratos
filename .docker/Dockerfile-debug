@@ -1,5 +1,5 @@
 FROM golang:1.26-trixie
-ENV CGO_ENABLED 1
+ENV CGO_ENABLED 0
 
 RUN apt-get update && apt-get install -y --no-install-recommends inotify-tools psmisc
 RUN go install github.com/go-delve/delve/cmd/dlv@latest

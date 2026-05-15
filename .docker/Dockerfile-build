@@ -13,8 +13,7 @@ COPY go.mod go.mod
 COPY go.sum go.sum
 COPY pkg/client-go/go.* pkg/client-go/
 
-ENV CGO_ENABLED 1
-ENV CGO_CPPFLAGS -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
+ENV CGO_ENABLED 0
 
 RUN go mod download
 

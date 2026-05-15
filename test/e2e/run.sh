@@ -389,7 +389,7 @@ if [[ "${cleanup}" == "yes" ]]; then
   exit 0
 fi
 
-export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true"
+export TEST_DATABASE_SQLITE="sqlite:///$(mktemp -d -t ci-XXXXXXXXXX)/db.sqlite?_fk=true&_journal=WAL"
 export TEST_DATABASE_MEMORY="memory"
 
 case "${1:-default}" in

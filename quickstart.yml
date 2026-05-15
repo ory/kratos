@@ -3,7 +3,7 @@ services:
   kratos-migrate:
     image: oryd/kratos:v26.2.0
     environment:
-      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&mode=rwc
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&_journal=WAL&mode=rwc
     volumes:
       - type: volume
         source: kratos-sqlite
@@ -36,7 +36,7 @@ services:
       - '4434:4434' # admin
     restart: unless-stopped
     environment:
-      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true
+      - DSN=sqlite:///var/lib/sqlite/db.sqlite?_fk=true&_journal=WAL
       - LOG_LEVEL=trace
     command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
     volumes:
