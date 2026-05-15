@@ -34,6 +34,8 @@ func TestNormalizePhoneIdentifier(t *testing.T) {
 		{"+44 20 7946 0958", "+442079460958"},
 		{"+49 176 671 11 638", "+4917667111638"},
 		{"+600136866982", "+60136866982"},
+		{"+256 730 691 099", "+256730691099"},
+		{"+256730691099", "+256730691099"},
 		{"invalid-phone", "invalid-phone"},
 	}
 
@@ -82,6 +84,7 @@ func TestNormalizeIdentifier(t *testing.T) {
 	}{
 		{"  EXAMPLE@DOMAIN.COM  ", "email", "example@domain.com", false},
 		{"+1 650-253-0000", "sms", "+16502530000", false},
+		{"+256 730 691 099", "sms", "+256730691099", false},
 		{"  username  ", "username", "username", false},
 		{"invalid-phone", "sms", "", true},
 	}
