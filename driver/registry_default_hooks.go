@@ -35,6 +35,13 @@ func (m *RegistryDefault) HookSessionDestroyer() *hook.SessionDestroyer {
 	return m.hookSessionDestroyer
 }
 
+func (m *RegistryDefault) HookSessionImpossibleTravelDetector() *hook.SessionImpossibleTravelDetector {
+	if m.hookSessionImpossibleTravelDetector == nil {
+		m.hookSessionImpossibleTravelDetector = hook.NewSessionImpossibleTravelDetector()
+	}
+	return m.hookSessionImpossibleTravelDetector
+}
+
 func (m *RegistryDefault) HookAddressVerifier() *hook.AddressVerifier {
 	if m.hookAddressVerifier == nil {
 		m.hookAddressVerifier = hook.NewAddressVerifier(m)
@@ -79,6 +86,10 @@ allHooksLoop:
 			addSessionIssuer = true
 		case hook.KeySessionDestroyer:
 			if h, ok := any(m.HookSessionDestroyer()).(T); ok {
+				hooks = append(hooks, h)
+			}
+		case hook.KeySessionImpossibleTravelDetector:
+			if h, ok := any(m.HookSessionImpossibleTravelDetector()).(T); ok {
 				hooks = append(hooks, h)
 			}
 		case hook.KeyWebHook:

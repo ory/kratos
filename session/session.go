@@ -132,6 +132,18 @@ type Session struct {
 	// IdentityID is a helper struct field for gobuffalo.pop.
 	IdentityID uuid.UUID `json:"-" faker:"-" db:"identity_id"`
 
+	// LastLocationLat is the latitude of the last successful login.
+	LastLocationLat *float64 `db:"last_location_lat" json:"-"`
+
+	// LastLocationLon is the longitude of the last successful login.
+	LastLocationLon *float64 `db:"last_location_lon" json:"-"`
+
+	// LastLocationAt is the timestamp of the last successful login.
+	LastLocationAt *time.Time `db:"last_location_at" json:"-"`
+
+	// ImpossibleTravel indicates if the session has been flagged.
+	ImpossibleTravel bool `db:"impossible_travel" json:"impossible_travel"`
+
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 
