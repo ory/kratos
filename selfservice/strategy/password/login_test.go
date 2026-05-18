@@ -191,10 +191,19 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginRequestLifespan, 100*time.Millisecond)
-		t.Cleanup(func() {
-			conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginRequestLifespan, 10*time.Minute)
-		})
+		// Force expiry via the persister so the test is not racy on slow CI runners.
+		// The previous approach set lifespan to 100ms and slept 101ms, but the setup
+		// helper itself takes longer than 100ms under load, expiring the flow before
+		// the GetLoginFlow call inside the helper could fetch it.
+		expireFlow := func(t *testing.T, id string) {
+			flowID, err := uuid.FromString(id)
+			require.NoError(t, err)
+			fl, err := reg.LoginFlowPersister().GetLoginFlow(t.Context(), flowID)
+			require.NoError(t, err)
+			fl.ExpiresAt = time.Now().Add(-time.Second)
+			require.NoError(t, reg.LoginFlowPersister().UpdateLoginFlow(t.Context(), fl))
+		}
+
 		values := url.Values{
 			"csrf_token": {nosurfx.FakeCSRFToken},
 			"identifier": {"identifier"},
@@ -203,8 +212,7 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
-
-			time.Sleep(101 * time.Millisecond)
+			expireFlow(t, f.Id)
 
 			actual, res := testhelpers.LoginMakeRequest(t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
@@ -216,8 +224,7 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, false, false, false)
-
-			time.Sleep(101 * time.Millisecond)
+			expireFlow(t, f.Id)
 
 			actual, res := testhelpers.LoginMakeRequest(t, false, false, f, browserClient, values.Encode())
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
@@ -228,8 +235,8 @@ func TestCompleteLogin(t *testing.T) {
 		t.Run("type=SPA", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
 			f := testhelpers.InitializeLoginFlowViaBrowser(t, browserClient, publicTS, false, true, false, false)
+			expireFlow(t, f.Id)
 
-			time.Sleep(101 * time.Millisecond)
 			actual, res := testhelpers.LoginMakeRequest(t, false, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
