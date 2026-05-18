@@ -18,7 +18,6 @@ import (
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
@@ -888,58 +887,32 @@ func (p *IdentityPersister) HydrateIdentityAssociations(ctx context.Context, i *
 
 	nid := p.NetworkID(ctx)
 
-	eg, ctx := errgroup.WithContext(ctx)
 	if expand.Has(identity.ExpandFieldRecoveryAddresses) {
-		eg.Go(func() error {
-			// We use WithContext to get a copy of the connection struct, which solves the race detector
-			// from complaining incorrectly.
-			//
-			// https://github.com/ory/pop/issues/723
-			if err := p.GetConnection(ctx).WithContext(ctx).
-				Where("identity_id = ? AND nid = ?", i.ID, nid).
-				Order("id ASC").
-				All(&i.RecoveryAddresses); err != nil {
-				return sqlcon.HandleError(err)
-			}
-			return nil
-		})
+		if err := p.GetConnection(ctx).
+			Where("identity_id = ? AND nid = ?", i.ID, nid).
+			Order("id ASC").
+			All(&i.RecoveryAddresses); err != nil {
+			return sqlcon.HandleError(err)
+		}
 	}
 
 	if expand.Has(identity.ExpandFieldVerifiableAddresses) {
-		eg.Go(func() error {
-			// We use WithContext to get a copy of the connection struct, which solves the race detector
-			// from complaining incorrectly.
-			//
-			// https://github.com/ory/pop/issues/723
-			if err := p.GetConnection(ctx).WithContext(ctx).
-				Order("id ASC").
-				Where("identity_id = ? AND nid = ?", i.ID, nid).
-				All(&i.VerifiableAddresses); err != nil {
-				return sqlcon.HandleError(err)
-			}
-			return nil
-		})
+		if err := p.GetConnection(ctx).
+			Order("id ASC").
+			Where("identity_id = ? AND nid = ?", i.ID, nid).
+			All(&i.VerifiableAddresses); err != nil {
+			return sqlcon.HandleError(err)
+		}
 	}
 
 	if expand.Has(identity.ExpandFieldCredentials) {
-		eg.Go(func() (err error) {
-			// We use WithContext to get a copy of the connection struct, which solves the race detector
-			// from complaining incorrectly.
-			//
-			// https://github.com/ory/pop/issues/723
-			creds, err := QueryForCredentials(p.GetConnection(ctx).WithContext(ctx),
-				Where{"identity_credentials.identity_id = ?", []interface{}{i.ID}},
-				Where{"identity_credentials.nid = ?", []interface{}{nid}})
-			if err != nil {
-				return err
-			}
-			i.Credentials = creds[i.ID]
-			return
-		})
-	}
-
-	if err := eg.Wait(); err != nil {
-		return err
+		creds, err := QueryForCredentials(p.GetConnection(ctx),
+			Where{"identity_credentials.identity_id = ?", []interface{}{i.ID}},
+			Where{"identity_credentials.nid = ?", []interface{}{nid}})
+		if err != nil {
+			return err
+		}
+		i.Credentials = creds[i.ID]
 	}
 
 	if err := i.Validate(); err != nil {
