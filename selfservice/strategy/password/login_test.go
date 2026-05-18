@@ -695,9 +695,10 @@ func TestCompleteLogin(t *testing.T) {
 		}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), id))
 
-		// CreateIdentity normalizes the credential identifier to E.164 format and
-		// sets credential version to the latest. To simulate a legacy database record
-		// created before normalization was introduced, revert both via raw SQL.
+		// CreateIdentity normalizes the credential identifier to E.164 format,
+		// rewrites the matching trait value, and sets credential version to
+		// the latest. To simulate a legacy database record created before
+		// normalization was introduced, revert all three via raw SQL.
 		require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery(
 			"UPDATE identity_credential_identifiers SET identifier = ? WHERE identity_id = ? AND identifier = ?",
 			nonNormalizedPhone, iId, normalizedPhone,
@@ -705,6 +706,10 @@ func TestCompleteLogin(t *testing.T) {
 		require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery(
 			"UPDATE identity_credentials SET version = 0 WHERE identity_id = ?",
 			iId,
+		).Exec())
+		require.NoError(t, reg.Persister().GetConnection(t.Context()).RawQuery(
+			"UPDATE identities SET traits = ? WHERE id = ?",
+			fmt.Sprintf(`{"phone_number":"%s"}`, nonNormalizedPhone), iId,
 		).Exec())
 
 		t.Run("type=browser/login with non-normalized phone", func(t *testing.T) {
