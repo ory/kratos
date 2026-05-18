@@ -96,7 +96,11 @@ func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {
 //
 // This endpoint initiates a recovery flow for API clients such as mobile devices, smart TVs, and so on.
 //
-// If a valid provided session cookie or session token is provided, a 400 Bad Request error.
+// The "code" recovery flow will not work on native devices, unless the
+// [use_continue_with_transitions](https://github.com/ory/kratos/blob/0b32ce113be47aa724d3468062ced09f8f60c52a/contrib/quickstart/kratos/email-password/kratos.yml#L101) feature flag is set in the kratos config file.
+// Otherwise, updating the recovery flow with the code that was sent via E-Mail will lead to a 422 Browser Location Change required error.
+//
+// Providing a valid session cookie or session token will result in a 400 Bad Request error.
 //
 // On an existing recovery flow, use the `getRecoveryFlow` API endpoint.
 //
