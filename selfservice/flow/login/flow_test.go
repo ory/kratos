@@ -53,6 +53,23 @@ func TestNewFlow(t *testing.T) {
 	ctx := context.Background()
 	conf, _ := pkg.NewFastRegistryWithMocks(t)
 
+	t.Run("captures request base URL from context at init", func(t *testing.T) {
+		// A proxy-aware middleware (cloud CaptureOriginalBaseURLMiddleware)
+		// stashes the validated customer-facing base URL on the request
+		// context at flow init. NewFlow must persist it on the flow so the
+		// OIDC/SAML provider submit can read it back.
+		req := (&http.Request{URL: &url.URL{Path: "/"}, Host: "slug.projects.oryapis.com"}).
+			WithContext(x.WithBaseURL(ctx, urlx.ParseOrPanic("http://localhost:4000")))
+		r, err := login.NewFlow(conf, 0, "csrf", req, flow.TypeBrowser)
+		require.NoError(t, err)
+		assert.Equal(t, "http://localhost:4000", flow.GetRequestBaseURL(r))
+
+		// No captured base URL → nothing persisted (plain oryapis traffic).
+		r, err = login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/"}, Host: "slug.projects.oryapis.com"}, flow.TypeBrowser)
+		require.NoError(t, err)
+		assert.Empty(t, flow.GetRequestBaseURL(r))
+	})
+
 	t.Run("type=aal", func(t *testing.T) {
 		r, err := login.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "aal=aal2&refresh=true"}, Host: "ory.sh"}, flow.TypeBrowser)
 		require.NoError(t, err)

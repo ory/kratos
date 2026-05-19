@@ -61,13 +61,14 @@ func TestPKCESupport(t *testing.T) {
 			ID: x.NewUUID(),
 		}
 
-		stateParam, pkce, err := strat.GenerateState(context.Background(), provider, flow)
+		stateParam, pkce, err := strat.GenerateState(context.Background(), provider, flow, "https://testhost")
 		require.NoError(t, err)
 		require.NotEmpty(t, stateParam)
 
 		state, err := oidc.DecryptState(context.Background(), reg.Cipher(context.Background()), stateParam)
 		require.NoError(t, err)
 		assert.Equal(t, oidcv1.FlowKind_FLOW_KIND_LOGIN, state.FlowKind)
+		assert.Equal(t, "https://testhost", state.RequestBaseUrl)
 
 		if tc.pkce {
 			require.NotEmpty(t, pkce)
@@ -84,7 +85,7 @@ func TestPKCESupport(t *testing.T) {
 			oidc.NewProviderX(&oidc.Configuration{IssuerURL: supported.URL, PKCE: "never"}, reg),
 			oidc.NewProviderX(&oidc.Configuration{IssuerURL: supported.URL, PKCE: "auto"}, reg),
 		} {
-			stateParam, pkce, err := strat.GenerateState(context.Background(), provider, &registration.Flow{ID: x.NewUUID()})
+			stateParam, pkce, err := strat.GenerateState(context.Background(), provider, &registration.Flow{ID: x.NewUUID()}, "https://testhost")
 			require.NoError(t, err)
 			require.NotEmpty(t, stateParam)
 			assert.Empty(t, pkce)
@@ -93,6 +94,7 @@ func TestPKCESupport(t *testing.T) {
 			require.NoError(t, err)
 			assert.Empty(t, oidc.PKCEVerifier(state))
 			assert.Equal(t, oidcv1.FlowKind_FLOW_KIND_REGISTRATION, state.FlowKind)
+			assert.Equal(t, "https://testhost", state.RequestBaseUrl)
 		}
 	})
 }

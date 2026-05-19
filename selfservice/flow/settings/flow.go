@@ -149,7 +149,7 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 		return nil, err
 	}
 
-	return &Flow{
+	f := &Flow{
 		ID:         id,
 		ExpiresAt:  now.Add(exp),
 		IssuedAt:   now,
@@ -163,7 +163,11 @@ func NewFlow(conf *config.Config, exp time.Duration, r *http.Request, i *identit
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
 		InternalContext: []byte("{}"),
-	}, nil
+	}
+	if err := flow.SetRequestBaseURL(f, x.BaseURLStringFromContext(r.Context())); err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
 func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage        { return f.InternalContext }

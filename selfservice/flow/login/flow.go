@@ -202,7 +202,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 
 	refresh, _ := strconv.ParseBool(r.URL.Query().Get("refresh"))
 
-	return &Flow{
+	f := &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hydraLoginChallenge,
 		ExpiresAt:            now.Add(exp),
@@ -220,7 +220,11 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			string(identity.AuthenticatorAssuranceLevel1)))),
 		InternalContext: []byte("{}"),
 		State:           flow.StateChooseMethod,
-	}, nil
+	}
+	if err := flow.SetRequestBaseURL(f, x.BaseURLStringFromContext(r.Context())); err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
 func (f *Flow) GetType() flow.Type                            { return f.Type }

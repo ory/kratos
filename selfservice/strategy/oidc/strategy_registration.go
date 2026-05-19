@@ -231,7 +231,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		return errors.WithStack(flow.ErrCompletedByStrategy)
 	}
 
-	state, pkce, err := s.GenerateState(ctx, provider, f)
+	state, pkce, err := s.GenerateState(ctx, provider, f, x.RequestBaseURL(r))
 	if err != nil {
 		return s.HandleError(ctx, w, r, f, pid, nil, err)
 	}

@@ -164,7 +164,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		}
 	}
 
-	return &Flow{
+	f := &Flow{
 		ID:                   id,
 		OAuth2LoginChallenge: hlc,
 		ExpiresAt:            now.Add(exp),
@@ -179,7 +179,11 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 		InternalContext: []byte("{}"),
 		State:           flow.StateChooseMethod,
 		IdentitySchema:  flow.IdentitySchema(identitySchema),
-	}, nil
+	}
+	if err := flow.SetRequestBaseURL(f, x.BaseURLStringFromContext(r.Context())); err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
 func (Flow) TableName() string                                { return "selfservice_registration_flows" }

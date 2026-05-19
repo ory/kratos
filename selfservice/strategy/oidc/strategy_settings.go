@@ -366,7 +366,7 @@ func (s *Strategy) initLinkProvider(ctx context.Context, w http.ResponseWriter, 
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	state, pkce, err := s.GenerateState(ctx, provider, ctxUpdate.Flow)
+	state, pkce, err := s.GenerateState(ctx, provider, ctxUpdate.Flow, x.RequestBaseURL(r))
 	if err != nil {
 		return s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}

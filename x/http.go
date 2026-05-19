@@ -82,6 +82,25 @@ func RequestURL(r *http.Request) *url.URL {
 	return &source
 }
 
+// RequestBaseURL returns the customer-facing base URL of the request.
+//
+// If a base URL was captured on the request context (e.g. by a proxy-aware
+// middleware that validated an Ory-Base-URL-Rewrite / X-Ory-Original-Host
+// header), that value wins — it is the URL the end user's browser actually
+// used, which may differ from the host this service was reached at. This is
+// the value an OIDC/SAML callback must be redirected back to.
+//
+// Otherwise it falls back to the request's own scheme://host[:port] (honoring
+// X-Forwarded-Host / X-Forwarded-Proto via RequestURL), with no path, query,
+// or fragment.
+func RequestBaseURL(r *http.Request) string {
+	if captured := BaseURLStringFromContext(r.Context()); captured != "" {
+		return captured
+	}
+	u := RequestURL(r)
+	return (&url.URL{Scheme: u.Scheme, Host: u.Host}).String()
+}
+
 // SendFlowCompletedAsRedirectOrJSON should be used when a login, registration, ... flow has been completed successfully.
 // It will redirect the user to the provided URL if the request accepts HTML, or return a JSON response if the request is
 // an SPA request

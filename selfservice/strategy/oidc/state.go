@@ -41,15 +41,28 @@ func DecryptState(ctx context.Context, c cipher.Cipher, ciphertext string) (*oid
 	return &state, nil
 }
 
-func (s *Strategy) GenerateState(ctx context.Context, p Provider, flow flow.Flow) (stateParam string, pkce []oauth2.AuthCodeOption, err error) {
+func (s *Strategy) GenerateState(ctx context.Context, p Provider, fl flow.Flow, requestBaseURL string) (stateParam string, pkce []oauth2.AuthCodeOption, err error) {
+	// The customer-facing base URL is captured at flow *init* (where the
+	// proxy / custom-domain headers are present) and stashed on the flow's
+	// InternalContext. The provider-submit request that reaches here does
+	// not necessarily carry those headers, so the flow-captured value wins
+	// over the request-derived fallback. Mirrors the legacy host-rewrite
+	// webhook, which also captured at flow init.
+	if ic, ok := fl.(flow.InternalContexter); ok {
+		if captured := flow.GetRequestBaseURL(ic); captured != "" {
+			requestBaseURL = captured
+		}
+	}
+
 	state := oidcv1.State{
-		FlowId:                         flow.GetID().Bytes(),
+		FlowId:                         fl.GetID().Bytes(),
 		SessionTokenExchangeCodeSha512: x.NewUUID().Bytes(),
 		ProviderId:                     p.Config().ID,
 		PkceVerifier:                   maybePKCE(ctx, s.d, p),
+		RequestBaseUrl:                 requestBaseURL,
 	}
 
-	switch flow.(type) {
+	switch fl.(type) {
 	case *login.Flow:
 		state.FlowKind = oidcv1.FlowKind_FLOW_KIND_LOGIN
 	case *registration.Flow:
@@ -60,7 +73,7 @@ func (s *Strategy) GenerateState(ctx context.Context, p Provider, flow flow.Flow
 		state.FlowKind = oidcv1.FlowKind_FLOW_KIND_UNSPECIFIED
 	}
 
-	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, flow.GetID()); hasCode {
+	if code, hasCode, _ := s.d.SessionTokenExchangePersister().CodeForFlow(ctx, fl.GetID()); hasCode {
 		sum := sha512.Sum512([]byte(code.InitCode))
 		state.SessionTokenExchangeCodeSha512 = sum[:]
 	}

@@ -54,6 +54,33 @@ func TestRequestURL(t *testing.T) {
 	}).String(), "https://notfoobar/foo")
 }
 
+func TestRequestBaseURL(t *testing.T) {
+	t.Run("falls back to request scheme://host with no path", func(t *testing.T) {
+		assert.Equal(t, "https://foobar", RequestBaseURL(&http.Request{
+			URL: urlx.ParseOrPanic("/self-service/login?foo=bar"), Host: "foobar", TLS: &tls.ConnectionState{},
+		}))
+		assert.Equal(t, "http://foobar", RequestBaseURL(&http.Request{
+			URL: urlx.ParseOrPanic("/foo"), Host: "foobar",
+		}))
+		assert.Equal(t, "https://notfoobar", RequestBaseURL(&http.Request{
+			URL: urlx.ParseOrPanic("/foo"), Host: "foobar",
+			Header: http.Header{"X-Forwarded-Host": []string{"notfoobar"}, "X-Forwarded-Proto": {"https"}},
+		}))
+	})
+
+	t.Run("context-captured customer base URL wins, scheme preserved", func(t *testing.T) {
+		// A proxy-aware middleware (e.g. the cloud courier middleware) validated
+		// an Ory-Base-URL-Rewrite / X-Ory-Original-Host header and stashed the
+		// real customer-facing base URL on the context. The OIDC/SAML state must
+		// capture *that*, not the oryapis host this service was reached at.
+		for _, captured := range []string{"http://localhost:4000", "https://login.customer.example.com"} {
+			req := (&http.Request{URL: urlx.ParseOrPanic("/self-service/login"), Host: "slug.projects.oryapis.com", TLS: &tls.ConnectionState{}}).
+				WithContext(WithBaseURL(context.Background(), urlx.ParseOrPanic(captured)))
+			assert.Equalf(t, captured, RequestBaseURL(req), "captured %q must win over the oryapis host", captured)
+		}
+	})
+}
+
 func TestAcceptToRedirectOrJSON(t *testing.T) {
 	wr := herodot.NewJSONWriter(logrusx.New("", ""))
 

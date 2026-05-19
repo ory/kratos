@@ -15,4 +15,9 @@ message State {
   string provider_id = 3;
   string pkce_verifier = 4;
   FlowKind flow_kind = 5;
+  // request_base_url is the scheme://host[:port] the browser used at flow
+  // init. It is captured so the OIDC/SAML callback can be redirected back
+  // onto the developer proxy / custom domain the user started on. Empty
+  // when there is nothing to rewrite.
+  string request_base_url = 6;
 }
