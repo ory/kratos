@@ -762,6 +762,33 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				func(s string) string { return s[:1] + strings.ToUpper(s[1:2]) + s[2:] },
 				strings.ToUpper,
 				func(s string) string { left, right, _ := strings.Cut(s, "@"); return left + "@" + strings.Title(right) },
+				// Invisible Unicode characters (category Cf) must not let an
+				// attacker register a second visually-identical identifier.
+				func(s string) string { return "\u200B" + s }, // zero-width space prefix
+				func(s string) string { return s[:1] + "\u200C" + s[1:] },
+				func(s string) string { return s[:1] + "\u200D" + s[1:] },
+				func(s string) string { return s[:1] + "\u00AD" + s[1:] },
+				func(s string) string { return s[:1] + "\uFEFF" + s[1:] },
+				func(s string) string { return s[:1] + "\u2060" + s[1:] },
+				func(s string) string { return s[:1] + "\u180E" + s[1:] },
+				// NFKC compatibility decomposition must collapse fullwidth
+				// lookalikes into ASCII.
+				func(s string) string {
+					left, right, _ := strings.Cut(s, "@")
+					out := make([]rune, 0, len(left))
+					for _, r := range left {
+						if r >= 'a' && r <= 'z' {
+							out = append(out, 0xFF41+(r-'a'))
+							continue
+						}
+						if r >= '0' && r <= '9' {
+							out = append(out, 0xFF10+(r-'0'))
+							continue
+						}
+						out = append(out, r)
+					}
+					return string(out) + "@" + right
+				},
 			} {
 				ids := transform(email)
 				expected := passwordIdentity("", ids)
