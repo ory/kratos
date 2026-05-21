@@ -451,7 +451,12 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should apply pending traits change when token is redeemed", func(t *testing.T) {
-		t.Parallel()
+		// Sibling subtests "fires settings post-persist webhook..." and
+		// "post-persist webhook error..." mutate the shared
+		// selfservice.flows.settings.after.profile.hooks config via
+		// conf.MustSet and clean up on subtest exit. Running this subtest
+		// in parallel races against that cleanup and against the shared
+		// SQLite database (SQLITE_BUSY), so it stays sequential.
 		// Create an identity with original traits.
 		pendingID := &identity.Identity{
 			ID:       x.NewUUID(),
@@ -743,7 +748,9 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should reject pending traits change on concurrent modification", func(t *testing.T) {
-		t.Parallel()
+		// See the note on "should apply pending traits change when token
+		// is redeemed" — this subtest shares config and SQLite state with
+		// the webhook-mutating siblings above and must stay sequential.
 		// Create an identity with original traits.
 		concurrentID := &identity.Identity{
 			ID:       x.NewUUID(),
