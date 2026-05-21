@@ -41,6 +41,7 @@ import (
 	"github.com/ory/x/networkx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/otelx/semconv"
+	"github.com/ory/x/popx"
 	"github.com/ory/x/prometheusx"
 	"github.com/ory/x/reqlog"
 	"github.com/ory/x/urlx"
@@ -343,6 +344,10 @@ func ServeAll(d *driver.RegistryDefault) func(cmd *cobra.Command, args []string)
 		ctx := cmd.Context()
 		g, ctx := errgroup.WithContext(ctx)
 		cmd.SetContext(ctx)
+
+		if err := popx.VerifyDialect(ctx, d.Persister().GetConnection(ctx)); err != nil {
+			return errors.WithStack(err)
+		}
 
 		// construct all tasks upfront to avoid race conditions
 		publicSrv, err := servePublic(ctx, d, cmd)

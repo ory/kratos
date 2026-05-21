@@ -73,6 +73,10 @@ func getPersister(cmd *cobra.Command, args []string, opts []driver.RegistryOptio
 		return nil, errors.Wrap(err, "an error occurred initializing migrations")
 	}
 
+	if err := popx.VerifyDialect(cmd.Context(), d.Persister().GetConnection(cmd.Context())); err != nil {
+		return nil, err
+	}
+
 	return d, nil
 }
 
