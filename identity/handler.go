@@ -1300,6 +1300,21 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Reject patches that desynchronize a credential's "type" field from
+	// its map key. The patch deny-list lets callers replace whole
+	// `/credentials/<key>` subtrees or add new keys; a value without a
+	// "type" field would otherwise either fail deep inside the persister
+	// with a misleading "code bug" 500 (new key path) or silently
+	// overwrite the existing credential's config (replace path) — for
+	// password credentials this destroys `hashed_password`.
+	// IdentityManager.ValidateIdentity also enforces this as a safeguard,
+	// but the handler-level check rejects the request before the
+	// confidential-identity reload and gives a sharper error path.
+	if err := ValidateCredentialsIntegrity(patchedIdentity.Credentials); err != nil {
+		h.r.Writer().WriteError(w, r, err)
+		return
+	}
+
 	// ApplyJSONPatch can't see omitempty-stripped fields; carry forward.
 	patchedIdentity.Region = ident.Region
 

@@ -550,6 +550,16 @@ func (m *Manager) UpdateTraits(ctx context.Context, id uuid.UUID, traits Traits,
 }
 
 func (m *Manager) ValidateIdentity(ctx context.Context, i *Identity, o *ManagerOptions) (err error) {
+	// Safeguard against callers that write to i.Credentials directly with a
+	// Type field that does not match its map key. Must run before
+	// IdentityValidator.Validate, because the schema-extension pass calls
+	// SetCredentials and would silently repair Type — masking the bug
+	// while still allowing the malformed Config to overwrite the existing
+	// credential row.
+	if err := ValidateCredentialsIntegrity(i.Credentials); err != nil {
+		return err
+	}
+
 	if err := m.r.IdentityValidator().Validate(ctx, i); err != nil {
 		var validationErr *jsonschema.ValidationError
 		if errors.As(err, &validationErr) && !o.ExposeValidationErrors {

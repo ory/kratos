@@ -14,8 +14,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/pkg/errors"
 	"github.com/wI2L/jsondiff"
 
+	"github.com/ory/herodot"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/sqlxx"
 )
@@ -258,6 +260,29 @@ func (c CredentialsTypeTable) TableName(context.Context) string {
 
 func (c CredentialIdentifier) TableName(context.Context) string {
 	return "identity_credential_identifiers"
+}
+
+// ValidateCredentialsIntegrity returns a BadRequest error if any entry in
+// the credentials map has a Type field that does not equal its map key.
+//
+// The internal helpers (SetCredentials, SetCredentialsWithConfig,
+// UpsertCredentialsConfig) always force these two to match, so this only
+// trips for callers that write to the map directly — notably the PATCH
+// /admin/identities/{id} handler, which decodes the patched JSON straight
+// into Identity. Caught early, this is a malformed request. Caught late,
+// it has two destructive failure modes: a misleading 500 from the
+// persister when the type is unknown, or a silent overwrite of the
+// existing credential's config (e.g. hashed_password) when schema
+// validation later repairs Type but not Config.
+func ValidateCredentialsIntegrity(creds map[CredentialsType]Credentials) error {
+	for k, c := range creds {
+		if c.Type != k {
+			return errors.WithStack(herodot.ErrBadRequest().WithReasonf(
+				"credentials.%s.type must equal %q, got %q", k, string(k), string(c.Type),
+			))
+		}
+	}
+	return nil
 }
 
 func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {

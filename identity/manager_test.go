@@ -6,9 +6,11 @@ package identity_test
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
+	"github.com/ory/herodot"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/sqlcon"
 
@@ -430,6 +432,47 @@ func TestManager(t *testing.T) {
 			require.NoError(t, reg.IdentityManager().Update(t.Context(), original, identity.ManagerAllowWriteProtectedTraits))
 
 			checkExtensionFieldsForIdentities(t, "bar@ory.sh", original)
+		})
+
+		t.Run("case=should reject credentials whose type does not match the map key", func(t *testing.T) {
+			// Safeguards the invariant from any caller that bypasses
+			// Identity.SetCredentials and writes to i.Credentials directly.
+			// The PATCH /admin/identities/{id} handler already enforces
+			// this; the Manager check is defense in depth.
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			original.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+			})
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
+
+			// Bypass SetCredentials and write a malformed entry whose
+			// Type does not match the map key. This is what the patch
+			// handler effectively does when it decodes a JSON Patch
+			// straight into the Credentials map.
+			original.Credentials[identity.CredentialsTypePassword] = identity.Credentials{
+				Type:        "",
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{}`),
+			}
+
+			err := reg.IdentityManager().Update(t.Context(), original, identity.ManagerAllowWriteProtectedTraits)
+			require.Error(t, err)
+			var herr *herodot.DefaultError
+			require.True(t, errors.As(err, &herr), "expected *herodot.DefaultError, got %T: %v", err, err)
+			assert.Equal(t, http.StatusBadRequest, herr.CodeField)
+			assert.Equal(t, `credentials.password.type must equal "password", got ""`, herr.Reason())
+
+			// Confirm the persisted credential row is byte-identical.
+			reloaded, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
+			require.NoError(t, err)
+			cred := reloaded.Credentials[identity.CredentialsTypePassword]
+			assert.Equal(t, identity.CredentialsTypePassword, cred.Type)
+			assert.Equal(t, []string{email}, cred.Identifiers)
+			assert.JSONEq(t, `{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`, string(cred.Config))
 		})
 
 		t.Run("case=should set AAL to 1 if password is set", func(t *testing.T) {

@@ -2179,6 +2179,120 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=PATCH should reject credentials whose type does not match the map key", func(t *testing.T) {
+		email := uuid.NewV5(uuid.Nil, t.Name()).String() + "@ory.sh"
+		i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+		i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{email},
+			Config:      sqlxx.JSONRawMessage(`{"hashed_password": "secret"}`),
+		})
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), i))
+
+		// Snapshot the on-disk credential bytes so we can prove the transaction
+		// rolled back fully on every rejected patch.
+		before, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
+		require.NoError(t, err)
+		passwordBefore := before.Credentials[identity.CredentialsTypePassword]
+
+		for _, tc := range []struct {
+			name           string
+			patch          []patch
+			expectedReason string
+		}{
+			{
+				name: "add new credential key without type",
+				patch: []patch{
+					{"op": "add", "path": "/credentials/foo", "value": map[string]any{"config": map[string]any{}}},
+				},
+				expectedReason: `credentials.foo.type must equal "foo", got ""`,
+			},
+			{
+				name: "replace existing credential without type",
+				patch: []patch{
+					{"op": "replace", "path": "/credentials/password", "value": map[string]any{"config": map[string]any{}}},
+				},
+				expectedReason: `credentials.password.type must equal "password", got ""`,
+			},
+			{
+				name: "replace the type field of an existing credential with an empty string",
+				patch: []patch{
+					{"op": "replace", "path": "/credentials/password/type", "value": ""},
+				},
+				expectedReason: `credentials.password.type must equal "password", got ""`,
+			},
+		} {
+			t.Run("case="+tc.name, func(t *testing.T) {
+				for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+					t.Run("endpoint="+name, func(t *testing.T) {
+						// Use a direct HTTP request rather than the local send()
+						// helper: send() uses require.EqualValues for the status
+						// check, which calls FailNow and short-circuits the
+						// downstream post-condition assertions that prove the DB
+						// is left untouched.
+						body, err := json.Marshal(&tc.patch)
+						require.NoError(t, err)
+						req, err := http.NewRequestWithContext(t.Context(), "PATCH", ts.URL+"/identities/"+i.ID.String(), bytes.NewReader(body))
+						require.NoError(t, err)
+						req.Header.Set("Content-Type", "application/json")
+						resp, err := ts.Client().Do(req)
+						require.NoError(t, err)
+						respBody, err := io.ReadAll(resp.Body)
+						require.NoError(t, err)
+						require.NoError(t, resp.Body.Close())
+						assert.Equal(t, http.StatusBadRequest, resp.StatusCode, "body=%s", respBody)
+						assert.Equal(t, tc.expectedReason, gjson.GetBytes(respBody, "error.reason").String(), "body=%s", respBody)
+
+						after, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
+						require.NoError(t, err)
+						passwordAfter := after.Credentials[identity.CredentialsTypePassword]
+						assert.Equal(t, identity.CredentialsTypePassword, passwordAfter.Type)
+						assert.Equal(t, passwordBefore.Identifiers, passwordAfter.Identifiers)
+						assert.JSONEq(t, string(passwordBefore.Config), string(passwordAfter.Config), "DB credential config was overwritten")
+						assert.Len(t, after.Credentials, 1)
+						assert.NotContains(t, after.Credentials, identity.CredentialsType("foo"))
+					})
+				}
+			})
+		}
+	})
+
+	t.Run("case=PATCH should allow whole-credential replace when type matches the map key", func(t *testing.T) {
+		// Lock in the contract that the new validation does not block a
+		// well-formed full-credential replace — only the
+		// type/map-key-mismatched variants caught above.
+		email := uuid.NewV5(uuid.Nil, t.Name()).String() + "@ory.sh"
+		i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+		i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+			Type:        identity.CredentialsTypePassword,
+			Identifiers: []string{email},
+			Config:      sqlxx.JSONRawMessage(`{"hashed_password": "old"}`),
+		})
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(t.Context(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{
+						"op":   "replace",
+						"path": "/credentials/password",
+						"value": map[string]any{
+							"type":        "password",
+							"identifiers": []string{email},
+							"config":      map[string]any{"hashed_password": "new"},
+						},
+					},
+				}
+				send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusOK, &patch)
+
+				updated, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
+				require.NoError(t, err)
+				assert.Equal(t, "new",
+					gjson.GetBytes(updated.Credentials[identity.CredentialsTypePassword].Config, "hashed_password").String())
+			})
+		}
+	})
+
 	t.Run("case=PATCH should not invalidate credentials ory/cloud#148", func(t *testing.T) {
 		// see https://github.com/ory/cloud/issues/148
 
