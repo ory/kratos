@@ -63,8 +63,8 @@ func NewFastRegistryWithMocks(t *testing.T, opts ...configx.OptionModifier) (*co
 	conf, reg := NewRegistryDefaultWithDSN(t, "", opts...)
 	reg.WithCSRFTokenGenerator(nosurfx.FakeCSRFTokenGenerator)
 	reg.WithCSRFHandler(nosurfx.NewFakeCSRFHandler(reg))
-	reg.WithHooks(map[string]func(config.SelfServiceHook) interface{}{
-		"err": func(c config.SelfServiceHook) interface{} {
+	reg.WithHooks(map[string]driver.NewHookFn{
+		"err": func(c config.SelfServiceHook, _ driver.Registry) interface{} {
 			return &hook.Error{Config: c.Config}
 		},
 	})

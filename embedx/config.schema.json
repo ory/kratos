@@ -100,14 +100,10 @@
       "properties": {
         "hook": {
           "enum": ["b2b_sso", "organization"]
-        },
-        "config": {
-          "type": "object",
-          "additionalProperties": true
         }
       },
-      "additionalProperties": false,
-      "required": ["hook", "config"]
+      "additionalProperties": true,
+      "required": ["hook"]
     },
     "selfServiceVerifyNewAddressHook": {
       "type": "object",

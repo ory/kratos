@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
@@ -38,8 +39,8 @@ func TestSettingsExecutor(t *testing.T) {
 			testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/identity.schema.json")
 			conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToServer.URL)
 
-			reg.WithHooks(map[string]func(config.SelfServiceHook) interface{}{
-				"err": func(c config.SelfServiceHook) interface{} {
+			reg.WithHooks(map[string]driver.NewHookFn{
+				"err": func(c config.SelfServiceHook, _ driver.Registry) interface{} {
 					return &hook.Error{Config: c.Config}
 				},
 			})

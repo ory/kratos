@@ -80,7 +80,7 @@ type RegistryDefault struct {
 
 	ctxer contextx.Contextualizer
 
-	injectedSelfserviceHooks map[string]func(config.SelfServiceHook) interface{}
+	injectedSelfserviceHooks map[string]NewHookFn
 	extraHandlerFactories    []NewHandler
 	extraHandlers            []x.Handler
 	slOptions                *servicelocatorx.Options
