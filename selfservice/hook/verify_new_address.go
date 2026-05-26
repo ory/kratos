@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/sqlcon"
 )
 
 var _ settings.PostHookPrePersistExecutor = new(VerifyNewAddress)
@@ -102,13 +103,32 @@ func (e *VerifyNewAddress) execute(
 		return errors.WithStack(settings.ErrHookAbortFlow)
 	}
 
+	// Process the first changed address (we can only redirect to one verification flow).
+	addr := changed[0]
+
+	// Reject if the new address already belongs to a different identity
+	existingAddr, err := e.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, addr.Via, addr.Value)
+	if err != nil && !errors.Is(err, sqlcon.ErrNoRows()) {
+		return err
+	}
+	if err == nil && existingAddr.IdentityID != original.ID {
+		f.UI.Messages.Clear()
+		f.UI.Messages.Add(text.NewErrorValidationDuplicateCredentials())
+		if err := e.r.SettingsFlowPersister().UpdateSettingsFlow(ctx, f); err != nil {
+			return err
+		}
+		if x.IsJSONRequest(r) {
+			e.r.Writer().WriteCode(w, r, http.StatusBadRequest, f)
+			return errors.WithStack(settings.ErrHookAbortFlow)
+		}
+		http.Redirect(w, r, f.AppendTo(e.r.Config().SelfServiceFlowSettingsUI(ctx)).String(), http.StatusSeeOther)
+		return errors.WithStack(settings.ErrHookAbortFlow)
+	}
+
 	// Delete any existing pending changes for this identity.
 	if err := e.r.PendingTraitsChangePersister().DeletePendingTraitsChangesByIdentity(ctx, original.ID); err != nil {
 		return err
 	}
-
-	// Process the first changed address (we can only redirect to one verification flow).
-	addr := changed[0]
 
 	// Create the verification flow.
 	strategies, primaryStrategy, err := e.r.GetActiveVerificationStrategies(ctx)

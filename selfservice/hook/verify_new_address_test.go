@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -35,13 +36,13 @@ func TestVerifyNewAddress(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	setup := func(t *testing.T) (*config.Config, *hook.VerifyNewAddress, *driver.RegistryDefault) {
-		conf, reg := pkg.NewFastRegistryWithMocks(t)
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify_single_email.schema.json")
-		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
-		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+	setup := func(t *testing.T) (context.Context, *hook.VerifyNewAddress, *driver.RegistryDefault) {
+		_, reg := pkg.NewFastRegistryWithMocks(t)
+		ctx := testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/verify_single_email.schema.json")
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.sh/")
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
 		h := hook.NewVerifyNewAddress(reg)
-		return conf, h, reg
+		return ctx, h, reg
 	}
 
 	newSettingsFlow := func(t *testing.T, i identity.Identity) *settings.Flow {
@@ -90,7 +91,7 @@ func TestVerifyNewAddress(t *testing.T) {
 
 	t.Run("case=no-op when address does not change", func(t *testing.T) {
 		t.Parallel()
-		_, h, reg := setup(t)
+		ctx, h, reg := setup(t)
 
 		original := createIdentity(t, ctx, reg, "old@example.com", true)
 		f := newSettingsFlow(t, *original)
@@ -119,7 +120,7 @@ func TestVerifyNewAddress(t *testing.T) {
 
 	t.Run("case=aborts flow when address changes", func(t *testing.T) {
 		t.Parallel()
-		_, h, reg := setup(t)
+		ctx, h, reg := setup(t)
 
 		original := createIdentity(t, ctx, reg, "old@example.com", true)
 		f := newSettingsFlow(t, *original)
@@ -185,7 +186,7 @@ func TestVerifyNewAddress(t *testing.T) {
 
 	t.Run("case=previous pending changes are deleted on new submission", func(t *testing.T) {
 		t.Parallel()
-		_, h, reg := setup(t)
+		ctx, h, reg := setup(t)
 
 		original := createIdentity(t, ctx, reg, "old@example.com", true)
 
@@ -260,8 +261,8 @@ func TestVerifyNewAddress(t *testing.T) {
 
 	t.Run("case=correctly detects change with two email addresses", func(t *testing.T) {
 		t.Parallel()
-		conf, h, reg := setup(t)
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify_two_emails.schema.json")
+		ctx, h, reg := setup(t)
+		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/verify_two_emails.schema.json")
 
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits(`{"email":"primary@example.com","recovery_email":"recovery@example.com","name":"Test"}`)
@@ -318,8 +319,8 @@ func TestVerifyNewAddress(t *testing.T) {
 
 	t.Run("case=no-op with two unchanged email addresses", func(t *testing.T) {
 		t.Parallel()
-		conf, h, reg := setup(t)
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify_two_emails.schema.json")
+		ctx, h, reg := setup(t)
+		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/verify_two_emails.schema.json")
 
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits(`{"email":"primary@example.com","recovery_email":"recovery@example.com","name":"Test"}`)
@@ -353,10 +354,106 @@ func TestVerifyNewAddress(t *testing.T) {
 		assert.Empty(t, f.ContinueWith())
 	})
 
+	t.Run("case=rejects change when new address is already owned by another identity", func(t *testing.T) {
+		t.Parallel()
+		ctx, h, reg := setup(t)
+
+		_ = createIdentity(t, ctx, reg, "existing@example.com", true)
+
+		original := createIdentity(t, ctx, reg, "other@example.com", true)
+		f := newSettingsFlow(t, *original)
+		require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(ctx, f))
+
+		proposed := &identity.Identity{
+			ID:     original.ID,
+			Traits: identity.Traits(`{"email":"existing@example.com","name":"Test"}`),
+			VerifiableAddresses: []identity.VerifiableAddress{
+				{Value: "existing@example.com", Via: identity.AddressTypeEmail, IdentityID: original.ID},
+			},
+		}
+
+		sess := &session.Session{
+			ID:              x.NewUUID(),
+			Identity:        original,
+			Token:           randx.MustString(12, randx.AlphaLowerNum),
+			LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+			AuthenticatedAt: time.Now(),
+		}
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+		r := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+		r = r.WithContext(ctx)
+		w := httptest.NewRecorder()
+
+		err := h.ExecuteSettingsPrePersistHook(w, r, settings.PostHookPrePersistExecutorParams{
+			Flow:     f,
+			Identity: proposed,
+			Session:  sess,
+		})
+		require.True(t, errors.Is(err, settings.ErrHookAbortFlow), "expected ErrHookAbortFlow, got: %v", err)
+
+		// Flow should carry the duplicate credentials error — no redirect to verification.
+		assert.Empty(t, f.ContinueWith(), "should not start a verification flow")
+		require.NotEmpty(t, f.UI.Messages)
+		assert.Contains(t, f.UI.Messages[0].Text, "exists already")
+	})
+
+	t.Run("case=rejects change when new phone number is already owned by another identity", func(t *testing.T) {
+		t.Parallel()
+		ctx, h, reg := setup(t)
+		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/verify_email_and_phone.schema.json")
+
+		existing := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		existing.Traits = identity.Traits(`{"email":"phone-existing@example.com","phone":"+19999999999","name":"Existing"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, existing))
+		verifyAllAddresses(t, ctx, reg, existing)
+
+		original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		original.Traits = identity.Traits(`{"email":"phone-original@example.com","phone":"+10000000000","name":"Original"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, original))
+		original = verifyAllAddresses(t, ctx, reg, original)
+
+		f := newSettingsFlow(t, *original)
+		require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(ctx, f))
+
+		// Proposed: email unchanged, phone changed to the existing's number.
+		proposed := &identity.Identity{
+			ID:     original.ID,
+			Traits: identity.Traits(`{"email":"phone-original@example.com","phone":"+19999999999","name":"Original"}`),
+			VerifiableAddresses: []identity.VerifiableAddress{
+				{Value: "phone-original@example.com", Via: identity.AddressTypeEmail, IdentityID: original.ID},
+				{Value: "+19999999999", Via: identity.AddressTypeSMS, IdentityID: original.ID},
+			},
+		}
+
+		sess := &session.Session{
+			ID:              x.NewUUID(),
+			Identity:        original,
+			Token:           randx.MustString(12, randx.AlphaLowerNum),
+			LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+			AuthenticatedAt: time.Now(),
+		}
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+		r := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+		r = r.WithContext(ctx)
+		w := httptest.NewRecorder()
+
+		err := h.ExecuteSettingsPrePersistHook(w, r, settings.PostHookPrePersistExecutorParams{
+			Flow:     f,
+			Identity: proposed,
+			Session:  sess,
+		})
+		require.True(t, errors.Is(err, settings.ErrHookAbortFlow), "expected ErrHookAbortFlow, got: %v", err)
+
+		// Flow should carry the duplicate credentials error — no redirect to verification.
+		assert.Empty(t, f.ContinueWith(), "should not start a verification flow")
+		require.NotEmpty(t, f.UI.Messages)
+		assert.Contains(t, f.UI.Messages[0].Text, "exists already")
+	})
+
 	t.Run("case=returns error when multiple addresses change at once", func(t *testing.T) {
 		t.Parallel()
-		conf, h, reg := setup(t)
-		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify_email_and_phone.schema.json")
+		ctx, h, reg := setup(t)
+		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/verify_email_and_phone.schema.json")
 
 		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
 		i.Traits = identity.Traits(`{"email":"old@example.com","phone":"+12345678901","name":"Test"}`)

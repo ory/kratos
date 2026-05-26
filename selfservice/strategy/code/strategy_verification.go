@@ -220,11 +220,39 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 	}
 
 	via := hackyInferChannel(body.Email)
-	if err := s.deps.CodeSender().SendVerificationCode(ctx, f, via, body.Email); err != nil {
-		if !errors.Is(err, ErrUnknownAddress()) {
+
+	ptc, ptcErr := s.deps.PendingTraitsChangePersister().GetPendingTraitsChangeByVerificationFlow(ctx, f.ID)
+	if ptcErr != nil {
+		if !errors.Is(ptcErr, sqlcon.ErrNoRows()) {
+			return s.handleVerificationError(r, f, body, ptcErr)
+		}
+		if err := s.deps.CodeSender().SendVerificationCode(ctx, f, via, body.Email); err != nil {
+			if !errors.Is(err, ErrUnknownAddress()) {
+				return s.handleVerificationError(r, f, body, err)
+			}
+			// Continue execution
+		}
+	} else {
+		// Re-check whether the proposed address is still unclaimed before resending.
+		// Another identity may have claimed it between the failed code submission and this resend.
+		existingAddr, addrErr := s.deps.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, ptc.NewAddressVia, ptc.NewAddressValue)
+		if addrErr != nil && !errors.Is(addrErr, sqlcon.ErrNoRows()) {
+			return s.handleVerificationError(r, f, body, addrErr)
+		}
+		if addrErr == nil && existingAddr.IdentityID != ptc.IdentityID {
+			if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationDuplicateCredentials(), http.StatusBadRequest); err != nil {
+				return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+			}
+			return errors.WithStack(flow.ErrCompletedByStrategy)
+		}
+
+		proposedIdentity, err := s.deps.IdentityPool().GetIdentity(ctx, ptc.IdentityID, identity.ExpandDefault)
+		if err != nil {
 			return s.handleVerificationError(r, f, body, err)
 		}
-		// Continue execution
+		if err := s.SendVerificationCode(ctx, f, proposedIdentity, ptc); err != nil {
+			return s.handleVerificationError(r, f, body, err)
+		}
 	}
 
 	f.State = flow.StateEmailSent
@@ -252,7 +280,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 	return nil
 }
 
-func (s *Strategy) updateVerificationFlowWithMessage(ctx context.Context, w http.ResponseWriter, r *http.Request, f *verification.Flow, message *text.Message) error {
+func (s *Strategy) updateVerificationFlowWithMessage(ctx context.Context, w http.ResponseWriter, r *http.Request, f *verification.Flow, message *text.Message, statusCode int) error {
 	f.UI.Messages.Clear()
 	f.UI.Messages.Add(message)
 
@@ -263,7 +291,7 @@ func (s *Strategy) updateVerificationFlowWithMessage(ctx context.Context, w http
 	if x.IsBrowserRequest(r) {
 		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
 	} else {
-		s.deps.Writer().Write(w, r, f)
+		s.deps.Writer().WriteCode(w, r, statusCode, f)
 	}
 	return nil
 }
@@ -271,7 +299,7 @@ func (s *Strategy) updateVerificationFlowWithMessage(ctx context.Context, w http
 func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWriter, r *http.Request, codeString string, f *verification.Flow) error {
 	code, err := s.deps.VerificationCodePersister().UseVerificationCode(ctx, f.ID, codeString)
 	if errors.Is(err, ErrCodeNotFound()) {
-		if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed()); err != nil {
+		if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(), http.StatusOK); err != nil {
 			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 		}
 		return errors.WithStack(flow.ErrCompletedByStrategy)
@@ -292,7 +320,7 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 			}
 			// PTC vanished between code issuance and use — show the standard
 			// "invalid or already used" message.
-			if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed()); err != nil {
+			if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(), http.StatusOK); err != nil {
 				return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 			}
 			return errors.WithStack(flow.ErrCompletedByStrategy)
@@ -311,7 +339,13 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 		if applyErr != nil {
 			if errors.Is(applyErr, identity.ErrConcurrentModification) ||
 				errors.Is(applyErr, settings.ErrPendingTraitsChangeSessionInvalid) {
-				if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed()); err != nil {
+				if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(), http.StatusOK); err != nil {
+					return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
+				}
+				return errors.WithStack(flow.ErrCompletedByStrategy)
+			}
+			if errors.Is(applyErr, sqlcon.ErrUniqueViolation()) {
+				if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationDuplicateCredentials(), http.StatusBadRequest); err != nil {
 					return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 				}
 				return errors.WithStack(flow.ErrCompletedByStrategy)
