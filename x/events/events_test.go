@@ -15,6 +15,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
+	"github.com/ory/x/otelx/semconv"
 )
 
 func TestNewJsonnetMappingFailed(t *testing.T) {
@@ -228,4 +229,42 @@ func TestNewVerificationFailed(t *testing.T) {
 		assert.Contains(t, attrs, attribute.String("SelfServiceFlowType", "browser"))
 		assert.Contains(t, attrs, attribute.String("SelfServiceMethodUsed", "link"))
 	})
+}
+
+func TestNewCourierMessageDispatched(t *testing.T) {
+	t.Parallel()
+	nid := uuid.Must(uuid.NewV4())
+	msgID := uuid.Must(uuid.NewV4())
+	ctx := semconv.ContextWithAttributes(t.Context(), attribute.String("ProjectID", nid.String()))
+
+	eventName, opts := events.NewCourierMessageDispatched(ctx, msgID, "smtp", "stub")
+
+	assert.Equal(t, events.CourierMessageDispatched.String(), eventName)
+
+	eventConfig := trace.NewEventConfig(opts)
+	attrs := eventConfig.Attributes()
+
+	assert.Contains(t, attrs, attribute.String("ProjectID", nid.String()))
+	assert.Contains(t, attrs, attribute.String("CourierMessageID", msgID.String()))
+	assert.Contains(t, attrs, attribute.String("CourierMessageChannel", "smtp"))
+	assert.Contains(t, attrs, attribute.String("CourierMessageTemplateType", "stub"))
+}
+
+func TestNewCourierMessageAbandoned(t *testing.T) {
+	t.Parallel()
+	nid := uuid.Must(uuid.NewV4())
+	msgID := uuid.Must(uuid.NewV4())
+	ctx := semconv.ContextWithAttributes(t.Context(), attribute.String("ProjectID", nid.String()))
+
+	eventName, opts := events.NewCourierMessageAbandoned(ctx, msgID, "http", "recovery")
+
+	assert.Equal(t, events.CourierMessageAbandoned.String(), eventName)
+
+	eventConfig := trace.NewEventConfig(opts)
+	attrs := eventConfig.Attributes()
+
+	assert.Contains(t, attrs, attribute.String("ProjectID", nid.String()))
+	assert.Contains(t, attrs, attribute.String("CourierMessageID", msgID.String()))
+	assert.Contains(t, attrs, attribute.String("CourierMessageChannel", "http"))
+	assert.Contains(t, attrs, attribute.String("CourierMessageTemplateType", "recovery"))
 }

@@ -4,19 +4,29 @@
 package courier_test
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"slices"
 	"testing"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/ory/kratos/courier"
 	templates "github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/pkg/testhelpers"
+	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
 )
 
 func queueNewMessage(t *testing.T, c courier.Courier) uuid.UUID {
@@ -112,4 +122,55 @@ func TestDispatchQueue(t *testing.T) {
 	require.Len(t, message.Dispatches, 2)
 	require.Contains(t, gjson.GetBytes(message.Dispatches[0].Error, "reason").String(), "failed to send email via smtp")
 	require.Contains(t, gjson.GetBytes(message.Dispatches[1].Error, "reason").String(), "failed to send email via smtp")
+}
+
+func TestDispatchMessageEmitsEventWithNID(t *testing.T) {
+	t.Parallel()
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(srv.Close)
+
+	requestConfig := fmt.Sprintf(`{"url": "%s", "method": "POST", "body": "file://./stub/request.config.mailer.jsonnet"}`, srv.URL)
+
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+		config.ViperKeyCourierDeliveryStrategy:  "http",
+		config.ViperKeyCourierHTTPRequestConfig: requestConfig,
+	}))
+
+	recorder := tracetest.NewSpanRecorder()
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+	reg.SetTracer(otelx.NewNoop().WithOTLP(provider.Tracer("test")))
+
+	c, err := reg.Courier(t.Context())
+	require.NoError(t, err)
+
+	_, err = c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
+		To:      testhelpers.RandomEmail(),
+		Subject: "test-subject",
+		Body:    "test-body",
+	}))
+	require.NoError(t, err)
+
+	require.NoError(t, c.DispatchQueue(t.Context()))
+
+	ended := recorder.Ended()
+	i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool {
+		return sp.Name() == "courier.DispatchMessage"
+	})
+	require.GreaterOrEqual(t, i, 0, "courier.DispatchMessage span not found")
+
+	evs := ended[i].Events()
+	j := slices.IndexFunc(evs, func(ev sdktrace.Event) bool {
+		return ev.Name == events.CourierMessageDispatched.String()
+	})
+	require.GreaterOrEqual(t, j, 0, "CourierMessageDispatched event not found on span")
+
+	attrs := evs[j].Attributes
+	k := slices.IndexFunc([]attribute.KeyValue(attrs), func(a attribute.KeyValue) bool {
+		return string(a.Key) == semconv.AttributeKeyNID.String()
+	})
+	require.GreaterOrEqual(t, k, 0, "NID attribute not found on event")
+	assert.NotEmpty(t, attrs[k].Value.AsString())
 }

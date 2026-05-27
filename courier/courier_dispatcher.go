@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
 )
 
 func (c *courier) channels(ctx context.Context, id string) (Channel, error) {
@@ -51,6 +52,7 @@ func (c *courier) DispatchMessage(ctx context.Context, msg Message) (err error) 
 		attribute.Int("message.send_count", msg.SendCount),
 	))
 	defer otelx.End(span, &err)
+	ctx = semconv.ContextWithAttributes(ctx, semconv.AttrNID(msg.NID))
 
 	logger := c.deps.Logger().
 		WithField("message_id", msg.ID).
@@ -126,7 +128,8 @@ func (c *courier) DispatchQueue(ctx context.Context) (err error) {
 				return err
 			}
 
-			span.AddEvent(events.NewCourierMessageAbandoned(ctx, msg.ID, msg.Channel.String(), string(msg.TemplateType)))
+			msgCtx := semconv.ContextWithAttributes(ctx, semconv.AttrNID(msg.NID))
+			span.AddEvent(events.NewCourierMessageAbandoned(msgCtx, msg.ID, msg.Channel.String(), string(msg.TemplateType)))
 
 			// Skip the message
 			logger.
