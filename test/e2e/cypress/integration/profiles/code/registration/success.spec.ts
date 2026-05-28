@@ -142,6 +142,15 @@ context("Registration success with code method", () => {
           cy.get('[data-testid="session-content"]').should("contain", email)
           cy.get('[data-testid="session-token"]').should("not.be.empty")
         } else {
+          // Wait for the post-registration UI to settle before querying
+          // /sessions/whoami. cy.request does not retry the HTTP call on a
+          // non-2xx status, so without this sync getSession races the
+          // browser's session-cookie persistence and intermittently 401s.
+          if (app === "express") {
+            cy.url().should("match", /\/welcome/)
+          } else {
+            cy.get('[data-testid="session-content"]').should("contain", email)
+          }
           cy.getSession({ expectAal: "aal1", expectMethods: ["code"] }).then(
             (session) => {
               cy.wrap(session).as("session")
@@ -289,6 +298,10 @@ context("Registration success with code method", () => {
         )
 
         cy.get(Selectors[app]["submitRecovery"]).click()
+
+        // Wait for the post-recovery settings page to render so the session
+        // cookie is in Cypress's jar before we hit /sessions/whoami.
+        cy.location("pathname").should("contain", "settings")
 
         cy.getSession({ expectAal: "aal1" }).then((session) => {
           cy.wrap(session).as("session")

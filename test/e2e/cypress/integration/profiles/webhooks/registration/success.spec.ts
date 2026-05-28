@@ -138,6 +138,13 @@ context("Registration success with email profile with webhooks", () => {
 
         cy.submitPasswordForm()
 
+        // Wait for the post-registration landing page (express welcome) so the
+        // session cookie is in Cypress's jar before we hit /sessions/whoami.
+        if (app === "express") {
+          cy.get("a[href*='sessions']").click()
+        }
+        cy.get("pre").should("contain.text", "updated-" + email)
+
         cy.getSession().should((session) => {
           const { identity } = session
           expect(identity.id).to.not.be.empty

@@ -1055,61 +1055,71 @@ Cypress.Commands.add("deleteMail", ({ atLeast = 0 } = {}) => {
 Cypress.Commands.add(
   "getSession",
   ({ expectAal = "aal1", expectMethods = [], token } = {}) => {
-    // Do the request once to ensure we have a session (with retry)
-    cy.request({
-      method: "GET",
+    // Poll /sessions/whoami until it returns 200. cy.request does not retry on
+    // its own and chaining .its("status").should("eq", 200) does not re-invoke
+    // the request — it only re-evaluates the assertion against the cached
+    // response. Browser-driven flows can briefly land in a state where the
+    // session cookie has been issued but not yet propagated to Cypress's
+    // cookie jar; that's the race that makes the bare cy.request approach
+    // flaky on slow runners.
+    const buildRequest = () => ({
+      method: "GET" as const,
       url: `${KRATOS_PUBLIC}/sessions/whoami`,
+      failOnStatusCode: false,
       ...(token && {
         auth: {
           bearer: token,
         },
       }),
     })
-      .its("status") // adds retry
-      .should("eq", 200)
 
-    // Return the session for further propagation
-    return cy
-      .request({
-        method: "GET",
-        url: `${KRATOS_PUBLIC}/sessions/whoami`,
-        ...(token && {
-          auth: {
-            bearer: token,
-          },
-        }),
-      })
-      .then((response) => {
-        expect(response.body.id).to.not.be.empty
-        expect(dayjs().isBefore(dayjs(response.body.expires_at))).to.be.true
-
-        // Add a grace second for MySQL which does not support millisecs.
-        expect(dayjs().isAfter(dayjs(response.body.issued_at).subtract(1, "s")))
-          .to.be.true
-        expect(
-          dayjs().isAfter(
-            dayjs(response.body.authenticated_at).subtract(1, "s"),
-          ),
-        ).to.be.true
-
-        expect(response.body.identity).to.exist
-
-        expect(response.body.authenticator_assurance_level).to.equal(expectAal)
-        if (expectMethods.length > 0) {
-          expect(response.body.authentication_methods).to.have.lengthOf(
-            expectMethods.length,
-          )
-          expectMethods.forEach((value) => {
-            expect(
-              response.body.authentication_methods.find(
-                ({ method }) => method === value,
-              ),
-            ).to.exist
-          })
+    const waitForSession = (
+      remaining: number,
+    ): Cypress.Chainable<Cypress.Response<any>> =>
+      cy.request(buildRequest()).then((resp) => {
+        if (resp.status === 200) {
+          return cy.wrap(resp, { log: false })
         }
-
-        return response.body
+        if (remaining <= 0) {
+          throw new Error(
+            `cy.getSession: /sessions/whoami still ${resp.status} after retries`,
+          )
+        }
+        cy.wait(250, { log: false })
+        return waitForSession(remaining - 1)
       })
+
+    // 20 retries × 250ms = 5s budget for the session cookie to land in
+    // Cypress's jar, then assertions on the response.
+    return waitForSession(20).then((response) => {
+      expect(response.body.id).to.not.be.empty
+      expect(dayjs().isBefore(dayjs(response.body.expires_at))).to.be.true
+
+      // Add a grace second for MySQL which does not support millisecs.
+      expect(dayjs().isAfter(dayjs(response.body.issued_at).subtract(1, "s")))
+        .to.be.true
+      expect(
+        dayjs().isAfter(dayjs(response.body.authenticated_at).subtract(1, "s")),
+      ).to.be.true
+
+      expect(response.body.identity).to.exist
+
+      expect(response.body.authenticator_assurance_level).to.equal(expectAal)
+      if (expectMethods.length > 0) {
+        expect(response.body.authentication_methods).to.have.lengthOf(
+          expectMethods.length,
+        )
+        expectMethods.forEach((value) => {
+          expect(
+            response.body.authentication_methods.find(
+              ({ method }) => method === value,
+            ),
+          ).to.exist
+        })
+      }
+
+      return response.body
+    })
   },
 )
 

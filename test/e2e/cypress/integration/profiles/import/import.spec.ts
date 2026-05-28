@@ -121,6 +121,9 @@ context("Import Identities", () => {
     cy.get("#remember").click()
     cy.get("#accept").click()
 
+    // Wait for the post-OIDC-consent redirect chain to settle so the session
+    // cookie is in Cypress's jar before we hit /sessions/whoami.
+    cy.location("pathname").should("not.contain", "/login")
     cy.getSession().should((session) => {
       const { identity } = session
       expect(identity.id).to.not.be.empty
