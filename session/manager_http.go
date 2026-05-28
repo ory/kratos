@@ -235,7 +235,7 @@ func (s *ManagerHTTP) extractToken(r *http.Request) string {
 
 func (s *ManagerHTTP) FetchFromRequestContext(ctx context.Context, r *http.Request) (_ *Session, err error) {
 	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequestContext")
-	otelx.End(span, &err)
+	defer otelx.End(span, &err)
 
 	if sess, ok := ctx.Value(sessionInContextKey).(*Session); ok {
 		return sess, nil
