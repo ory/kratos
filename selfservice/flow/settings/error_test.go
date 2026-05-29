@@ -166,7 +166,11 @@ func TestHandleError(t *testing.T) {
 				require.Equal(t, http.StatusGone, res.StatusCode, "%+v\n\t%s", res.Request, body)
 
 				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.GetBytes(body, "use_flow_id").String())
-				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expiredAnHourAgo), json.RawMessage(body), []string{"since", "redirect_browser_to", "use_flow_id"})
+				// "since" and "error.reason" both derive from time.Since(at), recomputed when the expected error is
+				// built here — after the response was generated. Across a rounding boundary the two timings disagree,
+				// so exclude both from the exact comparison and verify the reason template separately.
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expiredAnHourAgo), json.RawMessage(body), []string{"since", "error.reason", "redirect_browser_to", "use_flow_id"})
+				assert.Regexp(t, `^The self-service flow expired \d+\.\d{2} minutes ago, initialize a new one\.$`, gjson.GetBytes(body, "error.reason").String())
 			})
 
 			t.Run("case=validation error", func(t *testing.T) {
