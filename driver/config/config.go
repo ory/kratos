@@ -1011,6 +1011,21 @@ func (p *Config) SessionLifespan(ctx context.Context) time.Duration {
 	return p.GetProvider(ctx).DurationF(ViperKeySessionLifespan, time.Hour*24)
 }
 
+// OrganizationSessionLifespan returns the effective session lifespan for a
+// session issued to the given organization. If orgID is uuid.Nil, or no
+// matching organization is configured, or the organization has no
+// session_lifespan override, the project-level session.lifespan is returned.
+func (p *Config) OrganizationSessionLifespan(ctx context.Context, orgID uuid.UUID) time.Duration {
+	if orgID != uuid.Nil {
+		for _, org := range p.Organizations(ctx) {
+			if org.ID == orgID && org.SessionLifespan > 0 {
+				return org.SessionLifespan
+			}
+		}
+	}
+	return p.SessionLifespan(ctx)
+}
+
 func (p *Config) SessionPersistentCookie(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySessionPersistentCookie)
 }
@@ -1540,9 +1555,10 @@ func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
 }
 
 type Organization struct {
-	ID            uuid.UUID     `koanf:"id"`
-	Domains       []string      `koanf:"domains"`
-	DefaultRegion region.Region `koanf:"default_region"`
+	ID              uuid.UUID     `koanf:"id"`
+	Domains         []string      `koanf:"domains"`
+	DefaultRegion   region.Region `koanf:"default_region"`
+	SessionLifespan time.Duration `koanf:"session_lifespan"`
 }
 
 func (p *Config) Organizations(ctx context.Context) (orgs []Organization) {

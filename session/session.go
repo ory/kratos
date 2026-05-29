@@ -28,8 +28,10 @@ func ErrIdentityDisabled() *herodot.DefaultError {
 	return herodot.ErrBadRequest().WithID(text.ErrIDIdentityDisabled).WithError("identity is disabled").WithReason("This account was disabled.")
 }
 
+// lifespanProvider supplies the session lifespan, with optional per-organization overrides.
 type lifespanProvider interface {
 	SessionLifespan(ctx context.Context) time.Duration
+	OrganizationSessionLifespan(ctx context.Context, orgID uuid.UUID) time.Duration
 }
 
 type refreshWindowProvider interface {
@@ -316,8 +318,29 @@ func (s *Session) IsActive() bool {
 }
 
 func (s *Session) Refresh(ctx context.Context, c lifespanProvider) *Session {
-	s.ExpiresAt = time.Now().Add(c.SessionLifespan(ctx)).UTC()
+	s.ExpiresAt = time.Now().Add(c.OrganizationSessionLifespan(ctx, s.OrganizationID())).UTC()
 	return s
+}
+
+// OrganizationID returns the organization ID that issued this session, taken
+// from the first AMR entry whose Organization field parses as a UUID. Returns
+// uuid.Nil if no AMR entry carries a parseable organization ID, or if s is
+// nil.
+func (s *Session) OrganizationID() uuid.UUID {
+	if s == nil {
+		return uuid.Nil
+	}
+	for _, m := range s.AMR {
+		if m.Organization == "" {
+			continue
+		}
+		id, err := uuid.FromString(m.Organization)
+		if err != nil {
+			continue
+		}
+		return id
+	}
+	return uuid.Nil
 }
 
 func (s *Session) MarshalJSON() ([]byte, error) {

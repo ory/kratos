@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -540,5 +541,84 @@ func TestSession(t *testing.T) {
 
 		s.ExpiresAt = s.ExpiresAt.Add(-12 * time.Hour)
 		assert.True(t, s.CanBeRefreshed(ctx, reg.Config()), "session is refreshable after 12hrs")
+	})
+
+	t.Run("case=organization id", func(t *testing.T) {
+		t.Run("case=returns uuid.Nil for nil session", func(t *testing.T) {
+			var s *session.Session
+			assert.Equal(t, uuid.Nil, s.OrganizationID())
+		})
+
+		t.Run("case=returns uuid.Nil for empty AMR", func(t *testing.T) {
+			s := &session.Session{}
+			assert.Equal(t, uuid.Nil, s.OrganizationID())
+		})
+
+		t.Run("case=returns uuid.Nil when AMR has no org-tagged entry", func(t *testing.T) {
+			s := &session.Session{AMR: session.AuthenticationMethods{
+				{Method: identity.CredentialsTypePassword, AAL: identity.AuthenticatorAssuranceLevel1},
+			}}
+			assert.Equal(t, uuid.Nil, s.OrganizationID())
+		})
+
+		t.Run("case=returns uuid.Nil when the org is not a parseable UUID", func(t *testing.T) {
+			s := &session.Session{AMR: session.AuthenticationMethods{
+				{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel1, Organization: "not-a-uuid"},
+			}}
+			assert.Equal(t, uuid.Nil, s.OrganizationID())
+		})
+
+		t.Run("case=returns the org from the first AMR entry that carries a UUID", func(t *testing.T) {
+			orgA := uuid.Must(uuid.NewV4())
+			orgB := uuid.Must(uuid.NewV4())
+			s := &session.Session{AMR: session.AuthenticationMethods{
+				{Method: identity.CredentialsTypePassword, AAL: identity.AuthenticatorAssuranceLevel1},
+				{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel1, Organization: orgA.String()},
+				{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel1, Organization: orgB.String()},
+			}}
+			assert.Equal(t, orgA, s.OrganizationID())
+		})
+	})
+
+	t.Run("case=refresh uses organization lifespan", func(t *testing.T) {
+		// Use a real config (not a mock provider) so Refresh exercises the
+		// actual Config.OrganizationSessionLifespan resolution.
+		orgWithOverride := uuid.Must(uuid.NewV4())
+		orgWithoutOverride := uuid.Must(uuid.NewV4())
+		_, oreg := pkg.NewFastRegistryWithMocks(t,
+			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
+			configx.WithValues(map[string]any{
+				config.ViperKeySessionLifespan: "24h",
+				"selfservice.methods.b2b.config.organizations": []map[string]any{
+					{"id": orgWithOverride.String(), "domains": []string{"override.example.com"}, "session_lifespan": "1h"},
+					{"id": orgWithoutOverride.String(), "domains": []string{"default.example.com"}},
+				},
+			}),
+		)
+		ctx := t.Context()
+
+		t.Run("case=no org in AMR uses project default", func(t *testing.T) {
+			s := &session.Session{AMR: session.AuthenticationMethods{
+				{Method: identity.CredentialsTypePassword},
+			}}
+			s.Refresh(ctx, oreg.Config())
+			assert.WithinDuration(t, time.Now().Add(24*time.Hour), s.ExpiresAt, 2*time.Second)
+		})
+
+		t.Run("case=org in AMR with override uses override", func(t *testing.T) {
+			s := &session.Session{AMR: session.AuthenticationMethods{
+				{Method: identity.CredentialsTypeOIDC, Organization: orgWithOverride.String()},
+			}}
+			s.Refresh(ctx, oreg.Config())
+			assert.WithinDuration(t, time.Now().Add(1*time.Hour), s.ExpiresAt, 2*time.Second)
+		})
+
+		t.Run("case=org in AMR without override uses project default", func(t *testing.T) {
+			s := &session.Session{AMR: session.AuthenticationMethods{
+				{Method: identity.CredentialsTypeOIDC, Organization: orgWithoutOverride.String()},
+			}}
+			s.Refresh(ctx, oreg.Config())
+			assert.WithinDuration(t, time.Now().Add(24*time.Hour), s.ExpiresAt, 2*time.Second)
+		})
 	})
 }

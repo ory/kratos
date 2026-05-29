@@ -204,6 +204,53 @@ func TestManagerHTTP(t *testing.T) {
 		assert.EqualValues(t, identity.AuthenticatorAssuranceLevel1, actualIdentity.InternalAvailableAAL.String)
 	})
 
+	t.Run("suite=SessionActivate applies the organization session lifespan", func(t *testing.T) {
+		t.Parallel()
+
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		orgWithOverride := x.NewUUID()
+		orgWithoutOverride := x.NewUUID()
+
+		_, reg := pkg.NewFastRegistryWithMocks(t,
+			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
+			configx.WithValues(map[string]any{
+				config.ViperKeySessionLifespan: "24h",
+				"selfservice.methods.b2b.config.organizations": []map[string]any{
+					{"id": orgWithOverride.String(), "domains": []string{"override.example.com"}, "session_lifespan": "1h"},
+					{"id": orgWithoutOverride.String(), "domains": []string{"default.example.com"}},
+				},
+			}),
+		)
+
+		i := &identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		activate := func(t *testing.T, org string) *session.Session {
+			authAt := time.Now().UTC()
+			sess := session.NewInactiveSession()
+			if org != "" {
+				sess.AMR = session.AuthenticationMethods{{Method: identity.CredentialsTypeOIDC, AAL: identity.AuthenticatorAssuranceLevel1, Organization: org}}
+			}
+			require.NoError(t, reg.SessionManager().ActivateSession(req, sess, i, authAt))
+			return sess
+		}
+
+		t.Run("case=org with override uses the override", func(t *testing.T) {
+			sess := activate(t, orgWithOverride.String())
+			assert.WithinDuration(t, sess.IssuedAt.Add(1*time.Hour), sess.ExpiresAt, 5*time.Second)
+		})
+
+		t.Run("case=org without override uses the project default", func(t *testing.T) {
+			sess := activate(t, orgWithoutOverride.String())
+			assert.WithinDuration(t, sess.IssuedAt.Add(24*time.Hour), sess.ExpiresAt, 5*time.Second)
+		})
+
+		t.Run("case=no org uses the project default", func(t *testing.T) {
+			sess := activate(t, "")
+			assert.WithinDuration(t, sess.IssuedAt.Add(24*time.Hour), sess.ExpiresAt, 5*time.Second)
+		})
+	})
+
 	t.Run("suite=SessionAddAuthenticationMethod", func(t *testing.T) {
 		t.Parallel()
 

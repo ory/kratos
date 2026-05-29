@@ -1557,6 +1557,13 @@
                               "examples": ["my-app.com"],
                               "description": "If this domain matches the email's domain, this provider is shown."
                             }
+                          },
+                          "session_lifespan": {
+                            "title": "Session Lifespan Override",
+                            "description": "Overrides session.lifespan for sessions issued for this organization. Unset means inherit the project default.",
+                            "type": "string",
+                            "pattern": "^([0-9]+(ns|us|ms|s|m|h))+$",
+                            "examples": ["1h", "24h"]
                           }
                         }
                       }

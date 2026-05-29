@@ -39,6 +39,8 @@ import (
 
 	_ "github.com/ory/jsonschema/v3/fileloader"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/ory/kratos/driver/config"
 
 	"github.com/sirupsen/logrus"
@@ -1423,6 +1425,67 @@ func TestCleanup(t *testing.T) {
 		assert.Equal(t, p.DatabaseCleanupBatchSize(ctx), 100)
 		p.MustSet(ctx, config.ViperKeyDatabaseCleanupBatchSize, "1")
 		assert.Equal(t, p.DatabaseCleanupBatchSize(ctx), 1)
+	})
+}
+
+func TestOrganizationConfigSessionLifespan(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	orgID := uuid.Must(uuid.NewV4())
+	conf := config.MustNew(t, logrusx.New("", ""), &contextx.Default{},
+		configx.WithValues(map[string]interface{}{
+			"selfservice.methods.b2b.config.organizations": []map[string]interface{}{
+				{
+					"id":               orgID.String(),
+					"domains":          []string{"example.com"},
+					"session_lifespan": "2h",
+				},
+			},
+		}),
+		configx.SkipValidation(),
+	)
+
+	orgs := conf.Organizations(ctx)
+	require.Len(t, orgs, 1)
+	assert.Equal(t, orgID, orgs[0].ID)
+	assert.Equal(t, 2*time.Hour, orgs[0].SessionLifespan)
+}
+
+func TestConfigOrganizationSessionLifespan(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	orgWithOverride := uuid.Must(uuid.NewV4())
+	orgWithoutOverride := uuid.Must(uuid.NewV4())
+
+	conf := config.MustNew(t, logrusx.New("", ""), &contextx.Default{},
+		configx.WithValues(map[string]interface{}{
+			"session.lifespan": "24h",
+			"selfservice.methods.b2b.config.organizations": []map[string]interface{}{
+				{"id": orgWithOverride.String(), "domains": []string{"a.com"}, "session_lifespan": "1h"},
+				{"id": orgWithoutOverride.String(), "domains": []string{"b.com"}},
+			},
+		}),
+		configx.SkipValidation(),
+	)
+
+	t.Run("case=nil orgID returns project default", func(t *testing.T) {
+		t.Parallel()
+		assert.Equal(t, 24*time.Hour, conf.OrganizationSessionLifespan(ctx, uuid.Nil))
+	})
+
+	t.Run("case=org with override returns override", func(t *testing.T) {
+		t.Parallel()
+		assert.Equal(t, 1*time.Hour, conf.OrganizationSessionLifespan(ctx, orgWithOverride))
+	})
+
+	t.Run("case=org without override returns project default", func(t *testing.T) {
+		t.Parallel()
+		assert.Equal(t, 24*time.Hour, conf.OrganizationSessionLifespan(ctx, orgWithoutOverride))
+	})
+
+	t.Run("case=unknown orgID returns project default", func(t *testing.T) {
+		t.Parallel()
+		assert.Equal(t, 24*time.Hour, conf.OrganizationSessionLifespan(ctx, uuid.Must(uuid.NewV4())))
 	})
 }
 
