@@ -70,7 +70,7 @@ require (
 	github.com/rs/cors v1.11.1
 	github.com/samber/lo v1.46.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/slack-go/slack v0.13.1
+	github.com/slack-go/slack v0.23.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
