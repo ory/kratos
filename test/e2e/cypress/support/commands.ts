@@ -117,6 +117,7 @@ Cypress.Commands.add("longPrivilegedSessionTime", ({} = {}) => {
     return config
   })
 })
+
 Cypress.Commands.add("longVerificationLifespan", ({} = {}) => {
   updateConfigFile((config) => {
     config.selfservice.flows.verification.lifespan = "1m"

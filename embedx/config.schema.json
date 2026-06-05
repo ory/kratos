@@ -2017,6 +2017,71 @@
                       },
                       "type": "object",
                       "required": ["display_name", "id"]
+                    },
+                    "authenticator_selection": {
+                      "type": "object",
+                      "title": "Authenticator Selection Criteria",
+                      "description": "Controls which authenticators are eligible for passkey registration.",
+                      "additionalProperties": false,
+                      "properties": {
+                        "attachment": {
+                          "type": "string",
+                          "title": "Authenticator Attachment",
+                          "description": "Constrains eligible authenticators to a specific attachment modality. Use 'platform' for built-in authenticators (Touch ID, Windows Hello) or 'cross-platform' for roaming authenticators (HID tokens, Yubikeys). Omit this field to let users register either type (WebAuthn 'no preference'), which is the recommended default for passkey deployments.",
+                          "enum": ["platform", "cross-platform"]
+                        },
+                        "resident_key": {
+                          "type": "string",
+                          "title": "Client-side discoverable credential requirement",
+                          "description": "Controls whether the authenticator must create a client-side discoverable credential (historically called a resident key). Maps to the WebAuthn authenticatorSelection.residentKey member, whose name the spec retains for compatibility. See https://pkg.go.dev/github.com/go-webauthn/webauthn/protocol#ResidentKeyRequirement.",
+                          "enum": ["required", "preferred", "discouraged"],
+                          "default": "required"
+                        },
+                        "user_verification": {
+                          "type": "string",
+                          "title": "User Verification Requirement",
+                          "description": "Controls whether biometrics or PIN are required for the passkey ceremony.",
+                          "enum": ["required", "preferred", "discouraged"],
+                          "default": "preferred"
+                        }
+                      }
+                    },
+                    "attestation": {
+                      "type": "object",
+                      "title": "Attestation Configuration",
+                      "description": "Controls the attestation conveyance preference sent to the authenticator during passkey registration.",
+                      "additionalProperties": false,
+                      "properties": {
+                        "preference": {
+                          "type": "string",
+                          "title": "Attestation Conveyance Preference",
+                          "description": "Tells the authenticator what attestation statement to provide. 'none' is the WebAuthn default and tells the client not to provide an attestation statement, which is what most consumer passkeys (e.g., iOS, Android) support today. Use 'direct' to request the raw attestation statement, 'indirect' to allow the client to decide, or 'enterprise' for uniquely identifying attestation.",
+                          "enum": ["none", "indirect", "direct", "enterprise"],
+                          "default": "none"
+                        }
+                      }
+                    },
+                    "timeouts": {
+                      "type": "object",
+                      "title": "Timeout Configuration",
+                      "description": "Controls timeouts for passkey registration and login ceremonies.",
+                      "additionalProperties": false,
+                      "properties": {
+                        "registration": {
+                          "type": "string",
+                          "title": "Registration Timeout",
+                          "description": "Timeout for the passkey registration ceremony. Uses Go duration format. If empty, library defaults are used (5m with user verification, 2m without).",
+                          "pattern": "^([1-9][0-9]*(ns|us|ms|s|m|h))+$",
+                          "examples": ["60s", "5m"]
+                        },
+                        "login": {
+                          "type": "string",
+                          "title": "Login Timeout",
+                          "description": "Timeout for the passkey login ceremony. Uses Go duration format. If empty, library defaults are used (5m with user verification, 2m without).",
+                          "pattern": "^([1-9][0-9]*(ns|us|ms|s|m|h))+$",
+                          "examples": ["60s", "5m"]
+                        }
+                      }
                     }
                   },
                   "additionalProperties": false

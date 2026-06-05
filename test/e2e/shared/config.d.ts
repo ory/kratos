@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 /* eslint-disable */
@@ -8,591 +8,9 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type OryKratosConfiguration = OryKratosConfiguration1 &
-  OryKratosConfiguration2
-export type OryKratosConfiguration1 = {
-  [k: string]: unknown | undefined
-}
-/**
- * Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.com/kratos/docs/concepts/browser-redirect-flow-completion).
- */
-export type RedirectBrowsersToSetURLPerDefault = string
-/**
- * List of URLs that are allowed to be redirected to. A redirection request is made by appending `?return_to=...` to Login, Registration, and other self-service flows.
- */
-export type AllowedReturnToURLs = string[]
-/**
- * URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
- */
-export type URLOfTheSettingsPage = string
-/**
- * Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.
- */
-export type RequiredAuthenticatorAssuranceLevel = "aal1" | "highest_available"
-/**
- * Define what the hook should do
- */
-export type WebHookConfiguration =
-  | {
-      [k: string]: unknown | undefined
-    }
-  | {
-      can_interrupt?: false
-      [k: string]: unknown | undefined
-    }
-export type SelfServiceHooks = (SelfServiceWebHook | B2BSSOHook)[]
-/**
- * If set to true will enable [User Registration](https://www.ory.com/kratos/docs/self-service/flows/user-registration/).
- */
-export type EnableUserRegistration = boolean
-/**
- * When registration fails because an account with the given credentials or addresses previously signed up, provide login hints about available methods to sign in to the user.
- */
-export type ProvideLoginHintsOnFailedRegistration = boolean
-/**
- * URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
- */
-export type RegistrationUIURL = string
-/**
- * Deprecated, please use `style` instead.
- */
-export type DisableTwoStepRegistration = boolean
-/**
- * The style of the registration flow. If set to `unified` the login flow will be a one-step process. If set to `profile_first` the registration flow will first ask for the profile information first, and then the credentials.
- */
-export type RegistrationFlowStyle = "unified" | "profile_first"
-/**
- * URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
- */
-export type LoginUIURL = string
-/**
- * The style of the login flow. If set to `unified` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.
- */
-export type LoginFlowStyle = "unified" | "identifier_first"
-/**
- * If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.com/kratos/docs/self-service/flows/verify-email-account-activation/).
- */
-export type EnableEmailPhoneVerification = boolean
-/**
- * URL where the Ory Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
- */
-export type VerifyUIURL = string
-/**
- * Sets how long the verification request (for the UI interaction) is valid.
- */
-export type SelfServiceVerificationRequestLifespan = string
-/**
- * The strategy to use for verification requests
- */
-export type VerificationStrategy = "link" | "code"
-/**
- * Whether to notify recipients, if verification was requested for their address.
- */
-export type NotifyUnknownRecipients = boolean
-/**
- * If set to true will enable [Account Recovery](https://www.ory.com/kratos/docs/self-service/flows/password-reset-account-recovery/).
- */
-export type EnableAccountRecovery = boolean
-/**
- * URL where the Ory Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
- */
-export type RecoveryUIURL = string
-export type SelfServiceAfterRecoveryHooks = (
-  | SelfServiceWebHook
-  | SelfServiceSessionRevokerHook
-)[]
-/**
- * Sets how long the recovery request is valid. If expired, the user has to redo the flow.
- */
-export type SelfServiceRecoveryRequestLifespan = string
-/**
- * The strategy to use for recovery requests
- */
-export type RecoveryStrategy = "link" | "code"
-/**
- * Whether to notify recipients, if recovery was requested for their account.
- */
-export type NotifyUnknownRecipients1 = boolean
-/**
- * URL where the Ory Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
- */
-export type OryKratosErrorUIURL = string
-export type EnablesProfileManagementMethod = boolean
-export type EnablesLinkMethod = boolean
-export type OverrideTheBaseURLWhichShouldBeUsedAsTheBaseForRecoveryAndVerificationLinks =
-  string
-export type HowLongALinkIsValidFor = string
-export type EnablesUsernameEmailAndPasswordMethod = boolean
-/**
- * Allows changing the default HIBP host to a self hosted version.
- */
-export type CustomHaveibeenpwnedHost = string
-/**
- * If set to false the password validation does not utilize the Have I Been Pwnd API.
- */
-export type EnableTheHaveIBeenPwnedAPI = boolean
-/**
- * Defines how often a password may have been breached before it is rejected.
- */
-export type AllowPasswordBreaches = number
-/**
- * If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
- */
-export type IgnoreLookupNetworkErrors = boolean
-/**
- * Defines the minimum length of the password.
- */
-export type MinimumPasswordLength = number
-/**
- * If set to false the password validation does not check for similarity between the password and the user identifier.
- */
-export type EnablePasswordIdentifierSimilarityCheck = boolean
-/**
- * If set to true will enable password migration.
- */
-export type EnablePasswordMigration = boolean
-/**
- * Define which auth mechanism the Web-Hook should use
- */
-export type AuthMechanisms =
-  | WebHookAuthApiKeyProperties
-  | WebHookAuthBasicAuthProperties
-export type EnablesTheTOTPMethod = boolean
-/**
- * The issuer (e.g. a domain name) will be shown in the TOTP app (e.g. Google Authenticator). It helps the user differentiate between different codes.
- */
-export type TOTPIssuer = string
-export type EnablesTheLookupSecretMethod = boolean
-export type EnablesTheWebAuthnMethod = boolean
-/**
- * If enabled will have the effect that WebAuthn is used for passwordless flows (as a first factor) and not for multi-factor set ups. With this set to true, users will see an option to sign up with WebAuthn on the registration screen.
- */
-export type UseForPasswordlessFlows = boolean
-export type RelyingPartyRPConfig =
-  | {
-      origin?: {
-        [k: string]: unknown | undefined
-      }
-      origins?: {
-        [k: string]: unknown | undefined
-      }
-      [k: string]: unknown | undefined
-    }
-  | {
-      origin: string
-      origins?: {
-        [k: string]: unknown | undefined
-      }
-      [k: string]: unknown | undefined
-    }
-  | {
-      origin?: {
-        [k: string]: unknown | undefined
-      }
-      origins: string[]
-      [k: string]: unknown | undefined
-    }
-export type EnablesThePasskeyMethod = boolean
-/**
- * A name to help the user identify this RP.
- */
-export type RelyingPartyDisplayName = string
-/**
- * The id must be a subset of the domain currently in the browser.
- */
-export type RelyingPartyIdentifier = string
-/**
- * A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).
- */
-export type RelyingPartyOrigins = string[]
-export type EnablesOpenIDConnectMethod = boolean
-/**
- * Can be used to modify the base URL for OAuth2 Redirect URLs. If unset, the Public Base URL will be used.
- */
-export type BaseURLForOAuth2RedirectURIs = string
-export type SelfServiceOIDCProvider = SelfServiceOIDCProvider1 & {
-  id: string
-  provider: Provider
-  label?: OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons
-  client_id: string
-  client_secret?: string
-  issuer_url?: string
-  auth_url?: string
-  token_url?: string
-  mapper_url: JsonnetMapperURL
-  scope?: string[]
-  microsoft_tenant?: AzureADTenant
-  subject_source?: MicrosoftSubjectSource
-  apple_team_id?: AppleDeveloperTeamID
-  apple_private_key_id?: ApplePrivateKeyIdentifier
-  apple_private_key?: ApplePrivateKey
-  requested_claims?: OpenIDConnectClaims
-  organization_id?: OrganizationID
-  additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
-  claims_source?: ClaimsSource
-  pkce?: ProofKeyForCodeExchange
-  fedcm_config_url?: FederationConfigurationURL
-  net_id_token_origin_header?: NetIDTokenOriginHeader
-}
-export type SelfServiceOIDCProvider1 = {
+export type OryKratosConfiguration = {
   [k: string]: unknown | undefined
 } & {
-  [k: string]: unknown | undefined
-}
-/**
- * Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon.
- */
-export type Provider =
-  | "github"
-  | "github-app"
-  | "gitlab"
-  | "generic"
-  | "google"
-  | "microsoft"
-  | "discord"
-  | "salesforce"
-  | "slack"
-  | "facebook"
-  | "auth0"
-  | "vk"
-  | "yandex"
-  | "apple"
-  | "spotify"
-  | "netid"
-  | "dingtalk"
-  | "patreon"
-  | "linkedin"
-  | "linkedin_v2"
-  | "lark"
-  | "x"
-  | "fedcm-test"
-  | "uaepass"
-export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
-  string
-/**
- * The URL where the jsonnet source is located for mapping the provider's data to Ory Kratos data.
- */
-export type JsonnetMapperURL = string
-/**
- * The Azure AD Tenant to use for authentication.
- */
-export type AzureADTenant = string
-/**
- * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier. If the value is `oid` then the the oid (Object ID) is taken to identify users across different services.
- */
-export type MicrosoftSubjectSource = "userinfo" | "me" | "oid"
-/**
- * Apple Developer Team ID needed for generating a JWT token for client secret
- */
-export type AppleDeveloperTeamID = string
-/**
- * Sign In with Apple Private Key Identifier needed for generating a JWT token for client secret
- */
-export type ApplePrivateKeyIdentifier = string
-/**
- * Sign In with Apple Private Key needed for generating a JWT token for client secret
- */
-export type ApplePrivateKey = string
-/**
- * The ID of the organization that this provider belongs to. Only effective in the Ory Network.
- */
-export type OrganizationID = string
-export type AdditionalClientIdsAllowedWhenUsingIDTokenSubmission = string[]
-/**
- * Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`
- */
-export type ClaimsSource = "id_token" | "userinfo"
-/**
- * PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
- */
-export type ProofKeyForCodeExchange = "auto" | "never" | "force"
-/**
- * The URL where the FedCM IdP configuration is located for the provider. This is only effective in the Ory Network.
- */
-export type FederationConfigurationURL = string
-/**
- * Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token
- */
-export type NetIDTokenOriginHeader = string
-/**
- * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
- */
-export type OpenIDConnectAndOAuth2Providers = SelfServiceOIDCProvider[]
-/**
- * Controls how many records should be purged from one table during database cleanup task
- */
-export type NumberOfRecordsToCleanInOneIteration = number
-/**
- * Controls the delay time between cleaning each table in one cleanup iteration
- */
-export type DelayBetweenEachTableCleanups = string
-/**
- * Controls how old records do we want to leave
- */
-export type RemoveRecordsOlderThan = string
-/**
- * DSN is used to specify the database credentials as a connection URI.
- */
-export type DataSourceName = string
-/**
- * You can override certain or all message templates by pointing this key to the path where the templates are located.
- */
-export type OverrideMessageTemplates = string
-/**
- * Defines how emails will be sent, either through SMTP (default) or HTTP.
- */
-export type DeliveryStrategy = "smtp" | "http"
-/**
- * This URL will be used to send the emails to.
- */
-export type HTTPAddressOfAPIEndpoint = string
-/**
- * Define which auth mechanism to use for auth with the HTTP email provider
- */
-export type AuthMechanisms1 =
-  | WebHookAuthApiKeyProperties
-  | WebHookAuthBasicAuthProperties
-/**
- * This URI will be used to connect to the SMTP server. Use the scheme smtps for implicit TLS sessions or smtp for explicit StartTLS/cleartext sessions. Please note that TLS is always enforced with certificate trust verification by default for security reasons on both schemes. With the smtp scheme you can use the query parameter (`?disable_starttls=true`) to allow cleartext sessions or (`?disable_starttls=false`) to enforce StartTLS (default behaviour). Additionally, use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates (default behaviour) on both implicit and explicit TLS sessions.
- */
-export type SMTPConnectionString = string
-/**
- * Path of the client X.509 certificate, in case of certificate based client authentication to the SMTP server.
- */
-export type SMTPClientCertificatePath = string
-/**
- * Path of the client certificate private key, in case of certificate based client authentication to the SMTP server
- */
-export type SMTPClientPrivateKeyPath = string
-/**
- * The recipient of an email will see this as the sender address.
- */
-export type SMTPSenderAddress = string
-/**
- * The recipient of an email will see this as the sender name.
- */
-export type SMTPSenderName = string
-/**
- * Identifier used in the SMTP HELO/EHLO command. Some SMTP relays require a unique identifier.
- */
-export type SMTPHELOEHLOName = string
-/**
- * The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only sms is supported.
- */
-export type ChannelId = "sms"
-/**
- * The channel type. Currently only http is supported.
- */
-export type ChannelType = "http"
-/**
- * If set, the login and registration flows will handle the Ory OAuth 2.0 & OpenID `login_challenge` query parameter to serve as an OpenID Connect Provider. This URL should point to Ory Hydra when you are not running on the Ory Network and be left untouched otherwise.
- */
-export type OAuth20ProviderURL = string
-/**
- * Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow.
- */
-export type PersistOAuth2RequestBetweenFlows = boolean
-/**
- * The default consistency level to use when reading from the database. Defaults to `strong` to not break existing API contracts. Only set this to `eventual` if you can accept that other read APIs will suddenly return eventually consistent results. It is only effective in Ory Network.
- */
-export type DefaultReadConsistencyLevel = "strong" | "eventual"
-/**
- * Disable request logging for /health/alive and /health/ready endpoints
- */
-export type DisableHealthEndpointsRequestLogging = boolean
-/**
- * The URL where the admin endpoint is exposed at.
- */
-export type AdminBaseURL = string
-/**
- * The host (interface) kratos' admin endpoint listens on.
- */
-export type AdminHost = string
-/**
- * The port kratos' admin endpoint listens on.
- */
-export type AdminPort = number
-export type PrivateKeyPEM = TlsxSource
-export type PathToPEMEncodedFle = string
-/**
- * The base64 string of the PEM-encoded file content. Can be generated using for example `base64 -i path/to/file.pem`.
- */
-export type Base64EncodedInline = string
-export type TLSCertificatePEM = TlsxSource
-/**
- * Disable request logging for /health/alive and /health/ready endpoints
- */
-export type DisableHealthEndpointsRequestLogging1 = boolean
-/**
- * The URL where the endpoint is exposed at. This domain is used to generate redirects, form URLs, and more.
- */
-export type BaseURL = string
-/**
- * The host (interface) kratos' public endpoint listens on.
- */
-export type PublicHost = string
-/**
- * The port kratos' public endpoint listens on.
- */
-export type PublicPort = number
-/**
- * If set will leak sensitive values (e.g. emails) in the logs.
- */
-export type LeakSensitiveLogValues = boolean
-/**
- * Text to use, when redacting sensitive log value.
- */
-export type SensitiveLogValueRedactionText = string
-/**
- * This Identity Schema will be used as the default for self-service flows. Its ID needs to exist in the "schemas" list.
- */
-export type TheDefaultIdentitySchema = string
-/**
- * Note that identities that used the "default_schema_url" field in older kratos versions will be corrupted unless you specify their schema url with the id "default" in this list.
- *
- * @minItems 1
- */
-export type AllJSONSchemasForIdentityTraits = [
-  {
-    id: TheSchemaSID
-    url: JSONSchemaURLForIdentityTraitsSchema
-    [k: string]: unknown | undefined
-  },
-  ...{
-    id: TheSchemaSID
-    url: JSONSchemaURLForIdentityTraitsSchema
-    [k: string]: unknown | undefined
-  }[],
-]
-export type TheSchemaSID = string
-/**
- * URL for JSON Schema which describes a identity's traits. Can be a file path, a https URL, or a base64 encoded string.
- */
-export type JSONSchemaURLForIdentityTraitsSchema = string
-/**
- * The first secret in the array is used for signing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
- */
-export type DefaultEncryptionSigningSecrets = string[]
-/**
- * The first secret in the array is used for encrypting cookies while all other keys are used to decrypt older cookies that were signed with that old secret.
- */
-export type SigningKeysForCookies = string[]
-/**
- * The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.
- *
- * @minItems 1
- */
-export type SecretsToUseForEncryptionByCipher = [string, ...string[]]
-/**
- * One of the values: argon2, bcrypt.
- * Any other hashes will be migrated to the set algorithm once an identity authenticates using their password.
- */
-export type PasswordHashingAlgorithm = "argon2" | "bcrypt"
-/**
- * One of the values: noop, aes, xchacha20-poly1305
- */
-export type CipheringAlgorithm = "noop" | "aes" | "xchacha20-poly1305"
-/**
- * Sets the cookie domain for session and CSRF cookies. Useful when dealing with subdomains. Use with care!
- */
-export type HTTPCookieDomain = string
-/**
- * Sets the session and CSRF cookie path. Use with care!
- */
-export type HTTPCookiePath = string
-/**
- * Sets the session secure flag. If unset, defaults to !dev mode.
- */
-export type SessionCookieSecureFlag = string
-/**
- * Sets the session and CSRF cookie SameSite.
- */
-export type HTTPCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
-export type TokenTimeToLive = string
-export type JsonNetMapperURL = string
-export type JSONWebKeySetURL = string
-/**
- * Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.
- */
-export type SessionLifespan = string
-/**
- * Sets the session cookie domain. Useful when dealing with subdomains. Use with care! Overrides `cookies.domain`.
- */
-export type SessionCookieDomain = string
-/**
- * Sets the session cookie name. Use with care!
- */
-export type SessionCookieName = string
-/**
- * If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4). This option affects the Ory OAuth2 and OpenID Provider's remember feature as well.
- */
-export type MakeSessionCookiePersistent = boolean
-/**
- * Sets the session cookie path. Use with care! Overrides `cookies.path`.
- */
-export type SessionCookiePath = string
-/**
- * Sets the session secure flag. If unset, defaults to !dev mode.
- */
-export type SessionCookieSecureFlag1 = string
-/**
- * Sets the session cookie SameSite. Overrides `cookies.same_site`.
- */
-export type SessionCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
-/**
- * Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.
- */
-export type EarliestPossibleSessionExtension = string
-/**
- * SemVer according to https://semver.org/ prefixed with `v` as in our releases.
- */
-export type TheKratosVersionThisConfigIsWrittenFor = string
-/**
- * The port the courier's metrics endpoint listens on (0/disabled by default). This is a CLI flag and environment variable and can not be set using the config file.
- */
-export type MetricsPort = number
-/**
- * Disallow all outgoing HTTP calls to private IP ranges. This feature can help protect against SSRF attacks.
- */
-export type DisallowPrivateIPRanges = boolean
-/**
- * Allows the given URLs to be called despite them being in the private IP range. URLs need to have an exact and case-sensitive match to be excempt.
- */
-export type AddExemptURLsToPrivateIPRanges = string[]
-/**
- * List of request headers that are forwarded to the web hook target in canonical form.
- */
-export type AllowedRequestHeaders = string[]
-/**
- * If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.
- */
-export type EnableOrySessionsCaching = boolean
-/**
- * Set how long Ory Sessions are cached on the edge. If unset, the session expiry will be used. Only effective in the Ory Network.
- */
-export type SetOrySessionEdgeCachingMaximumAge = string
-/**
- * If enabled allows new flow transitions using `continue_with` items.
- */
-export type EnableNewFlowTransitionsUsingContinueWithItems = boolean
-/**
- * If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.
- */
-export type EnableFasterSessionExtension = boolean
-/**
- * The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility
- */
-export type RegistrationNodeGroup = "password" | "default"
-/**
- * Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.
- */
-export type Organizations = unknown[]
-/**
- * A fallback URL template used when looking up identity schemas.
- */
-export type FallbackURLTemplateForIdentitySchemas = string
-
-export interface OryKratosConfiguration2 {
   selfservice: {
     default_browser_return_url: RedirectBrowsersToSetURLPerDefault
     allowed_return_urls?: AllowedReturnToURLs
@@ -758,7 +176,9 @@ export interface OryKratosConfiguration2 {
       tls?: HTTPS
     }
   }
-  tracing?: OryTracingConfig
+  tracing?: {
+    [k: string]: unknown | undefined
+  }
   log?: Log
   identity: {
     default_schema_id?: TheDefaultIdentitySchema
@@ -767,6 +187,7 @@ export interface OryKratosConfiguration2 {
   secrets?: {
     default?: DefaultEncryptionSigningSecrets
     cookie?: SigningKeysForCookies
+    pagination?: SecretsToEncryptThePaginationToken
     cipher?: SecretsToUseForEncryptionByCipher
   }
   hashers?: HashingAlgorithmConfiguration
@@ -817,6 +238,682 @@ export interface OryKratosConfiguration2 {
   enterprise?: EnterpriseFeatures
   revision?: ConfigRevision
 }
+/**
+ * Ory Kratos redirects to this URL per default on completion of self-service flows and other browser interaction. Read this [article for more information on browser redirects](https://www.ory.com/kratos/docs/concepts/browser-redirect-flow-completion).
+ */
+export type RedirectBrowsersToSetURLPerDefault = string
+/**
+ * List of URLs that are allowed to be redirected to. A redirection request is made by appending `?return_to=...` to Login, Registration, and other self-service flows.
+ */
+export type AllowedReturnToURLs = string[]
+/**
+ * URL where the Settings UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+ */
+export type URLOfTheSettingsPage = string
+/**
+ * Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.
+ */
+export type RequiredAuthenticatorAssuranceLevel = "aal1" | "highest_available"
+/**
+ * Define what the hook should do
+ */
+export type WebHookConfiguration =
+  | {
+      [k: string]: unknown | undefined
+    }
+  | {
+      can_interrupt?: false
+      [k: string]: unknown | undefined
+    }
+export type SelfServiceHooks = (SelfServiceWebHook | B2BSSOHook)[]
+/**
+ * If set to true will enable [User Registration](https://www.ory.com/kratos/docs/self-service/flows/user-registration/).
+ */
+export type EnableUserRegistration = boolean
+/**
+ * When registration fails because an account with the given credentials or addresses previously signed up, provide login hints about available methods to sign in to the user.
+ */
+export type ProvideLoginHintsOnFailedRegistration = boolean
+/**
+ * URL where the Registration UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+ */
+export type RegistrationUIURL = string
+/**
+ * Deprecated, please use `style` instead.
+ */
+export type DisableTwoStepRegistration = boolean
+/**
+ * The style of the registration flow. If set to `unified` the login flow will be a one-step process. If set to `profile_first` the registration flow will first ask for the profile information first, and then the credentials.
+ */
+export type RegistrationFlowStyle = "unified" | "profile_first"
+/**
+ * URL where the Login UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+ */
+export type LoginUIURL = string
+/**
+ * The style of the login flow. If set to `unified` the login flow will be a one-step process. If set to `identifier_first` (experimental!) the login flow will first ask for the identifier and then the credentials.
+ */
+export type LoginFlowStyle = "unified" | "identifier_first"
+export type SelfServiceAfterDefaultLoginMethodHooks = (
+  | SelfServiceSessionRevokerHook
+  | SelfServiceRequireVerifiedAddressHook
+  | SelfServiceWebHook
+  | SelfServiceVerificationHook
+  | SelfServiceShowVerificationUIHook
+  | B2BSSOHook
+)[]
+/**
+ * If set to true will enable [Email and Phone Verification and Account Activation](https://www.ory.com/kratos/docs/self-service/flows/verify-email-account-activation/).
+ */
+export type EnableEmailPhoneVerification = boolean
+/**
+ * URL where the Ory Verify UI is hosted. This is the page where users activate and / or verify their email or telephone number. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+ */
+export type VerifyUIURL = string
+/**
+ * Sets how long the verification request (for the UI interaction) is valid.
+ */
+export type SelfServiceVerificationRequestLifespan = string
+/**
+ * The strategy to use for verification requests
+ */
+export type VerificationStrategy = "link" | "code"
+/**
+ * Whether to notify recipients, if verification was requested for their address.
+ */
+export type NotifyUnknownRecipients = boolean
+/**
+ * If set to true will enable [Account Recovery](https://www.ory.com/kratos/docs/self-service/flows/password-reset-account-recovery/).
+ */
+export type EnableAccountRecovery = boolean
+/**
+ * URL where the Ory Recovery UI is hosted. This is the page where users request and complete account recovery. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+ */
+export type RecoveryUIURL = string
+export type SelfServiceAfterRecoveryHooks = (
+  | SelfServiceWebHook
+  | SelfServiceSessionRevokerHook
+)[]
+/**
+ * Sets how long the recovery request is valid. If expired, the user has to redo the flow.
+ */
+export type SelfServiceRecoveryRequestLifespan = string
+/**
+ * The strategy to use for recovery requests
+ */
+export type RecoveryStrategy = "link" | "code"
+/**
+ * Whether to notify recipients, if recovery was requested for their account.
+ */
+export type NotifyUnknownRecipients1 = boolean
+/**
+ * URL where the Ory Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
+ */
+export type OryKratosErrorUIURL = string
+export type EnablesProfileManagementMethod = boolean
+export type EnablesLinkMethod = boolean
+export type OverrideTheBaseURLWhichShouldBeUsedAsTheBaseForRecoveryAndVerificationLinks =
+  string
+export type HowLongALinkIsValidFor = string
+export type EnablesUsernameEmailAndPasswordMethod = boolean
+/**
+ * Allows changing the default HIBP host to a self hosted version.
+ */
+export type CustomHaveibeenpwnedHost = string
+/**
+ * If set to false the password validation does not utilize the Have I Been Pwnd API.
+ */
+export type EnableTheHaveIBeenPwnedAPI = boolean
+/**
+ * Defines how often a password may have been breached before it is rejected.
+ */
+export type AllowPasswordBreaches = number
+/**
+ * If set to false the password validation fails when the network or the Have I Been Pwnd API is down.
+ */
+export type IgnoreLookupNetworkErrors = boolean
+/**
+ * Defines the minimum length of the password.
+ */
+export type MinimumPasswordLength = number
+/**
+ * If set to false the password validation does not check for similarity between the password and the user identifier.
+ */
+export type EnablePasswordIdentifierSimilarityCheck = boolean
+/**
+ * If set to true will enable password migration.
+ */
+export type EnablePasswordMigration = boolean
+/**
+ * Define which auth mechanism the Web-Hook should use
+ */
+export type AuthMechanisms =
+  | WebHookAuthApiKeyProperties
+  | WebHookAuthBasicAuthProperties
+export type EnablesTheTOTPMethod = boolean
+/**
+ * The issuer (e.g. a domain name) will be shown in the TOTP app (e.g. Google Authenticator). It helps the user differentiate between different codes.
+ */
+export type TOTPIssuer = string
+export type EnablesTheLookupSecretMethod = boolean
+export type EnablesTheWebAuthnMethod = boolean
+/**
+ * If enabled will have the effect that WebAuthn is used for passwordless flows (as a first factor) and not for multi-factor set ups. With this set to true, users will see an option to sign up with WebAuthn on the registration screen.
+ */
+export type UseForPasswordlessFlows = boolean
+export type RelyingPartyRPConfig =
+  | {
+      origin?: {
+        [k: string]: unknown | undefined
+      }
+      origins?: {
+        [k: string]: unknown | undefined
+      }
+      [k: string]: unknown | undefined
+    }
+  | {
+      origin: string
+      origins?: {
+        [k: string]: unknown | undefined
+      }
+      [k: string]: unknown | undefined
+    }
+  | {
+      origin?: {
+        [k: string]: unknown | undefined
+      }
+      origins: string[]
+      [k: string]: unknown | undefined
+    }
+export type EnablesThePasskeyMethod = boolean
+/**
+ * A name to help the user identify this RP.
+ */
+export type RelyingPartyDisplayName = string
+/**
+ * The id must be a subset of the domain currently in the browser.
+ */
+export type RelyingPartyIdentifier = string
+/**
+ * A list of explicit RP origins. If left empty, this defaults to either `origin` or `id`, prepended with the current protocol schema (HTTP or HTTPS).
+ */
+export type RelyingPartyOrigins = string[]
+/**
+ * Constrains eligible authenticators to a specific attachment modality. Use 'platform' for built-in authenticators (Touch ID, Windows Hello) or 'cross-platform' for roaming authenticators (HID tokens, Yubikeys). Omit this field to let users register either type (WebAuthn 'no preference'), which is the recommended default for passkey deployments.
+ */
+export type AuthenticatorAttachment = "platform" | "cross-platform"
+/**
+ * Controls whether the authenticator must create a client-side discoverable credential. See https://pkg.go.dev/github.com/go-webauthn/webauthn/protocol#ResidentKeyRequirement.
+ */
+export type ResidentKeyRequirement = "required" | "preferred" | "discouraged"
+/**
+ * Controls whether biometrics or PIN are required for the passkey ceremony.
+ */
+export type UserVerificationRequirement =
+  | "required"
+  | "preferred"
+  | "discouraged"
+/**
+ * Tells the authenticator what attestation statement to provide. 'none' is the WebAuthn default and tells the client not to provide an attestation statement, which is what most consumer passkeys (e.g., iOS, Android) support today. Use 'direct' to request the raw attestation statement, 'indirect' to allow the client to decide, or 'enterprise' for uniquely identifying attestation.
+ */
+export type AttestationConveyancePreference =
+  | "none"
+  | "indirect"
+  | "direct"
+  | "enterprise"
+/**
+ * Timeout for the passkey registration ceremony. Uses Go duration format. If empty, library defaults are used (5m with user verification, 2m without).
+ */
+export type RegistrationTimeout = string
+/**
+ * Timeout for the passkey login ceremony. Uses Go duration format. If empty, library defaults are used (5m with user verification, 2m without).
+ */
+export type LoginTimeout = string
+export type EnablesOpenIDConnectMethod = boolean
+/**
+ * Can be used to modify the base URL for OAuth2 Redirect URLs. If unset, the Public Base URL will be used.
+ */
+export type BaseURLForOAuth2RedirectURIs = string
+export type SelfServiceOIDCProvider = {
+  [k: string]: unknown | undefined
+} & {
+  id: string
+  provider: Provider
+  label?: OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons
+  client_id: string
+  client_secret?: string
+  issuer_url?: string
+  auth_url?: string
+  token_url?: string
+  mapper_url: JsonnetMapperURL
+  scope?: string[]
+  microsoft_tenant?: AzureADTenant
+  subject_source?: MicrosoftSubjectSource
+  apple_team_id?: AppleDeveloperTeamID
+  apple_private_key_id?: ApplePrivateKeyIdentifier
+  apple_private_key?: ApplePrivateKey
+  requested_claims?: OpenIDConnectClaims
+  organization_id?: OrganizationID
+  additional_id_token_audiences?: AdditionalClientIdsAllowedWhenUsingIDTokenSubmission
+  aal2_acr_values?: UpstreamAcrValuesThatMarkTheSessionAsAAL2
+  aal2_amr_values?: UpstreamAmrValuesThatMarkTheSessionAsAAL2
+  claims_source?: ClaimsSource
+  pkce?: ProofKeyForCodeExchange
+  fedcm_config_url?: FederationConfigurationURL
+  net_id_token_origin_header?: NetIDTokenOriginHeader
+  account_linking_mode?: AccountLinkingMode
+  update_identity_on_login?: UpdateIdentityOnLogin
+}
+/**
+ * Can be one of github, github-app, gitlab, generic, google, microsoft, discord, salesforce, slack, facebook, auth0, vk, yandex, apple, spotify, netid, dingtalk, patreon, amazon.
+ */
+export type Provider =
+  | "github"
+  | "github-app"
+  | "gitlab"
+  | "generic"
+  | "google"
+  | "microsoft"
+  | "discord"
+  | "salesforce"
+  | "slack"
+  | "facebook"
+  | "auth0"
+  | "vk"
+  | "yandex"
+  | "apple"
+  | "spotify"
+  | "netid"
+  | "dingtalk"
+  | "patreon"
+  | "line"
+  | "linkedin"
+  | "linkedin_v2"
+  | "lark"
+  | "x"
+  | "fedcm-test"
+  | "amazon"
+  | "uaepass"
+export type OptionalStringWhichWillBeUsedWhenGeneratingLabelsForUIButtons =
+  string
+/**
+ * The URL where the jsonnet source is located for mapping the provider's data to Ory Kratos data.
+ */
+export type JsonnetMapperURL = string
+/**
+ * The Azure AD Tenant to use for authentication.
+ */
+export type AzureADTenant = string
+/**
+ * Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier. If the value is `oid` then the the oid (Object ID) is taken to identify users across different services.
+ */
+export type MicrosoftSubjectSource = "userinfo" | "me" | "oid"
+/**
+ * Apple Developer Team ID needed for generating a JWT token for client secret
+ */
+export type AppleDeveloperTeamID = string
+/**
+ * Sign In with Apple Private Key Identifier needed for generating a JWT token for client secret
+ */
+export type ApplePrivateKeyIdentifier = string
+/**
+ * Sign In with Apple Private Key needed for generating a JWT token for client secret
+ */
+export type ApplePrivateKey = string
+/**
+ * The ID of the organization that this provider belongs to. Only effective in the Ory Network.
+ */
+export type OrganizationID = string
+export type AdditionalClientIdsAllowedWhenUsingIDTokenSubmission = string[]
+/**
+ * List of upstream OIDC `acr` claim values that should elevate the resulting Kratos session to AAL2. If the ID token returned by the upstream provider contains an `acr` claim matching any of these values, the session is marked AAL2. Leave empty to always issue AAL1 sessions for this provider.
+ */
+export type UpstreamAcrValuesThatMarkTheSessionAsAAL2 = string[]
+/**
+ * List of upstream OIDC `amr` claim values that should elevate the resulting Kratos session to AAL2. If the ID token returned by the upstream provider contains an `amr` array including any of these values, the session is marked AAL2. Values follow RFC 8176 (for example `mfa`, `otp`, `hwk`, `fpt`).
+ */
+export type UpstreamAmrValuesThatMarkTheSessionAsAAL2 = string[]
+/**
+ * Can be either `userinfo` (calls the userinfo endpoint to get the claims) or `id_token` (takes the claims from the id token). It defaults to `id_token`
+ */
+export type ClaimsSource = "id_token" | "userinfo"
+/**
+ * PKCE controls if the OpenID Connect OAuth2 flow should use PKCE (Proof Key for Code Exchange). IMPORTANT: If you set this to `force`, you must whitelist a different return URL for your OAuth2 client in the provider's configuration. Instead of <base-url>/self-service/methods/oidc/callback/<provider>, you must use <base-url>/self-service/methods/oidc/callback
+ */
+export type ProofKeyForCodeExchange = "auto" | "never" | "force"
+/**
+ * The URL where the FedCM IdP configuration is located for the provider. This is only effective in the Ory Network.
+ */
+export type FederationConfigurationURL = string
+/**
+ * Contains the orgin header to be used when exchanging a NetID FedCM token for an ID token
+ */
+export type NetIDTokenOriginHeader = string
+/**
+ * Controls how account conflicts are resolved for this provider. `confirm_with_existing_credential` (default) requires the user to verify their identity with an existing credential. `automatic` silently links accounts if the provider verifies email ownership. This is only effective in the Ory Network.
+ */
+export type AccountLinkingMode =
+  | "confirm_with_existing_credential"
+  | "automatic"
+/**
+ * Controls whether the identity is updated from OIDC claims on each login. `never` (default) does not update the identity. `automatic` re-runs the Jsonnet claims mapper on every OIDC login and updates the identity's traits and metadata if they changed.
+ */
+export type UpdateIdentityOnLogin = "never" | "automatic"
+/**
+ * A list and configuration of OAuth2 and OpenID Connect providers Ory Kratos should integrate with.
+ */
+export type OpenIDConnectAndOAuth2Providers = SelfServiceOIDCProvider[]
+/**
+ * Controls how many records should be purged from one table during database cleanup task
+ */
+export type NumberOfRecordsToCleanInOneIteration = number
+/**
+ * Controls the delay time between cleaning each table in one cleanup iteration
+ */
+export type DelayBetweenEachTableCleanups = string
+/**
+ * Controls how old records do we want to leave
+ */
+export type RemoveRecordsOlderThan = string
+/**
+ * DSN is used to specify the database credentials as a connection URI.
+ */
+export type DataSourceName = string
+/**
+ * You can override certain or all message templates by pointing this key to the path where the templates are located.
+ */
+export type OverrideMessageTemplates = string
+/**
+ * Defines how emails will be sent, either through SMTP (default) or HTTP.
+ */
+export type DeliveryStrategy = "smtp" | "http"
+/**
+ * This URL will be used to send the emails to.
+ */
+export type HTTPAddressOfAPIEndpoint = string
+/**
+ * Define which auth mechanism to use for auth with the HTTP email provider
+ */
+export type AuthMechanisms1 =
+  | WebHookAuthApiKeyProperties
+  | WebHookAuthBasicAuthProperties
+/**
+ * This URI will be used to connect to the SMTP server. Use the scheme smtps for implicit TLS sessions or smtp for explicit StartTLS/cleartext sessions. Please note that TLS is always enforced with certificate trust verification by default for security reasons on both schemes. With the smtp scheme you can use the query parameter (`?disable_starttls=true`) to allow cleartext sessions or (`?disable_starttls=false`) to enforce StartTLS (default behaviour). Additionally, use the query parameter to allow (`?skip_ssl_verify=true`) or disallow (`?skip_ssl_verify=false`) self-signed TLS certificates (default behaviour) on both implicit and explicit TLS sessions.
+ */
+export type SMTPConnectionString = string
+/**
+ * Path of the client X.509 certificate, in case of certificate based client authentication to the SMTP server.
+ */
+export type SMTPClientCertificatePath = string
+/**
+ * Path of the client certificate private key, in case of certificate based client authentication to the SMTP server
+ */
+export type SMTPClientPrivateKeyPath = string
+/**
+ * The recipient of an email will see this as the sender address.
+ */
+export type SMTPSenderAddress = string
+/**
+ * The recipient of an email will see this as the sender name.
+ */
+export type SMTPSenderName = string
+/**
+ * Identifier used in the SMTP HELO/EHLO command. Some SMTP relays require a unique identifier.
+ */
+export type SMTPHELOEHLOName = string
+/**
+ * The channel id. Corresponds to the .via property of the identity schema for recovery, verification, etc. Currently only sms is supported.
+ */
+export type ChannelId = "sms"
+/**
+ * The channel type. Currently only http is supported.
+ */
+export type ChannelType = "http"
+/**
+ * If set, the login and registration flows will handle the Ory OAuth 2.0 & OpenID `login_challenge` query parameter to serve as an OpenID Connect Provider. This URL should point to Ory Hydra when you are not running on the Ory Network and be left untouched otherwise.
+ */
+export type OAuth20ProviderURL = string
+/**
+ * Override the return_to query parameter with the OAuth2 provider request URL when perfoming an OAuth2 login flow.
+ */
+export type PersistOAuth2RequestBetweenFlows = boolean
+/**
+ * The default consistency level to use when reading from the database. Defaults to `strong` to not break existing API contracts. Only set this to `eventual` if you can accept that other read APIs will suddenly return eventually consistent results. It is only effective in Ory Network.
+ */
+export type DefaultReadConsistencyLevel = "strong" | "eventual"
+/**
+ * Disable request logging for /health/alive and /health/ready endpoints
+ */
+export type DisableHealthEndpointsRequestLogging = boolean
+/**
+ * The URL where the admin endpoint is exposed at.
+ */
+export type AdminBaseURL = string
+/**
+ * The host (interface) kratos' admin endpoint listens on.
+ */
+export type AdminHost = string
+/**
+ * The port kratos' admin endpoint listens on.
+ */
+export type AdminPort = number
+export type PrivateKeyPEM = TlsxSource
+export type PathToPEMEncodedFle = string
+/**
+ * The base64 string of the PEM-encoded file content. Can be generated using for example `base64 -i path/to/file.pem`.
+ */
+export type Base64EncodedInline = string
+export type TLSCertificatePEM = TlsxSource
+/**
+ * Disable request logging for /health/alive and /health/ready endpoints
+ */
+export type DisableHealthEndpointsRequestLogging1 = boolean
+/**
+ * The URL where the endpoint is exposed at. This domain is used to generate redirects, form URLs, and more.
+ */
+export type BaseURL = string
+/**
+ * The host (interface) kratos' public endpoint listens on.
+ */
+export type PublicHost = string
+/**
+ * The port kratos' public endpoint listens on.
+ */
+export type PublicPort = number
+/**
+ * If set will leak sensitive values (e.g. emails) in the logs.
+ */
+export type LeakSensitiveLogValues = boolean
+/**
+ * Text to use, when redacting sensitive log value.
+ */
+export type SensitiveLogValueRedactionText = string
+/**
+ * This Identity Schema will be used as the default for self-service flows. Its ID needs to exist in the "schemas" list.
+ */
+export type TheDefaultIdentitySchema = string
+/**
+ * Note that identities that used the "default_schema_url" field in older kratos versions will be corrupted unless you specify their schema url with the id "default" in this list.
+ *
+ * @minItems 1
+ */
+export type AllJSONSchemasForIdentityTraits = [
+  {
+    id: TheSchemaSID
+    url: JSONSchemaURLForIdentityTraitsSchema
+    selfservice_selectable?: IsTheSchemaEnabledInSelfServiceFlows
+    [k: string]: unknown | undefined
+  },
+  ...{
+    id: TheSchemaSID
+    url: JSONSchemaURLForIdentityTraitsSchema
+    selfservice_selectable?: IsTheSchemaEnabledInSelfServiceFlows
+    [k: string]: unknown | undefined
+  }[],
+]
+export type TheSchemaSID = string
+/**
+ * URL for JSON Schema which describes a identity's traits. Can be a file path, a https URL, or a base64 encoded string.
+ */
+export type JSONSchemaURLForIdentityTraitsSchema = string
+/**
+ * If set to true, this schema can be used explicity in self-service flows by setting `identity_schema` query parameter to the schema's ID.
+ */
+export type IsTheSchemaEnabledInSelfServiceFlows = boolean
+/**
+ * The first secret in the array is used for signing and encrypting things while all other keys are used to verify and decrypt older things that were signed with that old secret.
+ */
+export type DefaultEncryptionSigningSecrets = string[]
+/**
+ * The first secret in the array is used for encrypting cookies while all other keys are used to decrypt older cookies that were signed with that old secret.
+ */
+export type SigningKeysForCookies = string[]
+/**
+ * To avoid clients reverse-engineering and relying on the implementation details of the pagination token, it is encrypted with these keys
+ *
+ * @minItems 1
+ */
+export type SecretsToEncryptThePaginationToken = [string, ...string[]]
+/**
+ * The first secret in the array is used for encryption data while all other keys are used to decrypt older data that were signed with.
+ *
+ * @minItems 1
+ */
+export type SecretsToUseForEncryptionByCipher = [string, ...string[]]
+/**
+ * One of the values: argon2, bcrypt.
+ * Any other hashes will be migrated to the set algorithm once an identity authenticates using their password.
+ */
+export type PasswordHashingAlgorithm = "argon2" | "bcrypt"
+/**
+ * One of the values: noop, aes, xchacha20-poly1305
+ */
+export type CipheringAlgorithm = "noop" | "aes" | "xchacha20-poly1305"
+/**
+ * Sets the cookie domain for session and CSRF cookies. Useful when dealing with subdomains. Use with care!
+ */
+export type HTTPCookieDomain = string
+/**
+ * Sets the session and CSRF cookie path. Use with care!
+ */
+export type HTTPCookiePath = string
+/**
+ * Sets the session secure flag. If unset, defaults to !dev mode.
+ */
+export type SessionCookieSecureFlag = string
+/**
+ * Sets the session and CSRF cookie SameSite.
+ */
+export type HTTPCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
+export type TokenTimeToLive = string
+export type JsonnetMapperURL1 = string
+export type JSONWebKeySetURL = string
+/**
+ * The source of the subject claim in the token. Can be one of: `id`, or `external_id`.
+ */
+export type SubjectSource = "id" | "external_id"
+/**
+ * Defines how long a session is active. Once that lifespan has been reached, the user needs to sign in again.
+ */
+export type SessionLifespan = string
+/**
+ * Sets the session cookie domain. Useful when dealing with subdomains. Use with care! Overrides `cookies.domain`.
+ */
+export type SessionCookieDomain = string
+/**
+ * Sets the session cookie name. Use with care!
+ */
+export type SessionCookieName = string
+/**
+ * If set to true will persist the cookie in the end-user's browser using the `max-age` parameter which is set to the `session.lifespan` value. Persistent cookies are not deleted when the browser is closed (e.g. on reboot or alt+f4). This option affects the Ory OAuth2 and OpenID Provider's remember feature as well.
+ */
+export type MakeSessionCookiePersistent = boolean
+/**
+ * Sets the session cookie path. Use with care! Overrides `cookies.path`.
+ */
+export type SessionCookiePath = string
+/**
+ * Sets the session secure flag. If unset, defaults to !dev mode.
+ */
+export type SessionCookieSecureFlag1 = string
+/**
+ * Sets the session cookie SameSite. Overrides `cookies.same_site`.
+ */
+export type SessionCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
+/**
+ * Sets when a session can be extended. Settings this value to `24h` will prevent the session from being extended before until 24 hours before it expires. This setting prevents excessive writes to the database. We highly recommend setting this value.
+ */
+export type EarliestPossibleSessionExtension = string
+/**
+ * SemVer according to https://semver.org/ prefixed with `v` as in our releases.
+ */
+export type TheKratosVersionThisConfigIsWrittenFor = string
+/**
+ * The port the courier's metrics endpoint listens on (0/disabled by default). This is a CLI flag and environment variable and can not be set using the config file.
+ */
+export type MetricsPort = number
+/**
+ * Disallow all outgoing HTTP calls to private IP ranges. This feature can help protect against SSRF attacks.
+ */
+export type DisallowPrivateIPRanges = boolean
+/**
+ * Allows the given URLs to be called despite them being in the private IP range. URLs need to have an exact and case-sensitive match to be excempt.
+ */
+export type AddExemptURLsToPrivateIPRanges = string[]
+/**
+ * List of request headers that are forwarded to the web hook target in canonical form.
+ */
+export type AllowedRequestHeaders = string[]
+/**
+ * If enabled allows Ory Sessions to be cached. Only effective in the Ory Network.
+ */
+export type EnableOrySessionsCaching = boolean
+/**
+ * Set how long Ory Sessions are cached on the edge. If unset, the session expiry will be used. Only effective in the Ory Network.
+ */
+export type SetOrySessionEdgeCachingMaximumAge = string
+/**
+ * If enabled allows new flow transitions using `continue_with` items.
+ */
+export type EnableNewFlowTransitionsUsingContinueWithItems = boolean
+/**
+ * If enabled, enable new recovery screens to pick which address to send a recovery code to, and can send a code via SMS. It is safe to toggle it back and forth, existing recovery flows will be handled with their respective logic. That is because it is decided at creation time whether a recovery flow is V1 or V2 and this cannot be changed afterwards. Thus, if a recovery flow is created with this flag enabled, it will be created as a recovery v2 flow. If this flag is disabled while this flow is still active, this flow will still be handled with the correct logic (v2).
+ */
+export type EnableNewRecoveryScreensToPickWhichAddressToSendARecoveryCodeLinkTo =
+  boolean
+/**
+ * If true, restores the legacy behavior of always including `show_verification_ui` in the registration flow's `continue_with` when verification is enabled. If set to false, `show_verification_ui` is only set in `continue_with` if the `show_verification_ui` hook is used. This flag will be removed in the future.
+ */
+export type AlwaysIncludeShowVerificationUiInContinueWith = boolean
+/**
+ * If true, the login flow will return a form error if the login identifier is not verified, which restores legacy behavior. If this value is false, the `continue_with` array will contain a `show_verification_ui` hook instead.
+ */
+export type ReturnAFormErrorIfTheLoginIdentifierIsNotVerified = boolean
+/**
+ * If enabled allows faster session extension by skipping the session lookup. Disabling this feature will be deprecated in the future.
+ */
+export type EnableFasterSessionExtension = boolean
+/**
+ * The node group to use for registration flows. Previously, the node group for the password method's profile fields was `password`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility.
+ */
+export type RegistrationNodeGroup = "password" | "default"
+/**
+ * The node group to use for registration flows. Previously, the node group for the oidc method's profile fields was `oidc`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility and will be removed in the future.
+ */
+export type RegistrationNodeGroupForOIDC = boolean
+/**
+ * Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.
+ */
+export type Organizations = unknown[]
+/**
+ * A fallback URL template used when looking up identity schemas.
+ */
+export type FallbackURLTemplateForIdentitySchemas = string
+/**
+ * Set a recognizable revision. This could be the commit time or a random value. This value is exposed at the `/health/config` endpoint and allows you to ensure that the correct config is loaded.
+ */
+export type ConfigRevision = string
+
 export interface SelfServiceAfterSettings {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
   password?: SelfServiceAfterSettingsAuthMethod
@@ -825,7 +922,7 @@ export interface SelfServiceAfterSettings {
   webauthn?: SelfServiceAfterSettingsAuthMethod
   passkey?: SelfServiceAfterSettingsAuthMethod
   lookup_secret?: SelfServiceAfterSettingsAuthMethod
-  profile?: SelfServiceAfterSettingsMethod
+  profile?: SelfServiceAfterSettingsProfileMethod
   hooks?: SelfServiceHooks
 }
 export interface SelfServiceAfterSettingsAuthMethod {
@@ -839,15 +936,26 @@ export interface SelfServiceWebHook {
 export interface SelfServiceSessionRevokerHook {
   hook: "revoke_active_sessions"
 }
-export interface SelfServiceAfterSettingsMethod {
+export interface SelfServiceAfterSettingsProfileMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: (SelfServiceWebHook | B2BSSOHook)[]
+  hooks?: (
+    | SelfServiceWebHook
+    | SelfServiceShowVerificationUIHook
+    | B2BSSOHook
+    | SelfServiceVerifyNewAddressHook
+  )[]
+}
+export interface SelfServiceShowVerificationUIHook {
+  hook: "show_verification_ui"
 }
 export interface B2BSSOHook {
   hook: "b2b_sso" | "organization"
   config: {
     [k: string]: unknown | undefined
   }
+}
+export interface SelfServiceVerifyNewAddressHook {
+  hook: "verify_new_address"
 }
 export interface SelfServiceBeforeSettings {
   hooks?: SelfServiceHooks
@@ -876,9 +984,6 @@ export interface SelfServiceAfterRegistrationMethod {
 export interface SelfServiceSessionIssuerHook {
   hook: "session"
 }
-export interface SelfServiceShowVerificationUIHook {
-  hook: "show_verification_ui"
-}
 export interface SelfServiceBeforeLogin {
   hooks?: SelfServiceHooks
 }
@@ -891,25 +996,11 @@ export interface SelfServiceAfterLogin {
   code?: SelfServiceAfterDefaultLoginMethod
   totp?: SelfServiceAfterDefaultLoginMethod
   lookup_secret?: SelfServiceAfterDefaultLoginMethod
-  hooks?: (
-    | SelfServiceWebHook
-    | SelfServiceSessionRevokerHook
-    | SelfServiceRequireVerifiedAddressHook
-    | SelfServiceVerificationHook
-    | SelfServiceShowVerificationUIHook
-    | B2BSSOHook
-  )[]
+  hooks?: SelfServiceAfterDefaultLoginMethodHooks
 }
 export interface SelfServiceAfterDefaultLoginMethod {
   default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
-  hooks?: (
-    | SelfServiceSessionRevokerHook
-    | SelfServiceRequireVerifiedAddressHook
-    | SelfServiceWebHook
-    | SelfServiceVerificationHook
-    | SelfServiceShowVerificationUIHook
-    | B2BSSOHook
-  )[]
+  hooks?: SelfServiceAfterDefaultLoginMethodHooks
 }
 export interface SelfServiceRequireVerifiedAddressHook {
   hook: "require_verified_address"
@@ -1017,7 +1108,11 @@ export interface PasswordConfiguration {
        */
       emit_analytics_event?: boolean
       auth?: AuthMechanisms
-      additionalProperties?: false
+      /**
+       * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
+       */
+      body?: string
+      additionalProperties?: never
     }
   }
 }
@@ -1060,12 +1155,36 @@ export interface WebAuthnConfiguration {
 }
 export interface PasskeyConfiguration {
   rp?: RelyingPartyRPConfig1
+  authenticator_selection?: AuthenticatorSelectionCriteria
+  attestation?: AttestationConfiguration
+  timeouts?: TimeoutConfiguration
 }
 export interface RelyingPartyRPConfig1 {
   display_name: RelyingPartyDisplayName
   id: RelyingPartyIdentifier
   origins?: RelyingPartyOrigins
   [k: string]: unknown | undefined
+}
+/**
+ * Controls which authenticators are eligible for passkey registration.
+ */
+export interface AuthenticatorSelectionCriteria {
+  attachment?: AuthenticatorAttachment
+  resident_key?: ResidentKeyRequirement
+  user_verification?: UserVerificationRequirement
+}
+/**
+ * Controls the attestation conveyance preference sent to the authenticator during passkey registration.
+ */
+export interface AttestationConfiguration {
+  preference?: AttestationConveyancePreference
+}
+/**
+ * Controls timeouts for passkey registration and login ceremonies.
+ */
+export interface TimeoutConfiguration {
+  registration?: RegistrationTimeout
+  login?: LoginTimeout
 }
 export interface SpecifyOpenIDConnectAndOAuth2Configuration {
   enabled?: EnablesOpenIDConnectMethod
@@ -1224,11 +1343,11 @@ export interface HttpRequestConfig {
     [k: string]: string | undefined
   }
   /**
-   * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods, which support HTTP body payloads
+   * URI pointing to the jsonnet template used for payload generation. Only used for those HTTP methods which support HTTP body payloads
    */
   body?: string
   auth?: AuthMechanisms1
-  additionalProperties?: false
+  additionalProperties?: never
 }
 /**
  * Configures outgoing emails using the SMTP protocol.
@@ -1295,107 +1414,6 @@ export interface HTTPS {
 export interface TlsxSource {
   path?: PathToPEMEncodedFle
   base64?: Base64EncodedInline
-}
-/**
- * Configure distributed tracing using OpenTelemetry
- */
-export interface OryTracingConfig {
-  /**
-   * Set this to the tracing backend you wish to use. Supports Jaeger, Zipkin, and OTEL.
-   */
-  provider?: "jaeger" | "otel" | "zipkin"
-  /**
-   * Specifies the service name to use on the tracer.
-   */
-  service_name?: string
-  /**
-   * Specifies the deployment environment to use on the tracer.
-   */
-  deployment_environment?: string
-  providers?: {
-    /**
-     * Configures the jaeger tracing backend.
-     */
-    jaeger?: {
-      /**
-       * The address of the jaeger-agent where spans should be sent to.
-       */
-      local_agent_address?: (
-        | IPv6AddressAndPort
-        | IPv4AddressAndPort
-        | HostnameAndPort
-      ) &
-        string
-      sampling?: {
-        /**
-         * The address of jaeger-agent's HTTP sampling server
-         */
-        server_url?: string
-        /**
-         * Trace Id ratio sample
-         */
-        trace_id_ratio?: number
-      }
-    }
-    /**
-     * Configures the zipkin tracing backend.
-     */
-    zipkin?: {
-      /**
-       * The address of the Zipkin server where spans should be sent to.
-       */
-      server_url?: string
-      sampling?: {
-        /**
-         * Sampling ratio for spans.
-         */
-        sampling_ratio?: number
-      }
-    }
-    /**
-     * Configures the OTLP tracing backend.
-     */
-    otlp?: {
-      /**
-       * The endpoint of the OTLP exporter (HTTP) where spans should be sent to.
-       */
-      server_url?: (
-        | IPv6AddressAndPort1
-        | IPv4AddressAndPort1
-        | HostnameAndPort1
-      ) &
-        string
-      /**
-       * Will use HTTP if set to true; defaults to HTTPS.
-       */
-      insecure?: boolean
-      sampling?: {
-        /**
-         * Sampling ratio for spans.
-         */
-        sampling_ratio?: number
-      }
-      authorization_header?: string
-    }
-  }
-}
-export interface IPv6AddressAndPort {
-  [k: string]: unknown | undefined
-}
-export interface IPv4AddressAndPort {
-  [k: string]: unknown | undefined
-}
-export interface HostnameAndPort {
-  [k: string]: unknown | undefined
-}
-export interface IPv6AddressAndPort1 {
-  [k: string]: unknown | undefined
-}
-export interface IPv4AddressAndPort1 {
-  [k: string]: unknown | undefined
-}
-export interface HostnameAndPort1 {
-  [k: string]: unknown | undefined
 }
 /**
  * Configure logging using the following options. Logging will always be sent to stdout and stderr.
@@ -1479,8 +1497,9 @@ export interface TokenizerTemplates {
    */
   [k: string]: {
     ttl?: TokenTimeToLive
-    claims_mapper_url?: JsonNetMapperURL
+    claims_mapper_url?: JsonnetMapperURL1
     jwks_url: JSONWebKeySetURL
+    subject_source?: SubjectSource
     [k: string]: unknown | undefined
   }
 }
@@ -1511,18 +1530,16 @@ export interface FeatureFlags {
   cacheable_sessions?: EnableOrySessionsCaching
   cacheable_sessions_max_age?: SetOrySessionEdgeCachingMaximumAge
   use_continue_with_transitions?: EnableNewFlowTransitionsUsingContinueWithItems
+  choose_recovery_address?: EnableNewRecoveryScreensToPickWhichAddressToSendARecoveryCodeLinkTo
+  legacy_continue_with_verification_ui?: AlwaysIncludeShowVerificationUiInContinueWith
+  legacy_require_verified_login_error?: ReturnAFormErrorIfTheLoginIdentifierIsNotVerified
   faster_session_extend?: EnableFasterSessionExtension
   password_profile_registration_node_group?: RegistrationNodeGroup
+  legacy_oidc_registration_node_group?: RegistrationNodeGroupForOIDC
 }
 /**
  * Specifies enterprise features. Only effective in the Ory Network or with a valid license.
  */
 export interface EnterpriseFeatures {
   identity_schema_fallback_url_template?: FallbackURLTemplateForIdentitySchemas
-}
-/**
- * Only used in tests
- */
-export interface ConfigRevision {
-  [k: string]: unknown | undefined
 }

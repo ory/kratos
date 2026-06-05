@@ -191,6 +191,12 @@ const (
 	ViperKeyPasskeyRPDisplayName                             = "selfservice.methods.passkey.config.rp.display_name"
 	ViperKeyPasskeyRPID                                      = "selfservice.methods.passkey.config.rp.id"
 	ViperKeyPasskeyRPOrigins                                 = "selfservice.methods.passkey.config.rp.origins"
+	ViperKeyPasskeyAuthenticatorAttachment                   = "selfservice.methods.passkey.config.authenticator_selection.attachment"
+	ViperKeyPasskeyResidentKey                               = "selfservice.methods.passkey.config.authenticator_selection.resident_key"
+	ViperKeyPasskeyUserVerification                          = "selfservice.methods.passkey.config.authenticator_selection.user_verification"
+	ViperKeyPasskeyAttestationPreference                     = "selfservice.methods.passkey.config.attestation.preference"
+	ViperKeyPasskeyRegistrationTimeout                       = "selfservice.methods.passkey.config.timeouts.registration"
+	ViperKeyPasskeyLoginTimeout                              = "selfservice.methods.passkey.config.timeouts.login"
 	ViperKeyOrganizations                                    = "selfservice.methods.b2b.config.organizations"
 	ViperKeyOAuth2ProviderURL                                = "oauth2_provider.url"
 	ViperKeyOAuth2ProviderHeader                             = "oauth2_provider.headers"
@@ -1540,18 +1546,49 @@ func (p *Config) PasskeyConfig(ctx context.Context) *webauthn.Config {
 	scheme := p.SelfPublicURL(ctx).Scheme
 	id := p.GetProvider(ctx).String(ViperKeyPasskeyRPID)
 	origins := p.GetProvider(ctx).StringsF(ViperKeyPasskeyRPOrigins, []string{scheme + "://" + id})
-	return &webauthn.Config{
-		RPDisplayName: p.GetProvider(ctx).String(ViperKeyPasskeyRPDisplayName),
-		RPID:          id,
-		RPOrigins:     origins,
-		AuthenticatorSelection: protocol.AuthenticatorSelection{
-			AuthenticatorAttachment: "platform",
-			RequireResidentKey:      new(true),
-			ResidentKey:             protocol.ResidentKeyRequirementRequired,
-			UserVerification:        protocol.VerificationPreferred,
-		},
+
+	residentKey := protocol.ResidentKeyRequirement(
+		p.GetProvider(ctx).StringF(ViperKeyPasskeyResidentKey, string(protocol.ResidentKeyRequirementRequired)))
+	requireResidentKey := residentKey == protocol.ResidentKeyRequirementRequired
+
+	authSel := protocol.AuthenticatorSelection{
+		RequireResidentKey: &requireResidentKey,
+		ResidentKey:        residentKey,
+		UserVerification: protocol.UserVerificationRequirement(
+			p.GetProvider(ctx).StringF(ViperKeyPasskeyUserVerification, string(protocol.VerificationPreferred))),
+	}
+	// Only constrain authenticator attachment when the operator explicitly
+	// configures it. Omitting the field lets users register either platform
+	// or cross-platform authenticators, which matches the WebAuthn spec's
+	// "no preference" behavior.
+	if attachment := p.GetProvider(ctx).String(ViperKeyPasskeyAuthenticatorAttachment); attachment != "" {
+		authSel.AuthenticatorAttachment = protocol.AuthenticatorAttachment(attachment)
+	}
+
+	cfg := &webauthn.Config{
+		RPDisplayName:          p.GetProvider(ctx).String(ViperKeyPasskeyRPDisplayName),
+		RPID:                   id,
+		RPOrigins:              origins,
+		AuthenticatorSelection: authSel,
+		AttestationPreference: protocol.ConveyancePreference(
+			p.GetProvider(ctx).StringF(ViperKeyPasskeyAttestationPreference, string(protocol.PreferNoAttestation))),
 		EncodeUserIDAsString: false,
 	}
+
+	if d := p.GetProvider(ctx).Duration(ViperKeyPasskeyRegistrationTimeout); d > 0 {
+		cfg.Timeouts.Registration = webauthn.TimeoutConfig{
+			Timeout:    d,
+			TimeoutUVD: d,
+		}
+	}
+	if d := p.GetProvider(ctx).Duration(ViperKeyPasskeyLoginTimeout); d > 0 {
+		cfg.Timeouts.Login = webauthn.TimeoutConfig{
+			Timeout:    d,
+			TimeoutUVD: d,
+		}
+	}
+
+	return cfg
 }
 
 type Organization struct {

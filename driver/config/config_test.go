@@ -28,6 +28,8 @@ import (
 
 	"github.com/ghodss/yaml"
 
+	"github.com/go-webauthn/webauthn/protocol"
+
 	"github.com/ory/kratos/pkg/testhelpers"
 
 	"github.com/ory/x/configx"
@@ -1354,6 +1356,48 @@ func TestWebauthn(t *testing.T) {
 		_, err := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
 			configx.WithConfigFiles("stub/.kratos.webauthn.invalid.yaml"))
 		assert.Error(t, err)
+	})
+}
+
+func TestPasskeyConfig(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("case=defaults", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithConfigFiles("stub/.kratos.passkey.yaml"))
+		require.NoError(t, err)
+
+		c := conf.PasskeyConfig(ctx)
+		// Attachment is unset by default so users can register either
+		// platform or cross-platform authenticators.
+		assert.Empty(t, c.AuthenticatorSelection.AuthenticatorAttachment)
+		require.NotNil(t, c.AuthenticatorSelection.RequireResidentKey)
+		assert.True(t, *c.AuthenticatorSelection.RequireResidentKey)
+		assert.Equal(t, protocol.ResidentKeyRequirementRequired, c.AuthenticatorSelection.ResidentKey)
+		assert.Equal(t, protocol.VerificationPreferred, c.AuthenticatorSelection.UserVerification)
+		assert.Equal(t, protocol.PreferNoAttestation, c.AttestationPreference)
+		// Timeouts should be zero (use library defaults) when not configured
+		assert.Equal(t, time.Duration(0), c.Timeouts.Registration.Timeout)
+		assert.Equal(t, time.Duration(0), c.Timeouts.Login.Timeout)
+	})
+
+	t.Run("case=reads overrides from config", func(t *testing.T) {
+		conf, err := config.New(ctx, logrusx.New("", ""), os.Stderr, &contextx.Default{},
+			configx.WithConfigFiles("stub/.kratos.passkey.options.yaml"))
+		require.NoError(t, err)
+
+		c := conf.PasskeyConfig(ctx)
+		assert.Equal(t, protocol.CrossPlatform, c.AuthenticatorSelection.AuthenticatorAttachment)
+		require.NotNil(t, c.AuthenticatorSelection.RequireResidentKey)
+		assert.False(t, *c.AuthenticatorSelection.RequireResidentKey)
+		assert.Equal(t, protocol.ResidentKeyRequirementDiscouraged, c.AuthenticatorSelection.ResidentKey)
+		assert.Equal(t, protocol.VerificationRequired, c.AuthenticatorSelection.UserVerification)
+		assert.Equal(t, protocol.PreferDirectAttestation, c.AttestationPreference)
+		assert.Equal(t, 30*time.Second, c.Timeouts.Registration.Timeout)
+		assert.Equal(t, 30*time.Second, c.Timeouts.Registration.TimeoutUVD)
+		assert.Equal(t, 45*time.Second, c.Timeouts.Login.Timeout)
+		assert.Equal(t, 45*time.Second, c.Timeouts.Login.TimeoutUVD)
 	})
 }
 
