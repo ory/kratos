@@ -22,7 +22,7 @@ import (
 )
 
 func TestRecoveryCode(t *testing.T) {
-	conf := pkg.NewConfigurationWithDefaults(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	newCode := func(expiresIn time.Duration, f *recovery.Flow) *code.RecoveryCode {
 		return &code.RecoveryCode{
@@ -37,30 +37,30 @@ func TestRecoveryCode(t *testing.T) {
 		t.Parallel()
 
 		t.Run("case=returns ErrCodeNotFound if code is expired", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := recovery.NewFlow(reg, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(-time.Hour, f)
-			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound())
+			require.ErrorIs(t, c.Validate(reg.Clock()), code.ErrCodeNotFound())
 		})
 		t.Run("case=expired code does not return flow.ExpiredError", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := recovery.NewFlow(reg, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(-time.Hour, f)
 			expired := new(flow.ExpiredError)
-			require.False(t, errors.As(c.Validate(), &expired), "expired code should not return flow.ExpiredError")
+			require.False(t, errors.As(c.Validate(reg.Clock()), &expired), "expired code should not return flow.ExpiredError")
 		})
 		t.Run("case=returns no error if flow is not expired", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := recovery.NewFlow(reg, time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(time.Hour, f)
-			require.NoError(t, c.Validate())
+			require.NoError(t, c.Validate(reg.Clock()))
 		})
 
 		t.Run("case=returns error if flow has been used", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := recovery.NewFlow(reg, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(time.Hour, f)
@@ -68,23 +68,23 @@ func TestRecoveryCode(t *testing.T) {
 				Time:  time.Now(),
 				Valid: true,
 			}
-			require.ErrorIs(t, c.Validate(), code.ErrCodeAlreadyUsed())
+			require.ErrorIs(t, c.Validate(reg.Clock()), code.ErrCodeAlreadyUsed())
 		})
 
 		t.Run("case=returns no error if flow has not been used", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := recovery.NewFlow(reg, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			c := newCode(time.Hour, f)
 			c.UsedAt = sql.NullTime{
 				Valid: false,
 			}
-			require.NoError(t, c.Validate())
+			require.NoError(t, c.Validate(reg.Clock()))
 		})
 
 		t.Run("case=returns error if flow is nil", func(t *testing.T) {
 			var c *code.RecoveryCode
-			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound())
+			require.ErrorIs(t, c.Validate(reg.Clock()), code.ErrCodeNotFound())
 		})
 	})
 }

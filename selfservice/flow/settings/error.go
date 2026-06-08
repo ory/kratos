@@ -27,6 +27,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/swagger"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
@@ -37,6 +38,7 @@ var ErrHookAbortFlow = errors.New("aborted settings hook execution")
 
 type (
 	errorHandlerDependencies interface {
+		clock.Provider
 		config.Provider
 		errorx.ManagementProvider
 		httpx.WriterProvider
@@ -128,7 +130,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(ctx context.Context, w h
 		return nil, err
 	}
 
-	a.UI.Messages.Add(text.NewErrorValidationSettingsFlowExpired(e.ExpiredAt))
+	a.UI.Messages.Add(text.NewErrorValidationSettingsFlowExpired(s.d.Clock(), e.ExpiredAt))
 	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(ctx, a); err != nil {
 		return nil, err
 	}

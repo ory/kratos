@@ -14,6 +14,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/randx"
 )
 
@@ -77,9 +78,9 @@ func NewSelfServiceVerificationToken(address identity.VerifiableAddressLike, f *
 	return token
 }
 
-func (f *VerificationToken) Valid() error {
-	if f.ExpiresAt.Before(time.Now().UTC()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+func (f *VerificationToken) Valid(c clock.Clock) error {
+	if f.ExpiresAt.Before(c.Now().UTC()) {
+		return errors.WithStack(flow.NewFlowExpiredError(c, f.ExpiresAt))
 	}
 	return nil
 }

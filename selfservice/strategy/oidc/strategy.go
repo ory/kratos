@@ -46,6 +46,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonnetsecure"
@@ -72,6 +73,8 @@ var (
 )
 
 type Dependencies interface {
+	clock.Provider
+
 	errorx.ManagementProvider
 
 	config.Provider
@@ -309,14 +312,14 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 		if err != nil {
 			return nil, err
 		}
-		return lf, lf.Valid()
+		return lf, lf.Valid(s.d.Clock())
 
 	case oidcv1.FlowKind_FLOW_KIND_REGISTRATION:
 		rf, err := s.d.RegistrationFlowPersister().GetRegistrationFlow(ctx, rid)
 		if err != nil {
 			return nil, err
 		}
-		return rf, rf.Valid()
+		return rf, rf.Valid(s.d.Clock())
 
 	case oidcv1.FlowKind_FLOW_KIND_SETTINGS:
 		sf, err := s.d.SettingsFlowPersister().GetSettingsFlow(ctx, rid)
@@ -327,7 +330,7 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 		if err != nil {
 			return sf, err
 		}
-		return sf, sf.Valid(sess)
+		return sf, sf.Valid(s.d.Clock(), sess)
 
 	}
 

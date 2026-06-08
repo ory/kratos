@@ -84,8 +84,9 @@ func newApplyPTCFixture(t *testing.T) *applyPTCFixture {
 
 	// Create a verification flow — the PTC table has a FK on verification_flow_id
 	// (ON DELETE CASCADE), so we must persist a real verification flow row.
-	vf, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+	vf, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 		httptest.NewRequest(http.MethodGet, "/verification", nil), nil, flow.TypeBrowser)
+
 	require.NoError(t, err)
 	vf.State = flow.StateEmailSent
 	require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, vf))
@@ -244,8 +245,9 @@ func TestApplyPendingTraitsChange_WebhookReceivesOriginFlow(t *testing.T) {
 	}
 	require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(ctx, originFlow))
 
-	vf, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+	vf, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 		httptest.NewRequest(http.MethodGet, "/verification", nil), nil, flow.TypeBrowser)
+
 	require.NoError(t, err)
 	vf.State = flow.StateEmailSent
 	require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, vf))

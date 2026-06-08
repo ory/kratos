@@ -11,7 +11,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -274,7 +273,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/registration/browser"+query, nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := registration.NewFlow(reg, r, flow.TypeBrowser)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f

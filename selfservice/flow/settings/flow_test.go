@@ -14,10 +14,9 @@ import (
 
 	"github.com/gofrs/uuid"
 
-	"github.com/ory/kratos/selfservice/flow/registration"
-
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/jsonx"
 
 	"github.com/ory/kratos/pkg"
@@ -48,90 +47,95 @@ func TestFakeFlow(t *testing.T) {
 
 func TestNewFlow(t *testing.T) {
 	ctx := context.Background()
-	conf := pkg.NewConfigurationWithDefaults(t)
+	conf, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	id := &identity.Identity{ID: x.NewUUID()}
 	t.Run("case=0", func(t *testing.T) {
-		r, err := settings.NewFlow(conf, 0, &http.Request{URL: urlx.ParseOrPanic("/"),
+		r, err := settings.NewFlow(reg, &http.Request{URL: urlx.ParseOrPanic("/"),
 			Host: "ory.sh", TLS: &tls.ConnectionState{}}, id, flow.TypeBrowser)
+
 		require.NoError(t, err)
-		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
+		assert.True(t, r.ExpiresAt.After(r.IssuedAt))
 		assert.Equal(t, flow.TypeBrowser, r.Type)
 		assert.Equal(t, "https://ory.sh/", r.RequestURL)
 	})
 
 	t.Run("type=return_to", func(t *testing.T) {
-		_, err := registration.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, flow.TypeBrowser)
+		_, err := settings.NewFlow(reg, &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, id, flow.TypeBrowser)
 		require.Error(t, err)
 
-		_, err = registration.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, flow.TypeBrowser)
+		_, err = settings.NewFlow(reg, &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, id, flow.TypeBrowser)
 		require.NoError(t, err)
 	})
 
 	t.Run("case=1", func(t *testing.T) {
-		r, err := settings.NewFlow(conf, 0, &http.Request{
+		r, err := settings.NewFlow(reg, &http.Request{
 			URL:  urlx.ParseOrPanic("/?refresh=true"),
 			Host: "ory.sh"}, id, flow.TypeAPI)
+
 		require.NoError(t, err)
-		assert.Equal(t, r.IssuedAt, r.ExpiresAt)
+		assert.True(t, r.ExpiresAt.After(r.IssuedAt))
 		assert.Equal(t, flow.TypeAPI, r.Type)
 		assert.Equal(t, "http://ory.sh/?refresh=true", r.RequestURL)
 	})
 
 	t.Run("case=2", func(t *testing.T) {
-		r, err := settings.NewFlow(conf, 0, &http.Request{
+		r, err := settings.NewFlow(reg, &http.Request{
 			URL:  urlx.ParseOrPanic("https://ory.sh/"),
 			Host: "ory.sh"}, id, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		assert.Equal(t, "https://ory.sh/", r.RequestURL)
 	})
 }
 
 func TestFlow(t *testing.T) {
-	conf := pkg.NewConfigurationWithDefaults(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	alice := x.NewUUID()
 	malice := x.NewUUID()
 	for k, tc := range []struct {
 		r         *settings.Flow
+		exp       time.Duration
 		s         *session.Session
 		expectErr bool
 	}{
 		{
 			r: settings.MustNewFlow(
-				conf,
-				time.Hour,
+				reg,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&identity.Identity{ID: alice},
-				flow.TypeBrowser,
-			),
+				flow.TypeBrowser),
+			exp: time.Hour,
+
 			s: &session.Session{Identity: &identity.Identity{ID: alice}},
 		},
 		{
 			r: settings.MustNewFlow(
-				conf,
-				time.Hour,
+				reg,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&identity.Identity{ID: alice},
-				flow.TypeBrowser,
-			),
+				flow.TypeBrowser),
+			exp: time.Hour,
+
 			s:         &session.Session{Identity: &identity.Identity{ID: malice}},
 			expectErr: true,
 		},
 		{
 			r: settings.MustNewFlow(
-				conf,
-				-time.Hour,
+				reg,
 				&http.Request{URL: urlx.ParseOrPanic("http://foo/bar/baz"), Host: "foo"},
 				&identity.Identity{ID: alice},
-				flow.TypeBrowser,
-			),
+				flow.TypeBrowser),
+			exp: -time.Hour,
+
 			s:         &session.Session{Identity: &identity.Identity{ID: alice}},
 			expectErr: true,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := tc.r.Valid(tc.s)
+			tc.r.ExpiresAt = tc.r.IssuedAt.Add(tc.exp)
+			err := tc.r.Valid(clock.New(), tc.s)
 			if tc.expectErr {
 				require.Error(t, err)
 				return

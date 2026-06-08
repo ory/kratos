@@ -23,6 +23,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
@@ -32,6 +33,7 @@ var _ settings.PostHookPrePersistExecutor = new(VerifyNewAddress)
 
 type (
 	verifyNewAddressDependencies interface {
+		clock.Provider
 		config.Provider
 		nosurfx.CSRFTokenGeneratorProvider
 		nosurfx.CSRFProvider
@@ -141,7 +143,7 @@ func (e *VerifyNewAddress) execute(
 		csrf = e.r.GenerateCSRFToken(r)
 	}
 
-	verificationFlow, err := verification.NewPostHookFlow(e.r.Config(),
+	verificationFlow, err := verification.NewPostHookFlow(e.r,
 		e.r.Config().SelfServiceFlowVerificationRequestLifespan(ctx),
 		csrf, r, strategies, f)
 	if err != nil {

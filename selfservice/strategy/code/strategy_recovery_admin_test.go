@@ -64,7 +64,7 @@ func TestAdminStrategy(t *testing.T) {
 		require.Len(t, s, 1)
 		w := httptest.NewRecorder()
 		r := &http.Request{URL: new(url.URL)}
-		f, err := recovery.NewFlow(reg.Config(), time.Minute, "", r, s, flow.TypeBrowser)
+		f, err := recovery.NewFlow(reg, time.Minute, "", r, s, flow.TypeBrowser)
 		require.NoError(t, err)
 		require.NotPanics(t, func() {
 			require.Error(t, ps.(*Strategy).HandleRecoveryError(w, r, f, nil, errors.New("test")))

@@ -12,7 +12,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/configx"
@@ -555,7 +554,7 @@ func TestCompleteSettings(t *testing.T) {
 
 func TestPopulateSettingsMethod(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/settings.schema.json")
 	ctx = contextx.WithConfigValue(ctx, config.ViperKeyPasskeyRPDisplayName, "localhost")
@@ -577,7 +576,7 @@ func TestPopulateSettingsMethod(t *testing.T) {
 		t.Helper()
 		id := identity.NewIdentity("default")
 		id.Traits = identity.Traits(`{"email":"testuser@ory.sh"}`)
-		f, err := settings.NewFlow(conf, time.Minute, r, id, flowType)
+		f, err := settings.NewFlow(reg, r, id, flowType)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f, id

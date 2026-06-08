@@ -15,6 +15,7 @@ import (
 
 	"github.com/ory/kratos/x/events"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx/semconv"
@@ -42,6 +43,7 @@ func ErrAlreadyLoggedIn() *herodot.DefaultError {
 
 type (
 	errorHandlerDependencies interface {
+		clock.Provider
 		errorx.ManagementProvider
 		httpx.WriterProvider
 		logrusx.Provider
@@ -99,14 +101,14 @@ func (s *ErrorHandler) WriteFlowError(
 			}
 		}
 		// create new flow because the old one is not valid
-		newFlow, err := FromOldFlow(s.d.Config(), s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.GenerateCSRFToken(r), r, strategies, *f)
+		newFlow, err := FromOldFlow(s.d, s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.GenerateCSRFToken(r), r, strategies, *f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
 			s.WriteFlowError(w, r, f, group, err)
 			return
 		}
 
-		newFlow.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(expiredError.ExpiredAt))
+		newFlow.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(s.d.Clock(), expiredError.ExpiredAt))
 		if err := s.d.RecoveryFlowPersister().CreateRecoveryFlow(r.Context(), newFlow); err != nil {
 			s.forward(w, r, newFlow, err)
 			return

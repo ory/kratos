@@ -11,7 +11,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/ory/x/configx"
 
@@ -53,7 +52,7 @@ func TestLoginExecutor(t *testing.T) {
 				router := http.NewServeMux()
 
 				router.HandleFunc("GET /login/pre", func(w http.ResponseWriter, r *http.Request) {
-					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
+					loginFlow, err := login.NewFlow(reg, r, ft)
 					require.NoError(t, err)
 					if testhelpers.SelfServiceHookLoginErrorHandler(t, w, r, reg.LoginHookExecutor().PreLoginHook(w, r, loginFlow)) {
 						_, _ = w.Write([]byte("ok"))
@@ -61,7 +60,7 @@ func TestLoginExecutor(t *testing.T) {
 				})
 
 				router.HandleFunc("GET /login/post", func(w http.ResponseWriter, r *http.Request) {
-					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
+					loginFlow, err := login.NewFlow(reg, r, ft)
 					require.NoError(t, err)
 					loginFlow.Active = strategy
 					loginFlow.RequestURL = x.RequestURL(r).String()
@@ -80,7 +79,7 @@ func TestLoginExecutor(t *testing.T) {
 				})
 
 				router.HandleFunc("GET /login/post2fa", func(w http.ResponseWriter, r *http.Request) {
-					loginFlow, err := login.NewFlow(conf, time.Minute, "", r, ft)
+					loginFlow, err := login.NewFlow(reg, r, ft)
 					require.NoError(t, err)
 					loginFlow.Active = strategy
 					loginFlow.RequestURL = x.RequestURL(r).String()

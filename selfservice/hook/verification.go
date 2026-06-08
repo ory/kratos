@@ -10,6 +10,7 @@ import (
 	"github.com/tidwall/sjson"
 	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/otelx/semconv"
 
@@ -37,6 +38,7 @@ var (
 
 type (
 	verifierDependencies interface {
+		clock.Provider
 		config.Provider
 		nosurfx.CSRFTokenGeneratorProvider
 		nosurfx.CSRFProvider
@@ -152,7 +154,7 @@ func (e *Verifier) do(
 			}
 		}
 
-		verificationFlow, err := verification.NewPostHookFlow(e.r.Config(),
+		verificationFlow, err := verification.NewPostHookFlow(e.r,
 			e.r.Config().SelfServiceFlowVerificationRequestLifespan(ctx),
 			csrf, r, strategies, f)
 		if err != nil {

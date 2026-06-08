@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1321,7 +1320,7 @@ func TestFormHydration(t *testing.T) {
 		t.Helper()
 		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
 		r = r.WithContext(ctx)
-		f, err := login.NewFlow(reg.Config(), time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := login.NewFlow(reg, r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
 	}
@@ -1580,7 +1579,7 @@ func TestCodeLoginWithLoginChallenge(t *testing.T) {
 		t.Helper()
 		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
 		r = r.WithContext(ctx)
-		f, err := login.NewFlow(reg.Config(), time.Minute, nosurfx.FakeCSRFToken, r, flow.TypeBrowser)
+		f, err := login.NewFlow(reg, r, flow.TypeBrowser)
 		require.NoError(t, err)
 		require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(ctx, f))
 		return r, f

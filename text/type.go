@@ -3,8 +3,6 @@
 
 package text
 
-import "time"
-
 // swagger:enum UITextType
 type UITextType string
 
@@ -14,6 +12,3 @@ const (
 	Error   UITextType = "error"
 	Success UITextType = "success"
 )
-
-var Until = time.Until
-var Since = time.Since

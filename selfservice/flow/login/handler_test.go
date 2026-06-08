@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httprouterx"
 
 	"github.com/ory/kratos/corpx"
@@ -404,7 +405,7 @@ func TestFlowLifecycle(t *testing.T) {
 				actual, res := run(t, flow.TypeAPI, "aal1", `{"method":"password"}`, false)
 				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
 				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -417,7 +418,7 @@ func TestFlowLifecycle(t *testing.T) {
 				actual, res := run(t, flow.TypeBrowser, "aal1", `{"method":"password"}`, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
 				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 		})
 

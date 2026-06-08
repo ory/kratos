@@ -10,6 +10,7 @@ import (
 	"github.com/gofrs/uuid"
 	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
@@ -56,6 +57,7 @@ func ErrSessionRequiredForHigherAAL() *herodot.DefaultError {
 
 type (
 	errorHandlerDependencies interface {
+		clock.Provider
 		errorx.ManagementProvider
 		httpx.WriterProvider
 		logrusx.Provider
@@ -90,7 +92,7 @@ func (s *ErrorHandler) PrepareReplacementForExpiredFlow(w http.ResponseWriter, r
 		return nil, err
 	}
 
-	newFlow.UI.Messages.Add(text.NewErrorValidationLoginFlowExpired(errExpired.ExpiredAt))
+	newFlow.UI.Messages.Add(text.NewErrorValidationLoginFlowExpired(s.d.Clock(), errExpired.ExpiredAt))
 	if err := s.d.LoginFlowPersister().UpdateLoginFlow(r.Context(), newFlow); err != nil {
 		return nil, err
 	}

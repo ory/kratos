@@ -7,7 +7,6 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/pkg/errors"
 
@@ -26,6 +25,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
@@ -50,6 +50,7 @@ func ContinuityKey(id string) string {
 
 type (
 	handlerDependencies interface {
+		clock.Provider
 		nosurfx.CSRFProvider
 		httpx.WriterProvider
 		logrusx.Provider
@@ -130,7 +131,7 @@ func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Re
 	ctx, span := h.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.flow.settings.Handler.NewFlow")
 	defer otelx.End(span, &err)
 
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowSettingsFlowLifespan(r.Context()), r, i, ft)
+	f, err := NewFlow(h.d, r, i, ft)
 	if err != nil {
 		return nil, err
 	}
@@ -445,7 +446,7 @@ func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if pr.ExpiresAt.Before(time.Now().UTC()) {
+	if pr.ExpiresAt.Before(h.d.Clock().Now().UTC()) {
 		if pr.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(ctx, h.d.Config(), RouteInitBrowserFlow, pr.ReturnTo)
 
@@ -615,7 +616,7 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := f.Valid(ss); err != nil {
+	if err := f.Valid(h.d.Clock(), ss); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, ss.Identity, ss, err)
 		return
 	}

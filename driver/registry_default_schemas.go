@@ -9,9 +9,9 @@ import (
 	"github.com/ory/kratos/schema"
 )
 
+// IdentityTraitsSchemas returns the identity traits schemas. The provider is
+// eagerly initialized in initCheapMembers (or replaced in Init), so this getter
+// only reads the field and never lazily initializes it.
 func (m *RegistryDefault) IdentityTraitsSchemas(ctx context.Context) (schema.IdentitySchemaList, error) {
-	if m.identitySchemaProvider == nil {
-		m.identitySchemaProvider = schema.NewDefaultIdentityTraitsProvider(m)
-	}
 	return m.identitySchemaProvider.IdentityTraitsSchemas(ctx)
 }

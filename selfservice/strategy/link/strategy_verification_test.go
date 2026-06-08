@@ -373,7 +373,7 @@ func TestVerification(t *testing.T) {
 	})
 
 	newValidFlow := func(t *testing.T, fType flow.Type, requestURL string) (*verification.Flow, *link.VerificationToken) {
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), nil, fType)
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), nil, fType)
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
@@ -476,7 +476,7 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 
 		// Create a verification flow in StateEmailSent.
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -591,8 +591,9 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 
 		// Create verification flow + PTC linked to the session.
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 			httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -681,8 +682,9 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 			httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -778,7 +780,7 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Update(ctx, concurrentID, identity.ManagerAllowWriteProtectedTraits))
 
 		// Create a verification flow in StateEmailSent.
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -850,8 +852,9 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 			httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))

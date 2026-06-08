@@ -17,6 +17,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
@@ -35,6 +36,7 @@ type (
 	}
 
 	dependencies interface {
+		clock.Provider
 		nosurfx.CSRFProvider
 		nosurfx.CSRFTokenGeneratorProvider
 		httpx.WriterProvider

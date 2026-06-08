@@ -5,7 +5,6 @@ package recovery
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/pkg/errors"
 
@@ -21,6 +20,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/sqlcon"
@@ -40,6 +40,7 @@ type (
 		RecoveryHandler() *Handler
 	}
 	handlerDependencies interface {
+		clock.Provider
 		errorx.ManagementProvider
 		identity.ManagementProvider
 		identity.PrivilegedPoolProvider
@@ -128,7 +129,7 @@ func (h *Handler) createNativeRecoveryFlow(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategies, flow.TypeAPI)
+	f, err := NewFlow(h.d, h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategies, flow.TypeAPI)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
@@ -204,7 +205,7 @@ func (h *Handler) createBrowserRecoveryFlow(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategies, flow.TypeBrowser)
+	f, err := NewFlow(h.d, h.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, activeRecoveryStrategies, flow.TypeBrowser)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -307,7 +308,7 @@ func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if f.ExpiresAt.Before(time.Now().UTC()) {
+	if f.ExpiresAt.Before(h.d.Clock().Now().UTC()) {
 		if f.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, f.ReturnTo)
 
@@ -318,7 +319,7 @@ func (h *Handler) getRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.d.Writer().WriteError(w, r, flow.NewFlowExpiredError(f.ExpiresAt).
+		h.d.Writer().WriteError(w, r, flow.NewFlowExpiredError(h.d.Clock(), f.ExpiresAt).
 			WithDetail("api", urlx.AppendPaths(h.d.Config().SelfPublicURL(r.Context()), RouteInitAPIFlow).String()))
 		return
 	}
@@ -430,7 +431,7 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := f.Valid(); err != nil {
+	if err := f.Valid(h.d.Clock()); err != nil {
 		h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 		return
 	}

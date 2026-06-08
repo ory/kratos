@@ -15,6 +15,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"
@@ -49,6 +50,10 @@ func (l *logRegistryOnly) Audit() *logrusx.Logger {
 
 func (l *logRegistryOnly) Tracer(context.Context) *otelx.Tracer {
 	return otelx.NewNoop()
+}
+
+func (l *logRegistryOnly) Clock() clock.Clock {
+	return clock.New()
 }
 
 func (l *logRegistryOnly) IdentityTraitsSchemas(context.Context) (schema.IdentitySchemaList, error) {

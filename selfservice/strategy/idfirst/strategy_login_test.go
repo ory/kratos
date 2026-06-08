@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httprouterx"
 
 	"github.com/ory/kratos/driver/config"
@@ -174,7 +175,7 @@ func TestCompleteLogin(t *testing.T) {
 			actual, res := testhelpers.LoginMakeRequestCtx(t.Context(), t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -198,7 +199,7 @@ func TestCompleteLogin(t *testing.T) {
 			actual, res := testhelpers.LoginMakeRequestCtx(t.Context(), t, false, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
 		})
 	})
 
@@ -615,7 +616,7 @@ func TestCompleteLogin(t *testing.T) {
 }
 
 func TestFormHydration(t *testing.T) {
-	conf, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
 		config.ViperKeySelfServiceLoginFlowStyle: "identifier_first",
 		config.ViperKeyDefaultIdentitySchemaID:   "default",
 		config.ViperKeyIdentitySchemas: config.Schemas{
@@ -641,7 +642,7 @@ func TestFormHydration(t *testing.T) {
 
 		r := httptest.NewRequest("GET", "/self-service/login/browser"+query, nil)
 		r = r.WithContext(t.Context())
-		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := login.NewFlow(reg, r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
 	}

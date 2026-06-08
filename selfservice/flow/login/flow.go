@@ -25,8 +25,10 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -179,8 +181,19 @@ var (
 	_ flow.FlowWithContinueWith = (*Flow)(nil)
 )
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, flowType flow.Type) (*Flow, error) {
-	now := time.Now().UTC()
+// flowDependencies are the dependencies NewFlow needs to construct a login
+// flow: the configuration (for the lifespan and return-to validation), the
+// clock, and the CSRF token generator.
+type flowDependencies interface {
+	config.Provider
+	clock.Provider
+	nosurfx.CSRFTokenGeneratorProvider
+}
+
+func NewFlow(reg flowDependencies, r *http.Request, flowType flow.Type) (*Flow, error) {
+	conf := reg.Config()
+	now := reg.Clock().Now().UTC()
+	exp := conf.SelfServiceFlowLoginRequestLifespan(r.Context())
 	id := x.NewUUID()
 	requestURL := x.RequestURL(r).String()
 
@@ -212,7 +225,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
 		RequestURL: requestURL,
-		CSRFToken:  csrf,
+		CSRFToken:  reg.GenerateCSRFToken(r),
 		Type:       flowType,
 		Refresh:    refresh,
 		RequestedAAL: identity.AuthenticatorAssuranceLevel(strings.ToLower(cmp.Or(
@@ -247,9 +260,9 @@ func (f *Flow) GetTransientPayload() json.RawMessage          { return f.Transie
 // This is the case if the refresh query parameter is set to true.
 func (f *Flow) IsRefresh() bool { return f.Refresh }
 
-func (f *Flow) Valid() error {
-	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+func (f *Flow) Valid(c clock.Clock) error {
+	if f.ExpiresAt.Before(c.Now()) {
+		return errors.WithStack(flow.NewFlowExpiredError(c, f.ExpiresAt))
 	}
 	return nil
 }

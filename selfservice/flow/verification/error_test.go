@@ -14,6 +14,7 @@ import (
 
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/jsonx"
 
 	"github.com/ory/kratos/ui/node"
@@ -74,7 +75,7 @@ func TestHandleError(t *testing.T) {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		strategies, _, err := reg.GetActiveVerificationStrategies(context.Background())
 		require.NoError(t, err)
-		f, err := verification.NewFlow(conf, ttl, nosurfx.FakeCSRFToken, req, strategies, ft)
+		f, err := verification.NewFlow(reg, ttl, nosurfx.FakeCSRFToken, req, strategies, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(context.Background(), f))
 		f, err = reg.VerificationFlowPersister().GetVerificationFlow(context.Background(), f.ID)
@@ -136,7 +137,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				verificationFlow = newFlow(t, time.Minute, flow.TypeAPI)
-				flowError = flow.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 				methodName = node.UiNodeGroup(verification.VerificationStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -204,7 +205,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			verificationFlow = &verification.Flow{Type: flow.TypeBrowser}
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 			methodName = node.LinkGroup
 
 			lf, _ := expectVerificationUI(t)
@@ -244,7 +245,7 @@ func TestHandleError(t *testing.T) {
 
 			verificationFlow = newFlow(t, 0, flow.TypeBrowser)
 			verificationFlow.Active = "not-valid"
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 
 			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationUse, "not-valid")
 			sse, _ := expectErrorUI(t)

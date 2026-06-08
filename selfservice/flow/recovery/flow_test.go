@@ -21,13 +21,14 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/selfservice/strategy/link"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/jsonx"
 	"github.com/ory/x/urlx"
 )
 
 func TestFlow(t *testing.T) {
 	ctx := context.Background()
-	conf := pkg.NewConfigurationWithDefaults(t)
+	conf, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	must := func(r *recovery.Flow, err error) *recovery.Flow {
 		require.NoError(t, err)
@@ -39,11 +40,11 @@ func TestFlow(t *testing.T) {
 		r         *recovery.Flow
 		expectErr bool
 	}{
-		{r: must(recovery.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser))},
-		{r: must(recovery.NewFlow(conf, -time.Hour, "", u, nil, flow.TypeBrowser)), expectErr: true},
+		{r: must(recovery.NewFlow(reg, time.Hour, "", u, nil, flow.TypeBrowser))},
+		{r: must(recovery.NewFlow(reg, -time.Hour, "", u, nil, flow.TypeBrowser)), expectErr: true},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			err := tc.r.Valid()
+			err := tc.r.Valid(clock.New())
 			if tc.expectErr {
 				require.Error(t, err)
 				return
@@ -54,13 +55,13 @@ func TestFlow(t *testing.T) {
 	}
 
 	assert.EqualValues(t, flow.StateChooseMethod,
-		must(recovery.NewFlow(conf, time.Hour, "", u, nil, flow.TypeBrowser)).State)
+		must(recovery.NewFlow(reg, time.Hour, "", u, nil, flow.TypeBrowser)).State)
 
 	t.Run("type=return_to", func(t *testing.T) {
-		_, err := recovery.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, nil, flow.TypeBrowser)
+		_, err := recovery.NewFlow(reg, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=https://not-allowed/foobar"}, Host: "ory.sh"}, nil, flow.TypeBrowser)
 		require.Error(t, err)
 
-		_, err = recovery.NewFlow(conf, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
+		_, err = recovery.NewFlow(reg, 0, "csrf", &http.Request{URL: &url.URL{Path: "/", RawQuery: "return_to=" + urlx.AppendPaths(conf.SelfPublicURL(ctx), "/self-service/login/browser").String()}, Host: "ory.sh"}, nil, flow.TypeBrowser)
 		require.NoError(t, err)
 	})
 }
@@ -84,11 +85,11 @@ func TestGetRequestURL(t *testing.T) {
 }
 
 func TestNewFlow_capturesCourierBaseURL(t *testing.T) {
-	conf := pkg.NewConfigurationWithDefaults(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	t.Run("nothing in context", func(t *testing.T) {
 		r := &http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}
-		f, err := recovery.NewFlow(conf, time.Hour, "", r, nil, flow.TypeBrowser)
+		f, err := recovery.NewFlow(reg, time.Hour, "", r, nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		assert.Equal(t, "", f.GetCourierBaseURL())
 	})
@@ -97,7 +98,7 @@ func TestNewFlow_capturesCourierBaseURL(t *testing.T) {
 		base := urlx.ParseOrPanic("https://customer.example.com/")
 		r := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
 			WithContext(x.WithBaseURL(context.Background(), base))
-		f, err := recovery.NewFlow(conf, time.Hour, "", r, nil, flow.TypeBrowser)
+		f, err := recovery.NewFlow(reg, time.Hour, "", r, nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		assert.Equal(t, base.String(), f.GetCourierBaseURL())
 	})
@@ -106,7 +107,7 @@ func TestNewFlow_capturesCourierBaseURL(t *testing.T) {
 		base := urlx.ParseOrPanic("http://localhost:4000")
 		r := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
 			WithContext(x.WithBaseURL(context.Background(), base))
-		f, err := recovery.NewFlow(conf, time.Hour, "", r, nil, flow.TypeBrowser)
+		f, err := recovery.NewFlow(reg, time.Hour, "", r, nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		assert.Equal(t, "http://localhost:4000", f.GetCourierBaseURL())
 	})
@@ -128,9 +129,9 @@ func TestFromOldFlow(t *testing.T) {
 			flow.TypeBrowser,
 		} {
 			t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
-				f, err := recovery.NewFlow(conf, 0, "csrf", &r, recovery.Strategies{code.NewStrategy(reg)}, ft)
+				f, err := recovery.NewFlow(reg, 0, "csrf", &r, recovery.Strategies{code.NewStrategy(reg)}, ft)
 				require.NoError(t, err)
-				nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
+				nF, err := recovery.FromOldFlow(reg, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
 				require.NoError(t, err)
 				require.Equal(t, ft, nF.Type)
 			})
@@ -143,9 +144,9 @@ func TestFromOldFlow(t *testing.T) {
 			flow.TypeBrowser,
 		} {
 			t.Run(fmt.Sprintf("case=original flow is %s", ft), func(t *testing.T) {
-				f, err := recovery.NewFlow(conf, 0, "csrf", &r, recovery.Strategies{link.NewStrategy(reg)}, ft)
+				f, err := recovery.NewFlow(reg, 0, "csrf", &r, recovery.Strategies{link.NewStrategy(reg)}, ft)
 				require.NoError(t, err)
-				nF, err := recovery.FromOldFlow(conf, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
+				nF, err := recovery.FromOldFlow(reg, time.Duration(time.Hour), f.CSRFToken, &r, nil, *f)
 				require.NoError(t, err)
 				require.Equal(t, flow.TypeBrowser, nF.Type)
 			})
@@ -154,13 +155,13 @@ func TestFromOldFlow(t *testing.T) {
 }
 
 func TestFromOldFlow_capturesCourierBaseURL(t *testing.T) {
-	conf := pkg.NewConfigurationWithDefaults(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	t.Run("uses the new request's context, not the old flow's value", func(t *testing.T) {
 		// Old flow was created at customer.example.com.
 		oldR := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
 			WithContext(x.WithBaseURL(context.Background(), urlx.ParseOrPanic("https://customer.example.com/")))
-		oldF, err := recovery.NewFlow(conf, time.Hour, "csrf", oldR, nil, flow.TypeBrowser)
+		oldF, err := recovery.NewFlow(reg, time.Hour, "csrf", oldR, nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		require.Equal(t, "https://customer.example.com/", oldF.GetCourierBaseURL())
 
@@ -168,16 +169,16 @@ func TestFromOldFlow_capturesCourierBaseURL(t *testing.T) {
 		// reflect that, not silently inherit the old flow's captured URL.
 		newR := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
 			WithContext(x.WithBaseURL(context.Background(), urlx.ParseOrPanic("http://localhost:4000")))
-		newF, err := recovery.FromOldFlow(conf, time.Hour, oldF.CSRFToken, newR, nil, *oldF)
+		newF, err := recovery.FromOldFlow(reg, time.Hour, oldF.CSRFToken, newR, nil, *oldF)
 		require.NoError(t, err)
 		assert.Equal(t, "http://localhost:4000", newF.GetCourierBaseURL())
 	})
 
 	t.Run("empty when neither old nor new have a base URL", func(t *testing.T) {
 		r := &http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}
-		oldF, err := recovery.NewFlow(conf, time.Hour, "csrf", r, nil, flow.TypeBrowser)
+		oldF, err := recovery.NewFlow(reg, time.Hour, "csrf", r, nil, flow.TypeBrowser)
 		require.NoError(t, err)
-		newF, err := recovery.FromOldFlow(conf, time.Hour, oldF.CSRFToken, r, nil, *oldF)
+		newF, err := recovery.FromOldFlow(reg, time.Hour, oldF.CSRFToken, r, nil, *oldF)
 		require.NoError(t, err)
 		assert.Equal(t, "", newF.GetCourierBaseURL())
 	})
@@ -189,11 +190,11 @@ func TestFromOldFlow_capturesCourierBaseURL(t *testing.T) {
 // future refactor moves it elsewhere, this fails — separately from the
 // getter contract.
 func TestCourierBaseURLStoredInInternalContext(t *testing.T) {
-	conf := pkg.NewConfigurationWithDefaults(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	r := (&http.Request{URL: urlx.ParseOrPanic("http://foo/bar"), Host: "foo"}).
 		WithContext(x.WithBaseURL(context.Background(), urlx.ParseOrPanic("https://customer.example.com/")))
-	f, err := recovery.NewFlow(conf, time.Hour, "csrf", r, nil, flow.TypeBrowser)
+	f, err := recovery.NewFlow(reg, time.Hour, "csrf", r, nil, flow.TypeBrowser)
 	require.NoError(t, err)
 
 	got := gjson.GetBytes(f.InternalContext, flow.InternalContextKeyCourierBaseURL).String()

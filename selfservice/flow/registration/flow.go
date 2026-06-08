@@ -21,8 +21,10 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -135,8 +137,19 @@ type Flow struct {
 
 var _ flow.Flow = new(Flow)
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, ft flow.Type) (*Flow, error) {
-	now := time.Now().UTC()
+// flowDependencies are the dependencies NewFlow needs to construct a
+// registration flow: the configuration (for the lifespan and return-to
+// validation), the clock, and the CSRF token generator.
+type flowDependencies interface {
+	config.Provider
+	clock.Provider
+	nosurfx.CSRFTokenGeneratorProvider
+}
+
+func NewFlow(reg flowDependencies, r *http.Request, ft flow.Type) (*Flow, error) {
+	conf := reg.Config()
+	now := reg.Clock().Now().UTC()
+	exp := conf.SelfServiceFlowRegistrationRequestLifespan(r.Context())
 	id := x.NewUUID()
 
 	// Pre-validate the return to URL which is contained in the HTTP request.
@@ -174,7 +187,7 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 			Method: "POST",
 			Action: flow.AppendFlowTo(urlx.AppendPaths(conf.SelfPublicURL(r.Context()), RouteSubmitFlow), id).String(),
 		},
-		CSRFToken:       csrf,
+		CSRFToken:       reg.GenerateCSRFToken(r),
 		Type:            ft,
 		InternalContext: []byte("{}"),
 		State:           flow.StateChooseMethod,
@@ -201,9 +214,9 @@ func (f *Flow) GetTransientPayload() json.RawMessage          { return f.Transie
 func (f *Flow) SetReturnToVerification(to string)             { f.ReturnToVerification = to }
 func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString     { return f.OAuth2LoginChallenge }
 
-func (f *Flow) Valid() error {
-	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+func (f *Flow) Valid(c clock.Clock) error {
+	if f.ExpiresAt.Before(c.Now()) {
+		return errors.WithStack(flow.NewFlowExpiredError(c, f.ExpiresAt))
 	}
 	return nil
 }

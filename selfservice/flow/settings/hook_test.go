@@ -55,7 +55,7 @@ func TestSettingsExecutor(t *testing.T) {
 					}
 					sess, _ := testhelpers.NewActiveSession(r, reg, i, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
-					f, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
+					f, err := settings.NewFlow(reg, r, sess.Identity, ft)
 					require.NoError(t, err)
 					if handleErr(t, w, r, reg.SettingsHookExecutor().PreSettingsHook(r.Context(), w, r, f, sess)) {
 						_, _ = w.Write([]byte("ok"))
@@ -68,7 +68,7 @@ func TestSettingsExecutor(t *testing.T) {
 					}
 					sess, _ := testhelpers.NewActiveSession(r, reg, i, time.Now().UTC(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
 
-					a, err := settings.NewFlow(conf, time.Minute, r, sess.Identity, ft)
+					a, err := settings.NewFlow(reg, r, sess.Identity, ft)
 					require.NoError(t, err)
 					a.RequestURL = x.RequestURL(r).String()
 					require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(r.Context(), a))

@@ -12,7 +12,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -702,7 +701,7 @@ func TestRegistration(t *testing.T) {
 
 func TestPopulateRegistrationMethod(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 
 	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration.schema.json")
 	ctx = contextx.WithConfigValue(ctx, config.ViperKeyPasskeyRPDisplayName, "localhost")
@@ -725,7 +724,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := registration.NewFlow(reg, r, flow.TypeBrowser)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f
@@ -735,7 +734,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", r, flowType)
+		f, err := registration.NewFlow(reg, r, flowType)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f

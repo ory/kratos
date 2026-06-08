@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/ory/x/clock"
 )
 
-func NewErrorValidationSettingsFlowExpired(expiredAt time.Time) *Message {
+func NewErrorValidationSettingsFlowExpired(c clock.Clock, expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationSettingsFlowExpired,
-		Text: fmt.Sprintf("The settings flow expired %.2f minutes ago, please try again.", Since(expiredAt).Minutes()),
+		Text: fmt.Sprintf("The settings flow expired %.2f minutes ago, please try again.", c.Now().Sub(expiredAt).Minutes()),
 		Type: Error,
 		Context: context(map[string]any{
 			"expired_at":      expiredAt,

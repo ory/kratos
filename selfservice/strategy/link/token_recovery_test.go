@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/stringslice"
 	"github.com/ory/x/urlx"
 
@@ -22,12 +23,12 @@ import (
 )
 
 func TestRecoveryToken(t *testing.T) {
-	conf, _ := pkg.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 
 	req := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.com/")}
 	t.Run("func=NewSelfServiceRecoveryToken", func(t *testing.T) {
 		t.Run("case=creates unique tokens", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := recovery.NewFlow(reg, time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			tokens := make([]string, 10)
@@ -40,12 +41,12 @@ func TestRecoveryToken(t *testing.T) {
 	})
 	t.Run("method=Valid", func(t *testing.T) {
 		t.Run("case=is invalid when the flow is expired", func(t *testing.T) {
-			f, err := recovery.NewFlow(conf, -time.Hour, "", req, nil, flow.TypeBrowser)
+			f, err := recovery.NewFlow(reg, -time.Hour, "", req, nil, flow.TypeBrowser)
 			require.NoError(t, err)
 
 			token := link.NewSelfServiceRecoveryToken(nil, f, -time.Hour)
-			require.Error(t, token.Valid())
-			assert.EqualError(t, token.Valid(), f.Valid().Error())
+			require.Error(t, token.Valid(clock.New()))
+			assert.EqualError(t, token.Valid(clock.New()), f.Valid(clock.New()).Error())
 		})
 	})
 }

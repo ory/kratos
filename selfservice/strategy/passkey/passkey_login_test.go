@@ -13,7 +13,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +55,7 @@ func TestPopulateLoginMethod(t *testing.T) {
 	t.Run("case=API flow builds standard nodes and skips JS", func(t *testing.T) {
 		// Build a properly initialized API flow to avoid nil UI/container issues.
 		r := httptest.NewRequest("GET", "/self-service/login/api", nil).WithContext(t.Context())
-		f, err := login.NewFlow(fix.conf, time.Minute, "csrf_token", r, flow.TypeAPI)
+		f, err := login.NewFlow(fix.reg, r, flow.TypeAPI)
 		require.NoError(t, err)
 		f.UI.Nodes = make(node.Nodes, 0)
 
@@ -547,7 +546,7 @@ func createIdentity(t *testing.T, ctx context.Context, reg driver.Registry, id u
 
 func TestFormHydration(t *testing.T) {
 	ctx := context.Background()
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 
 	ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePasskey)+".enabled", true)
 	ctx = contextx.WithConfigValue(
@@ -580,7 +579,7 @@ func TestFormHydration(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := login.NewFlow(reg, r, flow.TypeBrowser)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f

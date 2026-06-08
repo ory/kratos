@@ -6,7 +6,6 @@ package login
 import (
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -30,6 +29,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
@@ -51,6 +51,7 @@ const (
 
 type (
 	dependencies interface {
+		clock.Provider
 		HookExecutorProvider
 		FlowPersistenceProvider
 		errorx.ManagementProvider
@@ -146,7 +147,7 @@ func WithLoginChallenge(loginChallenge string) FlowOption {
 
 func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, *session.Session, error) {
 	conf := h.d.Config()
-	f, err := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)
+	f, err := NewFlow(h.d, r, ft)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -763,7 +764,7 @@ func (h *Handler) getLoginFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ar.ExpiresAt.Before(time.Now()) {
+	if ar.ExpiresAt.Before(h.d.Clock().Now()) {
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(ctx, h.d.Config(), RouteInitBrowserFlow, ar.ReturnTo)
 
@@ -945,7 +946,7 @@ func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 continueLogin:
-	if err := f.Valid(); err != nil {
+	if err := f.Valid(h.d.Clock()); err != nil {
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, err)
 		return
 	}

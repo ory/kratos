@@ -25,23 +25,23 @@ import (
 	"github.com/ory/kratos/text"
 
 	"github.com/ory/x/clidoc"
+	"github.com/ory/x/clock"
 )
 
 var (
 	aSecondAgo = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(-time.Second)
 	inAMinute  = time.Date(2020, 1, 1, 1, 0, 0, 0, time.UTC).Add(time.Minute)
+
+	// Fixed clocks make the rendered "expired N minutes ago" / "within the next
+	// N minutes" example messages deterministic for doc generation. They are
+	// anchored so the durations come out as exactly one minute.
+	docExpiredClock = clock.NewMock(aSecondAgo.Add(time.Minute))
+	docUntilClock   = clock.NewMock(inAMinute.Add(-time.Minute))
 )
 
 var messages map[string]*text.Message
 
 func init() {
-	text.Until = func(t time.Time) time.Duration {
-		return time.Minute
-	}
-	text.Since = func(time.Time) time.Duration {
-		return time.Minute
-	}
-
 	messages = map[string]*text.Message{
 		"NewInfoNodeLabelVerifyOTP":                  text.NewInfoNodeLabelVerifyOTP(),
 		"NewInfoNodeLabelVerificationCode":           text.NewInfoNodeLabelVerificationCode(),
@@ -52,7 +52,7 @@ func init() {
 		"NewInfoNodeLabelSave":                       text.NewInfoNodeLabelSave(),
 		"NewInfoNodeLabelSubmit":                     text.NewInfoNodeLabelSubmit(),
 		"NewInfoNodeLabelID":                         text.NewInfoNodeLabelID(),
-		"NewErrorValidationSettingsFlowExpired":      text.NewErrorValidationSettingsFlowExpired(aSecondAgo),
+		"NewErrorValidationSettingsFlowExpired":      text.NewErrorValidationSettingsFlowExpired(docExpiredClock, aSecondAgo),
 		"NewInfoSelfServiceSettingsTOTPQRCode":       text.NewInfoSelfServiceSettingsTOTPQRCode(),
 		"NewInfoSelfServiceSettingsTOTPSecret":       text.NewInfoSelfServiceSettingsTOTPSecret("{secret}"),
 		"NewInfoSelfServiceSettingsTOTPSecretLabel":  text.NewInfoSelfServiceSettingsTOTPSecretLabel(),
@@ -74,7 +74,7 @@ func init() {
 		"NewInfoSelfServiceRegisterWebAuthnDisplayName":           text.NewInfoSelfServiceRegisterWebAuthnDisplayName(),
 		"NewInfoSelfServiceRemoveWebAuthn":                        text.NewInfoSelfServiceRemoveWebAuthn("{display_name}", aSecondAgo),
 		"NewInfoSelfServiceRemovePasskey":                         text.NewInfoSelfServiceRemovePasskey("{display_name}", aSecondAgo),
-		"NewErrorValidationVerificationFlowExpired":               text.NewErrorValidationVerificationFlowExpired(aSecondAgo),
+		"NewErrorValidationVerificationFlowExpired":               text.NewErrorValidationVerificationFlowExpired(docExpiredClock, aSecondAgo),
 		"NewInfoSelfServiceVerificationSuccessful":                text.NewInfoSelfServiceVerificationSuccessful(),
 		"NewVerificationEmailSent":                                text.NewVerificationEmailSent(),
 		"NewVerificationEmailWithCodeSent":                        text.NewVerificationEmailWithCodeSent(),
@@ -136,7 +136,7 @@ func init() {
 		"NewInfoLoginWith":                                        text.NewInfoLoginWith("{provider}", "{providerID}"),
 		"NewInfoLoginWithAndLink":                                 text.NewInfoLoginWithAndLink("{provider}"),
 		"NewErrorValidationNoDeviceAuthnDevice":                   text.NewErrorValidationNoDeviceAuthnDevice(),
-		"NewErrorValidationLoginFlowExpired":                      text.NewErrorValidationLoginFlowExpired(aSecondAgo),
+		"NewErrorValidationLoginFlowExpired":                      text.NewErrorValidationLoginFlowExpired(docExpiredClock, aSecondAgo),
 		"NewErrorValidationLoginNoStrategyFound":                  text.NewErrorValidationLoginNoStrategyFound(),
 		"NewErrorValidationRegistrationNoStrategyFound":           text.NewErrorValidationRegistrationNoStrategyFound(),
 		"NewErrorValidationSettingsNoStrategyFound":               text.NewErrorValidationSettingsNoStrategyFound(),
@@ -149,9 +149,9 @@ func init() {
 		"NewInfoRegistrationContinue":                             text.NewInfoRegistrationContinue(),
 		"NewInfoRegistrationBack":                                 text.NewInfoRegistrationBack(),
 		"NewInfoSelfServiceChooseCredentials":                     text.NewInfoSelfServiceChooseCredentials(),
-		"NewErrorValidationRegistrationFlowExpired":               text.NewErrorValidationRegistrationFlowExpired(aSecondAgo),
-		"NewErrorValidationRecoveryFlowExpired":                   text.NewErrorValidationRecoveryFlowExpired(aSecondAgo),
-		"NewRecoverySuccessful":                                   text.NewRecoverySuccessful(inAMinute),
+		"NewErrorValidationRegistrationFlowExpired":               text.NewErrorValidationRegistrationFlowExpired(docExpiredClock, aSecondAgo),
+		"NewErrorValidationRecoveryFlowExpired":                   text.NewErrorValidationRecoveryFlowExpired(docExpiredClock, aSecondAgo),
+		"NewRecoverySuccessful":                                   text.NewRecoverySuccessful(docUntilClock, inAMinute),
 		"NewRecoveryEmailSent":                                    text.NewRecoveryEmailSent(),
 		"NewRecoveryEmailWithCodeSent":                            text.NewRecoveryEmailWithCodeSent(),
 		"NewRecoveryCodeRecoverySelectAddressSent":                text.NewRecoveryCodeRecoverySelectAddressSent("{masked_address}"),

@@ -23,6 +23,7 @@ import (
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/session"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/fsx"
 	"github.com/ory/x/logrusx"
@@ -40,6 +41,7 @@ type (
 	persisterDependencies interface {
 		logrusx.Provider
 		config.Provider
+		clock.Provider
 		contextx.Provider
 		otelx.Provider
 		schema.IdentitySchemaProvider

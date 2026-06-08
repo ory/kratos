@@ -39,7 +39,7 @@ func TestRecoveryExecutor(t *testing.T) {
 	newServer := func(t *testing.T, i *identity.Identity, ft flow.Type) *httptest.Server {
 		router := http.NewServeMux()
 		router.HandleFunc("GET /recovery/pre", func(w http.ResponseWriter, r *http.Request) {
-			a, err := recovery.NewFlow(conf, time.Minute, nosurfx.FakeCSRFToken, r, s, ft)
+			a, err := recovery.NewFlow(reg, time.Minute, nosurfx.FakeCSRFToken, r, s, ft)
 			require.NoError(t, err)
 			if testhelpers.SelfServiceHookErrorHandler(t, w, r, recovery.ErrHookAbortFlow, reg.RecoveryExecutor().PreRecoveryHook(w, r, a)) {
 				_, _ = w.Write([]byte("ok"))
@@ -47,7 +47,7 @@ func TestRecoveryExecutor(t *testing.T) {
 		})
 
 		router.HandleFunc("GET /recovery/post", func(w http.ResponseWriter, r *http.Request) {
-			a, err := recovery.NewFlow(conf, time.Minute, nosurfx.FakeCSRFToken, r, s, ft)
+			a, err := recovery.NewFlow(reg, time.Minute, nosurfx.FakeCSRFToken, r, s, ft)
 			require.NoError(t, err)
 			s, err := testhelpers.NewActiveSession(r,
 				reg,

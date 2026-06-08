@@ -34,6 +34,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/urlx"
 )
@@ -88,7 +89,7 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type) *settings.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f, err := settings.NewFlow(conf, ttl, req, &id, ft)
+		f, err := settings.NewFlow(reg, req, &id, ft)
 		require.NoError(t, err)
 
 		for _, s := range reg.SettingsStrategies(context.Background()) {
@@ -153,7 +154,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				settingsFlow = newFlow(t, time.Minute, tc.t)
-				flowError = flow.NewFlowExpiredError(expiredAnHourAgo)
+				flowError = flow.NewFlowExpiredError(clock.New(), expiredAnHourAgo)
 				flowMethod = settings.StrategyProfile
 
 				res, err := c.Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -169,7 +170,7 @@ func TestHandleError(t *testing.T) {
 				// "since" and "error.reason" both derive from time.Since(at), recomputed when the expected error is
 				// built here — after the response was generated. Across a rounding boundary the two timings disagree,
 				// so exclude both from the exact comparison and verify the reason template separately.
-				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(expiredAnHourAgo), json.RawMessage(body), []string{"since", "error.reason", "redirect_browser_to", "use_flow_id"})
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), expiredAnHourAgo), json.RawMessage(body), []string{"since", "error.reason", "redirect_browser_to", "use_flow_id"})
 				assert.Regexp(t, `^The self-service flow expired \d+\.\d{2} minutes ago, initialize a new one\.$`, gjson.GetBytes(body, "error.reason").String())
 			})
 
@@ -280,7 +281,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			settingsFlow = &settings.Flow{Type: flow.TypeBrowser}
-			flowError = flow.NewFlowExpiredError(expiredAnHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), expiredAnHourAgo)
 			flowMethod = settings.StrategyProfile
 
 			lf, _ := expectSettingsUI(t)

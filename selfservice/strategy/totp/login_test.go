@@ -597,7 +597,7 @@ func TestCompleteLogin(t *testing.T) {
 }
 
 func TestFormHydration(t *testing.T) {
-	conf, reg := pkg.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.MethodEnableConfig(identity.CredentialsTypeTOTP, true)),
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/login.schema.json")),
 	)
@@ -618,7 +618,7 @@ func TestFormHydration(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := login.NewFlow(reg, r, flow.TypeBrowser)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f

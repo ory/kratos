@@ -31,6 +31,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/ioutilx"
@@ -456,7 +457,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 			actual, res := testhelpers.RegistrationMakeRequestCtx(t.Context(), t, true, false, f, apiClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "")
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "")
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
@@ -467,7 +468,7 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 			actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
@@ -483,10 +484,19 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 	})
 
 	t.Run("case=should fail because the password was used in databreaches", func(t *testing.T) {
-		testhelpers.SetDefaultIdentitySchemaFromRaw(conf, multifieldSchema)
-		t.Cleanup(func() {
-			testhelpers.SetDefaultIdentitySchemaFromRaw(conf, basicSchema)
-		})
+		// This subtest needs the multifield schema, whereas the rest of the
+		// suite uses the basic schema. Swapping the shared config's default
+		// schema and restoring it in a cleanup would let that mutation race
+		// in-flight requests of sibling subtests reading the same config. It
+		// therefore owns its own registry, config, and server, preconfigured
+		// with the multifield schema. See .claude/rules/go.md: "subtests that
+		// need parallelization must own their resources".
+		conf, reg := pkg.NewFastRegistryWithMocks(t,
+			configx.WithValue(config.ViperKeySelfServiceRegistrationEnableLegacyOneStep, true),
+			configx.WithValues(testhelpers.DefaultRawIdentitySchemaConfig(multifieldSchema)),
+		)
+		_ = testhelpers.NewRegistrationUIFlowEchoServer(t, reg)
+		publicTS := setupServer(t, reg)
 
 		email := testhelpers.RandomEmail()
 		check := func(t *testing.T, actual string) {

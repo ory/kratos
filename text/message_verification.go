@@ -6,12 +6,14 @@ package text
 import (
 	"fmt"
 	"time"
+
+	"github.com/ory/x/clock"
 )
 
-func NewErrorValidationVerificationFlowExpired(expiredAt time.Time) *Message {
+func NewErrorValidationVerificationFlowExpired(c clock.Clock, expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationVerificationFlowExpired,
-		Text: fmt.Sprintf("The verification flow expired %.2f minutes ago, please try again.", Since(expiredAt).Minutes()),
+		Text: fmt.Sprintf("The verification flow expired %.2f minutes ago, please try again.", c.Now().Sub(expiredAt).Minutes()),
 		Type: Error,
 		Context: context(map[string]any{
 			"expired_at":      expiredAt,

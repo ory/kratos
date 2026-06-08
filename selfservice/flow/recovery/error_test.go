@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/configx"
 
 	"github.com/ory/herodot"
@@ -76,7 +77,7 @@ func TestHandleError(t *testing.T) {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		s, _, err := reg.GetActiveRecoveryStrategies(context.Background())
 		require.NoError(t, err)
-		f, err := recovery.NewFlow(conf, ttl, nosurfx.FakeCSRFToken, req, s, ft)
+		f, err := recovery.NewFlow(reg, ttl, nosurfx.FakeCSRFToken, req, s, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 		f, err = reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), f.ID)
@@ -137,7 +138,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				recoveryFlow = newFlow(t, time.Minute, tc.t)
-				flowError = flow.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 				methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -225,7 +226,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser}
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 			methodName = node.LinkGroup
 
 			lf, _ := expectRecoveryUI(t)
@@ -261,7 +262,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser, Active: "code"}
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 
 			lf, _ := expectRecoveryUI(t)
 			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
@@ -273,7 +274,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser, Active: "not-valid"}
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 
 			lf, _ := expectRecoveryUI(t)
 			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
@@ -289,7 +290,7 @@ func TestHandleError(t *testing.T) {
 
 			recoveryFlow = newFlow(t, 0, flow.TypeBrowser)
 			recoveryFlow.Active = "not-valid"
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 
 			conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "not-valid")
 			sse, _ := expectErrorUI(t)
@@ -339,7 +340,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
 		s, _, err := reg.GetActiveRecoveryStrategies(context.Background())
 		require.NoError(t, err)
-		f, err := recovery.NewFlow(conf, ttl, nosurfx.FakeCSRFToken, req, s, ft)
+		f, err := recovery.NewFlow(reg, ttl, nosurfx.FakeCSRFToken, req, s, ft)
 		require.NoError(t, err)
 		require.NoError(t, reg.RecoveryFlowPersister().CreateRecoveryFlow(context.Background(), f))
 		f, err = reg.RecoveryFlowPersister().GetRecoveryFlow(context.Background(), f.ID)
@@ -400,7 +401,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 				t.Cleanup(reset)
 
 				recoveryFlow = newFlow(t, time.Minute, tc.t)
-				flowError = flow.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 				methodName = node.UiNodeGroup(recovery.RecoveryStrategyLink)
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -496,7 +497,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser}
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 			methodName = node.LinkGroup
 
 			lf, _ := expectRecoveryUI(t)
@@ -532,7 +533,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser, Active: "code"}
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 
 			lf, _ := expectRecoveryUI(t)
 			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
@@ -544,7 +545,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 			t.Cleanup(reset)
 
 			recoveryFlow = &recovery.Flow{Type: flow.TypeBrowser, Active: "not-valid"}
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 
 			lf, _ := expectRecoveryUI(t)
 			require.Len(t, lf.UI.Messages, 1, "%s", jsonx.TestMarshalJSONString(t, lf))
@@ -560,7 +561,7 @@ func TestHandleError_WithContinueWith(t *testing.T) {
 
 			recoveryFlow = newFlow(t, 0, flow.TypeBrowser)
 			recoveryFlow.Active = "not-valid"
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 
 			conf.MustSet(ctx, config.ViperKeySelfServiceRecoveryUse, "not-valid")
 			sse, _ := expectErrorUI(t)

@@ -22,7 +22,7 @@ import (
 func TestLoginCode(t *testing.T) {
 	t.Parallel()
 
-	conf := pkg.NewConfigurationWithDefaults(t)
+	_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
 
 	newCode := func(expiresIn time.Duration, f *login.Flow) *code.LoginCode {
 		return &code.LoginCode{
@@ -37,46 +37,50 @@ func TestLoginCode(t *testing.T) {
 		t.Parallel()
 
 		t.Run("case=returns error if code is expired", func(t *testing.T) {
-			f, err := login.NewFlow(conf, -time.Hour, "", req, flow.TypeBrowser)
+			f, err := login.NewFlow(reg, req, flow.TypeBrowser)
 			require.NoError(t, err)
+			f.ExpiresAt = f.IssuedAt.Add(-time.Hour)
 
 			c := newCode(-time.Hour, f)
-			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound())
+			require.ErrorIs(t, c.Validate(reg.Clock()), code.ErrCodeNotFound())
 		})
 		t.Run("case=returns no error if flow is not expired", func(t *testing.T) {
-			f, err := login.NewFlow(conf, time.Hour, "", req, flow.TypeBrowser)
+			f, err := login.NewFlow(reg, req, flow.TypeBrowser)
 			require.NoError(t, err)
+			f.ExpiresAt = f.IssuedAt.Add(time.Hour)
 
 			c := newCode(time.Hour, f)
-			require.NoError(t, c.Validate())
+			require.NoError(t, c.Validate(reg.Clock()))
 		})
 
 		t.Run("case=returns error if flow has been used", func(t *testing.T) {
-			f, err := login.NewFlow(conf, -time.Hour, "", req, flow.TypeBrowser)
+			f, err := login.NewFlow(reg, req, flow.TypeBrowser)
 			require.NoError(t, err)
+			f.ExpiresAt = f.IssuedAt.Add(-time.Hour)
 
 			c := newCode(time.Hour, f)
 			c.UsedAt = sql.NullTime{
 				Time:  time.Now(),
 				Valid: true,
 			}
-			require.ErrorIs(t, c.Validate(), code.ErrCodeAlreadyUsed())
+			require.ErrorIs(t, c.Validate(reg.Clock()), code.ErrCodeAlreadyUsed())
 		})
 
 		t.Run("case=returns no error if flow has not been used", func(t *testing.T) {
-			f, err := login.NewFlow(conf, -time.Hour, "", req, flow.TypeBrowser)
+			f, err := login.NewFlow(reg, req, flow.TypeBrowser)
 			require.NoError(t, err)
+			f.ExpiresAt = f.IssuedAt.Add(-time.Hour)
 
 			c := newCode(time.Hour, f)
 			c.UsedAt = sql.NullTime{
 				Valid: false,
 			}
-			require.NoError(t, c.Validate())
+			require.NoError(t, c.Validate(reg.Clock()))
 		})
 
 		t.Run("case=returns error if flow is nil", func(t *testing.T) {
 			var c *code.LoginCode
-			require.ErrorIs(t, c.Validate(), code.ErrCodeNotFound())
+			require.ErrorIs(t, c.Validate(reg.Clock()), code.ErrCodeNotFound())
 		})
 	})
 }

@@ -226,7 +226,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return s.HandleRecoveryError(w, r, recoveryFlow, body, err)
 	}
 
-	if err := recoveryFlow.Valid(); err != nil {
+	if err := recoveryFlow.Valid(s.deps.Clock()); err != nil {
 		return s.HandleRecoveryError(w, r, recoveryFlow, body, err)
 	}
 
@@ -321,7 +321,7 @@ func (s *Strategy) recoveryIssueSession(w http.ResponseWriter, r *http.Request, 
 
 	config := s.deps.Config()
 
-	sf.UI.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(config.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx))))
+	sf.UI.Messages.Set(text.NewRecoverySuccessful(s.deps.Clock(), s.deps.Clock().Now().Add(config.SelfServiceFlowSettingsPrivilegedSessionMaxAge(ctx))))
 	if err := s.deps.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), sf); err != nil {
 		return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(err))
 	}
@@ -422,7 +422,7 @@ func (s *Strategy) retryRecoveryFlow(w http.ResponseWriter, r *http.Request, ft 
 	ctx := r.Context()
 	config := s.deps.Config()
 
-	f, err := recovery.NewFlow(config, config.SelfServiceFlowRecoveryRequestLifespan(ctx), s.deps.CSRFHandler().RegenerateToken(w, r), r, recovery.Strategies{s}, ft)
+	f, err := recovery.NewFlow(s.deps, config.SelfServiceFlowRecoveryRequestLifespan(ctx), s.deps.CSRFHandler().RegenerateToken(w, r), r, recovery.Strategies{s}, ft)
 	if err != nil {
 		return err
 	}
@@ -433,7 +433,7 @@ func (s *Strategy) retryRecoveryFlow(w http.ResponseWriter, r *http.Request, ft 
 
 	if retryOptions.err != nil {
 		if expired := new(flow.ExpiredError); errors.As(retryOptions.err, &expired) {
-			f.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(expired.ExpiredAt))
+			f.UI.Messages.Add(text.NewErrorValidationRecoveryFlowExpired(s.deps.Clock(), expired.ExpiredAt))
 		} else if err := f.UI.ParseError(node.CodeGroup, retryOptions.err); err != nil {
 			return err
 		}

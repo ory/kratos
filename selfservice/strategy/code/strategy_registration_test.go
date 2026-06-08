@@ -14,7 +14,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -760,7 +759,7 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := registration.NewFlow(reg.Config(), time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := registration.NewFlow(reg, r, flow.TypeBrowser)
 		f.UI.Nodes = make(node.Nodes, 0)
 		require.NoError(t, err)
 		return r, f
@@ -840,7 +839,7 @@ func TestCodeRegistrationWithLoginChallenge(t *testing.T) {
 		t.Helper()
 		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
 		r = r.WithContext(ctx)
-		f, err := registration.NewFlow(reg.Config(), time.Minute, nosurfx.FakeCSRFToken, r, flow.TypeBrowser)
+		f, err := registration.NewFlow(reg, r, flow.TypeBrowser)
 		require.NoError(t, err)
 		require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(ctx, f))
 		return r, f

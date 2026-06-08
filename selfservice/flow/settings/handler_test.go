@@ -76,10 +76,12 @@ func TestHandler(t *testing.T) {
 	otherUser := testhelpers.NewHTTPClientWithArbitrarySessionCookie(ctx, t, reg)
 
 	newExpiredFlow := func() *settings.Flow {
-		f, err := settings.NewFlow(conf, -time.Minute,
+		f, err := settings.NewFlow(reg,
 			&http.Request{URL: urlx.ParseOrPanic(publicTS.URL + login.RouteInitBrowserFlow)},
 			primaryIdentity, flow.TypeBrowser)
+
 		require.NoError(t, err)
+		f.ExpiresAt = f.IssuedAt.Add(-time.Minute)
 		return f
 	}
 

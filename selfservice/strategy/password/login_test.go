@@ -958,13 +958,33 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("should fail as email is not yet verified", func(t *testing.T) {
-		conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
-			{"hook": "require_verified_address"},
-		})
-		conf.MustSet(t.Context(), config.ViperKeyUseLegacyRequireVerifiedLoginError, true)
-		t.Cleanup(func() {
-			conf.MustSet(t.Context(), config.ViperKeyUseLegacyRequireVerifiedLoginError, false)
-		})
+		// This subtest mutates config (the require_verified_address login hook
+		// and the legacy-error flag) and registers a cleanup that mutates it
+		// again. Sharing the parent's registry would let that mutation race
+		// in-flight requests of sibling subtests reading the same config (e.g.
+		// IsInsecureDevMode via the password hasher). It therefore owns its own
+		// registry, config, and server stack. See .claude/rules/go.md:
+		// "subtests that need parallelization must own their resources".
+		conf, reg := pkg.NewFastRegistryWithMocks(t,
+			configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true),
+			configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
+				"default": "file://./stub/login.schema.json",
+			})),
+			configx.WithValue(config.ViperKeySelfServiceLoginAfter+".password.hooks", []map[string]interface{}{
+				{"hook": "require_verified_address"},
+			}),
+			configx.WithValue(config.ViperKeyUseLegacyRequireVerifiedLoginError, true),
+		)
+		publicTS, _ := testhelpers.NewKratosServerWithRouters(t, reg, httprouterx.NewRouterPublic(), httprouterx.NewRouterAdminWithPrefix())
+		_ = testhelpers.NewLoginUIFlowEchoServer(t, reg)
+		_ = testhelpers.NewErrorTestServer(t, reg)
+
+		expectValidationError := func(t *testing.T, isAPI, refresh, isSPA bool, values func(url.Values)) string {
+			return testhelpers.SubmitLoginForm(t, isAPI, nil, publicTS, values,
+				isSPA, refresh,
+				testhelpers.ExpectStatusCode(isAPI || isSPA, http.StatusBadRequest, http.StatusOK),
+				testhelpers.ExpectURL(isAPI || isSPA, publicTS.URL+login.RouteSubmitFlow, conf.SelfServiceFlowLoginUI(t.Context()).String()))
+		}
 
 		identifier, pwd := x.NewUUID().String(), "password"
 		createIdentity(t.Context(), reg, t, identifier, pwd)
@@ -1382,7 +1402,7 @@ func TestCompleteLogin(t *testing.T) {
 }
 
 func TestFormHydration(t *testing.T) {
-	conf, reg := pkg.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true),
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/login.schema.json")),
 	)
@@ -1402,7 +1422,7 @@ func TestFormHydration(t *testing.T) {
 		r := httptest.NewRequest("GET", "/self-service/login/browser", nil)
 		r = r.WithContext(ctx)
 		t.Helper()
-		f, err := login.NewFlow(conf, time.Minute, "csrf_token", r, flow.TypeBrowser)
+		f, err := login.NewFlow(reg, r, flow.TypeBrowser)
 		require.NoError(t, err)
 		return r, f
 	}

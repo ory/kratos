@@ -16,13 +16,14 @@ import (
 
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
 
 type oneTimeCodeProvider interface {
 	GetID() uuid.UUID
-	Validate() error
+	Validate(clock.Clock) error
 	TableName(ctx context.Context) string
 	GetHMACCode() string
 }
@@ -96,7 +97,7 @@ func useOneTimeCode[P any, U interface {
 			}
 		}
 
-		if target.Validate() != nil {
+		if target.Validate(p.r.Clock()) != nil {
 			// Return no error, as that would roll back the transaction. We re-validate the code after the transaction.
 			return nil
 		}
@@ -107,7 +108,7 @@ func useOneTimeCode[P any, U interface {
 		return nil, sqlcon.HandleError(err)
 	}
 
-	if err := target.Validate(); err != nil {
+	if err := target.Validate(p.r.Clock()); err != nil {
 		return nil, err
 	}
 

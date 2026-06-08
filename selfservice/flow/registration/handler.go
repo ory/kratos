@@ -6,7 +6,6 @@ package registration
 import (
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
@@ -29,6 +28,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
@@ -48,6 +48,7 @@ const (
 
 type (
 	handlerDependencies interface {
+		clock.Provider
 		config.Provider
 		errorx.ManagementProvider
 		hydra.Provider
@@ -123,7 +124,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		return nil, errors.WithStack(ErrRegistrationDisabled())
 	}
 
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowRegistrationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, ft)
+	f, err := NewFlow(h.d, r, ft)
 	if err != nil {
 		return nil, err
 	}
@@ -542,7 +543,7 @@ func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ar.ExpiresAt.Before(time.Now()) {
+	if ar.ExpiresAt.Before(h.d.Clock().Now()) {
 		if ar.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, ar.ReturnTo)
 
@@ -692,7 +693,7 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := f.Valid(); err != nil {
+	if err := f.Valid(h.d.Clock()); err != nil {
 		h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, err)
 		return
 	}

@@ -25,6 +25,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -119,8 +120,18 @@ type OAuth2LoginChallengeParams struct {
 
 var _ flow.Flow = (*Flow)(nil)
 
-func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
-	now := time.Now().UTC()
+// flowDependencies are the dependencies NewFlow needs to construct a
+// verification flow: the configuration (for return-to validation) and the
+// clock. The lifespan and CSRF token are passed explicitly because callers
+// vary them (regenerated CSRF tokens, conditional tokens by flow type).
+type flowDependencies interface {
+	config.Provider
+	clock.Provider
+}
+
+func NewFlow(reg flowDependencies, exp time.Duration, csrf string, r *http.Request, strategies Strategies, ft flow.Type) (*Flow, error) {
+	conf := reg.Config()
+	now := reg.Clock().Now().UTC()
 	id := x.NewUUID()
 
 	// Pre-validate the return to URL which is contained in the HTTP request.
@@ -164,13 +175,13 @@ func NewFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Reques
 	return f, nil
 }
 
-func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of *Flow) (*Flow, error) {
+func FromOldFlow(reg flowDependencies, exp time.Duration, csrf string, r *http.Request, strategies Strategies, of *Flow) (*Flow, error) {
 	f := of.Type
 	// Using the same flow in the recovery/verification context can lead to using API flow in a verification/recovery email
 	if of.Type == flow.TypeAPI {
 		f = flow.TypeBrowser
 	}
-	nf, err := NewFlow(conf, exp, csrf, r, strategies, f)
+	nf, err := NewFlow(reg, exp, csrf, r, strategies, f)
 	if err != nil {
 		return nil, err
 	}
@@ -179,8 +190,8 @@ func FromOldFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Re
 	return nf, nil
 }
 
-func NewPostHookFlow(conf *config.Config, exp time.Duration, csrf string, r *http.Request, strategies Strategies, original flow.Flow) (*Flow, error) {
-	f, err := NewFlow(conf, exp, csrf, r, strategies, original.GetType())
+func NewPostHookFlow(reg flowDependencies, exp time.Duration, csrf string, r *http.Request, strategies Strategies, original flow.Flow) (*Flow, error) {
+	f, err := NewFlow(reg, exp, csrf, r, strategies, original.GetType())
 	if err != nil {
 		return nil, err
 	}
@@ -254,9 +265,9 @@ func (f *Flow) setCourierBaseURL(s string) error {
 	return nil
 }
 
-func (f *Flow) Valid() error {
-	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+func (f *Flow) Valid(c clock.Clock) error {
+	if f.ExpiresAt.Before(c.Now()) {
+		return errors.WithStack(flow.NewFlowExpiredError(c, f.ExpiresAt))
 	}
 	return nil
 }

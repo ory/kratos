@@ -35,6 +35,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/nosurf"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/healthx"
@@ -51,6 +52,10 @@ type Registry interface {
 
 	SetLogger(l *logrusx.Logger)
 	SetJSONNetVMProvider(jsonnetsecure.VMProvider)
+
+	// Clock returns the time source used for time-dependent behavior such as
+	// flow expiry. Tests can override it via RegistryDefault.SetClock.
+	Clock() clock.Clock
 
 	WithCSRFHandler(c nosurf.Handler)
 	WithCSRFTokenGenerator(cg nosurfx.CSRFToken)

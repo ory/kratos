@@ -1335,7 +1335,7 @@ func TestHandlerRefreshSessionBySessionID(t *testing.T) {
 func TestExchangeCode(t *testing.T) {
 	t.Parallel()
 
-	conf, reg := pkg.NewFastRegistryWithMocks(t,
+	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json")),
 	)
 	ts, _, _, _ := testhelpers.NewKratosServerWithCSRFAndRouters(t, reg)
@@ -1344,7 +1344,7 @@ func TestExchangeCode(t *testing.T) {
 	newRegistrationFlow := func(t *testing.T) *registration.Flow {
 		t.Helper()
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f, err := registration.NewFlow(conf, time.Minute, "csrf_token", req, flow.TypeAPI)
+		f, err := registration.NewFlow(reg, req, flow.TypeAPI)
 		require.NoError(t, err)
 		require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(ctx, f))
 		return f

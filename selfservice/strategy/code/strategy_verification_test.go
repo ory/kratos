@@ -14,7 +14,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -25,6 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/configx"
 	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 
@@ -408,15 +408,19 @@ func TestVerification(t *testing.T) {
 	})
 
 	t.Run("description=should not be able to submit email in expired flow", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, 100*time.Millisecond)
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
-		})
+		// Drive expiry with a deterministic clock instead of a real sleep, so the
+		// "expired N minutes ago" message no longer depends on wall-clock timing.
+		mockClock := clock.NewMock(time.Now())
+		reg.SetClock(mockClock)
+		t.Cleanup(func() { reg.SetClock(clock.New()) })
+
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 
 		c := testhelpers.NewClientWithCookies(t)
 		rs := testhelpers.GetVerificationFlow(t, c, public)
 
-		time.Sleep(101 * time.Millisecond)
+		// 1-minute lifespan + 2 minutes => deterministically "expired 2.00 minutes ago".
+		mockClock.Add(3 * time.Minute)
 
 		res, err := c.PostForm(rs.Ui.Action, url.Values{"method": {"code"}, "email": {verificationEmail}})
 		require.NoError(t, err)
@@ -424,14 +428,17 @@ func TestVerification(t *testing.T) {
 		assert.NotContains(t, res.Request.URL.String(), "flow="+rs.Id)
 		assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowVerificationUI(ctx).String())
 		body := ioutilx.MustReadAll(res.Body)
-		assert.Regexpf(t, regexp.MustCompile(`The verification flow expired 0\.0\d minutes ago, please try again\.`), gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
+		assert.Equalf(t, "The verification flow expired 2.00 minutes ago, please try again.", gjson.GetBytes(body, "ui.messages.0.text").Str, "%s", body)
 	})
 
 	t.Run("description=should not be able to submit code in expired flow", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, 100*time.Millisecond)
-		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
-		})
+		// Deterministic clock: the courier still runs on the real clock, only flow
+		// expiry is driven by the mock, so the assertion no longer races the load.
+		mockClock := clock.NewMock(time.Now())
+		reg.SetClock(mockClock)
+		t.Cleanup(func() { reg.SetClock(clock.New()) })
+
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationRequestLifespan, time.Minute)
 
 		c := testhelpers.NewClientWithCookies(t)
 		body := expectSuccess(t, c, false, false, func(v url.Values) {
@@ -443,11 +450,12 @@ func TestVerification(t *testing.T) {
 
 		code := testhelpers.CourierExpectCodeInMessage(t, message, 1)
 
-		time.Sleep(101 * time.Millisecond)
+		// 1-minute lifespan + 2 minutes => deterministically "expired 2.00 minutes ago".
+		mockClock.Add(3 * time.Minute)
 
 		f, _ := submitVerificationCode(t, body, c, code)
 
-		assert.Regexpf(t, regexp.MustCompile(`The verification flow expired 0\.0\d minutes ago, please try again\.`), gjson.Get(f, "ui.messages.0.text").Str, "%s", body)
+		assert.Equalf(t, "The verification flow expired 2.00 minutes ago, please try again.", gjson.Get(f, "ui.messages.0.text").Str, "%s", body)
 	})
 
 	t.Run("description=should verify an email address", func(t *testing.T) {
@@ -543,7 +551,7 @@ func TestVerification(t *testing.T) {
 	})
 
 	newValidFlow := func(t *testing.T, fType flow.Type, requestURL string) (*verification.Flow, *code.VerificationCode, string) {
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), verification.Strategies{code.NewStrategy(reg)}, fType)
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", requestURL, nil), verification.Strategies{code.NewStrategy(reg)}, fType)
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		u, err := url.Parse(f.RequestURL)
@@ -858,7 +866,7 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 
 		// Create a verification flow in StateEmailSent.
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -980,8 +988,9 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 
 		// Create verification flow + PTC linked to the session.
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 			httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -1074,8 +1083,9 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 			httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -1161,7 +1171,7 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Update(ctx, concurrentID, identity.ManagerAllowWriteProtectedTraits))
 
 		// Create a verification flow in StateEmailSent.
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken, httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -1242,8 +1252,9 @@ func TestVerification(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
 
-		f, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+		f, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 			httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		f.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
@@ -1337,14 +1348,16 @@ func TestVerification(t *testing.T) {
 		newAddr := "race-claimed@ory.sh"
 
 		// Two separate verification flows — one per identity.
-		fA, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+		fA, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 			httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		fA.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, fA))
 
-		fB, err := verification.NewFlow(conf, time.Hour, nosurfx.FakeCSRFToken,
+		fB, err := verification.NewFlow(reg, time.Hour, nosurfx.FakeCSRFToken,
 			httptest.NewRequest("GET", public.URL+verification.RouteInitBrowserFlow, nil), nil, flow.TypeBrowser)
+
 		require.NoError(t, err)
 		fB.State = flow.StateEmailSent
 		require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, fB))

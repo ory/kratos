@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/x/clock"
 )
 
 type VerificationCode struct {
@@ -60,11 +61,11 @@ func (VerificationCode) TableName(context.Context) string {
 // - If the code is expired, `flow.ExpiredError` is returned
 // - If the code was already used `ErrCodeAlreadyUsed` is returnd
 // - Otherwise, `nil` is returned
-func (c *VerificationCode) Validate() error {
+func (c *VerificationCode) Validate(clk clock.Clock) error {
 	if c == nil {
 		return errors.WithStack(ErrCodeNotFound())
 	}
-	if c.ExpiresAt.Before(time.Now().UTC()) {
+	if c.ExpiresAt.Before(clk.Now().UTC()) {
 		return errors.WithStack(ErrCodeNotFound())
 	}
 	if c.UsedAt.Valid {

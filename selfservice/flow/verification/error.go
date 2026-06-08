@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
@@ -39,6 +40,7 @@ var ErrHookAbortFlow = errors.New("aborted verification hook execution")
 
 type (
 	errorHandlerDependencies interface {
+		clock.Provider
 		errorx.ManagementProvider
 		httpx.WriterProvider
 		logrusx.Provider
@@ -104,7 +106,7 @@ func (s *ErrorHandler) WriteFlowError(
 			}
 		}
 		// create new flow because the old one is not valid
-		a, err := FromOldFlow(s.d.Config(), s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
+		a, err := FromOldFlow(s.d, s.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()),
 			s.d.CSRFHandler().RegenerateToken(w, r), r, strategies, f)
 		if err != nil {
 			// failed to create a new session and redirect to it, handle that error as a new one
@@ -112,7 +114,7 @@ func (s *ErrorHandler) WriteFlowError(
 			return
 		}
 
-		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(e.ExpiredAt))
+		a.UI.Messages.Add(text.NewErrorValidationVerificationFlowExpired(s.d.Clock(), e.ExpiredAt))
 		if err := s.d.VerificationFlowPersister().CreateVerificationFlow(r.Context(), a); err != nil {
 			s.forward(w, r, a, err)
 			return

@@ -58,6 +58,7 @@ import (
 	"github.com/ory/kratos/x/webauthnx"
 	"github.com/ory/nosurf"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/healthx"
@@ -77,6 +78,10 @@ import (
 type RegistryDefault struct {
 	l *logrusx.Logger
 	c *config.Config
+
+	// clock is the time source for time-dependent behavior such as flow expiry.
+	// It is set eagerly in initCheapMembers and replaced in tests via SetClock.
+	clock clock.Clock
 
 	ctxer contextx.Contextualizer
 
@@ -248,6 +253,18 @@ func NewRegistryDefault() *RegistryDefault {
 
 func (m *RegistryDefault) SetLogger(l *logrusx.Logger) {
 	m.l = l
+}
+
+// Clock returns the registry's time source. It is eagerly initialized in
+// initCheapMembers, so this getter never lazily initializes.
+func (m *RegistryDefault) Clock() clock.Clock {
+	return m.clock
+}
+
+// SetClock replaces the registry's time source. Intended for tests that need
+// deterministic control over time-dependent behavior such as flow expiry.
+func (m *RegistryDefault) SetClock(c clock.Clock) {
+	m.clock = c
 }
 
 func (m *RegistryDefault) SetJSONNetVMProvider(p jsonnetsecure.VMProvider) {
@@ -895,7 +912,9 @@ func (m *RegistryDefault) ExtraHandlers() []x.Handler {
 
 // initCheapMembers initializes members that are cheap to initialize.
 func (m *RegistryDefault) initCheapMembers() {
+	m.clock = clock.New()
 	m.identityValidator = identity.NewValidator(m)
+	m.identitySchemaProvider = schema.NewDefaultIdentityTraitsProvider(m)
 	m.identityManager = identity.NewManager(m)
 	m.sessionManager = session.NewManagerHTTP(m)
 	m.errorManager = errorx.NewManager(m)

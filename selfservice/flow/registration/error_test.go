@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/configx"
 
 	"github.com/ory/herodot"
@@ -82,7 +83,7 @@ func TestHandleError(t *testing.T) {
 
 	newFlow := func(t *testing.T, ttl time.Duration, ft flow.Type, options ...func(*opts)) *registration.Flow {
 		req := &http.Request{URL: urlx.ParseOrPanic("/")}
-		f, err := registration.NewFlow(conf, ttl, "csrf_token", req, ft)
+		f, err := registration.NewFlow(reg, req, ft)
 		require.NoError(t, err)
 		opts := &opts{}
 		for _, o := range options {
@@ -166,7 +167,7 @@ func TestHandleError(t *testing.T) {
 				t.Cleanup(reset)
 
 				registrationFlow = newFlow(t, time.Minute, tc.t)
-				flowError = flow.NewFlowExpiredError(anHourAgo)
+				flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 				group = node.PasswordGroup
 
 				res, err := ts.Client().Do(testhelpers.NewHTTPGetJSONRequest(t, ts.URL+"/error"))
@@ -273,7 +274,7 @@ func TestHandleError(t *testing.T) {
 			t.Cleanup(reset)
 
 			registrationFlow = &registration.Flow{Type: flow.TypeBrowser}
-			flowError = flow.NewFlowExpiredError(anHourAgo)
+			flowError = flow.NewFlowExpiredError(clock.New(), anHourAgo)
 			group = node.PasswordGroup
 
 			lf, _ := expectRegistrationUI(t)

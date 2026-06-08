@@ -17,6 +17,7 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/swagger"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/urlx"
 
@@ -139,8 +140,8 @@ func (e *ExpiredError) EnhanceJSONError() interface{} {
 	return e
 }
 
-func NewFlowExpiredError(at time.Time) *ExpiredError {
-	ago := time.Since(at)
+func NewFlowExpiredError(c clock.Clock, at time.Time) *ExpiredError {
+	ago := c.Now().Sub(at)
 	return &ExpiredError{
 		ExpiredAt: at.UTC(),
 		Since:     ago,

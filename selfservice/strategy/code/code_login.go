@@ -13,6 +13,7 @@ import (
 	"github.com/gofrs/uuid"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/x/clock"
 )
 
 // swagger:ignore
@@ -63,11 +64,11 @@ func (LoginCode) TableName(ctx context.Context) string {
 	return "identity_login_codes"
 }
 
-func (c *LoginCode) Validate() error {
+func (c *LoginCode) Validate(clk clock.Clock) error {
 	if c == nil {
 		return errors.WithStack(ErrCodeNotFound())
 	}
-	if c.ExpiresAt.Before(time.Now().UTC()) {
+	if c.ExpiresAt.Before(clk.Now().UTC()) {
 		return errors.WithStack(ErrCodeNotFound())
 	}
 	if c.UsedAt.Valid {

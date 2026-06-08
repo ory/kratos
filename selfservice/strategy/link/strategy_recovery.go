@@ -172,7 +172,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		return
 	}
 
-	req, err := recovery.NewFlow(s.d.Config(), expiresIn, s.d.GenerateCSRFToken(r), r, recovery.Strategies{s}, flow.TypeBrowser)
+	req, err := recovery.NewFlow(s.d, expiresIn, s.d.GenerateCSRFToken(r), r, recovery.Strategies{s}, flow.TypeBrowser)
 	if err != nil {
 		s.d.Writer().WriteError(w, r, err)
 		return
@@ -288,7 +288,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return s.HandleRecoveryError(r, req, body, err)
 	}
 
-	if err := req.Valid(); err != nil {
+	if err := req.Valid(s.d.Clock()); err != nil {
 		return s.HandleRecoveryError(r, req, body, err)
 	}
 
@@ -351,7 +351,7 @@ func (s *Strategy) recoveryIssueSession(ctx context.Context, w http.ResponseWrit
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
-	sf.UI.Messages.Set(text.NewRecoverySuccessful(time.Now().Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context()))))
+	sf.UI.Messages.Set(text.NewRecoverySuccessful(s.d.Clock(), s.d.Clock().Now().Add(s.d.Config().SelfServiceFlowSettingsPrivilegedSessionMaxAge(r.Context()))))
 	if err := s.d.SettingsFlowPersister().UpdateSettingsFlow(r.Context(), sf); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
@@ -372,7 +372,7 @@ func (s *Strategy) recoveryUseToken(ctx context.Context, w http.ResponseWriter, 
 
 	var f *recovery.Flow
 	if !token.FlowID.Valid {
-		f, err = recovery.NewFlow(s.d.Config(), time.Until(token.ExpiresAt), s.d.GenerateCSRFToken(r), r, recovery.Strategies{s}, flow.TypeBrowser)
+		f, err = recovery.NewFlow(s.d, token.ExpiresAt.Sub(s.d.Clock().Now()), s.d.GenerateCSRFToken(r), r, recovery.Strategies{s}, flow.TypeBrowser)
 		if err != nil {
 			return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 		}
@@ -387,7 +387,7 @@ func (s *Strategy) recoveryUseToken(ctx context.Context, w http.ResponseWriter, 
 		}
 	}
 
-	if err := token.Valid(); err != nil {
+	if err := token.Valid(s.d.Clock()); err != nil {
 		return s.retryRecoveryFlowWithError(w, r, flow.TypeBrowser, err)
 	}
 
@@ -410,7 +410,7 @@ func (s *Strategy) recoveryUseToken(ctx context.Context, w http.ResponseWriter, 
 func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.Request, ft flow.Type, message *text.Message) error {
 	s.d.Logger().WithRequest(r).WithField("message", message).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewFlow(s.d.Config(), s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, recovery.Strategies{s}, ft)
+	req, err := recovery.NewFlow(s.d, s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, recovery.Strategies{s}, ft)
 	if err != nil {
 		return err
 	}
@@ -433,13 +433,13 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Request, ft flow.Type, recErr error) error {
 	s.d.Logger().WithRequest(r).WithError(recErr).Debug("A recovery flow is being retried because a validation error occurred.")
 
-	req, err := recovery.NewFlow(s.d.Config(), s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, recovery.Strategies{s}, ft)
+	req, err := recovery.NewFlow(s.d, s.d.Config().SelfServiceFlowRecoveryRequestLifespan(r.Context()), s.d.CSRFHandler().RegenerateToken(w, r), r, recovery.Strategies{s}, ft)
 	if err != nil {
 		return err
 	}
 
 	if expired := new(flow.ExpiredError); errors.As(recErr, &expired) {
-		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(expired.ExpiredAt))
+		return s.retryRecoveryFlowWithMessage(w, r, ft, text.NewErrorValidationRecoveryFlowExpired(s.d.Clock(), expired.ExpiredAt))
 	} else {
 		if err := req.UI.ParseError(node.LinkGroup, recErr); err != nil {
 			return err

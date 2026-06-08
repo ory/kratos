@@ -6,12 +6,14 @@ package text
 import (
 	"fmt"
 	"time"
+
+	"github.com/ory/x/clock"
 )
 
-func NewErrorValidationRecoveryFlowExpired(expiredAt time.Time) *Message {
+func NewErrorValidationRecoveryFlowExpired(c clock.Clock, expiredAt time.Time) *Message {
 	return &Message{
 		ID:   ErrorValidationRecoveryFlowExpired,
-		Text: fmt.Sprintf("The recovery flow expired %.2f minutes ago, please try again.", Since(expiredAt).Minutes()),
+		Text: fmt.Sprintf("The recovery flow expired %.2f minutes ago, please try again.", c.Now().Sub(expiredAt).Minutes()),
 		Type: Error,
 		Context: context(map[string]any{
 			"expired_at":      expiredAt,
@@ -20,8 +22,8 @@ func NewErrorValidationRecoveryFlowExpired(expiredAt time.Time) *Message {
 	}
 }
 
-func NewRecoverySuccessful(privilegedSessionExpiresAt time.Time) *Message {
-	hasLeft := Until(privilegedSessionExpiresAt)
+func NewRecoverySuccessful(c clock.Clock, privilegedSessionExpiresAt time.Time) *Message {
+	hasLeft := privilegedSessionExpiresAt.Sub(c.Now())
 	return &Message{
 		ID:   InfoSelfServiceRecoverySuccessful,
 		Type: Success,

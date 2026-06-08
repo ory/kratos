@@ -5,7 +5,6 @@ package verification
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/pkg/errors"
 
@@ -22,6 +21,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/nosurf"
+	"github.com/ory/x/clock"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
@@ -42,6 +42,7 @@ type (
 		VerificationHandler() *Handler
 	}
 	handlerDependencies interface {
+		clock.Provider
 		errorx.ManagementProvider
 		identity.ManagementProvider
 		identity.PrivilegedPoolProvider
@@ -102,7 +103,7 @@ func (h *Handler) NewVerificationFlow(w http.ResponseWriter, r *http.Request, ft
 		return nil, err
 	}
 
-	f, err := NewFlow(h.d.Config(), h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, strategies, ft)
+	f, err := NewFlow(h.d, h.d.Config().SelfServiceFlowVerificationRequestLifespan(r.Context()), h.d.GenerateCSRFToken(r), r, strategies, ft)
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +310,7 @@ func (h *Handler) getVerificationFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.ExpiresAt.Before(time.Now().UTC()) {
+	if req.ExpiresAt.Before(h.d.Clock().Now().UTC()) {
 		if req.Type == flow.TypeBrowser {
 			redirectURL := flow.GetFlowExpiredRedirectURL(r.Context(), h.d.Config(), RouteInitBrowserFlow, req.ReturnTo)
 
@@ -432,7 +433,7 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if err := f.Valid(); err != nil {
+	if err := f.Valid(h.d.Clock()); err != nil {
 		h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, node.DefaultGroup, err)
 		return
 	}

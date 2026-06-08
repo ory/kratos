@@ -109,14 +109,14 @@ func (h *Handler) adminCreateTestLoginFlow(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	conf := h.d.Config()
-	// Admin-created flows have no browser cookie to bind against; mint a
-	// random UUID as the opaque CSRF bearer and validate it on submit.
-	f, err := NewFlow(conf, conf.SelfServiceFlowLoginRequestLifespan(r.Context()), x.NewUUID().String(), r, flow.TypeBrowser)
+	f, err := NewFlow(h.d, r, flow.TypeBrowser)
 	if err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
+	// Admin-created flows have no browser cookie to bind against; mint a
+	// random UUID as the opaque CSRF bearer and validate it on submit.
+	f.CSRFToken = x.NewUUID().String()
 
 	if err := f.SetTestContext(&TestContext{ProviderID: body.ProviderID}); err != nil {
 		h.d.Writer().WriteError(w, r, err)

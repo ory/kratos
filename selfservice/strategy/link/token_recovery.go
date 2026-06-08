@@ -12,6 +12,7 @@ import (
 	"github.com/gofrs/uuid"
 	errors "github.com/pkg/errors"
 
+	"github.com/ory/x/clock"
 	"github.com/ory/x/randx"
 
 	"github.com/ory/kratos/identity"
@@ -101,9 +102,9 @@ func NewAdminRecoveryToken(identityID uuid.UUID, fID uuid.UUID, expiresIn time.D
 	}
 }
 
-func (f *RecoveryToken) Valid() error {
-	if f.ExpiresAt.Before(time.Now()) {
-		return errors.WithStack(flow.NewFlowExpiredError(f.ExpiresAt))
+func (f *RecoveryToken) Valid(c clock.Clock) error {
+	if f.ExpiresAt.Before(c.Now()) {
+		return errors.WithStack(flow.NewFlowExpiredError(c, f.ExpiresAt))
 	}
 	return nil
 }

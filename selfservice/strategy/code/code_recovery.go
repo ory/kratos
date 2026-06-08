@@ -15,6 +15,7 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/identity"
+	"github.com/ory/x/clock"
 )
 
 type RecoveryCodeType int
@@ -81,11 +82,11 @@ func (RecoveryCode) TableName(ctx context.Context) string {
 	return "identity_recovery_codes"
 }
 
-func (f *RecoveryCode) Validate() error {
+func (f *RecoveryCode) Validate(clk clock.Clock) error {
 	if f == nil {
 		return errors.WithStack(ErrCodeNotFound())
 	}
-	if f.ExpiresAt.Before(time.Now().UTC()) {
+	if f.ExpiresAt.Before(clk.Now().UTC()) {
 		return errors.WithStack(ErrCodeNotFound())
 	}
 	if f.UsedAt.Valid {

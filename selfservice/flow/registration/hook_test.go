@@ -9,9 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
-	"time"
-
-	"github.com/ory/kratos/x/nosurfx"
 
 	"github.com/gobuffalo/httptest"
 	"github.com/gofrs/uuid"
@@ -52,7 +49,7 @@ func TestRegistrationExecutor(t *testing.T) {
 
 				handleErr := testhelpers.SelfServiceHookRegistrationErrorHandler
 				router.HandleFunc("GET /registration/pre", func(w http.ResponseWriter, r *http.Request) {
-					f, err := registration.NewFlow(conf, time.Minute, nosurfx.FakeCSRFToken, r, ft)
+					f, err := registration.NewFlow(reg, r, ft)
 					require.NoError(t, err)
 					if handleErr(t, w, r, reg.RegistrationHookExecutor().PreRegistrationHook(w, r, f)) {
 						_, _ = w.Write([]byte("ok"))
@@ -63,7 +60,7 @@ func TestRegistrationExecutor(t *testing.T) {
 					if i == nil {
 						i = testhelpers.SelfServiceHookFakeIdentity(t)
 					}
-					regFlow, err := registration.NewFlow(conf, time.Minute, nosurfx.FakeCSRFToken, r, ft)
+					regFlow, err := registration.NewFlow(reg, r, ft)
 					require.NoError(t, err)
 					regFlow.RequestURL = x.RequestURL(r).String()
 					for _, callback := range flowCallbacks {
