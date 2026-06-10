@@ -154,12 +154,20 @@ func TestCompleteLogin(t *testing.T) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginRequestLifespan, time.Millisecond*100)
+		lifespan := 100 * time.Millisecond
+		conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginRequestLifespan, lifespan)
 		conf.MustSet(t.Context(), config.ViperKeySecurityAccountEnumerationMitigate, true)
 		t.Cleanup(func() {
 			conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginRequestLifespan, time.Hour)
 			conf.MustSet(t.Context(), config.ViperKeySecurityAccountEnumerationMitigate, nil)
 		})
+
+		// Freeze the clock so flow expiry is deterministic and the "expired N minutes ago" reason does not depend on
+		// the request round-trip. Each subtest creates a flow, then advances the clock past its lifespan instead of
+		// sleeping, so the handler and the expected error read the same instant.
+		mock := clock.NewMock(time.Now().UTC())
+		reg.SetClock(mock)
+		t.Cleanup(func() { reg.SetClock(clock.New()) })
 
 		values := url.Values{
 			"csrf_token": {nosurfx.FakeCSRFToken},
@@ -168,22 +176,22 @@ func TestCompleteLogin(t *testing.T) {
 		}
 
 		t.Run("type=api", func(t *testing.T) {
+			expiresAt := mock.Now().Add(lifespan)
 			f := testhelpers.InitializeLoginFlowViaAPICtx(t.Context(), t, apiClient, publicTS, false)
+			mock.Set(expiresAt.Add(time.Minute))
 
-			// TODO: Testing expiry with time.Sleep is flaky, we should better use a fake clock at the registry level.
-			time.Sleep(time.Millisecond * 110)
 			actual, res := testhelpers.LoginMakeRequestCtx(t.Context(), t, true, false, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(reg.Clock(), expiresAt), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
+			expiresAt := mock.Now().Add(lifespan)
 			f := testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, false, false, false)
+			mock.Set(expiresAt.Add(time.Minute))
 
-			// TODO: Testing expiry with time.Sleep is flaky, we should better use a fake clock at the registry level.
-			time.Sleep(time.Millisecond * 110)
 			actual, res := testhelpers.LoginMakeRequestCtx(t.Context(), t, false, false, f, browserClient, values.Encode())
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/login-ts")
 			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)
@@ -192,14 +200,14 @@ func TestCompleteLogin(t *testing.T) {
 
 		t.Run("type=SPA", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
+			expiresAt := mock.Now().Add(lifespan)
 			f := testhelpers.InitializeLoginFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, true, false, false)
+			mock.Set(expiresAt.Add(time.Minute))
 
-			// TODO: Testing expiry with time.Sleep is flaky, we should better use a fake clock at the registry level.
-			time.Sleep(time.Millisecond * 110)
 			actual, res := testhelpers.LoginMakeRequestCtx(t.Context(), t, false, true, f, apiClient, testhelpers.EncodeFormAsJSON(t, true, values))
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+login.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), time.Now()), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(reg.Clock(), expiresAt), json.RawMessage(actual), []string{"use_flow_id", "since", "expired_at"}, "expired", "%s", actual)
 		})
 	})
 

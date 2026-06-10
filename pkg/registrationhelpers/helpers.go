@@ -445,37 +445,48 @@ func AssertCommonErrorCases(t *testing.T, flows []string) {
 	})
 
 	t.Run("case=should return an error because the request is expired", func(t *testing.T) {
-		conf.MustSet(t.Context(), config.ViperKeySelfServiceRegistrationRequestLifespan, "500ms")
+		lifespan := 500 * time.Millisecond
+		conf.MustSet(t.Context(), config.ViperKeySelfServiceRegistrationRequestLifespan, lifespan)
 		t.Cleanup(func() {
 			conf.MustSet(context.Background(), config.ViperKeySelfServiceRegistrationRequestLifespan, "10m")
 		})
 
-		t.Run("type=api", func(t *testing.T) {
-			f := testhelpers.InitializeRegistrationFlowViaAPICtx(t.Context(), t, apiClient, publicTS)
+		// Freeze the clock so flow expiry is deterministic and the "expired N minutes ago" reason does not depend on
+		// the request round-trip. Each subtest creates a flow, then advances the clock past its lifespan instead of
+		// sleeping, so the handler and the expected error read the same instant.
+		mock := clock.NewMock(time.Now().UTC())
+		reg.SetClock(mock)
+		t.Cleanup(func() { reg.SetClock(clock.New()) })
 
-			time.Sleep(600 * time.Millisecond)
+		t.Run("type=api", func(t *testing.T) {
+			expiresAt := mock.Now().Add(lifespan)
+			f := testhelpers.InitializeRegistrationFlowViaAPICtx(t.Context(), t, apiClient, publicTS)
+			mock.Set(expiresAt.Add(time.Minute))
+
 			actual, res := testhelpers.RegistrationMakeRequestCtx(t.Context(), t, true, false, f, apiClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "")
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(reg.Clock(), expiresAt), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "")
 		})
 
 		t.Run("type=spa", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
+			expiresAt := mock.Now().Add(lifespan)
 			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, true, false, false)
+			mock.Set(expiresAt.Add(time.Minute))
 
-			time.Sleep(600 * time.Millisecond)
 			actual, res := testhelpers.RegistrationMakeRequest(t, false, true, f, browserClient, "{}")
 			assert.Contains(t, res.Request.URL.String(), publicTS.URL+registration.RouteSubmitFlow)
 			assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), time.Now()), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
+			assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(reg.Clock(), expiresAt), json.RawMessage(actual), []string{"use_flow_id", "expired_at", "since"}, "expired", "%s", actual)
 		})
 
 		t.Run("type=browser", func(t *testing.T) {
 			browserClient := testhelpers.NewClientWithCookies(t)
+			expiresAt := mock.Now().Add(lifespan)
 			f := testhelpers.InitializeRegistrationFlowViaBrowserCtx(t.Context(), t, browserClient, publicTS, false, false, false)
+			mock.Set(expiresAt.Add(time.Minute))
 
-			time.Sleep(600 * time.Millisecond)
 			actual, res := testhelpers.RegistrationMakeRequest(t, false, false, f, browserClient, "")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/registration-ts")
 			assert.NotEqual(t, f.Id, gjson.Get(actual, "id").String(), "%s", actual)

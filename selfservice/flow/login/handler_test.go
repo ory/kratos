@@ -376,10 +376,16 @@ func TestFlowLifecycle(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceLoginRequestLifespan, "10m")
 			})
 
-			expired := time.Now().Add(-time.Minute)
+			// Freeze the clock so the handler and the expected error read the same instant. The "expired N minutes
+			// ago" reason is then deterministic instead of depending on the request round-trip time.
+			now := time.Now().UTC()
+			reg.SetClock(clock.NewMock(now))
+			t.Cleanup(func() { reg.SetClock(clock.New()) })
+
+			expired := now.Add(-time.Minute)
 			run := func(t *testing.T, tt flow.Type, aal string, values string, isSPA bool) (string, *http.Response) {
 				f := login.Flow{
-					Type: tt, ExpiresAt: expired, IssuedAt: time.Now(),
+					Type: tt, ExpiresAt: expired, IssuedAt: now,
 					UI: container.New(""), Refresh: false, RequestedAAL: identity.AuthenticatorAssuranceLevel(aal),
 				}
 				require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
@@ -405,7 +411,7 @@ func TestFlowLifecycle(t *testing.T) {
 				actual, res := run(t, flow.TypeAPI, "aal1", `{"method":"password"}`, false)
 				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
 				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(reg.Clock(), expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 
 			t.Run("type=browser", func(t *testing.T) {
@@ -418,7 +424,7 @@ func TestFlowLifecycle(t *testing.T) {
 				actual, res := run(t, flow.TypeBrowser, "aal1", `{"method":"password"}`, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteSubmitFlow)
 				assert.NotEqual(t, "00000000-0000-0000-0000-000000000000", gjson.Get(actual, "use_flow_id").String())
-				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(clock.New(), expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
+				assertx.EqualAsJSONExcept(t, flow.NewFlowExpiredError(reg.Clock(), expired), json.RawMessage(actual), []string{"use_flow_id", "since"}, "expired", "%s", actual)
 			})
 		})
 
