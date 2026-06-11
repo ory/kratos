@@ -105,6 +105,7 @@ require (
 )
 
 require (
+	connectrpc.com/connect v1.20.0 // indirect
 	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/XSAM/otelsql v0.41.0 // indirect
 	github.com/a8m/envsubst v1.4.2 // indirect
