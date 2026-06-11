@@ -140,8 +140,10 @@ func (h *Handler) NewFlow(ctx context.Context, w http.ResponseWriter, r *http.Re
 		return nil, err
 	}
 
+	filters := PrepareOrganizations(r, f, i, h.d.Config().Organizations(ctx))
+
 	cookieStore := continuity.NewCookieReferenceStore(h.d.ContinuityCookieManager(ctx))
-	for _, strategy := range h.d.SettingsStrategies(ctx) {
+	for _, strategy := range h.d.SettingsStrategies(ctx, filters...) {
 		if err := h.d.ContinuityManager().Abort(ctx, w, r, ContinuityKey(strategy.SettingsStrategyID()), cookieStore); err != nil {
 			return nil, err
 		}
@@ -188,6 +190,13 @@ type createNativeSettingsFlow struct {
 	//
 	// in: header
 	SessionToken string `json:"X-Session-Token"`
+
+	// An optional organization ID that scopes the settings flow to providers of that organization.
+	// This parameter is only effective in the Ory Network.
+	//
+	// required: false
+	// in: query
+	Organization string `json:"organization"`
 }
 
 // swagger:route GET /self-service/settings/api frontend createNativeSettingsFlow
@@ -268,6 +277,13 @@ type createBrowserSettingsFlow struct {
 	// in: header
 	// name: Cookie
 	Cookies string `json:"Cookie"`
+
+	// An optional organization ID that scopes the settings flow to providers of that organization.
+	// This parameter is only effective in the Ory Network.
+	//
+	// required: false
+	// in: query
+	Organization string `json:"organization"`
 }
 
 // swagger:route GET /self-service/settings/browser frontend createBrowserSettingsFlow

@@ -33,5 +33,6 @@
     "updated_at": "2013-10-07T08:23:19Z",
     "organization_id": null
   },
-  "state": "show_form"
+  "state": "show_form",
+  "organization_id": null
 }

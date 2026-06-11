@@ -2988,6 +2988,9 @@
             "format": "date-time",
             "type": "string"
           },
+          "organization_id": {
+            "$ref": "#/components/schemas/NullUUID"
+          },
           "request_url": {
             "description": "RequestURL is the initial URL that was requested from Ory Kratos. It can be used\nto forward information contained in the URL's path or query for example.",
             "type": "string"
@@ -8386,6 +8389,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "An optional organization ID that scopes the settings flow to providers of that organization.\nThis parameter is only effective in the Ory Network.",
+            "in": "query",
+            "name": "organization",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -8444,6 +8455,14 @@
             "description": "HTTP Cookies\n\nWhen using the SDK in a browser app, on the server side you must include the HTTP Cookie Header\nsent by the client to your server here. This ensures that CSRF and session cookies are respected.",
             "in": "header",
             "name": "Cookie",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "An optional organization ID that scopes the settings flow to providers of that organization.\nThis parameter is only effective in the Ory Network.",
+            "in": "query",
+            "name": "organization",
             "schema": {
               "type": "string"
             }

@@ -52,7 +52,10 @@ func (s Strategies) MustStrategy(id string) Strategy {
 	return strategy
 }
 
+// StrategyFilter selects which Settings strategies to include when populating a flow.
+type StrategyFilter func(strategy Strategy) bool
+
 type StrategyProvider interface {
-	SettingsStrategies(ctx context.Context) Strategies
+	SettingsStrategies(ctx context.Context, filters ...StrategyFilter) Strategies
 	AllSettingsStrategies() Strategies
 }

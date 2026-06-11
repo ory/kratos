@@ -104,8 +104,9 @@ type Flow struct {
 	// CreatedAt is a helper struct field for gobuffalo.pop.
 	CreatedAt time.Time `json:"-" faker:"-" db:"created_at"`
 	// UpdatedAt is a helper struct field for gobuffalo.pop.
-	UpdatedAt time.Time `json:"-" faker:"-" db:"updated_at"`
-	NID       uuid.UUID `json:"-" faker:"-" db:"nid"`
+	UpdatedAt      time.Time     `json:"-" faker:"-" db:"updated_at"`
+	NID            uuid.UUID     `json:"-" faker:"-" db:"nid"`
+	OrganizationID uuid.NullUUID `json:"organization_id,omitempty" faker:"-" db:"organization_id"`
 
 	// Contains a list of actions, that could follow this flow
 	//

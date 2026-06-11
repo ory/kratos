@@ -1681,10 +1681,11 @@ func (a *FrontendAPIService) CreateBrowserRegistrationFlowExecute(r FrontendAPIC
 }
 
 type FrontendAPICreateBrowserSettingsFlowRequest struct {
-	ctx        context.Context
-	ApiService FrontendAPI
-	returnTo   *string
-	cookie     *string
+	ctx          context.Context
+	ApiService   FrontendAPI
+	returnTo     *string
+	cookie       *string
+	organization *string
 }
 
 // The URL to return the browser to after the flow was completed.
@@ -1696,6 +1697,12 @@ func (r FrontendAPICreateBrowserSettingsFlowRequest) ReturnTo(returnTo string) F
 // HTTP Cookies  When using the SDK in a browser app, on the server side you must include the HTTP Cookie Header sent by the client to your server here. This ensures that CSRF and session cookies are respected.
 func (r FrontendAPICreateBrowserSettingsFlowRequest) Cookie(cookie string) FrontendAPICreateBrowserSettingsFlowRequest {
 	r.cookie = &cookie
+	return r
+}
+
+// An optional organization ID that scopes the settings flow to providers of that organization. This parameter is only effective in the Ory Network.
+func (r FrontendAPICreateBrowserSettingsFlowRequest) Organization(organization string) FrontendAPICreateBrowserSettingsFlowRequest {
+	r.organization = &organization
 	return r
 }
 
@@ -1767,6 +1774,9 @@ func (a *FrontendAPIService) CreateBrowserSettingsFlowExecute(r FrontendAPICreat
 
 	if r.returnTo != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "return_to", r.returnTo, "form", "")
+	}
+	if r.organization != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "organization", r.organization, "form", "")
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
@@ -2640,11 +2650,18 @@ type FrontendAPICreateNativeSettingsFlowRequest struct {
 	ctx           context.Context
 	ApiService    FrontendAPI
 	xSessionToken *string
+	organization  *string
 }
 
 // The Session Token of the Identity performing the settings flow.
 func (r FrontendAPICreateNativeSettingsFlowRequest) XSessionToken(xSessionToken string) FrontendAPICreateNativeSettingsFlowRequest {
 	r.xSessionToken = &xSessionToken
+	return r
+}
+
+// An optional organization ID that scopes the settings flow to providers of that organization. This parameter is only effective in the Ory Network.
+func (r FrontendAPICreateNativeSettingsFlowRequest) Organization(organization string) FrontendAPICreateNativeSettingsFlowRequest {
+	r.organization = &organization
 	return r
 }
 
@@ -2710,6 +2727,9 @@ func (a *FrontendAPIService) CreateNativeSettingsFlowExecute(r FrontendAPICreate
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
 
+	if r.organization != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "organization", r.organization, "form", "")
+	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 

@@ -338,6 +338,26 @@ func (n *Nodes) Remove(ids ...string) {
 	*n = r
 }
 
+// RemoveInGroup removes nodes whose ID is one of ids and that belong to the
+// given group. Unlike Remove, which matches on ID alone, this leaves nodes with
+// the same ID in other groups untouched — so one strategy clearing its own
+// link/unlink nodes does not clobber another strategy's nodes that share the
+// "link"/"unlink" input name but render in a different group.
+func (n *Nodes) RemoveInGroup(group UiNodeGroup, ids ...string) {
+	if n == nil {
+		return
+	}
+
+	var r Nodes
+	for _, v := range *n {
+		if v != nil && v.Group == group && slices.Contains(ids, v.ID()) {
+			continue
+		}
+		r = append(r, v)
+	}
+	*n = r
+}
+
 // RemoveGroup removes all nodes belonging to a specific group.
 func (n *Nodes) RemoveGroup(group UiNodeGroup) {
 	if n == nil {

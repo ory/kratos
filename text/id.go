@@ -82,6 +82,7 @@ const (
 	InfoSelfServiceSettingsRemovePasskey
 	InfoSelfServiceSettingsRemoveDeviceAuthnKey
 	InfoSelfServiceSettingsDeviceAuthnNonce
+	InfoSelfServiceSettingsManagedByOrganization
 )
 
 const (

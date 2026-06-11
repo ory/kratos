@@ -217,3 +217,11 @@ func NewInfoSelfServiceRemovePasskey(name string, createdAt time.Time) *Message 
 		}),
 	}
 }
+
+func NewInfoSelfServiceSettingsManagedByOrganization() *Message {
+	return &Message{
+		ID:   InfoSelfServiceSettingsManagedByOrganization,
+		Text: "Your account is managed by your organization. To change these settings, contact your organization administrator.",
+		Type: Info,
+	}
+}

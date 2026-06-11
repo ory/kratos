@@ -345,6 +345,23 @@ func TestSettingsStrategy(t *testing.T) {
 			checkCredentials(t, true, userID, "ory", email, false)
 		})
 
+		t.Run("case=should not be able to unlink under an org-scoped settings flow", func(t *testing.T) {
+			_, userData := multiOIDCIdentity()
+			_, client := testhelpers.AddAndLoginIdentity(t, reg, userData)
+
+			req, err := reg.SettingsFlowPersister().GetSettingsFlow(t.Context(),
+				x.ParseUUID(testhelpers.InitializeSettingsFlowViaBrowser(t, client, false, publicTS).Id))
+			require.NoError(t, err)
+
+			req.OrganizationID = uuid.NullUUID{UUID: x.NewUUID(), Valid: true}
+			require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(t.Context(), req))
+
+			body, res := testhelpers.HTTPPostForm(t, client, publicTS.URL+settings.RouteSubmitFlow+"?flow="+req.ID.String(),
+				&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "unlink": {"github"}})
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+			assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(), "Cannot unlink")
+		})
+
 		t.Run("case=should not be able to unlink a connection without a privileged session", func(t *testing.T) {
 			userEmail, userData := multiOIDCIdentity()
 			userID, client := testhelpers.AddAndLoginIdentity(t, reg, userData)
@@ -1039,4 +1056,53 @@ func TestPopulateSettingsMethod(t *testing.T) {
 			assert.EqualValues(t, tc.e, actual.Nodes)
 		})
 	}
+
+	t.Run("case=org-scoped flow renders only org providers and surfaces linked ones as disabled unlink nodes", func(t *testing.T) {
+		t.Parallel()
+		orgA := uuid.Must(uuid.NewV4())
+		orgB := uuid.Must(uuid.NewV4())
+		reg, ctx := nCtx(t, &oidc.ConfigurationCollection{Providers: []oidc.Configuration{
+			{Provider: "generic", ID: "public-github"},
+			{Provider: "generic", ID: "orgA-google", Label: "Org A Google", OrganizationID: orgA.String()},
+			{Provider: "generic", ID: "orgA-facebook", OrganizationID: orgA.String()},
+			{Provider: "generic", ID: "orgB-github", OrganizationID: orgB.String()},
+		}})
+		i := &identity.Identity{
+			Traits:      []byte(`{"subject":"foo@bar.com"}`),
+			Credentials: make(map[identity.CredentialsType]identity.Credentials, 1),
+		}
+		// Identity has already linked orgA-google.
+		i.Credentials[identity.CredentialsTypeOIDC] = identity.Credentials{
+			Type:        identity.CredentialsTypeOIDC,
+			Identifiers: []string{"orgA-google:1234"},
+			Config:      []byte(`{"providers":[{"provider":"orgA-google","subject":"1234"}]}`),
+		}
+
+		f := nr()
+		f.OrganizationID = uuid.NullUUID{UUID: orgA, Valid: true}
+
+		ui := populate(t, reg, ctx, i, f)
+
+		// Expected nodes: CSRF + an unlink node for the already-linked orgA-google
+		// (disabled — the org owns the binding) + a link node for the unlinked
+		// orgA-facebook. Public/other-org providers are filtered out.
+		linkedNode := oidc.NewUnlinkNode("orgA-google", "Org A Google")
+		linkedNode.Attributes.(*node.InputAttributes).Disabled = true
+		expected := node.Nodes{
+			node.NewCSRFNode(nosurfx.FakeCSRFToken),
+			linkedNode,
+			oidc.NewLinkNode("orgA-facebook", "orgA-facebook"),
+		}
+		assert.EqualValues(t, expected, ui.Nodes)
+
+		// Sanity: no provider from another org or public provider leaks in.
+		for _, n := range ui.Nodes {
+			attrs, ok := n.Attributes.(*node.InputAttributes)
+			if !ok {
+				continue
+			}
+			assert.NotEqual(t, "public-github", attrs.FieldValue)
+			assert.NotEqual(t, "orgB-github", attrs.FieldValue)
+		}
+	})
 }

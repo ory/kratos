@@ -159,6 +159,31 @@ func TestNodesRemove(t *testing.T) {
 	require.Len(t, nodes, 1)
 }
 
+func TestNodesRemoveInGroup(t *testing.T) {
+	samlLink := node.NewInputField("link", "saml-provider", node.SAMLGroup, node.InputAttributeTypeSubmit)
+	nodes := node.Nodes{
+		node.NewInputField("link", "oidc-provider", node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
+		samlLink,
+		node.NewInputField("unlink", "oidc-provider", node.OpenIDConnectGroup, node.InputAttributeTypeSubmit),
+		node.NewCSRFNode("token"),
+	}
+
+	// Remove only the OIDC group's link/unlink nodes.
+	nodes.RemoveInGroup(node.OpenIDConnectGroup, "link", "unlink")
+
+	require.Len(t, nodes, 2)
+	// The SAML link node shares the "link" name but a different group: it survives.
+	assert.Contains(t, nodes, samlLink)
+	// The CSRF node (DefaultGroup) is untouched.
+	var sawCSRF bool
+	for _, n := range nodes {
+		if n.Group == node.DefaultGroup {
+			sawCSRF = true
+		}
+	}
+	assert.True(t, sawCSRF, "CSRF node must not be removed")
+}
+
 func TestNodeJSON(t *testing.T) {
 	t.Run("idempotent decode", func(t *testing.T) {
 		nodes := make(node.Nodes, 5)

@@ -61,12 +61,20 @@ func (m *RegistryDefault) SettingsFlowErrorHandler() *settings.ErrorHandler {
 	return m.selfserviceSettingsErrorHandler
 }
 
-func (m *RegistryDefault) SettingsStrategies(ctx context.Context) (profileStrategies settings.Strategies) {
+func (m *RegistryDefault) SettingsStrategies(ctx context.Context, filters ...settings.StrategyFilter) (profileStrategies settings.Strategies) {
+nextStrategy:
 	for _, strategy := range m.selfServiceStrategies() {
-		if s, ok := strategy.(settings.Strategy); ok {
-			if m.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled {
-				profileStrategies = append(profileStrategies, s)
+		s, ok := strategy.(settings.Strategy)
+		if !ok {
+			continue
+		}
+		for _, filter := range filters {
+			if !filter(s) {
+				continue nextStrategy
 			}
+		}
+		if m.Config().SelfServiceStrategy(ctx, s.SettingsStrategyID()).Enabled || supportsOrganizations(strategy) {
+			profileStrategies = append(profileStrategies, s)
 		}
 	}
 	return
