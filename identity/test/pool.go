@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -2021,12 +2020,6 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 		})
 
 		t.Run("suite=recovery-address", func(t *testing.T) {
-			sortAddresses := func(addresses []identity.RecoveryAddress) {
-				slices.SortFunc(addresses, func(a, b identity.RecoveryAddress) int {
-					return strings.Compare(a.Value, b.Value)
-				})
-			}
-
 			createIdentityWithAddresses := func(t *testing.T, email string) *identity.Identity {
 				var i identity.Identity
 				require.NoError(t, faker.FakeData(&i))
@@ -2045,7 +2038,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, "does-not-exist")
 				require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
-				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, "does-not-exist")
+				allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, "does-not-exist")
 				require.NoError(t, err)
 				require.Len(t, allAddresses, 0)
 			})
@@ -2080,19 +2073,18 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 						})
 					})
 
-					t.Run("method=FindAllRecoveryAddressesForIdentityByRecoveryAddressValue", func(t *testing.T) {
+					t.Run("method=FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue", func(t *testing.T) {
 						t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-							allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, expected.Value)
+							allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, expected.Value)
 							require.NoError(t, err)
 							require.Len(t, allAddresses, 2)
-							sortAddresses(allAddresses)
-							require.Equal(t, expected.Value, allAddresses[0].Value)
-							require.Equal(t, expected.Value+"_other", allAddresses[1].Value)
+							require.Equal(t, expected.Value, allAddresses[0])
+							require.Equal(t, expected.Value+"_other", allAddresses[1])
 						})
 
 						t.Run("not if on another network", func(t *testing.T) {
 							_, p := testhelpers.NewNetwork(t, ctx, p)
-							allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, expected.Value)
+							allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, expected.Value)
 							require.NoError(t, err)
 							require.Len(t, allAddresses, 0)
 						})
@@ -2108,19 +2100,18 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
 				require.NoError(t, err)
 
-				allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
+				allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, emailLower)
 				require.NoError(t, err)
 				require.Len(t, allAddresses, 2)
-				sortAddresses(allAddresses)
-				require.Equal(t, allAddresses[0].Value, emailLower)
-				require.Equal(t, allAddresses[1].Value, emailLower+"_other")
+				require.Equal(t, allAddresses[0], emailLower)
+				require.Equal(t, allAddresses[1], emailLower+"_other")
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
+					allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, emailLower)
 					require.NoError(t, err)
 					require.Len(t, allAddresses, 0)
 				})
@@ -2132,7 +2123,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				_, err = p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
 				require.EqualError(t, err, sqlcon.ErrNoRows().Error())
 
-				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
+				allAddresses, err = p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, emailLower)
 				require.NoError(t, err)
 				require.Len(t, allAddresses, 0)
 
@@ -2141,7 +2132,7 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, email)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailLower)
+					allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, emailLower)
 					require.NoError(t, err)
 					require.Len(t, allAddresses, 0)
 				})
@@ -2152,21 +2143,18 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				assert.Equal(t, identity.AddressTypeEmail, actual.Via)
 				assert.Equal(t, emailNextLower, actual.Value)
 
-				allAddresses, err = p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
+				allAddresses, err = p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
 				require.NoError(t, err)
 				require.Len(t, allAddresses, 2)
-				sortAddresses(allAddresses)
-				assert.Equal(t, identity.AddressTypeEmail, allAddresses[0].Via)
-				assert.Equal(t, emailNextLower, allAddresses[0].Value)
-				assert.Equal(t, identity.AddressTypeEmail, allAddresses[1].Via)
-				assert.Equal(t, emailNextLower+"_other", allAddresses[1].Value)
+				assert.Equal(t, emailNextLower, allAddresses[0])
+				assert.Equal(t, emailNextLower+"_other", allAddresses[1])
 
 				t.Run("can not find if on another network", func(t *testing.T) {
 					_, p := testhelpers.NewNetwork(t, ctx, p)
 					_, err := p.FindRecoveryAddressByValue(ctx, identity.AddressTypeEmail, emailNext)
 					require.ErrorIs(t, err, sqlcon.ErrNoRows())
 
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
+					allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, emailNextLower)
 					require.NoError(t, err)
 					require.Len(t, allAddresses, 0)
 				})
@@ -2367,30 +2355,25 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					createdIDs = append(createdIDs, i.ID)
 
 					// Test 1: Find all addresses using normalized phone1
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, normalizedPhone1)
+					allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, normalizedPhone1)
 					require.NoError(t, err, "should find all recovery addresses with normalized phone")
 					require.Len(t, allAddresses, 2, "should return all recovery addresses for the identity")
-					sortAddresses(allAddresses)
-					assert.Equal(t, normalizedPhone1, allAddresses[0].Value)
-					assert.Equal(t, normalizedPhone2, allAddresses[1].Value)
-					assert.Equal(t, identity.AddressTypeSMS, allAddresses[0].Via)
-					assert.Equal(t, identity.AddressTypeSMS, allAddresses[1].Via)
+					assert.Equal(t, normalizedPhone1, allAddresses[0])
+					assert.Equal(t, normalizedPhone2, allAddresses[1])
 
 					// Test 2: Find all addresses using non-normalized phone1 (gets normalized, then matches)
-					allAddresses2, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, nonNormalizedPhone1)
+					allAddresses2, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, nonNormalizedPhone1)
 					require.NoError(t, err, "should find all recovery addresses with non-normalized phone")
 					require.Len(t, allAddresses2, 2, "should return all recovery addresses when querying with non-normalized phone")
-					sortAddresses(allAddresses2)
-					assert.Equal(t, normalizedPhone1, allAddresses2[0].Value)
-					assert.Equal(t, normalizedPhone2, allAddresses2[1].Value)
+					assert.Equal(t, normalizedPhone1, allAddresses2[0])
+					assert.Equal(t, normalizedPhone2, allAddresses2[1])
 
 					// Test 3: Find all addresses using normalized phone2
-					allAddresses3, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, normalizedPhone2)
+					allAddresses3, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, normalizedPhone2)
 					require.NoError(t, err)
 					require.Len(t, allAddresses3, 2, "should return all recovery addresses when querying with second phone")
-					sortAddresses(allAddresses3)
-					assert.Equal(t, normalizedPhone1, allAddresses3[0].Value)
-					assert.Equal(t, normalizedPhone2, allAddresses3[1].Value)
+					assert.Equal(t, normalizedPhone1, allAddresses3[0])
+					assert.Equal(t, normalizedPhone2, allAddresses3[1])
 				})
 
 				t.Run("create with multiple SMS addresses and find all with non-normalized phone", func(t *testing.T) {
@@ -2413,22 +2396,18 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					createdIDs = append(createdIDs, i.ID)
 
 					// Test 1: Find all addresses using non-normalized phone1 (gets normalized for search)
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, nonNormPhone1)
+					allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, nonNormPhone1)
 					require.NoError(t, err, "should find all recovery addresses with non-normalized phone")
 					require.Len(t, allAddresses, 2, "should return all recovery addresses for the identity")
-					sortAddresses(allAddresses)
-					assert.Equal(t, normPhone1, allAddresses[0].Value, "stored values should be normalized")
-					assert.Equal(t, normPhone2, allAddresses[1].Value)
-					assert.Equal(t, identity.AddressTypeSMS, allAddresses[0].Via)
-					assert.Equal(t, identity.AddressTypeSMS, allAddresses[1].Via)
+					assert.Equal(t, normPhone1, allAddresses[0], "stored values should be normalized")
+					assert.Equal(t, normPhone2, allAddresses[1])
 
 					// Test 2: Find all addresses using normalized phone1 (direct match)
-					allAddresses2, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, normPhone1)
+					allAddresses2, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, normPhone1)
 					require.NoError(t, err)
 					require.Len(t, allAddresses2, 2, "should return all recovery addresses when querying with normalized phone")
-					sortAddresses(allAddresses2)
-					assert.Equal(t, normPhone1, allAddresses2[0].Value)
-					assert.Equal(t, normPhone2, allAddresses2[1].Value)
+					assert.Equal(t, normPhone1, allAddresses2[0])
+					assert.Equal(t, normPhone2, allAddresses2[1])
 				})
 
 				t.Run("backward compatibility with legacy non-normalized phone data", func(t *testing.T) {
@@ -2470,14 +2449,11 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 
 					// Test: Find all addresses with exact non-normalized phone (what user would enter)
 					// Should find all recovery addresses for the identity
-					allAddresses, err := p.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx, legacyPhone1)
+					allAddresses, err := p.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx, legacyPhone1)
 					require.NoError(t, err, "should find all recovery addresses with non-normalized search")
 					require.Len(t, allAddresses, 2, "should return all recovery addresses for the identity")
-					sortAddresses(allAddresses)
-					assert.Equal(t, legacyPhone1, allAddresses[0].Value)
-					assert.Equal(t, legacyPhone2, allAddresses[1].Value)
-					assert.Equal(t, identity.AddressTypeSMS, allAddresses[0].Via)
-					assert.Equal(t, identity.AddressTypeSMS, allAddresses[1].Via)
+					assert.Equal(t, legacyPhone1, allAddresses[0])
+					assert.Equal(t, legacyPhone2, allAddresses[1])
 				})
 			})
 		})

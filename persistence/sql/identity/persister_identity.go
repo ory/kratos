@@ -1541,11 +1541,11 @@ func (p *IdentityPersister) FindRecoveryAddressByValue(ctx context.Context, via,
 	return &addr, nil
 }
 
-// FindAllRecoveryAddressesForIdentityByRecoveryAddressValue returns all
-// recovery addresses for an identity if at least one of those addresses matches
-// the provided value.
-func (p *IdentityPersister) FindAllRecoveryAddressesForIdentityByRecoveryAddressValue(ctx context.Context, anyRecoveryAddress string) (recoveryAddresses []identity.RecoveryAddress, err error) {
-	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindAllRecoveryAddressesForIdentityByRecoveryAddressValue",
+// FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue returns the
+// values of all recovery addresses for an identity if at least one of those
+// addresses matches the provided value.
+func (p *IdentityPersister) FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue(ctx context.Context, anyRecoveryAddress string) (recoveryAddresses []string, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.FindAllRecoveryAddressValuesForIdentityByRecoveryAddressValue",
 		trace.WithAttributes(
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
@@ -1560,19 +1560,28 @@ func (p *IdentityPersister) FindAllRecoveryAddressesForIdentityByRecoveryAddress
 	//
 	// This is all done in one query with a self-join.
 	// We also bound the results for safety.
+	via := identity.AddressTypeSMS
+	if strings.ContainsRune(anyRecoveryAddress, '@') {
+		via = identity.AddressTypeEmail
+	}
+
+	nid := p.NetworkID(ctx)
 	err = p.GetConnection(ctx).RawQuery(`
-SELECT A.id, A.via, A.value, A.identity_id, A.created_at, A.updated_at, A.nid, A.break_glass_for_organization
+SELECT A.value
 FROM identity_recovery_addresses A
 JOIN identity_recovery_addresses B
-ON A.identity_id = B.identity_id
-AND A.nid = B.nid
-WHERE B.value IN (?,?)
-AND A.nid = ?
+  ON A.identity_id = B.identity_id
+  AND A.nid = B.nid
+WHERE A.nid = ?
+  AND B.via = ?
+  AND B.value IN (?, ?)
+ORDER BY A.value
 LIMIT 10
 		`,
+		nid,
+		via,
 		x.GracefulNormalization(anyRecoveryAddress),
 		anyRecoveryAddress,
-		p.NetworkID(ctx),
 	).
 		All(&recoveryAddresses)
 	if err != nil {
