@@ -226,6 +226,7 @@ func TestWebHooks(t *testing.T) {
 	})
 
 	bodyWithFlowAndIdentityAndSessionAndClaimsAndTransientPayload := func(req *http.Request, f flow.Flow, s *session.Session, c *claims.Claims, tp json.RawMessage) string {
+		groups := c.RawClaims["groups"].([]string)
 		body := fmt.Sprintf(`{
 					"flow_id": "%s",
 					"identity_id": "%s",
@@ -240,7 +241,7 @@ func TestWebHooks(t *testing.T) {
 					"transient_payload": %s,
 					"nickname": "%s",
 					"groups": ["%s", "%s"]
-				}`, f.GetID(), s.Identity.ID, s.ID, req.Method, "http://www.ory.sh/some_end_point", string(tp), oidcClaims.Nickname, oidcClaims.RawClaims["groups"].([]string)[0], oidcClaims.RawClaims["groups"].([]string)[1])
+				}`, f.GetID(), s.Identity.ID, s.ID, req.Method, "http://www.ory.com/some_end_point", string(tp), oidcClaims.Nickname, groups[0], groups[1])
 		if len(req.Header) != 0 {
 			if ua := req.Header.Get("User-Agent"); ua != "" {
 				body, _ = sjson.Set(body, "headers.User-Agent", []string{ua})
