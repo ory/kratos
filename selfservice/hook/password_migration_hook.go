@@ -58,7 +58,7 @@ func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow
 	if emitEvent {
 		InstrumentHTTPClientForEvents(ctx, httpClient, x.NewUUID(), "password_migration_hook")
 	}
-	builder, err := request.NewBuilder(ctx, p.conf, p.deps)
+	builder, err := request.NewBuilder(p.conf, p.deps)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -99,7 +99,6 @@ func (p *PasswordMigration) Execute(ctx context.Context, req *http.Request, flow
 	}
 
 	p.deps.Logger().WithRequest(whReq.Request).Info("Dispatching password migration hook")
-	whReq = whReq.WithContext(ctx)
 
 	resp, err := httpClient.Do(whReq)
 	if err != nil {

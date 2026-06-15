@@ -276,7 +276,7 @@ func TestBuildRequest(t *testing.T) {
 		t.Run("request-type="+tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			rb, err := NewBuilder(context.Background(), &tc.config, newTestDependencyProvider(t))
+			rb, err := NewBuilder(&tc.config, newTestDependencyProvider(t))
 			require.NoError(t, err)
 
 			assert.Equal(t, tc.bodyTemplateURI, rb.Config.TemplateURI)
@@ -307,7 +307,7 @@ func TestBuildRequest(t *testing.T) {
 	}
 
 	t.Run("cancel request", func(t *testing.T) {
-		rb, err := NewBuilder(context.Background(), &Config{
+		rb, err := NewBuilder(&Config{
 			URL:         "https://test.kratos.ory.sh/my_endpoint6",
 			Method:      "POST",
 			TemplateURI: "file://./stub/cancel_body.jsonnet",

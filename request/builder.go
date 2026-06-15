@@ -25,8 +25,6 @@ import (
 	"github.com/ory/x/jsonnetsecure"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
-
-	"go.opentelemetry.io/otel/attribute"
 )
 
 var ErrCancel = errors.New("request cancel by JsonNet")
@@ -69,19 +67,11 @@ func WithBodySizeHint(hint uint) BuilderOption {
 	}
 }
 
-func NewBuilder(ctx context.Context, c *Config, deps Dependencies, o ...BuilderOption) (_ *Builder, err error) {
-	_, span := deps.Tracer(ctx).Tracer().Start(ctx, "request.NewBuilder")
-	defer otelx.End(span, &err)
-
+func NewBuilder(c *Config, deps Dependencies, o ...BuilderOption) (*Builder, error) {
 	var opts options
 	for _, f := range o {
 		f(&opts)
 	}
-
-	span.SetAttributes(
-		attribute.String("url", c.URL),
-		attribute.String("method", c.Method),
-	)
 
 	r, err := retryablehttp.NewRequest(c.Method, c.URL, nil)
 	if err != nil {
@@ -236,7 +226,7 @@ func (b *Builder) BuildRequest(ctx context.Context, body interface{}) (*retryabl
 		}
 	}
 
-	return b.r, nil
+	return b.r.WithContext(ctx), nil
 }
 
 func (b *Builder) addRawBody(body any) (err error) {
@@ -265,7 +255,7 @@ func (b *Builder) addRawBody(body any) (err error) {
 	return nil
 }
 
-func (b *Builder) BuildRawRequest(body any) (*retryablehttp.Request, error) {
+func (b *Builder) BuildRawRequest(ctx context.Context, body any) (*retryablehttp.Request, error) {
 	b.r.Header = b.Config.header
 	b.Config.auth.apply(b.r)
 
@@ -277,7 +267,7 @@ func (b *Builder) BuildRawRequest(body any) (*retryablehttp.Request, error) {
 		}
 	}
 
-	return b.r, nil
+	return b.r.WithContext(ctx), nil
 }
 
 func (b *Builder) readTemplate(ctx context.Context) ([]byte, error) {

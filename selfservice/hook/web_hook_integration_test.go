@@ -28,6 +28,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -1422,6 +1423,60 @@ func TestWebhookEvents(t *testing.T) {
 		})
 		require.Equal(t, i, -1)
 	})
+}
+
+func TestWebhookHTTPClientSpan(t *testing.T) {
+	t.Parallel()
+	_, reg := pkg.NewFastRegistryWithMocks(t)
+	logger := logrusx.New("kratos", "test")
+	whDeps := newWebHookDeps(t, logger, reg)
+
+	webhookReceiver := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	}))
+	t.Cleanup(webhookReceiver.Close)
+
+	wh := hook.NewWebHook(whDeps, &request.Config{
+		ID:          x.NewUUID().String(),
+		URL:         webhookReceiver.URL,
+		Method:      "GET",
+		TemplateURI: "file://stub/test_body.jsonnet",
+	})
+
+	recorder := tracetest.NewSpanRecorder()
+	tracer := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test")
+	ctx, span := tracer.Start(t.Context(), "parent")
+	defer span.End()
+
+	req := &http.Request{
+		Header: map[string][]string{"Some-Header": {"Some-Value"}},
+		Host:   "www.ory.com",
+		TLS:    new(tls.ConnectionState),
+		URL:    &url.URL{Path: "/some_end_point"},
+		Method: http.MethodPost,
+	}
+	f := &login.Flow{ID: x.NewUUID()}
+
+	require.NoError(t, wh.ExecuteLoginPreHook(nil, req.Clone(ctx), f))
+
+	ended := recorder.Ended()
+
+	i := slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool { return sp.Name() == "selfservice.webhook" })
+	require.GreaterOrEqual(t, i, 0)
+	webhookSpan := ended[i]
+
+	spanNames := make([]string, len(ended))
+	for i, sp := range ended {
+		spanNames[i] = sp.Name()
+	}
+
+	i = slices.IndexFunc(ended, func(sp sdktrace.ReadOnlySpan) bool { return sp.SpanKind() == trace.SpanKindClient })
+	require.GreaterOrEqual(t, i, 0, "expected the HTTP client span of the webhook request to be ended and recorded, got only %v", spanNames)
+	clientSpan := ended[i]
+
+	assert.Equal(t, webhookSpan.SpanContext().TraceID(), clientSpan.SpanContext().TraceID(), "the HTTP client span must belong to the same trace as the selfservice.webhook span")
+	assert.Equal(t, webhookSpan.SpanContext().SpanID(), clientSpan.Parent().SpanID(), "the HTTP client span must be a direct child of the selfservice.webhook span")
 }
 
 func TestRemoveDisallowedHeaders(t *testing.T) {

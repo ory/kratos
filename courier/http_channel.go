@@ -66,7 +66,7 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	ctx, span := c.d.Tracer(ctx).Tracer().Start(ctx, "courier.httpChannel.Dispatch")
 	defer otelx.End(span, &err)
 
-	builder, err := request.NewBuilder(ctx, c.requestConfig, c.d)
+	builder, err := request.NewBuilder(c.requestConfig, c.d)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -92,7 +92,6 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	req = req.WithContext(ctx)
 
 	res, err := c.d.HTTPClient(ctx,
 		// fail fast and let the courier retry if needed instead of blocking the queue
@@ -102,7 +101,9 @@ func (c *httpChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	defer func() { _ = res.Body.Close() }()
+	// Close the original body, not the NopCloser below: closing it returns
+	// the connection to the pool and ends the otelhttp client span.
+	defer func(body io.ReadCloser) { _ = body.Close() }(res.Body)
 	res.Body = io.NopCloser(io.LimitReader(res.Body, 1024))
 
 	logger := c.d.Logger().

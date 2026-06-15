@@ -354,7 +354,7 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			}
 		}(time.Now())
 
-		builder, err := request.NewBuilder(ctx, e.conf, e.deps, request.WithCache(jsonnetCache))
+		builder, err := request.NewBuilder(e.conf, e.deps, request.WithCache(jsonnetCache))
 		if err != nil {
 			return err
 		}
@@ -385,8 +385,6 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 
 		e.deps.Logger().WithRequest(req.Request).Info("Dispatching webhook")
 
-		req = req.WithContext(ctx)
-
 		resp, err := httpClient.Do(req)
 		if err != nil {
 			if IsTimeoutError(err) {
@@ -400,7 +398,9 @@ func (e *WebHook) execute(ctx context.Context, data *templateContext) error {
 			}
 			return errors.WithStack(err)
 		}
-		defer func() { _ = resp.Body.Close() }()
+		// Close the original body, not the NopCloser below: closing it returns
+		// the connection to the pool and ends the otelhttp client span.
+		defer func(body io.ReadCloser) { _ = body.Close() }(resp.Body)
 		resp.Body = io.NopCloser(io.LimitReader(resp.Body, 5<<20)) // read at most 5 MB from the response
 		span.SetAttributes(semconv.HTTPAttributesFromHTTPStatusCode(resp.StatusCode)...)
 
