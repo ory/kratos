@@ -152,6 +152,30 @@ func TestVerifier(t *testing.T) {
 		})
 	}
 
+	t.Run("case=should not send verification emails when auto-injection is disabled", func(t *testing.T) {
+		t.Parallel()
+		conf, reg := pkg.NewFastRegistryWithMocks(t)
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/verify.schema.json")
+		conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://www.ory.com/")
+		conf.MustSet(ctx, config.ViperKeyCourierSMTPURL, "smtp://foo@bar@dev.null/")
+		conf.MustSet(ctx, config.ViperKeySelfServiceVerificationEnabled, true)
+		conf.MustSet(ctx, config.ViperKeyDisableVerificationHookAutoInjection, true)
+
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		i.Traits = identity.Traits(`{"emails":["foo@ory.sh","bar@ory.sh"]}`)
+		require.NoError(t, reg.IdentityManager().Create(context.Background(), i))
+
+		hooks, err := reg.PostRegistrationPostPersistHooks(ctx, identity.CredentialsTypePassword)
+		require.NoError(t, err)
+		for _, h := range hooks {
+			assert.IsNotType(t, &hook.Verifier{}, h, "verifier hook should not be auto-injected when flag is set")
+		}
+
+		messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
+		require.EqualError(t, err, courier.ErrQueueEmpty.Error())
+		require.Len(t, messages, 0)
+	})
+
 	t.Run("flow=login/case=does not run if aal is not 1", func(t *testing.T) {
 		t.Parallel()
 		_, reg := pkg.NewFastRegistryWithMocks(t)
