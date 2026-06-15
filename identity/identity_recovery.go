@@ -5,6 +5,7 @@ package identity
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -46,6 +47,27 @@ func (a RecoveryAddress) GetID() uuid.UUID  { return a.ID }
 // Signature returns a unique string representation for the recovery address.
 func (a RecoveryAddress) Signature() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v", a.Value, a.Via, a.BreakGlassForOrganization, a.IdentityID, a.NID)
+}
+
+// RecoveryAddressesEqual reports whether two sets of recovery addresses are
+// equal, comparing by value (via Signature) and ignoring order. It mirrors
+// VerifiableAddressesEqual and is used by the privileged-session gate so that
+// changing a recovery address requires a privileged session.
+func RecoveryAddressesEqual(original, updated []RecoveryAddress) bool {
+	if len(original) != len(updated) {
+		return false
+	}
+	originalSignatures := make([]string, len(original))
+	for i, a := range original {
+		originalSignatures[i] = a.Signature()
+	}
+	updatedSignatures := make([]string, len(updated))
+	for i, a := range updated {
+		updatedSignatures[i] = a.Signature()
+	}
+	slices.Sort(originalSignatures)
+	slices.Sort(updatedSignatures)
+	return slices.Equal(originalSignatures, updatedSignatures)
 }
 
 func NewRecoveryEmailAddress(

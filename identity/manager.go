@@ -437,7 +437,8 @@ func (m *Manager) requiresPrivilegedAccess(ctx context.Context, original, update
 		return nil
 
 	case !CredentialsEqual(updated.Credentials, original.Credentials),
-		!VerifiableAddressesEqual(updated.VerifiableAddresses, original.VerifiableAddresses):
+		!VerifiableAddressesEqual(updated.VerifiableAddresses, original.VerifiableAddresses),
+		!RecoveryAddressesEqual(updated.RecoveryAddresses, original.RecoveryAddresses):
 		// reset the identity
 		*updated = *original
 		return errors.WithStack(ErrProtectedFieldModified())
