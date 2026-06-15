@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/x/httpx"
 
 	"github.com/pkg/errors"
@@ -70,7 +71,7 @@ func (g *ProviderGitLab) OAuth2(ctx context.Context) (*oauth2.Config, error) {
 	return g.oauth2(ctx)
 }
 
-func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
+func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*claims.Claims, error) {
 	o, err := g.OAuth2(ctx)
 	if err != nil {
 		return nil, err
@@ -99,7 +100,7 @@ func (g *ProviderGitLab) Claims(ctx context.Context, exchange *oauth2.Token, que
 		return nil, err
 	}
 
-	var claims Claims
+	var claims claims.Claims
 	if err := json.NewDecoder(resp.Body).Decode(&claims); err != nil {
 		return nil, errors.WithStack(herodot.ErrUpstreamError().WithWrap(err).WithReasonf("%s", err))
 	}

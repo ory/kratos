@@ -19,6 +19,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 )
 
 type testUpdateProvider struct {
@@ -40,7 +41,7 @@ func TestEvaluateClaimsMapper(t *testing.T) {
 		Mapper:   "file://./stub/oidc.hydra.jsonnet",
 	}}
 
-	claims := &oidc.Claims{
+	claims := &claims.Claims{
 		Subject: "alice@example.com",
 		Email:   "alice@example.com",
 		Website: "https://example.com",
@@ -106,7 +107,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			MetadataAdmin:  []byte(`{}`),
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject: "alice@example.com",
 			Website: "https://new.example.com",
 			RawClaims: map[string]any{
@@ -132,7 +133,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			MetadataAdmin:  []byte(`{}`),
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:     "alice@example.com",
 			Picture:     "https://example.com/new-pic.png",
 			PhoneNumber: "+1234567890",
@@ -156,7 +157,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			MetadataAdmin:  []byte(`{"phone_number":"+1234567890"}`),
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:     "alice@example.com",
 			Website:     "https://example.com",
 			Picture:     "https://example.com/alice.png",
@@ -184,7 +185,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			Credentials:    originalCreds,
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:   "alice@example.com",
 			Website:   "https://new.example.com",
 			RawClaims: map[string]any{"_placeholder": true},
@@ -212,7 +213,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			MetadataAdmin:  []byte(`{}`),
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:   "alice@example.com",
 			Website:   "https://new.example.com",
 			Picture:   "https://example.com/new.png",
@@ -245,7 +246,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			MetadataAdmin:  []byte(`{}`),
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:   "alice@example.com",
 			Website:   "https://new.example.com",
 			RawClaims: map[string]any{"_placeholder": true},
@@ -276,7 +277,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			Mapper:   "file://./stub/oidc.update-identity.jsonnet",
 		}}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:   "alice@example.com",
 			Website:   "https://example.com",
 			RawClaims: map[string]any{"_placeholder": true},
@@ -306,7 +307,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			MetadataAdmin:  []byte(`{}`),
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject: "alice@example.com",
 			RawClaims: map[string]any{
 				"groups": []any{"admin"},
@@ -366,7 +367,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			},
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:   "alice@example.com",
 			RawClaims: map[string]any{"_placeholder": true},
 		}
@@ -398,7 +399,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			MetadataAdmin:  []byte(`{"secret":"admin-data"}`),
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:   "alice@example.com",
 			Website:   "https://new.example.com",
 			RawClaims: map[string]any{"_placeholder": true},
@@ -438,7 +439,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			},
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:   "alice@example.com",
 			RawClaims: map[string]any{"_placeholder": true},
 		}
@@ -494,7 +495,7 @@ func TestUpdateIdentityFromClaims(t *testing.T) {
 			},
 		}
 
-		claims := &oidc.Claims{
+		claims := &claims.Claims{
 			Subject:   "alice@example.com",
 			RawClaims: map[string]any{"_placeholder": true},
 		}

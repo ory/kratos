@@ -53,6 +53,7 @@ func TestSessionDestroyer(t *testing.T) {
 					node.DefaultGroup,
 					nil,
 					&session.Session{Identity: i},
+					nil,
 				)
 			},
 		},

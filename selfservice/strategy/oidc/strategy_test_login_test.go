@@ -24,6 +24,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/selfservice/strategy/oidc/oidcerr"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
@@ -206,7 +207,7 @@ func TestStrategy_ProcessTestLogin_HappyPath(t *testing.T) {
 
 	f := newTestLoginFlow(t, ctx, reg, "providerID")
 
-	claims := &oidc.Claims{
+	claims := &claims.Claims{
 		Subject: "alice@example.com",
 		Email:   "alice@example.com",
 		Website: "https://example.com",
@@ -296,7 +297,7 @@ func TestStrategy_ProcessTestLogin_AlreadyCaptured(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/self-service/methods/oidc/callback?code=x&state=y", nil)
-	err = strat.ProcessTestLoginForTest(ctx, w, r, f, &oidc.Claims{Subject: "alice"}, provider)
+	err = strat.ProcessTestLoginForTest(ctx, w, r, f, &claims.Claims{Subject: "alice"}, provider)
 	require.Error(t, err)
 	var herr *herodot.DefaultError
 	require.ErrorAs(t, err, &herr)
@@ -321,7 +322,7 @@ func TestStrategy_ProcessTestLogin_RawTokensNotStored(t *testing.T) {
 
 	f := newTestLoginFlow(t, ctx, reg, "providerID")
 
-	claims := &oidc.Claims{
+	claims := &claims.Claims{
 		Subject: "alice@example.com",
 		RawClaims: map[string]any{
 			"groups": []any{"admin"},
@@ -416,7 +417,7 @@ func TestStrategy_ProcessTestLogin_MapperEvaluationFailure(t *testing.T) {
 
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/self-service/methods/oidc/callback?code=x&state=y", nil)
-	require.NoError(t, strat.ProcessTestLoginForTest(ctx, w, r, f, &oidc.Claims{Subject: "alice"}, provider))
+	require.NoError(t, strat.ProcessTestLoginForTest(ctx, w, r, f, &claims.Claims{Subject: "alice"}, provider))
 
 	got, err := reg.LoginFlowPersister().GetLoginFlow(ctx, f.ID)
 	require.NoError(t, err)

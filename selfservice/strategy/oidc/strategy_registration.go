@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
@@ -323,7 +324,7 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
+func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *claims.Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processRegistration")
 	defer otelx.End(span, &err)
 
@@ -398,7 +399,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 // EvaluateClaimsMapper runs the Jsonnet mapper for the given claims and returns
 // the evaluated JSON string. If currentIdentity is non-nil, its traits and
 // metadata are made available in the Jsonnet context as std.extVar('identity').
-func (s *Strategy) EvaluateClaimsMapper(ctx context.Context, claims *Claims, provider Provider, currentIdentity *identity.Identity) (evaluated string, claimsJSON []byte, err error) {
+func (s *Strategy) EvaluateClaimsMapper(ctx context.Context, claims *claims.Claims, provider Provider, currentIdentity *identity.Identity) (evaluated string, claimsJSON []byte, err error) {
 	fetch := fetcher.NewFetcher(fetcher.WithClient(s.d.HTTPClient(ctx)), fetcher.WithCache(jsonnetCache, 60*time.Minute))
 	jsonnetSnippet, err := fetch.FetchContext(ctx, provider.Config().Mapper)
 	if err != nil {
@@ -456,7 +457,7 @@ func (s *Strategy) EvaluateClaimsMapper(ctx context.Context, claims *Claims, pro
 	return evaluated, jsonClaims.Bytes(), nil
 }
 
-func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *Claims, provider Provider, container *AuthCodeContainer, schema flow.IdentitySchema) (_ *identity.Identity, _ []VerifiedAddress, err error) {
+func (s *Strategy) newIdentityFromClaims(ctx context.Context, claims *claims.Claims, provider Provider, container *AuthCodeContainer, schema flow.IdentitySchema) (_ *identity.Identity, _ []VerifiedAddress, err error) {
 	evaluated, _, err := s.EvaluateClaimsMapper(ctx, claims, provider, nil)
 	if err != nil {
 		return nil, nil, err

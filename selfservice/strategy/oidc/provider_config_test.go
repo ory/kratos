@@ -16,6 +16,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/kratos/selfservice/strategy/oidc/claims"
 )
 
 func TestConfig(t *testing.T) {
@@ -41,7 +42,7 @@ func TestConfiguration_AALForClaims(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
 		config oidc.Configuration
-		claims *oidc.Claims
+		claims *claims.Claims
 		want   identity.AuthenticatorAssuranceLevel
 	}{
 		{
@@ -53,61 +54,61 @@ func TestConfiguration_AALForClaims(t *testing.T) {
 		{
 			name:   "empty config with claims stays aal1",
 			config: oidc.Configuration{},
-			claims: &oidc.Claims{ACR: "urn:mfa", AMR: []string{"mfa", "pwd"}},
+			claims: &claims.Claims{ACR: "urn:mfa", AMR: []string{"mfa", "pwd"}},
 			want:   identity.AuthenticatorAssuranceLevel1,
 		},
 		{
 			name:   "acr match elevates to aal2",
 			config: oidc.Configuration{AAL2ACRValues: []string{"urn:mfa", "urn:strong"}},
-			claims: &oidc.Claims{ACR: "urn:mfa"},
+			claims: &claims.Claims{ACR: "urn:mfa"},
 			want:   identity.AuthenticatorAssuranceLevel2,
 		},
 		{
 			name:   "acr mismatch stays aal1",
 			config: oidc.Configuration{AAL2ACRValues: []string{"urn:mfa"}},
-			claims: &oidc.Claims{ACR: "urn:basic"},
+			claims: &claims.Claims{ACR: "urn:basic"},
 			want:   identity.AuthenticatorAssuranceLevel1,
 		},
 		{
 			name:   "empty acr does not accidentally match empty configured value",
 			config: oidc.Configuration{AAL2ACRValues: []string{""}},
-			claims: &oidc.Claims{ACR: ""},
+			claims: &claims.Claims{ACR: ""},
 			want:   identity.AuthenticatorAssuranceLevel1,
 		},
 		{
 			name:   "amr match elevates to aal2",
 			config: oidc.Configuration{AAL2AMRValues: []string{"mfa"}},
-			claims: &oidc.Claims{AMR: []string{"pwd", "mfa"}},
+			claims: &claims.Claims{AMR: []string{"pwd", "mfa"}},
 			want:   identity.AuthenticatorAssuranceLevel2,
 		},
 		{
 			name:   "amr mismatch stays aal1",
 			config: oidc.Configuration{AAL2AMRValues: []string{"mfa"}},
-			claims: &oidc.Claims{AMR: []string{"pwd"}},
+			claims: &claims.Claims{AMR: []string{"pwd"}},
 			want:   identity.AuthenticatorAssuranceLevel1,
 		},
 		{
 			name:   "any configured amr value is sufficient",
 			config: oidc.Configuration{AAL2AMRValues: []string{"otp", "hwk", "mfa"}},
-			claims: &oidc.Claims{AMR: []string{"pwd", "hwk"}},
+			claims: &claims.Claims{AMR: []string{"pwd", "hwk"}},
 			want:   identity.AuthenticatorAssuranceLevel2,
 		},
 		{
 			name:   "both acr and amr configured, acr matches",
 			config: oidc.Configuration{AAL2ACRValues: []string{"urn:mfa"}, AAL2AMRValues: []string{"mfa"}},
-			claims: &oidc.Claims{ACR: "urn:mfa", AMR: []string{"pwd"}},
+			claims: &claims.Claims{ACR: "urn:mfa", AMR: []string{"pwd"}},
 			want:   identity.AuthenticatorAssuranceLevel2,
 		},
 		{
 			name:   "both acr and amr configured, amr matches",
 			config: oidc.Configuration{AAL2ACRValues: []string{"urn:mfa"}, AAL2AMRValues: []string{"mfa"}},
-			claims: &oidc.Claims{ACR: "urn:basic", AMR: []string{"pwd", "mfa"}},
+			claims: &claims.Claims{ACR: "urn:basic", AMR: []string{"pwd", "mfa"}},
 			want:   identity.AuthenticatorAssuranceLevel2,
 		},
 		{
 			name:   "both configured, neither matches",
 			config: oidc.Configuration{AAL2ACRValues: []string{"urn:mfa"}, AAL2AMRValues: []string{"mfa"}},
-			claims: &oidc.Claims{ACR: "urn:basic", AMR: []string{"pwd"}},
+			claims: &claims.Claims{ACR: "urn:basic", AMR: []string{"pwd"}},
 			want:   identity.AuthenticatorAssuranceLevel1,
 		},
 	} {
