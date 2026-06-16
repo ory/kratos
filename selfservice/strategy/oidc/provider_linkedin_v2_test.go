@@ -4,7 +4,6 @@
 package oidc_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,7 +26,7 @@ func TestProviderLinkedInV2_Discovery(t *testing.T) {
 		Scope:           []string{"email", "profile", "offline_access"},
 	}, reg)
 
-	c, err := p.(oidc.OAuth2Provider).OAuth2(context.Background())
+	c, err := p.(oidc.OAuth2Provider).OAuth2(t.Context())
 	require.NoError(t, err)
 	assert.Contains(t, c.Scopes, "openid")
 	assert.Equal(t, "https://www.linkedin.com/oauth/v2/accessToken", c.Endpoint.TokenURL)

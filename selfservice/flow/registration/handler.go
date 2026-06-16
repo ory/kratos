@@ -119,6 +119,12 @@ func WithFlowOAuth2LoginChallenge(loginChallenge string) FlowOption {
 	}
 }
 
+func WithFlowIdentitySchema(schema string) FlowOption {
+	return func(f *Flow) {
+		f.IdentitySchema = flow.IdentitySchema(schema)
+	}
+}
+
 func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
 	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
 		return nil, errors.WithStack(ErrRegistrationDisabled())

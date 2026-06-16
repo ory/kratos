@@ -57,31 +57,16 @@ func TestSettingsStrategy(t *testing.T) {
 		}),
 	)
 
-	var (
-		subject string
-		claims  idTokenClaims
-		scope   []string
-	)
-	remoteAdmin, remotePublic, _ := newHydra(t, &hydraIntegrationState{
-		subject: &subject,
-		claims:  &claims,
-		scope:   &scope,
-	})
+	hydraAdmin, hydraPublic := newHydra(t)
 	uiTS := newUI(t, reg)
 	errTS := testhelpers.NewErrorTestServer(t, reg)
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
 
-	viperSetProviderConfig(
-		t,
-		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory", func(c *oidc.Configuration) {
-			c.Label = "Ory"
-		}),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory-sso", func(c *oidc.Configuration) {
-			c.OrganizationID = "org-1"
-		}),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "google"),
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "github"),
+	setProviderConfig(t, conf,
+		newOIDCProvider(t, publicTS, hydraPublic, hydraAdmin, "ory", func(c *oidc.Configuration) { c.Label = "Ory" }),
+		newOIDCProvider(t, publicTS, hydraPublic, hydraAdmin, "ory-sso", func(c *oidc.Configuration) { c.OrganizationID = "org-1" }),
+		newOIDCProvider(t, publicTS, hydraPublic, hydraAdmin, "google"),
+		newOIDCProvider(t, publicTS, hydraPublic, hydraAdmin, "github"),
 	)
 
 	type userDataFunc = func() (string, *identity.Identity)
@@ -255,10 +240,6 @@ func TestSettingsStrategy(t *testing.T) {
 		}
 	})
 
-	action := func(req *kratos.SettingsFlow) string {
-		return req.Ui.Action
-	}
-
 	checkCredentials := func(t *testing.T, shouldExist bool, iid uuid.UUID, provider, subject string, expectTokens bool) {
 		actual, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), iid)
 		require.NoError(t, err)
@@ -292,7 +273,7 @@ func TestSettingsStrategy(t *testing.T) {
 	t.Run("suite=unlink", func(t *testing.T) {
 		unlink := func(t *testing.T, agent *http.Client, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, agent)
-			body, res = testhelpers.HTTPPostForm(t, agent, action(req),
+			body, res = testhelpers.HTTPPostForm(t, agent, req.Ui.Action,
 				&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "unlink": {provider}})
 			return
 		}
@@ -305,8 +286,6 @@ func TestSettingsStrategy(t *testing.T) {
 				body, res, req := unlink(t, client, provider)
 
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
-
-				// assert.EqualValues(t, identity.CredentialsTypeOIDC.String(), gjson.GetBytes(body, "active").String())
 
 				// The original options to link google and github are still there
 				t.Run("flow=fetch", func(t *testing.T) {
@@ -404,7 +383,7 @@ func TestSettingsStrategy(t *testing.T) {
 				// fake login by allowing longer sessions...
 				conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, normalPrivilegedSessionFor)
 
-				body, res := testhelpers.HTTPPostForm(t, client, action(req),
+				body, res := testhelpers.HTTPPostForm(t, client, req.Ui.Action,
 					&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 
@@ -422,7 +401,7 @@ func TestSettingsStrategy(t *testing.T) {
 
 		link := func(t *testing.T, client *http.Client, provider string) (body []byte, res *http.Response, req *kratos.SettingsFlow) {
 			req = nprSDK(t, client)
-			body, res = testhelpers.HTTPPostForm(t, client, action(req),
+			body, res = testhelpers.HTTPPostForm(t, client, req.Ui.Action,
 				&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "link": {provider}})
 			return
 		}
@@ -460,20 +439,21 @@ func TestSettingsStrategy(t *testing.T) {
 			_, otherUserData := singleOIDCIdentity()
 			_, otherClient := testhelpers.AddAndLoginIdentity(t, reg, otherUserData)
 
-			subject = userEmail
-			scope = []string{"openid"}
+			subject := userEmail
+			scope := []string{"openid"}
 
-			body, res, _ := link(t, otherClient, "github")
+			c := wrapClientForHydraLoginConsent(t, otherClient, hydraAdmin, hydraFlowParams{subject: subject, scope: scope})
+
+			body, res, _ := link(t, c, "github")
 
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 			assert.Containsf(t, gjson.GetBytes(body, "ui.messages.0.text").String(), "An account with the same identifier (email, phone, username, ...) exists already.", "%s", body)
 		})
 
 		t.Run("case=should not be able to link a connection which is missing the ID token", func(t *testing.T) {
-			subject = "hackerman+scope-missing"
-			scope = []string{}
+			c := wrapClientForHydraLoginConsent(t, client, hydraAdmin, hydraFlowParams{subject: "hackerman+scope-missing", scope: []string{}})
 
-			body, res, _ := link(t, client, "google")
+			body, res, _ := link(t, c, "google")
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
 			assert.Containsf(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
@@ -481,26 +461,15 @@ func TestSettingsStrategy(t *testing.T) {
 				"%s", body)
 		})
 
-		t.Run("case=should not be able to link a connection which is missing the ID token", func(t *testing.T) {
-			subject = "hackerman+scope-missing"
-			scope = []string{}
-
-			body, res, _ := link(t, client, "google")
-			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-
-			assert.Contains(t, gjson.GetBytes(body, `ui.messages.0.text`).String(),
-				"no id_token was returned")
-		})
-
 		t.Run("case=should link a connection", func(t *testing.T) {
-			subject = testhelpers.RandomEmail()
-			scope = []string{"openid", "offline"}
+			subject := testhelpers.RandomEmail()
+			scope := []string{"openid", "offline"}
 			provider := "google"
 
 			_, userData := multiOIDCIdentity()
 			userID, client := testhelpers.AddAndLoginIdentity(t, reg, userData)
 
-			updatedFlow, res, originalFlow := link(t, client, provider)
+			updatedFlow, res, originalFlow := link(t, wrapClientForHydraLoginConsent(t, client, hydraAdmin, hydraFlowParams{subject: subject, scope: scope}), provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
 			updatedFlowSDK, _, err := testhelpers.NewSDKCustomClient(publicTS, client).FrontendAPI.GetSettingsFlow(t.Context()).Id(originalFlow.Id).Execute()
@@ -518,36 +487,26 @@ func TestSettingsStrategy(t *testing.T) {
 			})
 
 			checkCredentials(t, true, userID, provider, subject, true)
-		})
 
-		t.Run("case=should link a connection and add auth method to session", func(t *testing.T) {
-			_, userData := multiOIDCIdentity()
-			_, client := testhelpers.AddAndLoginIdentity(t, reg, userData)
-			provider := "google"
+			t.Run("session should have new auth method", func(t *testing.T) {
+				// Get the specific session for this agent using SDK
+				sess, _, err := testhelpers.NewSDKCustomClient(publicTS, client).
+					FrontendAPI.
+					ToSession(t.Context()).
+					Execute()
+				require.NoError(t, err)
+				require.NotNil(t, sess)
 
-			subject = testhelpers.RandomEmail()
-			scope = []string{"openid", "offline"}
+				// Check that the session has the expected auth method
+				found := slices.ContainsFunc(sess.AuthenticationMethods, func(am kratos.SessionAuthenticationMethod) bool {
+					return am.Method != nil &&
+						am.Provider != nil &&
+						*am.Method == string(identity.CredentialsTypeOIDC) &&
+						*am.Provider == provider
+				})
 
-			_, res, _ := link(t, client, provider)
-			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
-
-			// Get the specific session for this agent using SDK
-			sess, _, err := testhelpers.NewSDKCustomClient(publicTS, client).
-				FrontendAPI.
-				ToSession(t.Context()).
-				Execute()
-			require.NoError(t, err)
-			require.NotNil(t, sess)
-
-			// Check that the session has the expected auth method
-			found := slices.ContainsFunc(sess.AuthenticationMethods, func(am kratos.SessionAuthenticationMethod) bool {
-				return am.Method != nil &&
-					am.Provider != nil &&
-					*am.Method == string(identity.CredentialsTypeOIDC) &&
-					*am.Provider == provider
+				require.Truef(t, found, "session should contain OIDC auth method for provider %s", provider)
 			})
-
-			require.True(t, found, "session should contain OIDC auth method for provider %s", provider)
 		})
 
 		t.Run("case=should link a connection even if user does not have oidc credentials yet", func(t *testing.T) {
@@ -555,10 +514,9 @@ func TestSettingsStrategy(t *testing.T) {
 			userID, client := testhelpers.AddAndLoginIdentity(t, reg, userData)
 			provider := "google"
 
-			subject = testhelpers.RandomEmail()
-			scope = []string{"openid", "offline"}
+			subject := testhelpers.RandomEmail()
 
-			_, res, req := link(t, client, provider)
+			_, res, req := link(t, wrapClientForHydraLoginConsent(t, client, hydraAdmin, hydraFlowParams{subject: subject, scope: []string{"openid", "offline"}}), provider)
 			assert.Contains(t, res.Request.URL.String(), uiTS.URL)
 
 			rs, _, err := testhelpers.NewSDKCustomClient(publicTS, client).FrontendAPI.GetSettingsFlow(t.Context()).Id(req.Id).Execute()
@@ -571,11 +529,7 @@ func TestSettingsStrategy(t *testing.T) {
 		})
 
 		t.Run("case=upstream parameters", func(t *testing.T) {
-			subject = ""
-			scope = nil
-			provider := "google"
-
-			t.Run("case=should be able to pass upstream paramters when linking a connection", func(t *testing.T) {
+			t.Run("case=should pass upstream parameters when linking a connection", func(t *testing.T) {
 				req := nprSDK(t, client)
 				// copy over the client so we can disable redirects
 				c := *client
@@ -586,12 +540,12 @@ func TestSettingsStrategy(t *testing.T) {
 
 				values := &url.Values{}
 				values.Set("csrf_token", nosurfx.FakeCSRFToken)
-				values.Set("link", provider)
+				values.Set("link", "google")
 				values.Set("upstream_parameters.login_hint", "foo@bar.com")
 				values.Set("upstream_parameters.hd", "bar.com")
 				values.Set("upstream_parameters.prompt", "consent")
 
-				resp, err := c.PostForm(action(req), *values)
+				resp, err := c.PostForm(req.Ui.Action, *values)
 				require.NoError(t, err)
 				require.Equal(t, http.StatusSeeOther, resp.StatusCode)
 
@@ -600,9 +554,9 @@ func TestSettingsStrategy(t *testing.T) {
 
 				// login_hint is never forwarded: a caller-supplied value cannot be
 				// trusted (HackerOne #3239672, ory-corp/cloud#8955).
-				require.Empty(t, loc.Query().Get("login_hint"))
-				require.EqualValues(t, "bar.com", loc.Query().Get("hd"))
-				require.EqualValues(t, "consent", loc.Query().Get("prompt"))
+				assert.Empty(t, loc.Query().Get("login_hint"))
+				assert.EqualValues(t, "bar.com", loc.Query().Get("hd"))
+				assert.EqualValues(t, "consent", loc.Query().Get("prompt"))
 			})
 
 			t.Run("case=invalid query parameters should be ignored", func(t *testing.T) {
@@ -616,17 +570,17 @@ func TestSettingsStrategy(t *testing.T) {
 
 				values := &url.Values{}
 				values.Set("csrf_token", nosurfx.FakeCSRFToken)
-				values.Set("link", provider)
+				values.Set("link", "google")
 				values.Set("upstream_parameters.lol", "invalid")
 
-				resp, err := c.PostForm(action(req), *values)
+				resp, err := c.PostForm(req.Ui.Action, *values)
 				require.NoError(t, err)
 				require.Equal(t, http.StatusSeeOther, resp.StatusCode)
 
 				loc, err := resp.Location()
 				require.NoError(t, err)
 
-				require.Empty(t, loc.Query().Get("lol"))
+				assert.False(t, loc.Query().Has("lol"))
 			})
 		})
 
@@ -635,8 +589,7 @@ func TestSettingsStrategy(t *testing.T) {
 			userID, client := testhelpers.AddAndLoginIdentity(t, reg, userData)
 			provider := "google"
 
-			subject = testhelpers.RandomEmail()
-			scope = []string{"openid", "offline"}
+			subject := testhelpers.RandomEmail()
 
 			runUnauthed := func(t *testing.T) *kratos.SettingsFlow {
 				conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, time.Millisecond)
@@ -650,11 +603,13 @@ func TestSettingsStrategy(t *testing.T) {
 				lf, _, err := fa.GetLoginFlow(t.Context()).Id(res.Request.URL.Query()["flow"][0]).Execute()
 				require.NoError(t, err)
 
+				var allProviders []any
 				for _, n := range lf.Ui.Nodes {
 					if n.Group == "oidc" && n.Attributes.UiNodeInputAttributes.Name == "provider" {
-						assert.Contains(t, []string{"ory", "github"}, n.Attributes.UiNodeInputAttributes.Value)
+						allProviders = append(allProviders, n.Attributes.UiNodeInputAttributes.Value)
 					}
 				}
+				assert.ElementsMatch(t, []string{"ory"}, allProviders)
 
 				rs, _, err := fa.GetSettingsFlow(t.Context()).Id(req.Id).Execute()
 				require.NoError(t, err)
@@ -675,7 +630,7 @@ func TestSettingsStrategy(t *testing.T) {
 				// fake login by allowing longer sessions...
 				conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, normalPrivilegedSessionFor)
 
-				body, res := testhelpers.HTTPPostForm(t, client, action(req),
+				body, res := testhelpers.HTTPPostForm(t, wrapClientForHydraLoginConsent(t, client, hydraAdmin, hydraFlowParams{subject: subject, scope: []string{"openid", "offline"}}), req.Ui.Action,
 					&url.Values{"csrf_token": {nosurfx.FakeCSRFToken}, "unlink": {provider}})
 				assert.Contains(t, res.Request.URL.String(), uiTS.URL+"/settings?flow="+req.Id)
 

@@ -4,9 +4,6 @@
 package oidc_test
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,19 +13,16 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/x/configx"
 )
 
 func TestConfig(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
-
-	var c map[string]interface{}
-	require.NoError(t, json.NewDecoder(
-		bytes.NewBufferString(`{"config":{"providers": [{"provider": "generic"}]}}`)).Decode(&c))
-	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC), c)
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(
+		config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config",
+		map[string]any{"providers": []map[string]any{{"provider": "generic"}}}))
 
 	s := oidc.NewStrategy(reg)
-	collection, err := s.Config(ctx)
+	collection, err := s.Config(t.Context())
 	require.NoError(t, err)
 
 	require.Len(t, collection.Providers, 1)

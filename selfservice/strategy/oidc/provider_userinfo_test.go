@@ -13,6 +13,8 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
 	"github.com/ory/herodot"
@@ -20,11 +22,8 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/httpx"
-	"github.com/ory/x/otelx"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type mockRegistry struct {
@@ -32,17 +31,17 @@ type mockRegistry struct {
 	cl *retryablehttp.Client
 }
 
-func (s *mockRegistry) HTTPClient(ctx context.Context, opts ...httpx.ResilientOptions) *retryablehttp.Client {
+func (s *mockRegistry) HTTPClient(context.Context, ...httpx.ResilientOptions) *retryablehttp.Client {
 	return s.cl
 }
 
 func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
-	conf, base := pkg.NewFastRegistryWithMocks(t)
-	conf.MustSet(context.Background(), config.ViperKeyClientHTTPNoPrivateIPRanges, true)
-	base.SetTracer(otelx.NewNoop())
+	t.Parallel()
+
+	_, base := pkg.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeyClientHTTPNoPrivateIPRanges, true))
 	reg := &mockRegistry{base, retryablehttp.NewClient()}
 
-	ctx := context.Background()
 	token := &oauth2.Token{AccessToken: "foo", Expiry: time.Now().Add(time.Hour)}
 
 	expectedClaims := &oidc.Claims{
@@ -352,7 +351,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 					return httpmock.NewJsonResponse(455, map[string]interface{}{})
 				})
 
-				_, err := tc.provider.(oidc.OAuth2Provider).Claims(ctx, token, url.Values{})
+				_, err := tc.provider.(oidc.OAuth2Provider).Claims(t.Context(), token, url.Values{})
 				var he *herodot.DefaultError
 				require.ErrorAs(t, err, &he)
 				assert.Equal(t, "OpenID Connect provider returned a 455 status code but 200 is expected.", he.Reason(), "%+v", err)
@@ -368,7 +367,7 @@ func TestProviderClaimsRespectsErrorCodes(t *testing.T) {
 
 				httpmock.RegisterResponder("GET", tc.userInfoEndpoint, tc.userInfoHandler)
 
-				claims, err := tc.provider.(oidc.OAuth2Provider).Claims(ctx, token, url.Values{})
+				claims, err := tc.provider.(oidc.OAuth2Provider).Claims(t.Context(), token, url.Values{})
 				require.NoError(t, err)
 				if tc.expectedClaims == nil {
 					assert.Equal(t, expectedClaims, claims)

@@ -4,7 +4,6 @@
 package oidc_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,11 +19,9 @@ import (
 )
 
 func TestGenerateState(t *testing.T) {
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
-	_ = conf
+	_, reg := pkg.NewFastRegistryWithMocks(t)
 	strat := oidc.NewStrategy(reg)
-	ctx := context.Background()
-	ciph := reg.Cipher(ctx)
+	ciph := reg.Cipher(t.Context())
 	_, ok := ciph.(*cipher.Noop)
 	require.False(t, ok)
 
@@ -32,12 +29,12 @@ func TestGenerateState(t *testing.T) {
 		ID: x.NewUUID(),
 	}
 
-	stateParam, pkce, err := strat.GenerateState(ctx, &testProvider{}, flow, "https://teststatehost")
+	stateParam, pkce, err := strat.GenerateState(t.Context(), &testProvider{}, flow, "https://teststatehost")
 	require.NoError(t, err)
 	require.NotEmpty(t, stateParam)
 	assert.Empty(t, pkce)
 
-	state, err := oidc.DecryptState(ctx, ciph, stateParam)
+	state, err := oidc.DecryptState(t.Context(), ciph, stateParam)
 	require.NoError(t, err)
 	assert.Equal(t, flow.GetID().Bytes(), state.FlowId)
 	assert.Empty(t, oidc.PKCEVerifier(state))
@@ -57,8 +54,7 @@ func TestGenerateState(t *testing.T) {
 func TestGenerateStateUsesFlowCapturedBaseURL(t *testing.T) {
 	_, reg := pkg.NewFastRegistryWithMocks(t)
 	strat := oidc.NewStrategy(reg)
-	ctx := context.Background()
-	ciph := reg.Cipher(ctx)
+	ciph := reg.Cipher(t.Context())
 
 	t.Run("flow-captured base URL wins over the submit fallback", func(t *testing.T) {
 		f := &registration.Flow{ID: x.NewUUID(), InternalContext: []byte("{}")}
@@ -66,9 +62,9 @@ func TestGenerateStateUsesFlowCapturedBaseURL(t *testing.T) {
 
 		// The fallback (what the submit request resolved to, e.g. the bare
 		// projects.oryapis host) must be ignored in favor of the captured value.
-		stateParam, _, err := strat.GenerateState(ctx, &testProvider{}, f, "https://slug.projects.oryapis.com")
+		stateParam, _, err := strat.GenerateState(t.Context(), &testProvider{}, f, "https://slug.projects.oryapis.com")
 		require.NoError(t, err)
-		state, err := oidc.DecryptState(ctx, ciph, stateParam)
+		state, err := oidc.DecryptState(t.Context(), ciph, stateParam)
 		require.NoError(t, err)
 		assert.Equal(t, "http://localhost:4000", state.RequestBaseUrl,
 			"http scheme + host captured at init must survive to the callback")
@@ -76,9 +72,9 @@ func TestGenerateStateUsesFlowCapturedBaseURL(t *testing.T) {
 
 	t.Run("no captured base URL falls back to the passed value", func(t *testing.T) {
 		f := &registration.Flow{ID: x.NewUUID(), InternalContext: []byte("{}")}
-		stateParam, _, err := strat.GenerateState(ctx, &testProvider{}, f, "https://slug.projects.oryapis.com")
+		stateParam, _, err := strat.GenerateState(t.Context(), &testProvider{}, f, "https://slug.projects.oryapis.com")
 		require.NoError(t, err)
-		state, err := oidc.DecryptState(ctx, ciph, stateParam)
+		state, err := oidc.DecryptState(t.Context(), ciph, stateParam)
 		require.NoError(t, err)
 		assert.Equal(t, "https://slug.projects.oryapis.com", state.RequestBaseUrl)
 	})

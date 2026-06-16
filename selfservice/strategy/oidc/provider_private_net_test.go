@@ -4,7 +4,6 @@
 package oidc_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -19,6 +18,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
+	"github.com/ory/x/configx"
 )
 
 const (
@@ -27,15 +27,16 @@ const (
 )
 
 func TestProviderPrivateIP(t *testing.T) {
+	t.Parallel()
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Error("the request should not have reached the test server")
 		w.WriteHeader(http.StatusOK)
 	}))
 	t.Cleanup(ts.Close)
 
-	ctx := t.Context()
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyClientHTTPNoPrivateIPRanges, true)
+	_, reg := pkg.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeyClientHTTPNoPrivateIPRanges, true))
 
 	generic := func(c *oidc.Configuration) oidc.Provider {
 		return oidc.NewProviderGenericOIDC(c, reg)
@@ -97,7 +98,7 @@ func TestProviderPrivateIP(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			p := tc.p(tc.c)
-			_, err := p.(oidc.OAuth2Provider).Claims(context.Background(), (&oauth2.Token{RefreshToken: "foo", Expiry: time.Now().Add(-time.Hour)}).WithExtra(map[string]interface{}{
+			_, err := p.(oidc.OAuth2Provider).Claims(t.Context(), (&oauth2.Token{RefreshToken: "foo", Expiry: time.Now().Add(-time.Hour)}).WithExtra(map[string]interface{}{
 				"id_token": tc.id,
 			}), url.Values{})
 			require.Error(t, err)

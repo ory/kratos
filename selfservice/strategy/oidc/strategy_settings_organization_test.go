@@ -70,19 +70,8 @@ func TestSettingsOrganizationFlow(t *testing.T) {
 		}),
 	)
 
-	// Hydra runs as the upstream provider so getAuthRedirectURL can resolve a
-	// real OAuth2 authorize URL when the test POSTs a link payload. The dance
-	// itself does not complete in this OSS package — see the doc comment.
-	var (
-		subject string
-		claims  idTokenClaims
-		scope   []string
-	)
-	remoteAdmin, remotePublic, _ := newHydra(t, &hydraIntegrationState{
-		subject: &subject,
-		claims:  &claims,
-		scope:   &scope,
-	})
+	hydraAdmin, hydraPublic := newHydra(t)
+
 	_ = newUI(t, reg)
 	_ = testhelpers.NewErrorTestServer(t, reg)
 	publicTS, _ := testhelpers.NewKratosServer(t, reg)
@@ -92,7 +81,7 @@ func TestSettingsOrganizationFlow(t *testing.T) {
 	// hydra client. The non-helper provider only registers /callback/<id>; an
 	// org-scoped flow uses /organization/<orgID>/callback/<id>.
 	newOrgOIDCProvider := func(id string, organizationID uuid.UUID, opts ...func(*oidc.Configuration)) oidc.Configuration {
-		clientID, secret := createClient(t, remoteAdmin, []string{
+		clientID, secret := createClient(t, hydraAdmin, []string{
 			publicTS.URL + oidc.RouteBase + "/callback/" + id,
 			publicTS.URL + oidc.RouteBase + "/organization/" + organizationID.String() + "/callback/" + id,
 			publicTS.URL + oidc.RouteCallbackGeneric,
@@ -102,7 +91,7 @@ func TestSettingsOrganizationFlow(t *testing.T) {
 			ID:             id,
 			ClientID:       clientID,
 			ClientSecret:   secret,
-			IssuerURL:      remotePublic + "/",
+			IssuerURL:      hydraPublic + "/",
 			Mapper:         "file://./stub/oidc.hydra.jsonnet",
 			OrganizationID: organizationID.String(),
 		}
@@ -112,10 +101,10 @@ func TestSettingsOrganizationFlow(t *testing.T) {
 		return cfg
 	}
 
-	viperSetProviderConfig(
+	setProviderConfig(
 		t,
 		conf,
-		newOIDCProvider(t, publicTS, remotePublic, remoteAdmin, "ory"),
+		newOIDCProvider(t, publicTS, hydraPublic, hydraAdmin, "ory"),
 		newOrgOIDCProvider("orgA-google", orgA, func(c *oidc.Configuration) {
 			c.Label = "Org A Google"
 		}),

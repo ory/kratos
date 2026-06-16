@@ -4,21 +4,20 @@
 package oidc_test
 
 import (
-	"context"
 	"encoding/json"
 	"net/url"
 	"testing"
 
-	"github.com/ory/kratos/driver"
-	"github.com/ory/kratos/driver/config"
-	"github.com/ory/kratos/pkg"
-	"github.com/ory/kratos/selfservice/strategy/oidc"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/driver"
+	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/selfservice/flow/login"
+	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
 )
 
 func makeOIDCClaims() json.RawMessage {
@@ -45,15 +44,14 @@ func makeAuthCodeURL(t *testing.T, r *login.Flow, reg *driver.RegistryDefault) s
 		Mapper:          "file://./stub/hydra.schema.json",
 		RequestedClaims: makeOIDCClaims(),
 	}, reg)
-	c, err := p.(oidc.OAuth2Provider).OAuth2(context.Background())
+	c, err := p.(oidc.OAuth2Provider).OAuth2(t.Context())
 	require.NoError(t, err)
 	return c.AuthCodeURL("state", p.(oidc.OAuth2Provider).AuthCodeURLOptions(r)...)
 }
 
 func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
-	ctx := context.Background()
-	conf, reg := pkg.NewFastRegistryWithMocks(t)
-	conf.MustSet(ctx, config.ViperKeyPublicBaseURL, "https://ory.sh")
+	conf, reg := pkg.NewFastRegistryWithMocks(t,
+		configx.WithValue(config.ViperKeyPublicBaseURL, "https://ory.sh"))
 	t.Run("case=redirectURI is public base url", func(t *testing.T) {
 		r := &login.Flow{ID: x.NewUUID(), Refresh: true}
 		actual, err := url.ParseRequestURI(makeAuthCodeURL(t, r, reg))
@@ -62,9 +60,9 @@ func TestProviderGenericOIDC_AddAuthCodeURLOptions(t *testing.T) {
 	})
 
 	t.Run("case=redirectURI is public base url", func(t *testing.T) {
-		conf.MustSet(ctx, config.ViperKeyOIDCBaseRedirectURL, "https://example.org")
+		conf.MustSet(t.Context(), config.ViperKeyOIDCBaseRedirectURL, "https://example.org")
 		t.Cleanup(func() {
-			conf.MustSet(ctx, config.ViperKeyOIDCBaseRedirectURL, nil)
+			conf.MustSet(t.Context(), config.ViperKeyOIDCBaseRedirectURL, nil)
 		})
 		r := &login.Flow{ID: x.NewUUID(), Refresh: true}
 		actual, err := url.ParseRequestURI(makeAuthCodeURL(t, r, reg))

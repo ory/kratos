@@ -51,6 +51,8 @@ func TestDecodeQuery(t *testing.T) {
 }
 
 func TestAppleVerify(t *testing.T) {
+	t.Parallel()
+
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		_, _ = w.Write(publicJWKS)

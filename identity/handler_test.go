@@ -28,8 +28,6 @@ import (
 	"github.com/tidwall/gjson"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/ory/x/configx"
-
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
@@ -37,6 +35,7 @@ import (
 	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/snapshotx"
@@ -103,22 +102,22 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, err)
 		defer func() { _ = res.Body.Close() }()
 
-		require.EqualValues(t, expectCode, res.StatusCode, "%s", ioutilx.MustReadAll(res.Body))
+		require.EqualValuesf(t, expectCode, res.StatusCode, "%s", ioutilx.MustReadAll(res.Body))
 	}
 
-	send := func(t *testing.T, base *httptest.Server, method, href string, expectCode int, send interface{}) gjson.Result {
+	send := func(t *testing.T, base *httptest.Server, method, href string, expectCode int, send any) gjson.Result {
 		t.Helper()
-		var b bytes.Buffer
-		switch raw := send.(type) {
-		case json.RawMessage:
-			b = *bytes.NewBuffer(raw)
-		default:
-			if send != nil {
-				require.NoError(t, json.NewEncoder(&b).Encode(send))
-			}
+
+		var payloadReader io.Reader
+		if r, ok := send.(io.Reader); ok {
+			payloadReader = r
+		} else if send != nil {
+			b, err := json.Marshal(send)
+			require.NoError(t, err)
+			payloadReader = bytes.NewReader(b)
 		}
 
-		req, err := http.NewRequest(method, base.URL+href, &b)
+		req, err := http.NewRequest(method, base.URL+href, payloadReader)
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
 		res, err := base.Client().Do(req)
@@ -127,11 +126,11 @@ func TestHandler(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 
-		require.EqualValues(t, expectCode, res.StatusCode, "%s", body)
+		require.EqualValuesf(t, expectCode, res.StatusCode, "%s", body)
 		return gjson.ParseBytes(body)
 	}
 
-	type patch map[string]interface{}
+	type patch map[string]any
 
 	t.Run("case=should return an empty list", func(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
@@ -261,7 +260,7 @@ func TestHandler(t *testing.T) {
 		})
 
 		t.Run("with malformed traits", func(t *testing.T) {
-			send(t, adminTS, "POST", "/identities", http.StatusBadRequest, json.RawMessage(`{"traits": not valid JSON}`))
+			send(t, adminTS, "POST", "/identities", http.StatusBadRequest, strings.NewReader(`{"traits": not valid JSON}`))
 		})
 
 		t.Run("with cleartext password and oidc credentials", func(t *testing.T) {
@@ -2437,7 +2436,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, publicTS.URL+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -2454,7 +2453,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateActive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, publicTS.URL+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -2471,7 +2470,7 @@ func TestHandler(t *testing.T) {
 				assert.JSONEq(t, string(cr.Traits), res.Get("traits").Raw, "%s", res.Raw)
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
 				assert.EqualValues(t, identity.StateInactive, res.Get("state").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, publicTS.URL+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 			})
 		}
 	})
@@ -2494,7 +2493,7 @@ func TestHandler(t *testing.T) {
 				})
 
 				assert.EqualValues(t, "employee", res.Get("schema_id").String(), "%s", res.Raw)
-				assert.EqualValues(t, mockServerURL.String()+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
+				assert.EqualValues(t, publicTS.URL+"/schemas/ZW1wbG95ZWU", res.Get("schema_url").String(), "%s", res.Raw)
 				assert.EqualValues(t, updatedEmail, res.Get("traits.email").String(), "%s", res.Raw)
 				assert.EqualValues(t, "ory", res.Get("traits.department").String(), "%s", res.Raw)
 				assert.EqualValues(t, updatedEmail, res.Get("recovery_addresses.0.value").String(), "%s", res.Raw)
@@ -2660,7 +2659,7 @@ func TestHandler(t *testing.T) {
 				}
 				if id.Get("credentials.saml.identifiers.0").Str == "bar:foo.saml@bar.com" {
 					foundSAML = true
-					assert.False(t, id.Get("credentials.saml.config").Exists(), "SAML config is not included")
+					assert.Falsef(t, id.Get("credentials.saml.config").Exists(), "SAML config is not included: %s", id.Raw)
 				}
 			}
 			assert.True(t, foundOIDC, "OIDC credential included")
@@ -2684,7 +2683,7 @@ func TestHandler(t *testing.T) {
 		for name, ts := range map[string]*httptest.Server{"admin": adminTS} {
 			t.Run("endpoint="+name, func(t *testing.T) {
 				res := get(t, ts, "/identities?include_credential=XYZ", http.StatusBadRequest)
-				assert.Contains(t, res.Get("error.message").String(), "The request was malformed or contained invalid parameters", "%s", res.Raw)
+				assert.Containsf(t, res.Get("error.message").String(), "The request was malformed or contained invalid parameters", "%s", res.Raw)
 			})
 		}
 	})
