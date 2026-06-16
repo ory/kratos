@@ -108,15 +108,18 @@ context("Social Sign In Successes", () => {
           app,
           url: login + "?return_to=https://www.example.org/",
           preTriggerHook: () => {
-            // add login_hint to upstream_parameters
-            // this injects an input element into the form
+            // Inject hd and login_hint into upstream_parameters. hd is
+            // forwarded; login_hint is never forwarded because a caller-supplied
+            // value cannot be trusted (HackerOne #3239672, ory-corp/cloud#8955).
+            cy.addInputElement("form", "upstream_parameters.hd", "ory.sh")
             cy.addInputElement("form", "upstream_parameters.login_hint", email)
           },
         })
         // once a request to getHydraLogin responds, 'cy.wait' will resolve
         cy.wait("@getHydraLogin")
           .its("request.url")
-          .should("include", "login_hint=" + encodeURIComponent(email))
+          .should("include", "hd=ory.sh")
+          .and("not.include", "login_hint")
 
         cy.location("href").should("eq", "https://www.example.org/")
       })

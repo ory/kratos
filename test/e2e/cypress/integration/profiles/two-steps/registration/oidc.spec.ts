@@ -206,6 +206,10 @@ context("Social Sign Up Successes", () => {
 
         cy.visit(registration + "?return_to=https://www.example.org/")
 
+        // hd is forwarded; login_hint is never forwarded because a
+        // caller-supplied value cannot be trusted (HackerOne #3239672,
+        // ory-corp/cloud#8955).
+        cy.addInputElement("form", "upstream_parameters.hd", "ory.sh")
         cy.addInputElement("form", "upstream_parameters.login_hint", email)
 
         cy.triggerOidc(app)
@@ -213,7 +217,8 @@ context("Social Sign Up Successes", () => {
         // once a request to getHydraRegistration responds, 'cy.wait' will resolve
         cy.wait("@getHydraRegistration")
           .its("request.url")
-          .should("include", "login_hint=" + encodeURIComponent(email))
+          .should("include", "hd=ory.sh")
+          .and("not.include", "login_hint")
       })
     })
   })

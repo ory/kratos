@@ -7,10 +7,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
 func TestClaimsValidate(t *testing.T) {
@@ -58,6 +60,66 @@ func (t *TestProvider) Verify(_ context.Context, token string) (*Claims, error) 
 func (p *ProviderUAEPass) SetUserInfoURL(t *testing.T, url string) {
 	t.Helper()
 	p.userinfoURL = url
+}
+
+// upstreamParam reports whether the option list produced by
+// UpstreamParameters contains a given upstream parameter, and its value.
+// The options are applied through a real oauth2.Config.AuthCodeURL so the
+// test observes exactly what is sent to the upstream provider.
+func upstreamParam(t *testing.T, opts []oauth2.AuthCodeOption, key string) (string, bool) {
+	t.Helper()
+	conf := &oauth2.Config{
+		ClientID: "client",
+		Endpoint: oauth2.Endpoint{AuthURL: "https://idp.example.com/auth"},
+	}
+	authURL, err := url.Parse(conf.AuthCodeURL("state", opts...))
+	require.NoError(t, err)
+	q := authURL.Query()
+	if !q.Has(key) {
+		return "", false
+	}
+	return q.Get(key), true
+}
+
+func TestUpstreamParameters(t *testing.T) {
+	t.Parallel()
+
+	upstream := map[string]string{
+		"login_hint": "victim@example.com",
+		"hd":         "example.com",
+		"prompt":     "select_account",
+		"auth_type":  "reauthenticate",
+		"acr_values": "urn:example:acr",
+		"unknown":    "dropped",
+	}
+
+	opts := UpstreamParameters(upstream)
+
+	t.Run("case=login_hint is never forwarded", func(t *testing.T) {
+		// A caller-supplied login_hint cannot be trusted and can steer
+		// account/tenant/client selection on some IdPs, enabling a client-swap
+		// attack (HackerOne #3239672, ory-corp/cloud#8955).
+		_, ok := upstreamParam(t, opts, "login_hint")
+		assert.False(t, ok, "login_hint must not be forwarded")
+	})
+
+	t.Run("case=other allowed parameters are forwarded", func(t *testing.T) {
+		for key, want := range map[string]string{
+			"hd":         "example.com",
+			"prompt":     "select_account",
+			"auth_type":  "reauthenticate",
+			"acr_values": "urn:example:acr",
+		} {
+			got, ok := upstreamParam(t, opts, key)
+			assert.True(t, ok, "%s must be forwarded", key)
+			assert.Equal(t, want, got)
+		}
+	})
+
+	t.Run("case=unknown parameters are dropped", func(t *testing.T) {
+		_, ok := upstreamParam(t, opts, "unknown")
+		assert.False(t, ok, "unknown parameters must not be forwarded")
+	})
 }
 
 func TestLocale(t *testing.T) {

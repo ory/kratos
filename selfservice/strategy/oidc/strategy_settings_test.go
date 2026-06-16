@@ -598,7 +598,9 @@ func TestSettingsStrategy(t *testing.T) {
 				loc, err := resp.Location()
 				require.NoError(t, err)
 
-				require.EqualValues(t, "foo@bar.com", loc.Query().Get("login_hint"))
+				// login_hint is never forwarded: a caller-supplied value cannot be
+				// trusted (HackerOne #3239672, ory-corp/cloud#8955).
+				require.Empty(t, loc.Query().Get("login_hint"))
 				require.EqualValues(t, "bar.com", loc.Query().Get("hd"))
 				require.EqualValues(t, "consent", loc.Query().Get("prompt"))
 			})

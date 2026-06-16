@@ -1711,7 +1711,9 @@ func TestStrategy(t *testing.T) {
 			loc, err := res.Location()
 			require.NoError(t, err)
 
-			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
+			// login_hint is never forwarded: a caller-supplied value cannot be
+			// trusted (HackerOne #3239672, ory-corp/cloud#8955).
+			require.Empty(t, loc.Query().Get("login_hint"))
 			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
 			require.Equal(t, "select_account", loc.Query().Get("prompt"))
 			require.Equal(t, "reauthenticate", loc.Query().Get("auth_type"))
@@ -1736,7 +1738,9 @@ func TestStrategy(t *testing.T) {
 			loc, err := res.Location()
 			require.NoError(t, err)
 
-			require.Equal(t, "oidc-upstream-parameters@ory.sh", loc.Query().Get("login_hint"))
+			// login_hint is never forwarded: a caller-supplied value cannot be
+			// trusted (HackerOne #3239672, ory-corp/cloud#8955).
+			require.Empty(t, loc.Query().Get("login_hint"))
 			require.Equal(t, "ory.sh", loc.Query().Get("hd"))
 			require.Equal(t, "select_account", loc.Query().Get("prompt"))
 		})
