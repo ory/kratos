@@ -169,5 +169,7 @@ func (a *ProviderApple) Verify(ctx context.Context, rawIDToken string) (*Claims,
 var _ NonceValidationSkipper = new(ProviderApple)
 
 func (a *ProviderApple) CanSkipNonce(c *Claims) bool {
-	return c.NonceSupported
+	// Apple sets nonce_supported=true when the device requires nonce validation,
+	// so the nonce check may only be skipped when nonce_supported is false.
+	return !c.NonceSupported
 }

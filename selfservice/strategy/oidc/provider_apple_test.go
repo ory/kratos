@@ -122,3 +122,23 @@ func TestAppleVerify(t *testing.T) {
 		require.NoError(t, err)
 	})
 }
+
+func TestAppleCanSkipNonce(t *testing.T) {
+	apple := oidc.NewProviderApple(&oidc.Configuration{}, nil).(*oidc.ProviderApple)
+
+	for _, tc := range []struct {
+		name           string
+		nonceSupported bool
+		wantSkip       bool
+	}{
+		// Apple sets nonce_supported=true when the device requires a nonce,
+		// so nonce validation must NOT be skipped in that case.
+		{name: "nonce supported means nonce is mandatory", nonceSupported: true, wantSkip: false},
+		// Legacy devices report nonce_supported=false, so nonce validation may be skipped.
+		{name: "nonce not supported means skip is allowed", nonceSupported: false, wantSkip: true},
+	} {
+		t.Run("case="+tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.wantSkip, apple.CanSkipNonce(&oidc.Claims{NonceSupported: tc.nonceSupported}))
+		})
+	}
+}
