@@ -368,6 +368,14 @@ func (h *Handler) completeLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Instruct the browser to clear cookies, storage, and caches for this origin.
+	// We only send the header over HTTPS because browsers ignore Clear-Site-Data
+	// on insecure origins, and gate it behind a config flag (off by default) so we
+	// do not clear data that other applications on the same origin may rely on.
+	if h.d.Config().SelfServiceFlowLogoutClearBrowserData(r.Context()) && x.RequestURL(r).Scheme == "https" {
+		w.Header().Set("Clear-Site-Data", `"cookies", "storage", "cache"`)
+	}
+
 	if x.IsJSONRequest(r) {
 		w.WriteHeader(http.StatusNoContent)
 		return

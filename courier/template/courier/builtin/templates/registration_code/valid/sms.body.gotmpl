@@ -1,3 +1,6 @@
 Your registration code is: {{ .RegistrationCode }}
 
 It expires in {{ .ExpiresInMinutes }} minutes.
+{{ if .RequestURLDomain }}
+@{{ .RequestURLDomain }} #{{ .RegistrationCode }}
+{{ end -}}

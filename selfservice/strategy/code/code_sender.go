@@ -129,6 +129,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					RegistrationCode:   rawCode,
 					Identity:           model,
 					RequestURL:         f.GetRequestURL(),
+					RequestURLDomain:   requestURLDomain(f.GetRequestURL()),
 					TransientPayload:   transientPayload,
 					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
@@ -182,6 +183,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					LoginCode:          rawCode,
 					Identity:           model,
 					RequestURL:         f.GetRequestURL(),
+					RequestURLDomain:   requestURLDomain(f.GetRequestURL()),
 					TransientPayload:   transientPayload,
 					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
@@ -438,6 +440,7 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 			VerificationCode: codeString,
 			Identity:         model,
 			RequestURL:       f.GetRequestURL(),
+			RequestURLDomain: requestURLDomain(f.GetRequestURL()),
 			TransientPayload: transientPayload,
 			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
 		})
@@ -479,6 +482,18 @@ func (s *Sender) send(ctx context.Context, via string, t courier.Template) error
 	default:
 		return f.ToUnknownCaseErr()
 	}
+}
+
+// requestURLDomain returns the bare hostname of the flow's request URL. It is
+// used to bind the SMS one-time code to its origin for the Web OTP API. The
+// result is a best-effort hint: a malformed URL yields an empty string and must
+// not block delivery of the code.
+func requestURLDomain(rawURL string) string {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return ""
+	}
+	return u.Hostname()
 }
 
 // hackyInferChannel infers the channel (email or sms) based on the address format.

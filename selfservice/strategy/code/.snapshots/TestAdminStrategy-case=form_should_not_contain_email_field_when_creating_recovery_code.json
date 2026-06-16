@@ -6,6 +6,7 @@
       "name": "code",
       "type": "text",
       "required": true,
+      "autocomplete": "one-time-code",
       "pattern": "[0-9]+",
       "disabled": false,
       "maxlength": 6,

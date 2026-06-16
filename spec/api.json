@@ -3354,7 +3354,7 @@
         "description": "InputAttributes represents the attributes of an input node",
         "properties": {
           "autocomplete": {
-            "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername webauthn InputAttributeAutocompleteUsernameWebauthn",
+            "description": "The autocomplete attribute for the input.\nemail InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername InputAttributeAutocompleteUsername\nusername webauthn InputAttributeAutocompleteUsernameWebauthn",
             "enum": [
               "email",
               "tel",
@@ -3362,10 +3362,11 @@
               "current-password",
               "new-password",
               "one-time-code",
+              "username",
               "username webauthn"
             ],
             "type": "string",
-            "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername webauthn InputAttributeAutocompleteUsernameWebauthn"
+            "x-go-enum-desc": "email InputAttributeAutocompleteEmail\ntel InputAttributeAutocompleteTel\nurl InputAttributeAutocompleteUrl\ncurrent-password InputAttributeAutocompleteCurrentPassword\nnew-password InputAttributeAutocompleteNewPassword\none-time-code InputAttributeAutocompleteOneTimeCode\nusername InputAttributeAutocompleteUsername\nusername webauthn InputAttributeAutocompleteUsernameWebauthn"
           },
           "disabled": {
             "description": "Sets the input's disabled field to true or false.",
@@ -4886,6 +4887,32 @@
   },
   "openapi": "3.0.3",
   "paths": {
+    "/.well-known/change-password": {
+      "get": {
+        "description": "This endpoint implements the W3C \"change password URL\" well-known location by\nredirecting the browser to the configured settings UI. Password managers follow\nthis redirect to take users straight to the page where they can change their\npassword.",
+        "operationId": "getWellKnownChangePassword",
+        "responses": {
+          "303": {
+            "$ref": "#/components/responses/emptyResponse"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
+          }
+        },
+        "summary": "Change Password URL",
+        "tags": [
+          "frontend"
+        ],
+        "x-ory-ratelimit-bucket": "kratos-public-high"
+      }
+    },
     "/.well-known/ory/webauthn.js": {
       "get": {
         "description": "This endpoint provides JavaScript which is needed in order to perform WebAuthn login and registration.\n\nIf you are building a JavaScript Browser App (e.g. in ReactJS or AngularJS) you will need to load this file:\n\n```html\n\u003cscript src=\"https://public-kratos.example.org/.well-known/ory/webauthn.js\" type=\"script\" async /\u003e\n```\n\nMore information can be found at [Ory Kratos User Login](https://www.ory.com/docs/kratos/self-service/flows/user-login) and [User Registration Documentation](https://www.ory.com/docs/kratos/self-service/flows/user-registration).",

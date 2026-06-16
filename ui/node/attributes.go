@@ -32,6 +32,7 @@ const (
 	InputAttributeAutocompleteCurrentPassword  UiNodeInputAttributeAutocomplete = "current-password"
 	InputAttributeAutocompleteNewPassword      UiNodeInputAttributeAutocomplete = "new-password"
 	InputAttributeAutocompleteOneTimeCode      UiNodeInputAttributeAutocomplete = "one-time-code"
+	InputAttributeAutocompleteUsername         UiNodeInputAttributeAutocomplete = "username"
 	InputAttributeAutocompleteUsernameWebauthn UiNodeInputAttributeAutocomplete = "username webauthn"
 )
 

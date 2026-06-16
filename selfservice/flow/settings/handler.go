@@ -41,6 +41,13 @@ const (
 
 	RouteSubmitFlow = "/self-service/settings"
 
+	// RouteWellKnownChangePassword implements the W3C "change password URL"
+	// well-known location. Browsers and password managers use it to deep-link
+	// users to the page where they can change their password.
+	//
+	// See https://w3c.github.io/webappsec-change-password-url/.
+	RouteWellKnownChangePassword = "/.well-known/change-password"
+
 	ContinuityPrefix = "ory_kratos_settings"
 )
 
@@ -115,6 +122,33 @@ func (h *Handler) RegisterPublicRoutes(public *httprouterx.RouterPublic) {
 
 	public.POST(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.updateSettingsFlow, OnUnauthenticated(h.d)))
 	public.GET(RouteSubmitFlow, h.d.SessionHandler().IsAuthenticated(h.updateSettingsFlow, OnUnauthenticated(h.d)))
+
+	public.GET(RouteWellKnownChangePassword, h.redirectToChangePassword)
+}
+
+// swagger:route GET /.well-known/change-password frontend getWellKnownChangePassword
+//
+// # Change Password URL
+//
+// This endpoint implements the W3C "change password URL" well-known location by
+// redirecting the browser to the configured settings UI. Password managers follow
+// this redirect to take users straight to the page where they can change their
+// password.
+//
+//	Schemes: http, https
+//
+//	Responses:
+//	  303: emptyResponse
+//	  default: errorGeneric
+//
+//	Extensions:
+//	  x-ory-ratelimit-bucket: kratos-public-high
+func (h *Handler) redirectToChangePassword(w http.ResponseWriter, r *http.Request) {
+	to := h.d.Config().SelfServiceFlowSettingsUI(r.Context()).String()
+	if to == "" {
+		to = h.d.Config().SelfPublicURL(r.Context()).JoinPath(RouteInitBrowserFlow).String()
+	}
+	http.Redirect(w, r, to, http.StatusSeeOther)
 }
 
 func (h *Handler) RegisterAdminRoutes(admin *httprouterx.RouterAdmin) {

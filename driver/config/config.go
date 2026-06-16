@@ -131,6 +131,7 @@ const (
 	ViperKeySelfServiceLoginBeforeHooks                      = "selfservice.flows.login.before.hooks"
 	ViperKeySelfServiceErrorUI                               = "selfservice.flows.error.ui_url"
 	ViperKeySelfServiceLogoutBrowserDefaultReturnTo          = "selfservice.flows.logout.after." + DefaultBrowserReturnURL
+	ViperKeySelfServiceLogoutClearBrowserData                = "selfservice.flows.logout.clear_browser_data"
 	ViperKeySelfServiceSettingsURL                           = "selfservice.flows.settings.ui_url"
 	ViperKeySelfServiceSettingsAfter                         = "selfservice.flows.settings.after"
 	ViperKeySelfServiceSettingsBeforeHooks                   = "selfservice.flows.settings.before.hooks"
@@ -1351,6 +1352,10 @@ func (p *Config) SelfServiceFlowRecoveryRequestLifespan(ctx context.Context) tim
 
 func (p *Config) SelfServiceFlowRecoveryNotifyUnknownRecipients(ctx context.Context) bool {
 	return p.GetProvider(ctx).BoolF(ViperKeySelfServiceRecoveryNotifyUnknownRecipients, false)
+}
+
+func (p *Config) SelfServiceFlowLogoutClearBrowserData(ctx context.Context) bool {
+	return p.GetProvider(ctx).BoolF(ViperKeySelfServiceLogoutClearBrowserData, false)
 }
 
 func (p *Config) SelfServiceLinkMethodLifespan(ctx context.Context) time.Duration {

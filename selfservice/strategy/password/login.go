@@ -191,7 +191,11 @@ func (s *Strategy) addIdentifierNode(r *http.Request, sr *login.Flow) error {
 		return err
 	}
 
-	sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute).WithMetaLabel(identifierLabel))
+	sr.UI.SetNode(node.NewInputField("identifier", "", node.DefaultGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute,
+		node.WithInputAttributes(func(a *node.InputAttributes) {
+			// Hint password managers to autofill the saved username for this site.
+			a.Autocomplete = node.InputAttributeAutocompleteUsername
+		})).WithMetaLabel(identifierLabel))
 	return nil
 }
 

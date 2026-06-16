@@ -22,6 +22,7 @@ type (
 		LoginCode          string         `json:"login_code"`
 		Identity           map[string]any `json:"identity"`
 		RequestURL         string         `json:"request_url"`
+		RequestURLDomain   string         `json:"request_url_domain"`
 		TransientPayload   map[string]any `json:"transient_payload"`
 		ExpiresInMinutes   int            `json:"expires_in_minutes"`
 		UserRequestHeaders http.Header    `json:"-"`

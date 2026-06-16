@@ -104,6 +104,7 @@ Class | Method | HTTP request | Description
 *FrontendAPI* | [**GetSettingsFlow**](docs/FrontendAPI.md#getsettingsflow) | **Get** /self-service/settings/flows | Get Settings Flow
 *FrontendAPI* | [**GetVerificationFlow**](docs/FrontendAPI.md#getverificationflow) | **Get** /self-service/verification/flows | Get Verification Flow
 *FrontendAPI* | [**GetWebAuthnJavaScript**](docs/FrontendAPI.md#getwebauthnjavascript) | **Get** /.well-known/ory/webauthn.js | Get WebAuthn JavaScript
+*FrontendAPI* | [**GetWellKnownChangePassword**](docs/FrontendAPI.md#getwellknownchangepassword) | **Get** /.well-known/change-password | Change Password URL
 *FrontendAPI* | [**ListMySessions**](docs/FrontendAPI.md#listmysessions) | **Get** /sessions | Get My Active Sessions
 *FrontendAPI* | [**PerformNativeLogout**](docs/FrontendAPI.md#performnativelogout) | **Delete** /self-service/logout/api | Perform Logout for Native Apps
 *FrontendAPI* | [**ToSession**](docs/FrontendAPI.md#tosession) | **Get** /sessions/whoami | Check Who the Current HTTP Session Belongs To

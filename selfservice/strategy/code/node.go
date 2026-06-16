@@ -38,5 +38,10 @@ func nodeCodeInputFieldHidden() *node.Node {
 }
 
 func nodeCodeInputField() *node.Node {
-	return node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute)
+	return node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute,
+		node.WithInputAttributes(func(a *node.InputAttributes) {
+			// Hint the browser to autofill the one-time code from SMS or email,
+			// enabling the Web OTP API on supported platforms.
+			a.Autocomplete = node.InputAttributeAutocompleteOneTimeCode
+		}))
 }

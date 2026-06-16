@@ -1312,6 +1312,12 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
+                "clear_browser_data": {
+                  "type": "boolean",
+                  "title": "Clear browser data on logout",
+                  "description": "If set to true, a successful browser logout sends the `Clear-Site-Data` response header over HTTPS, instructing the browser to clear cookies, storage, and caches for the origin. This is off by default to avoid clearing data that other applications on the same origin may rely on.",
+                  "default": false
+                },
                 "after": {
                   "type": "object",
                   "additionalProperties": false,

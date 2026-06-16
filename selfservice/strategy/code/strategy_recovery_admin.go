@@ -187,6 +187,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 	recoveryFlow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
 		a.Pattern = "[0-9]+"
 		a.MaxLength = CodeLength
+		a.Autocomplete = node.InputAttributeAutocompleteOneTimeCode
 	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)

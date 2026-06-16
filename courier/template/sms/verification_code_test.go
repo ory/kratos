@@ -5,7 +5,6 @@ package sms_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,7 +24,7 @@ func TestNewOTPMessage(t *testing.T) {
 
 	tpl := sms.NewVerificationCodeValid(reg, &sms.VerificationCodeValidModel{To: expectedPhone, VerificationCode: otp})
 
-	expectedBody := fmt.Sprintf("Your verification code is: %s\n\nIf this was not you, do nothing. It expires in 0 minutes.\n", otp)
+	expectedBody := "Your verification code is: 012345\n\nIf this was not you, do nothing. It expires in 0 minutes.\n"
 
 	actualBody, err := tpl.SMSBody(context.Background())
 	require.NoError(t, err)

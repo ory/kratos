@@ -53,6 +53,7 @@
       },
       {
         "attributes": {
+          "autocomplete": "one-time-code",
           "disabled": false,
           "name": "code",
           "node_type": "input",

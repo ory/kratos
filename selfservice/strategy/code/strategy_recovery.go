@@ -682,6 +682,7 @@ func (s *Strategy) recoveryV2HandleStateConfirmingAddress(r *http.Request, f *re
 		a.Required = true
 		a.Pattern = "[0-9]+"
 		a.MaxLength = CodeLength
+		a.Autocomplete = node.InputAttributeAutocompleteOneTimeCode
 	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
@@ -805,6 +806,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 		a.Required = true
 		a.Pattern = "[0-9]+"
 		a.MaxLength = CodeLength
+		a.Autocomplete = node.InputAttributeAutocompleteOneTimeCode
 	})).
 		WithMetaLabel(text.NewInfoNodeLabelRecoveryCode()),
 	)
