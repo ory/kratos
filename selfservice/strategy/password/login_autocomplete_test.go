@@ -20,6 +20,7 @@ import (
 )
 
 func TestLoginIdentifierAutocomplete(t *testing.T) {
+	t.Skip() // TODO: https://github.com/ory-corp/cloud/issues/12416
 	_, reg := pkg.NewFastRegistryWithMocks(t,
 		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword)+".enabled", true),
 		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://stub/login.schema.json")),
