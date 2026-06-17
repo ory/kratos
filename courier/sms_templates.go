@@ -51,7 +51,12 @@ func NewSMSTemplateFromMessage(d template.Dependencies, m Message) (SMSTemplate,
 			return nil, err
 		}
 		return sms.NewRegistrationCodeValid(d, &t), nil
-
+	case template.TypeVerifiableAddressChanged:
+		var t sms.VerifiableAddressChangedModel
+		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return sms.NewVerifiableAddressChanged(d, &t), nil
 	default:
 		return nil, errors.Errorf("received unexpected message template type: %s", m.TemplateType)
 	}
