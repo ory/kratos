@@ -3819,6 +3819,11 @@
             "format": "uint8"
           }
         },
+        "relaxed_attestation_expires_at": {
+          "description": "RelaxedAttestationExpiresAt is set only when the key's attestation\nchain validated because relaxed attestation was allowed (software\nroots, expired certs, software security level) rather than under\nstrict rules. Such keys are second-class: they are refused at login\nafter this time, or immediately if relaxed attestation is turned off.\nIt is nil for hardware-attested keys that pass strict validation.",
+          "type": "string",
+          "format": "date-time"
+        },
         "state": {
           "$ref": "#/definitions/KeyState"
         },

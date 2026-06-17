@@ -57,4 +57,12 @@ type Key struct {
 	// enrollment. Useful for distinguishing keys in the UI (e.g. OS
 	// version, manufacturer) and for forensics.
 	Attestation *Attestation `json:"attestation,omitempty"`
+
+	// RelaxedAttestationExpiresAt is set only when the key's attestation
+	// chain validated because relaxed attestation was allowed (software
+	// roots, expired certs, software security level) rather than under
+	// strict rules. Such keys are second-class: they are refused at login
+	// after this time, or immediately if relaxed attestation is turned off.
+	// It is nil for hardware-attested keys that pass strict validation.
+	RelaxedAttestationExpiresAt *time.Time `json:"relaxed_attestation_expires_at,omitempty"`
 }

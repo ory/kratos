@@ -173,6 +173,7 @@ const (
 	ErrorValidationNoDeviceAuthnDevice
 	ErrorValidationWebAuthnVerifierWrong
 	ErrorValidationDeviceAuthnVerifierWrong
+	ErrorValidationDeviceAuthnRelaxedAttestationNoLongerValid
 )
 
 const (

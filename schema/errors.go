@@ -64,6 +64,17 @@ func NewDeviceAuthnVerifierWrongError(instancePtr string) error {
 	})
 }
 
+func NewDeviceAuthnRelaxedAttestationNoLongerValidError(instancePtr string) error {
+	t := text.NewErrorValidationDeviceAuthnRelaxedAttestationNoLongerValid()
+	return errors.WithStack(&ValidationError{
+		ValidationError: &jsonschema.ValidationError{
+			Message:     t.Text,
+			InstancePtr: instancePtr,
+		},
+		Messages: new(text.Messages).Add(t),
+	})
+}
+
 func NewLookupAlreadyUsed() error {
 	t := text.NewErrorValidationLookupAlreadyUsed()
 	return errors.WithStack(&ValidationError{
