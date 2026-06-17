@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS courier_messages_nid_created_at_id_idx;
