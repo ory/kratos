@@ -5,6 +5,7 @@ package sql
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -22,9 +23,14 @@ import (
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/stringsx"
 )
+
+// dialectPostgreSQL is the pop dialect name for PostgreSQL. dbal does not
+// export it as a constant.
+const dialectPostgreSQL = "postgres"
 
 var _ session.Persister = new(Persister)
 
@@ -411,16 +417,9 @@ func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) (err
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionByToken")
 	defer otelx.End(span, &err)
 
-	//#nosec G201 -- TableName is static
-	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"UPDATE %s SET active = false WHERE token = ? AND nid = ?",
-		session.Session{}.TableName(),
-	),
-		token,
-		p.NetworkID(ctx),
-	).ExecWithCount()
+	count, err := p.revokeMatchingSessions(ctx, "token = ? AND nid = ?", token, p.NetworkID(ctx))
 	if err != nil {
-		return sqlcon.HandleError(err)
+		return err
 	}
 	if count == 0 {
 		return errors.WithStack(sqlcon.ErrNoRows())
@@ -434,16 +433,9 @@ func (p *Persister) RevokeSessionById(ctx context.Context, sID uuid.UUID) (err e
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionById")
 	defer otelx.End(span, &err)
 
-	//#nosec G201 -- TableName is static
-	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"UPDATE %s SET active = false WHERE id = ? AND nid = ?",
-		session.Session{}.TableName(),
-	),
-		sID,
-		p.NetworkID(ctx),
-	).ExecWithCount()
+	count, err := p.revokeMatchingSessions(ctx, "id = ? AND nid = ?", sID, p.NetworkID(ctx))
 	if err != nil {
-		return sqlcon.HandleError(err)
+		return err
 	}
 	if count == 0 {
 		return errors.WithStack(sqlcon.ErrNoRows())
@@ -457,19 +449,12 @@ func (p *Persister) RevokeSession(ctx context.Context, iID, sID uuid.UUID) (err 
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSession")
 	defer otelx.End(span, &err)
 
-	//#nosec G201 -- TableName is static
-	err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"UPDATE %s SET active = false WHERE id = ? AND identity_id = ? AND nid = ?",
-		session.Session{}.TableName(),
-	),
-		sID,
-		iID,
-		p.NetworkID(ctx),
-	).Exec()
-	if err != nil {
-		return sqlcon.HandleError(err)
-	}
-	return nil
+	return p.runInReadCommittedOnCRDB(ctx, func(c *pop.Connection) error {
+		return c.RawQuery(
+			"UPDATE sessions SET active = false WHERE id = ? AND identity_id = ? AND nid = ? AND active = true",
+			sID, iID, p.NetworkID(ctx),
+		).Exec()
+	})
 }
 
 // RevokeSessionsIdentityExcept marks all except the given session of an identity inactive.
@@ -477,19 +462,7 @@ func (p *Persister) RevokeSessionsIdentityExcept(ctx context.Context, iID, sID u
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionsIdentityExcept")
 	defer otelx.End(span, &err)
 
-	//#nosec G201 -- TableName is static
-	count, err := p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"UPDATE %s SET active = false WHERE identity_id = ? AND id != ? AND nid = ?",
-		session.Session{}.TableName(),
-	),
-		iID,
-		sID,
-		p.NetworkID(ctx),
-	).ExecWithCount()
-	if err != nil {
-		return 0, sqlcon.HandleError(err)
-	}
-	return count, nil
+	return p.revokeMatchingSessions(ctx, "identity_id = ? AND id != ? AND nid = ?", iID, sID, p.NetworkID(ctx))
 }
 
 // RevokeSessionsByIdentities marks all currently active sessions inactive for the given identity IDs.
@@ -501,11 +474,14 @@ func (p *Persister) RevokeSessionsByIdentities(ctx context.Context, identityIDs 
 		return 0, nil
 	}
 
-	//#nosec G201 -- TableName is static.
-	count, err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"UPDATE %s SET active = false WHERE identity_id IN (?) AND active = true AND nid = ?",
-		session.Session{}.TableName(),
-	), identityIDs, p.NetworkID(ctx)).ExecWithCount()
+	err = p.runInReadCommittedOnCRDB(ctx, func(c *pop.Connection) error {
+		var inner error
+		count, inner = c.RawQuery(
+			"UPDATE sessions SET active = false WHERE identity_id IN (?) AND active = true AND nid = ?",
+			identityIDs, p.NetworkID(ctx),
+		).ExecWithCount()
+		return inner
+	})
 	if err != nil {
 		return 0, sqlcon.HandleError(err)
 	}
@@ -521,11 +497,14 @@ func (p *Persister) RevokeSessionsByIDs(ctx context.Context, sessionIDs []uuid.U
 		return 0, nil
 	}
 
-	//#nosec G201 -- TableName is static.
-	count, err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"UPDATE %s SET active = false WHERE id IN (?) AND active = true AND nid = ?",
-		session.Session{}.TableName(),
-	), sessionIDs, p.NetworkID(ctx)).ExecWithCount()
+	err = p.runInReadCommittedOnCRDB(ctx, func(c *pop.Connection) error {
+		var inner error
+		count, inner = c.RawQuery(
+			"UPDATE sessions SET active = false WHERE id IN (?) AND active = true AND nid = ?",
+			sessionIDs, p.NetworkID(ctx),
+		).ExecWithCount()
+		return inner
+	})
 	if err != nil {
 		return 0, sqlcon.HandleError(err)
 	}
@@ -539,15 +518,84 @@ func (p *Persister) RevokeAllSessions(ctx context.Context, limit int) (count int
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeAllSessions")
 	defer otelx.End(span, &err)
 
-	//#nosec G201 -- TableName is static.
-	count, err = p.GetConnection(ctx).RawQuery(fmt.Sprintf(
-		"UPDATE %[1]s SET active = false WHERE id IN (SELECT id FROM (SELECT id FROM %[1]s c WHERE active = true AND nid = ? LIMIT ?) AS s)",
-		session.Session{}.TableName(),
-	), p.NetworkID(ctx), limit).ExecWithCount()
+	err = p.runInReadCommittedOnCRDB(ctx, func(c *pop.Connection) error {
+		var inner error
+		count, inner = c.RawQuery(
+			"UPDATE sessions SET active = false WHERE id IN (SELECT id FROM (SELECT id FROM sessions c WHERE active = true AND nid = ? LIMIT ?) AS s)",
+			p.NetworkID(ctx), limit,
+		).ExecWithCount()
+		return inner
+	})
 	if err != nil {
 		return 0, sqlcon.HandleError(err)
 	}
 	return count, nil
+}
+
+// revokeMatchingSessions flips active=false on every sessions row matching the
+// given WHERE clause and returns the number of rows that matched the clause
+// before the update (irrespective of whether they were already inactive). Used
+// by the revoke entry points whose caller relies on the matched-count
+// distinction — either to map count==0 to sqlcon.ErrNoRows() or to surface
+// the count as an API response field.
+//
+// On CockroachDB and PostgreSQL, the update is expressed as a CTE so that
+// only rows whose current active=true get rewritten. CockroachDB's sessions
+// table is LOCALITY GLOBAL: every write commits at a future timestamp and
+// any concurrent write to the same key inside that closed-timestamp window
+// raises WriteTooOldError + a serializable refresh. Suppressing the
+// redundant rewrite of already-inactive rows eliminates the dominant
+// same-fingerprint contention pattern observed in production (concurrent
+// revokes for the same token from logout retries / multiple clients).
+// SQLite and MySQL retain the single-statement UPDATE; neither is subject
+// to the GLOBAL-table closed-timestamp contention.
+func (p *Persister) revokeMatchingSessions(ctx context.Context, predicate string, args ...any) (int, error) {
+	con := p.GetConnection(ctx)
+	var (
+		count int
+		err   error
+	)
+
+	switch con.Dialect.Name() {
+	case dbal.DriverCockroachDB, dialectPostgreSQL:
+		//#nosec G201 -- predicate is a static persister-internal constant, not user input
+		query := fmt.Sprintf(`WITH found AS (SELECT id FROM sessions WHERE %s),
+     upd AS (UPDATE sessions SET active = false FROM found WHERE sessions.id = found.id AND sessions.active = true RETURNING 1)
+SELECT count(*) FROM found`, predicate)
+
+		err = p.runInReadCommittedOnCRDB(ctx, func(c *pop.Connection) error {
+			return c.RawQuery(query, args...).First(&count)
+		})
+	default:
+		//#nosec G201 -- predicate is a static persister-internal constant, not user input
+		count, err = con.RawQuery(
+			fmt.Sprintf("UPDATE sessions SET active = false WHERE %s", predicate),
+			args...,
+		).ExecWithCount()
+	}
+	if err != nil {
+		return 0, sqlcon.HandleError(err)
+	}
+	return count, nil
+}
+
+// runInReadCommittedOnCRDB invokes fn against a connection bound to a READ
+// COMMITTED transaction on CockroachDB, and against the bare persister
+// connection on every other dialect. CRDB needs the explicit isolation
+// downgrade so the cluster transparently advances the statement read
+// timestamp on WriteTooOldError instead of surfacing the serializable
+// retry. Postgres already runs single statements at READ COMMITTED by
+// default; SQLite and MySQL are not subject to the GLOBAL-table
+// closed-timestamp contention.
+func (p *Persister) runInReadCommittedOnCRDB(ctx context.Context, fn func(*pop.Connection) error) error {
+	con := p.GetConnection(ctx)
+	if con.Dialect.Name() != dbal.DriverCockroachDB {
+		return fn(con)
+	}
+	return popx.TransactionWithOptions(ctx, con,
+		&sql.TxOptions{Isolation: sql.LevelReadCommitted},
+		func(ctx context.Context, tx *pop.Connection) error { return fn(tx) },
+	)
 }
 
 // DeleteSessionsByIdentities permanently deletes all sessions belonging to the given identity IDs.
