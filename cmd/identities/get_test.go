@@ -10,11 +10,13 @@ import (
 
 	"github.com/ory/kratos/cmd/identities"
 	"github.com/ory/x/assertx"
+	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/x"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
@@ -50,6 +52,24 @@ func TestGetCmd(t *testing.T) {
 
 	t.Run("case=fails with unknown ID", func(t *testing.T) {
 		stdErr := cmd.ExecExpectedErr(t, x.NewUUID().String())
+
+		assert.Contains(t, stdErr, "Unable to locate the resource", stdErr)
+	})
+
+	t.Run("case=gets a single identity by its external ID", func(t *testing.T) {
+		externalID := "customer-" + x.NewUUID().String()
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		i.ExternalID = sqlxx.NullString(externalID)
+		require.NoError(t, reg.Persister().CreateIdentity(context.Background(), i))
+
+		stdOut := cmd.ExecNoErr(t, "--"+identities.FlagExternalID, externalID)
+
+		assert.Equal(t, i.ID.String(), gjson.Get(stdOut, "id").String())
+		assert.Equal(t, externalID, gjson.Get(stdOut, "external_id").String())
+	})
+
+	t.Run("case=fails with unknown external ID", func(t *testing.T) {
+		stdErr := cmd.ExecExpectedErr(t, "--"+identities.FlagExternalID, "does-not-exist")
 
 		assert.Contains(t, stdErr, "Unable to locate the resource", stdErr)
 	})

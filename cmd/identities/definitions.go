@@ -21,16 +21,21 @@ type (
 )
 
 func (outputIdentity) Header() []string {
-	return []string{"ID", "VERIFIED ADDRESSES", "RECOVERY ADDRESSES", "SCHEMA ID", "SCHEMA URL"}
+	return []string{"ID", "EXTERNAL ID", "VERIFIED ADDRESSES", "RECOVERY ADDRESSES", "SCHEMA ID", "SCHEMA URL"}
 }
 
 func (i outputIdentity) Columns() []string {
-	data := [5]string{
+	data := [6]string{
 		i.Id,
 		cmdx.None,
 		cmdx.None,
 		cmdx.None,
 		cmdx.None,
+		cmdx.None,
+	}
+
+	if i.ExternalId != nil && len(*i.ExternalId) > 0 {
+		data[1] = *i.ExternalId
 	}
 
 	addresses := make([]string, 0, len(i.VerifiableAddresses))
@@ -39,7 +44,7 @@ func (i outputIdentity) Columns() []string {
 			addresses = append(addresses, a.Value)
 		}
 	}
-	data[1] = strings.Join(addresses, ", ")
+	data[2] = strings.Join(addresses, ", ")
 
 	addresses = addresses[:0]
 	for _, a := range i.RecoveryAddresses {
@@ -47,9 +52,9 @@ func (i outputIdentity) Columns() []string {
 			addresses = append(addresses, a.Value)
 		}
 	}
-	data[2] = strings.Join(addresses, ", ")
-	data[3] = i.SchemaId
-	data[4] = i.SchemaUrl
+	data[3] = strings.Join(addresses, ", ")
+	data[4] = i.SchemaId
+	data[5] = i.SchemaUrl
 
 	return data[:]
 }

@@ -123,4 +123,28 @@ func TestImportCmd(t *testing.T) {
 		_, err = reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
 		assert.NoError(t, err)
 	})
+
+	t.Run("case=imports an identity with an external ID", func(t *testing.T) {
+		externalID := "customer-12345"
+		i := kratos.CreateIdentityBody{
+			SchemaId:   config.DefaultIdentityTraitsSchemaID,
+			Traits:     map[string]interface{}{},
+			ExternalId: kratos.PtrString(externalID),
+		}
+		ij, err := json.Marshal(i)
+		require.NoError(t, err)
+
+		stdOut, stdErr, err := cmd.Exec(bytes.NewBuffer(ij))
+		require.NoError(t, err, "%s %s", stdOut, stdErr)
+
+		// the external ID must be reflected in the command output
+		assert.Equal(t, externalID, gjson.Get(stdOut, "external_id").String())
+
+		// and it must be persisted on the identity
+		id, err := uuid.FromString(gjson.Get(stdOut, "id").String())
+		require.NoError(t, err)
+		stored, err := reg.Persister().GetIdentity(context.Background(), id, identity.ExpandNothing)
+		require.NoError(t, err)
+		assert.Equal(t, externalID, stored.ExternalID.String())
+	})
 }
