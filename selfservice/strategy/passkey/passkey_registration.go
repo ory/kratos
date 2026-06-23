@@ -194,9 +194,17 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 	return nil
 }
 
+// passkeyCreateData carries the WebAuthn registration ceremony options to
+// the bundled JS. Both display-name fields are populated from the identity
+// schema's flagged traits: DisplayNameFieldName is the alphabetically-first
+// candidate kept for backward compatibility with custom UIs that only read
+// the singular field; DisplayNameFieldNames is the full sorted list. Newer
+// clients should consume DisplayNameFieldNames and pick the first form
+// field with a non-empty value.
 type passkeyCreateData struct {
-	CredentialOptions    *protocol.CredentialCreation `json:"credentialOptions"`
-	DisplayNameFieldName string                       `json:"displayNameFieldName"`
+	CredentialOptions     *protocol.CredentialCreation `json:"credentialOptions"`
+	DisplayNameFieldName  string                       `json:"displayNameFieldName"`
+	DisplayNameFieldNames []string                     `json:"displayNameFieldNames"`
 }
 
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
@@ -299,11 +307,16 @@ func (s *Strategy) hydratePassKeyRegistrationOptions(ctx context.Context, f *reg
 	}
 
 	createData := new(passkeyCreateData)
-	fieldName, err := s.PasskeyDisplayNameFromSchema(ctx, defaultSchemaURL.String())
+	fieldNames, err := s.PasskeyDisplayNameFromSchema(ctx, defaultSchemaURL.String())
 	if err != nil {
 		return nil, err
 	}
-	createData.DisplayNameFieldName = fieldName
+	// fieldNames is guaranteed non-empty here: PasskeyDisplayNameFromSchema
+	// returns at least one candidate or an error. The singular field keeps the
+	// alphabetically-first candidate for backward compatibility with custom UIs
+	// that only read it.
+	createData.DisplayNameFieldNames = fieldNames
+	createData.DisplayNameFieldName = fieldNames[0]
 
 	webAuthn, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {

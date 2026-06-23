@@ -6,14 +6,17 @@ package passkey
 import (
 	"cmp"
 	"context"
-	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	"github.com/ory/jsonschema/v3"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/x/jsonschemax"
 )
 
 type SchemaExtension struct {
@@ -57,58 +60,47 @@ func (s *Strategy) PasskeyDisplayNameFromTraits(ctx context.Context, traits iden
 	return s.PasskeyDisplayNameFromIdentity(ctx, id)
 }
 
-func (s *Strategy) PasskeyDisplayNameFromSchema(ctx context.Context, schemaURL string) (string, error) {
-	ext := &passkeyDisplayNameExtension{}
-
-	runner, err := schema.NewExtensionRunner(ctx, schema.WithCompileRunners(ext))
+// PasskeyDisplayNameFromSchema returns every trait path (e.g. ["traits.email", "traits.phone"])
+// whose schema flags `passkey.display_name: true` or `webauthn.identifier: true`. The slice
+// is sorted alphabetically so server and client agree on precedence. When no
+// trait is flagged, it preserves the legacy behavior: fall back to the first
+// untitled trait, and return an error only when there is none.
+func (s *Strategy) PasskeyDisplayNameFromSchema(ctx context.Context, schemaURL string) ([]string, error) {
+	runner, err := schema.NewExtensionRunner(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	c, err := schema.NewCompilerWithURL(ctx, schemaURL, s.d.Config().SecurityDisallowRefInIdentitySchemas(ctx))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	c.ExtractAnnotations = true
 	runner.Register(c)
 
-	schem, err := c.Compile(ctx, schemaURL)
+	paths, err := jsonschemax.ListPaths(ctx, schemaURL, c)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	for key, value := range schem.Properties["traits"].Properties {
-		if value.Title == ext.getLabel() {
-			return "traits." + key, nil
+	var result []string
+	for _, p := range paths {
+		ext, ok := p.CustomProperties[schema.ExtensionName].(*schema.ExtensionConfig)
+		if !ok {
+			continue
+		}
+		if ext.Credentials.WebAuthn.Identifier || ext.Credentials.Passkey.DisplayName {
+			result = append(result, p.Name)
 		}
 	}
+	if len(result) > 0 {
+		slices.Sort(result)
+		return result, nil
+	}
 
-	return "", errors.New("no identifier found")
-}
-
-type passkeyDisplayNameExtension struct {
-	identifierLabelCandidates []string
-}
-
-func (i *passkeyDisplayNameExtension) Run(_ jsonschema.CompilerContext, config schema.ExtensionConfig, rawSchema map[string]interface{}) error {
-	if config.Credentials.WebAuthn.Identifier ||
-		config.Credentials.Passkey.DisplayName {
-		if title, ok := rawSchema["title"]; ok {
-			// The jsonschema compiler validates the title to be a string, so this should always work.
-			switch t := title.(type) {
-			case string:
-				if t != "" {
-					i.identifierLabelCandidates = append(i.identifierLabelCandidates, t)
-				}
-			}
+	for _, p := range paths {
+		if strings.HasPrefix(p.Name, "traits.") && p.Title == "" {
+			return []string{p.Name}, nil
 		}
 	}
-	return nil
-}
-
-func (i *passkeyDisplayNameExtension) getLabel() string {
-	if len(i.identifierLabelCandidates) != 1 {
-		// sane default is set elsewhere
-		return ""
-	}
-	return i.identifierLabelCandidates[0]
+	return nil, errors.New("no identifier found")
 }

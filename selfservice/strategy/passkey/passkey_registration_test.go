@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"slices"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -351,6 +352,62 @@ func TestRegistration(t *testing.T) {
 				assert.Contains(t, gjson.Get(actual, "ui.action").String(), fix.publicTS.URL+registration.RouteSubmitFlow, "%s", actual)
 				registrationhelpers.CheckFormContent(t, []byte(actual), "csrf_token", "traits.email")
 				assert.Equal(t, text.NewErrorValidationRegistrationNoStrategyFound().Text, gjson.Get(actual, "ui.messages.0.text").String(), "%s", actual)
+			})
+		}
+	})
+
+	t.Run("case=registration flow with multiple flagged traits returns all candidate field names", func(t *testing.T) {
+		t.Parallel()
+		fix := newRegistrationFixture(t)
+		testhelpers.SetDefaultIdentitySchema(fix.conf, "file://./stub/registration-multi-identifier.schema.json")
+
+		uiFlows := []string{"spa", "browser"}
+		for _, f := range uiFlows {
+			t.Run("type="+f, func(t *testing.T) {
+				t.Parallel()
+				client := testhelpers.NewClientWithCookies(t)
+				isSPA := f == "spa"
+
+				// Before the multi-trait fix this would 500 inside InitializeRegistrationFlowViaBrowser
+				// with "no identifier found".
+				regFlow := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, fix.publicTS, isSPA, false, false)
+
+				// Find the passkey_create_data hidden input node and extract its value.
+				var createDataValue string
+				for _, n := range regFlow.Ui.Nodes {
+					attrs := n.Attributes.UiNodeInputAttributes
+					if attrs == nil {
+						continue
+					}
+					if attrs.Name != node.PasskeyCreateData {
+						continue
+					}
+					if v, ok := attrs.Value.(string); ok {
+						createDataValue = v
+					}
+					break
+				}
+
+				require.NotEmpty(t, createDataValue, "passkey_create_data node must be present and have a non-empty value")
+
+				// Both flagged trait paths must appear in displayNameFieldNames.
+				fieldNames := gjson.Get(createDataValue, "displayNameFieldNames")
+				require.True(t, fieldNames.IsArray(), "displayNameFieldNames must be a JSON array, got: %s", createDataValue)
+
+				names := make([]string, 0, len(fieldNames.Array()))
+				for _, r := range fieldNames.Array() {
+					names = append(names, r.String())
+				}
+				assert.True(t, slices.Contains(names, "traits.email"),
+					"traits.email must be in displayNameFieldNames, got: %v", names)
+				assert.True(t, slices.Contains(names, "traits.phone"),
+					"traits.phone must be in displayNameFieldNames, got: %v", names)
+
+				// Backward compatibility: the singular field stays populated with
+				// the alphabetically-first candidate so custom UIs that only read
+				// it continue to work.
+				assert.Equal(t, "traits.email", gjson.Get(createDataValue, "displayNameFieldName").String(),
+					"displayNameFieldName must be the first sorted candidate")
 			})
 		}
 	})

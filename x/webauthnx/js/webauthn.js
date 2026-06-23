@@ -308,11 +308,26 @@
 
     const createData = JSON.parse(dataEl.value)
 
-    // Fetch display name from field value
-    const displayNameFieldName = createData.displayNameFieldName
-    const displayName = dataEl
-      .closest("form")
-      .querySelector("[name='" + displayNameFieldName + "']").value
+    // Resolve the passkey display name from the first non-empty candidate field.
+    // Newer servers publish `displayNameFieldNames` (an array of all candidate
+    // field names from the identity schema). Older servers only publish
+    // `displayNameFieldName` (a single field name). Fall back accordingly.
+    const candidateFieldNames =
+      Array.isArray(createData.displayNameFieldNames) &&
+      createData.displayNameFieldNames.length > 0
+        ? createData.displayNameFieldNames
+        : [createData.displayNameFieldName]
+
+    const form = dataEl.closest("form")
+    let displayName = ""
+    for (const fieldName of candidateFieldNames) {
+      if (!fieldName) continue
+      const el = form.querySelector("[name='" + fieldName + "']")
+      if (el && el.value) {
+        displayName = el.value
+        break
+      }
+    }
 
     let opts = createData.credentialOptions
     opts.publicKey.user.name = displayName
