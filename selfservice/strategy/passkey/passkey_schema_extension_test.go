@@ -12,7 +12,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/strategy/passkey"
 )
 
@@ -65,5 +67,32 @@ func TestPasskeyDisplayNameFromSchema(t *testing.T) {
 		paths, err := strategy.PasskeyDisplayNameFromSchema(ctx, abs(t, "stub/registration-no-passkey-titled.schema.json"))
 		require.ErrorContains(t, err, "no identifier found")
 		assert.Nil(t, paths)
+	})
+}
+
+// TestPasskeyDisplayNameFromTraits_MultipleFlaggedTraits guards the resolution
+// order when an identity schema flags more than one trait as a passkey
+// display-name source. A flagged trait that the user left empty must not clobber
+// a flagged trait that has a value, regardless of the order the validator visits
+// the traits. This mirrors the client-side behavior, which picks the first
+// non-empty candidate field.
+func TestPasskeyDisplayNameFromTraits_MultipleFlaggedTraits(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration-multi-identifier.schema.json")
+
+	strategy := passkey.NewStrategy(reg)
+
+	t.Run("case=keeps the non-empty candidate when a later flagged trait is empty", func(t *testing.T) {
+		t.Parallel()
+		name := strategy.PasskeyDisplayNameFromTraits(ctx, identity.Traits(`{"email":"alice@example.com","phone":""}`))
+		assert.Equal(t, "alice@example.com", name)
+	})
+
+	t.Run("case=keeps the non-empty candidate when an earlier flagged trait is empty", func(t *testing.T) {
+		t.Parallel()
+		name := strategy.PasskeyDisplayNameFromTraits(ctx, identity.Traits(`{"email":"","phone":"+15555550123"}`))
+		assert.Equal(t, "+15555550123", name)
 	})
 }

@@ -29,11 +29,15 @@ func (e *SchemaExtension) Run(_ jsonschema.ValidationContext, s schema.Extension
 	e.Lock()
 	defer e.Unlock()
 
-	if s.Credentials.WebAuthn.Identifier {
+	// When a schema flags multiple traits, the validator visits them in an
+	// unspecified order. Keep the first non-empty value so an empty flagged
+	// trait never clobbers a populated one. This mirrors the client, which
+	// names the passkey after the first non-empty candidate field.
+	if s.Credentials.WebAuthn.Identifier && e.WebauthnIdentifier == "" {
 		e.WebauthnIdentifier = strings.ToLower(fmt.Sprintf("%s", value))
 	}
 
-	if s.Credentials.Passkey.DisplayName {
+	if s.Credentials.Passkey.DisplayName && e.PasskeyDisplayName == "" {
 		e.PasskeyDisplayName = fmt.Sprintf("%s", value)
 	}
 
