@@ -22,7 +22,7 @@ var _ MappedNullable = &CreateRecoveryCodeForIdentityBody{}
 // CreateRecoveryCodeForIdentityBody Create Recovery Code for Identity Request Body
 type CreateRecoveryCodeForIdentityBody struct {
 	// Code Expires In  The recovery code will expire after that amount of time has passed. Defaults to the configuration value of `selfservice.methods.code.config.lifespan`.
-	ExpiresIn *string `json:"expires_in,omitempty" validate:"regexp=^([0-9]+(ns|us|ms|s|m|h))*$"`
+	ExpiresIn *string `json:"expires_in,omitempty" validate:"regexp=^([0-9]+([.][0-9]+)?(ns|us|µs|ms|s|m|h))+$"`
 	// The flow type can either be `api` or `browser`.
 	FlowType *string `json:"flow_type,omitempty"`
 	// Identity to Recover  The identity's ID you wish to recover.

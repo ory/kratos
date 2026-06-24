@@ -4553,7 +4553,7 @@
         "expires_in": {
           "description": "Code Expires In\n\nThe recovery code will expire after that amount of time has passed. Defaults to the configuration value of\n`selfservice.methods.code.config.lifespan`.",
           "type": "string",
-          "pattern": "^([0-9]+(ns|us|ms|s|m|h))*$"
+          "pattern": "^([0-9]+([.][0-9]+)?(ns|us|µs|ms|s|m|h))+$"
         },
         "flow_type": {
           "$ref": "#/definitions/selfServiceFlowType"
@@ -4575,7 +4575,7 @@
         "expires_in": {
           "description": "Link Expires In\n\nThe recovery link will expire after that amount of time has passed. Defaults to the configuration value of\n`selfservice.methods.code.config.lifespan`.",
           "type": "string",
-          "pattern": "^[0-9]+(ns|us|ms|s|m|h)$"
+          "pattern": "^([0-9]+([.][0-9]+)?(ns|us|µs|ms|s|m|h))+$"
         },
         "identity_id": {
           "description": "Identity to Recover\n\nThe identity's ID you wish to recover.",

@@ -917,7 +917,7 @@
         "properties": {
           "expires_in": {
             "description": "Code Expires In\n\nThe recovery code will expire after that amount of time has passed. Defaults to the configuration value of\n`selfservice.methods.code.config.lifespan`.",
-            "pattern": "^([0-9]+(ns|us|ms|s|m|h))*$",
+            "pattern": "^([0-9]+([.][0-9]+)?(ns|us|µs|ms|s|m|h))+$",
             "type": "string"
           },
           "flow_type": {
@@ -939,7 +939,7 @@
         "properties": {
           "expires_in": {
             "description": "Link Expires In\n\nThe recovery link will expire after that amount of time has passed. Defaults to the configuration value of\n`selfservice.methods.code.config.lifespan`.",
-            "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
+            "pattern": "^([0-9]+([.][0-9]+)?(ns|us|µs|ms|s|m|h))+$",
             "type": "string"
           },
           "identity_id": {
@@ -2503,11 +2503,6 @@
         ],
         "title": "Is sent when a privileged session is required to perform the settings update.",
         "type": "object"
-      },
-      "nullDuration": {
-        "nullable": true,
-        "pattern": "^[0-9]+(ns|us|ms|s|m|h)$",
-        "type": "string"
       },
       "nullInt64": {
         "nullable": true,

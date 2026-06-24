@@ -94,7 +94,7 @@ type createRecoveryLinkForIdentityBody struct {
 	// `selfservice.methods.code.config.lifespan`.
 	//
 	//
-	// pattern: ^[0-9]+(ns|us|ms|s|m|h)$
+	// pattern: ^([0-9]+([.][0-9]+)?(ns|us|µs|ms|s|m|h))+$
 	// example:
 	//	- 1h
 	//	- 1m
@@ -162,7 +162,7 @@ func (s *Strategy) createRecoveryLinkForIdentity(w http.ResponseWriter, r *http.
 		var err error
 		expiresIn, err = time.ParseDuration(p.ExpiresIn)
 		if err != nil {
-			s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to parse "expires_in" whose format should match "[0-9]+(ns|us|ms|s|m|h)" but did not: %s`, p.ExpiresIn)))
+			s.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf(`Unable to parse "expires_in" as a duration string (e.g. "1h", "1m30s", "500ms"): %s`, p.ExpiresIn)))
 			return
 		}
 	}
