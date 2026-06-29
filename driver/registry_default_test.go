@@ -334,6 +334,38 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					}
 				},
 			},
+			{
+				uc: "Verification enabled but auto-injection disabled",
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationEnabled:       true,
+					config.ViperKeyDisableVerificationHookAutoInjection: true,
+					config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
+						{"hook": "session"},
+					},
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{
+						hook.NewSessionIssuer(reg),
+					}
+				},
+			},
+			{
+				uc: "Auto-injection disabled but verification hook explicitly configured",
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationEnabled:       true,
+					config.ViperKeyDisableVerificationHookAutoInjection: true,
+					config.ViperKeySelfServiceRegistrationAfter + ".password.hooks": []map[string]any{
+						{"hook": "verification"},
+						{"hook": "session"},
+					},
+				},
+				expect: func(reg *driver.RegistryDefault) []registration.PostHookPostPersistExecutor {
+					return []registration.PostHookPostPersistExecutor{
+						hook.NewVerifier(reg),
+						hook.NewSessionIssuer(reg),
+					}
+				},
+			},
 		} {
 			t.Run(fmt.Sprintf("after/uc=%s", tc.uc), func(t *testing.T) {
 				t.Parallel()
@@ -605,6 +637,38 @@ func TestDriverDefault_Hooks(t *testing.T) {
 					return []settings.PostHookPostPersistExecutor{
 						hook.NewVerifier(reg),
 						hook.NewWebHook(reg, &request.Config{Method: "GET", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+					}
+				},
+			},
+			{
+				uc: "Verification enabled but auto-injection disabled",
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationEnabled:       true,
+					config.ViperKeyDisableVerificationHookAutoInjection: true,
+					config.ViperKeySelfServiceSettingsAfter + ".profile.hooks": []map[string]any{
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
+				},
+				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
+					return []settings.PostHookPostPersistExecutor{
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
+					}
+				},
+			},
+			{
+				uc: "Auto-injection disabled but verification hook explicitly configured",
+				config: map[string]any{
+					config.ViperKeySelfServiceVerificationEnabled:       true,
+					config.ViperKeyDisableVerificationHookAutoInjection: true,
+					config.ViperKeySelfServiceSettingsAfter + ".profile.hooks": []map[string]any{
+						{"hook": "verification"},
+						{"hook": "web_hook", "config": map[string]any{"url": "foo", "method": "POST", "headers": map[string]string{"X-Custom-Header": "test"}}},
+					},
+				},
+				expect: func(reg *driver.RegistryDefault) []settings.PostHookPostPersistExecutor {
+					return []settings.PostHookPostPersistExecutor{
+						hook.NewVerifier(reg),
+						hook.NewWebHook(reg, &request.Config{Method: "POST", URL: "foo", Headers: map[string]string{"X-Custom-Header": "test"}}),
 					}
 				},
 			},
