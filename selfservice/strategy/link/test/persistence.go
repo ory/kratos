@@ -5,6 +5,8 @@ package link
 
 import (
 	"context"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -102,6 +104,34 @@ func TestPersister(ctx context.Context, p interface {
 				})
 			})
 
+			t.Run("case=concurrent use of the same token succeeds at most once", func(t *testing.T) {
+				// HackerOne #3692149 / #3695625: the consume UPDATE must be
+				// atomic. On READ COMMITTED backends two concurrent submissions
+				// of the same valid token must not both succeed.
+				expected, f := newRecoveryToken(t, "concurrent-recovery@ory.sh")
+				require.NoError(t, p.CreateRecoveryToken(ctx, expected))
+
+				const concurrency = 8
+				var success int32
+				var start sync.WaitGroup
+				var done sync.WaitGroup
+				start.Add(1)
+				for range concurrency {
+					done.Add(1)
+					go func() {
+						defer done.Done()
+						start.Wait()
+						if _, err := p.UseRecoveryToken(ctx, f.ID, expected.Token); err == nil {
+							atomic.AddInt32(&success, 1)
+						}
+					}()
+				}
+				start.Done()
+				done.Wait()
+
+				require.EqualValues(t, 1, atomic.LoadInt32(&success), "exactly one concurrent consumer may use the token")
+			})
+
 			t.Run("case=update to identity should not invalidate token", func(t *testing.T) {
 				expected, f := newRecoveryToken(t, "some-user@ory.sh")
 
@@ -184,6 +214,34 @@ func TestPersister(ctx context.Context, p interface {
 
 				_, err = p.UseVerificationToken(ctx, f.ID, expected.Token)
 				require.Error(t, err)
+			})
+
+			t.Run("case=concurrent use of the same token succeeds at most once", func(t *testing.T) {
+				// HackerOne #3692149 / #3695625: the consume UPDATE must be
+				// atomic. On READ COMMITTED backends two concurrent submissions
+				// of the same valid token must not both succeed.
+				f, expected := newVerificationToken(t, "concurrent-verification@ory.sh")
+				require.NoError(t, p.CreateVerificationToken(ctx, expected))
+
+				const concurrency = 8
+				var success int32
+				var start sync.WaitGroup
+				var done sync.WaitGroup
+				start.Add(1)
+				for range concurrency {
+					done.Add(1)
+					go func() {
+						defer done.Done()
+						start.Wait()
+						if _, err := p.UseVerificationToken(ctx, f.ID, expected.Token); err == nil {
+							atomic.AddInt32(&success, 1)
+						}
+					}()
+				}
+				start.Done()
+				done.Wait()
+
+				require.EqualValues(t, 1, atomic.LoadInt32(&success), "exactly one concurrent consumer may use the token")
 			})
 		})
 	}

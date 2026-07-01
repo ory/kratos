@@ -101,8 +101,19 @@ func (p *Persister) UseRecoveryToken(ctx context.Context, fID uuid.UUID, token s
 		}
 		rt.RecoveryAddress = &ra
 
+		// Consume the token atomically. The `NOT used` guard ensures that on
+		// READ COMMITTED backends two concurrent submissions of the same token
+		// cannot both succeed: only the first UPDATE affects a row. If no row
+		// was affected, another transaction already consumed the token.
 		//#nosec G201 -- TableName is static
-		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ?", rt.TableName(ctx)), time.Now().UTC(), rt.ID, nid).Exec()
+		count, err := tx.RawQuery(fmt.Sprintf("UPDATE %s SET used=true, used_at=? WHERE id=? AND nid = ? AND NOT used", rt.TableName(ctx)), time.Now().UTC(), rt.ID, nid).ExecWithCount()
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			return errors.WithStack(sqlcon.ErrNoRows())
+		}
+		return nil
 	})); err != nil {
 		return nil, err
 	}

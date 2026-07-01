@@ -65,13 +65,7 @@ func (c *VerificationCode) Validate(clk clock.Clock) error {
 	if c == nil {
 		return errors.WithStack(ErrCodeNotFound())
 	}
-	if c.ExpiresAt.Before(clk.Now().UTC()) {
-		return errors.WithStack(ErrCodeNotFound())
-	}
-	if c.UsedAt.Valid {
-		return errors.WithStack(ErrCodeAlreadyUsed())
-	}
-	return nil
+	return validateOneTimeCode(c.ExpiresAt, c.UsedAt, clk)
 }
 
 func (c *VerificationCode) GetHMACCode() string {

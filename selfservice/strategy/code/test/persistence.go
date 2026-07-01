@@ -99,6 +99,35 @@ func TestPersister(ctx context.Context, p interface {
 				require.ErrorIs(t, err, code.ErrCodeAlreadyUsed())
 			})
 
+			t.Run("case=concurrent use of the same code succeeds at most once", func(t *testing.T) {
+				// HackerOne #3692149 / #3695625: the consume UPDATE must be
+				// atomic. On READ COMMITTED backends two concurrent
+				// submissions of the same valid code must not both succeed.
+				dto, f, _ := newRecoveryCodeDTO(t, "concurrent-code@ory.sh")
+				_, err := p.CreateRecoveryCode(ctx, dto)
+				require.NoError(t, err)
+
+				const concurrency = 8
+				var success int32
+				var start sync.WaitGroup
+				var done sync.WaitGroup
+				start.Add(1)
+				for range concurrency {
+					done.Add(1)
+					go func() {
+						defer done.Done()
+						start.Wait()
+						if _, err := p.UseRecoveryCode(ctx, f.ID, dto.RawCode); err == nil {
+							atomic.AddInt32(&success, 1)
+						}
+					}()
+				}
+				start.Done()
+				done.Wait()
+
+				require.EqualValues(t, 1, atomic.LoadInt32(&success), "exactly one concurrent consumer may use the code")
+			})
+
 			t.Run("case=should not be able to use expired codes", func(t *testing.T) {
 				dto, f, _ := newRecoveryCodeDTO(t, "expired-code@ory.sh")
 				dto.ExpiresIn = -time.Hour

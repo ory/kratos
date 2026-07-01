@@ -102,8 +102,19 @@ func useOneTimeCode[P any, U interface {
 			return nil
 		}
 
+		// Consume the code atomically. The `used_at IS NULL` guard ensures that
+		// on READ COMMITTED backends two concurrent submissions of the same code
+		// cannot both succeed: only the first UPDATE affects a row. If no row was
+		// affected, another transaction already consumed the code.
 		//#nosec G201 -- TableName is static
-		return tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ?", target.TableName(ctx)), time.Now().UTC(), target.GetID(), nid).Exec()
+		count, err := tx.RawQuery(fmt.Sprintf("UPDATE %s SET used_at = ? WHERE id = ? AND nid = ? AND used_at IS NULL", target.TableName(ctx)), time.Now().UTC(), target.GetID(), nid).ExecWithCount()
+		if err != nil {
+			return err
+		}
+		if count == 0 {
+			return errors.WithStack(code.ErrCodeAlreadyUsed())
+		}
+		return nil
 	}); err != nil {
 		return nil, sqlcon.HandleError(err)
 	}
