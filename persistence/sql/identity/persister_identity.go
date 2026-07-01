@@ -1155,15 +1155,25 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			columns = params.ColumnsTransformer(columns)
 		}
 
+		// DISTINCT is only needed when the credentials-identifier filter adds the
+		// INNER JOINs below: a single identity can match multiple identifier rows,
+		// which would otherwise produce duplicates. Without the joins, identities.id
+		// is the primary key, so every row is already unique and DISTINCT is pure
+		// overhead (a distinct processor over the wide traits/metadata columns).
+		distinct := ""
+		if joins != "" {
+			distinct = "DISTINCT "
+		}
+
 		query := fmt.Sprintf(`
-		SELECT DISTINCT %s
+		SELECT %s%s
 		FROM identities AS identities
 		%s
 		WHERE
 		%s
 		ORDER BY identities.id ASC
 		%s`,
-			columns,
+			distinct, columns,
 			joins, wheres, limit)
 
 		if params.RowScanner != nil {
