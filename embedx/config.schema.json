@@ -3253,6 +3253,12 @@
           "description": "The node group to use for registration flows. Previously, the node group for the oidc method's profile fields was `oidc`. Going forward, it will be `default`. This switch can toggle between those two for backwards compatibility and will be removed in the future.",
           "default": false,
           "type": "boolean"
+        },
+        "refresh_login_choose_address": {
+          "type": "boolean",
+          "title": "Enable the address picker on the code refresh login screen",
+          "description": "If enabled, a code-strategy refresh (privileged re-authentication) login renders a \"Send code to <address>\" button per available code address instead of re-asking for the identifier. The identity is fixed by the active session, so re-entering the identifier is unnecessary and makes the privileged login look like a fresh login. It is safe to toggle this back and forth.",
+          "default": false
         }
       },
       "additionalProperties": false

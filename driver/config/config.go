@@ -106,6 +106,7 @@ const (
 	ViperKeyUseLegacyShowVerificationUI                      = "feature_flags.legacy_continue_with_verification_ui"
 	ViperKeyLegacyOIDCRegistrationGroup                      = "feature_flags.legacy_oidc_registration_node_group"
 	ViperKeyUseLegacyRequireVerifiedLoginError               = "feature_flags.legacy_require_verified_login_error"
+	ViperKeyRefreshLoginChooseAddress                        = "feature_flags.refresh_login_choose_address"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -1446,6 +1447,10 @@ func (p *Config) UseContinueWithTransitions(ctx context.Context) bool {
 
 func (p *Config) ChooseRecoveryAddress(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeyChooseRecoveryAddress)
+}
+
+func (p *Config) RefreshLoginChooseAddress(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyRefreshLoginChooseAddress)
 }
 
 func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {

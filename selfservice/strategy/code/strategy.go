@@ -17,6 +17,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/continuity"
@@ -41,6 +42,7 @@ import (
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/otelx/semconv"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/urlx"
 )
@@ -304,7 +306,42 @@ func (s *Strategy) populateChooseMethodFlow(r *http.Request, f flow.Flow) error 
 				f.GetUI().Nodes.Append(node.NewInputField("address", address.To, node.CodeGroup, node.InputAttributeTypeSubmit).
 					WithMetaLabel(text.NewInfoSelfServiceLoginAAL2CodeAddress(string(address.Via), address.To)))
 			}
+		} else if f.Refresh && s.deps.Config().RefreshLoginChooseAddress(ctx) {
+			// On a refresh login the identity is already known from the active
+			// session. Asking for the identifier again makes the privileged
+			// login look like a fresh unified login (ory/kratos#4194). Instead,
+			// render one "Send code to <address>" button per available code address,
+			// exactly like the second-factor flow above.
+			sess, err := s.deps.SessionManager().FetchFromRequest(ctx, r)
+			if err != nil {
+				return err
+			}
+
+			if len(sess.Identity.Credentials) == 0 {
+				if err := s.deps.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, sess.Identity, identity.ExpandCredentials); err != nil {
+					return err
+				}
+			}
+
+			addresses, err := s.FindCodeAddresses(ctx, sess, "")
+			if err != nil {
+				return err
+			}
+
+			// If the identity has no code address, append nothing so another
+			// first-factor strategy (e.g. password) can fulfil the refresh.
+			for _, address := range addresses {
+				f.GetUI().Nodes.Append(node.NewInputField("address", address.To, node.CodeGroup, node.InputAttributeTypeSubmit).
+					WithMetaLabel(text.NewInfoSelfServiceLoginAAL2CodeAddress(string(address.Via), address.To)))
+			}
 		} else {
+			if f.Refresh {
+				// The refresh address picker is disabled, so we fall back to
+				// re-asking for the identifier. This is deprecated: the identity
+				// is already fixed by the active session (ory/kratos#4194).
+				trace.SpanFromContext(ctx).AddEvent(semconv.NewDeprecatedFeatureUsedEvent(ctx, "refresh_login_identifier_input"))
+			}
+
 			identifierLabel, err := login.GetIdentifierLabelFromSchema(ctx, ds.String(), s.deps.Config().SecurityDisallowRefInIdentitySchemas(ctx))
 			if err != nil {
 				return err

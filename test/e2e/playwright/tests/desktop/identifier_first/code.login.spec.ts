@@ -268,6 +268,9 @@ test.describe(() => {
           },
         },
       },
+      featureFlags: {
+        refresh_login_choose_address: true,
+      },
     }),
   })
   test("refresh", async ({ page, identity, config, kratosPublicURL }) => {
@@ -296,8 +299,11 @@ test.describe(() => {
     await login.open({
       refresh: true,
     })
-    await login.inputField("identifier").fill(identity.email)
-    await login.submit("code")
+    // On a refresh login the identity is fixed by the session, so the screen
+    // shows a "Send code to <address>" button instead of an identifier field
+    // (ory/kratos#4194).
+    await expect(login.inputField("identifier")).toBeHidden()
+    await login.codeSubmitMfa.click()
 
     const mails = await search({
       query: identity.email,
@@ -414,4 +420,217 @@ test.describe("second factor", () => {
       })
     })
   }
+})
+
+test.describe("second factor refresh", () => {
+  // TOTP is enabled alongside code so the code method does not fast-login as the
+  // only second factor. That keeps the flow on the regular handler path, which
+  // renders the "Send code to <address>" button this test exercises.
+  test.use({
+    configOverride: toConfig({
+      style: "identifier_first",
+      selfservice: {
+        methods: {
+          oidc: {
+            enabled: false,
+          },
+          password: {
+            enabled: true,
+          },
+          totp: {
+            enabled: true,
+          },
+          code: {
+            passwordless_enabled: false,
+            mfa_enabled: true,
+          },
+        },
+      },
+    }),
+  })
+
+  test("refreshes an aal2 session through the code address button", async ({
+    page,
+    config,
+    identity,
+    kratosPublicURL,
+  }) => {
+    const login = new LoginPage(page, config)
+    const seenCodes: string[] = []
+
+    await test.step("set up TOTP as a second 2FA method", async () => {
+      await login.open()
+      await login.loginWithPassword(identity.email, identity.password)
+
+      // The verified email already works as a code second factor, so with
+      // `highest_available` the flow fast-logs in to aal2 with code. Complete
+      // that before opening settings to set up TOTP.
+      const mails = await search({
+        query: identity.email,
+        kind: "to",
+        filter: (m) => !seenCodes.some((c) => m.html.includes(c)),
+      })
+      const code = extractCode(mails[0])
+      seenCodes.push(code)
+      await login.codeInput.input.fill(code)
+      await login.codeSubmit.getByText("Continue").click()
+
+      const settings = new SettingsPage(page, config)
+      await settings.open()
+      await settings.setupTotp()
+
+      await page.goto(await logoutUrl(page.request, kratosPublicURL))
+    })
+
+    const initialSession =
+      await test.step("log in to aal2 with the code second factor", async () => {
+        await login.open()
+        await login.loginWithPassword(identity.email, identity.password)
+
+        // With TOTP and code both configured, the flow escalates to aal2 and
+        // renders both factors instead of fast-logging in.
+        await expect(login.totpInput.input).toBeVisible()
+        await expect(login.codeSubmitMfa).toBeVisible()
+
+        await login.codeSubmitMfa.click()
+
+        const mails = await search({
+          query: identity.email,
+          kind: "to",
+          filter: (m) => !seenCodes.some((c) => m.html.includes(c)),
+        })
+        const code = extractCode(mails[0])
+        seenCodes.push(code)
+
+        await login.codeInput.input.fill(code)
+        await login.codeSubmit.getByText("Continue").click()
+
+        const session = await getSession(page.request, kratosPublicURL)
+        expect(session.active).toBe(true)
+        expect(session.authenticator_assurance_level).toBe("aal2")
+        return session
+      })
+
+    await test.step("refresh the aal2 session", async () => {
+      await login.open({
+        refresh: true,
+        aal: "aal2",
+      })
+
+      // On a refresh + aal2 flow the second-factor hydrator wins over the
+      // first-factor refresh branch: it renders "Send code to <address>"
+      // buttons and never the hidden first-factor identifier field
+      // (ory/kratos#4194).
+      await expect(login.codeSubmitMfa).toBeVisible()
+      await expect(login.inputField("identifier")).toBeHidden()
+
+      await login.codeSubmitMfa.click()
+
+      const mails = await search({
+        query: identity.email,
+        kind: "to",
+        filter: (m) => !seenCodes.some((c) => m.html.includes(c)),
+      })
+      expect(mails).toHaveLength(1)
+      const code = extractCode(mails[0])
+
+      await login.codeInput.input.fill(code)
+      await login.codeSubmit.getByText("Continue").click()
+      await page.waitForURL(
+        new RegExp(config.selfservice.default_browser_return_url),
+      )
+
+      const refreshedSession = await getSession(page.request, kratosPublicURL)
+      expect(refreshedSession.active).toBe(true)
+      expect(refreshedSession.authenticator_assurance_level).toBe("aal2")
+
+      const initialAuthAt = Date.parse(initialSession.authenticated_at)
+      const refreshedAuthAt = Date.parse(refreshedSession.authenticated_at)
+      expect(refreshedAuthAt).toBeGreaterThanOrEqual(initialAuthAt)
+    })
+  })
+
+  test("rejects a foreign address on an aal2 refresh", async ({
+    page,
+    config,
+    identity,
+    kratosPublicURL,
+  }) => {
+    const login = new LoginPage(page, config)
+    const seenCodes: string[] = []
+
+    await test.step("set up TOTP as a second 2FA method", async () => {
+      await login.open()
+      await login.loginWithPassword(identity.email, identity.password)
+
+      // Complete the code second factor that fast-login auto-sends, then set
+      // up TOTP so later flows render the address button instead of fast-login.
+      const mails = await search({
+        query: identity.email,
+        kind: "to",
+        filter: (m) => !seenCodes.some((c) => m.html.includes(c)),
+      })
+      const code = extractCode(mails[0])
+      seenCodes.push(code)
+      await login.codeInput.input.fill(code)
+      await login.codeSubmit.getByText("Continue").click()
+
+      const settings = new SettingsPage(page, config)
+      await settings.open()
+      await settings.setupTotp()
+
+      await page.goto(await logoutUrl(page.request, kratosPublicURL))
+    })
+
+    const aal2Session =
+      await test.step("log in to aal2 with the code second factor", async () => {
+        await login.open()
+        await login.loginWithPassword(identity.email, identity.password)
+
+        await login.codeSubmitMfa.click()
+
+        const mails = await search({
+          query: identity.email,
+          kind: "to",
+          filter: (m) => !seenCodes.some((c) => m.html.includes(c)),
+        })
+        const code = extractCode(mails[0])
+        seenCodes.push(code)
+        await login.codeInput.input.fill(code)
+        await login.codeSubmit.getByText("Continue").click()
+
+        const session = await getSession(page.request, kratosPublicURL)
+        expect(session.authenticator_assurance_level).toBe("aal2")
+        return session
+      })
+
+    await test.step("tampering the address with a foreign identifier is rejected", async () => {
+      await login.open({
+        refresh: true,
+        aal: "aal2",
+      })
+
+      // Tamper the server-rendered address button so it posts a foreign
+      // identifier. A refresh login must not send a code to it
+      // (ory/kratos#4194).
+      const foreignEmail = "not-" + identity.email
+      await login.codeSubmitMfa.evaluate(
+        (el, value) => el.setAttribute("value", value),
+        foreignEmail,
+      )
+      await login.codeSubmitMfa.click()
+
+      await expect(
+        page.locator('[data-testid="ui/message/4000035"]'),
+        "expect the no-code-credentials error to be shown",
+      ).toBeVisible()
+      await expect(login.codeInput.input).toBeHidden()
+
+      // The active session is untouched: still aal2, same authentication time.
+      const session = await getSession(page.request, kratosPublicURL)
+      expect(session.active).toBe(true)
+      expect(session.authenticator_assurance_level).toBe("aal2")
+      expect(session.authenticated_at).toBe(aal2Session.authenticated_at)
+    })
+  })
 })

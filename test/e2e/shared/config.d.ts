@@ -24,6 +24,7 @@ export type OryKratosConfiguration = {
         before?: SelfServiceBeforeSettings
       }
       logout?: {
+        clear_browser_data?: ClearBrowserDataOnLogout
         after?: {
           default_browser_return_url?: RedirectBrowsersToSetURLPerDefault
         }
@@ -214,6 +215,7 @@ export type OryKratosConfiguration = {
       mitigate?: boolean
       [k: string]: unknown | undefined
     }
+    disallow_ref_in_identity_schemas?: DisallowExternal$RefResolutionInIdentitySchemas
     [k: string]: unknown | undefined
   }
   version?: TheKratosVersionThisConfigIsWrittenFor
@@ -266,6 +268,10 @@ export type WebHookConfiguration =
       [k: string]: unknown | undefined
     }
 export type SelfServiceHooks = (SelfServiceWebHook | B2BSSOHook)[]
+/**
+ * If set to true, a successful browser logout sends the `Clear-Site-Data` response header over HTTPS, instructing the browser to clear cookies, storage, and caches for the origin. This is off by default to avoid clearing data that other applications on the same origin may rely on.
+ */
+export type ClearBrowserDataOnLogout = boolean
 /**
  * If set to true will enable [User Registration](https://www.ory.com/kratos/docs/self-service/flows/user-registration/).
  */
@@ -350,6 +356,10 @@ export type NotifyUnknownRecipients1 = boolean
  * URL where the Ory Kratos Error UI is hosted. Check the [reference implementation](https://github.com/ory/kratos-selfservice-ui-node).
  */
 export type OryKratosErrorUIURL = string
+/**
+ * Overrides session.lifespan for sessions issued for this organization. Unset means inherit the project default.
+ */
+export type SessionLifespanOverride = string
 export type EnablesProfileManagementMethod = boolean
 export type EnablesLinkMethod = boolean
 export type OverrideTheBaseURLWhichShouldBeUsedAsTheBaseForRecoveryAndVerificationLinks =
@@ -443,9 +453,12 @@ export type RelyingPartyOrigins = string[]
  */
 export type AuthenticatorAttachment = "platform" | "cross-platform"
 /**
- * Controls whether the authenticator must create a client-side discoverable credential. See https://pkg.go.dev/github.com/go-webauthn/webauthn/protocol#ResidentKeyRequirement.
+ * Controls whether the authenticator must create a client-side discoverable credential (historically called a resident key). Maps to the WebAuthn authenticatorSelection.residentKey member, whose name the spec retains for compatibility. See https://pkg.go.dev/github.com/go-webauthn/webauthn/protocol#ResidentKeyRequirement.
  */
-export type ResidentKeyRequirement = "required" | "preferred" | "discouraged"
+export type ClientSideDiscoverableCredentialRequirement =
+  | "required"
+  | "preferred"
+  | "discouraged"
 /**
  * Controls whether biometrics or PIN are required for the passkey ceremony.
  */
@@ -845,6 +858,10 @@ export type SessionCookieSameSiteConfiguration = "Strict" | "Lax" | "None"
  */
 export type EarliestPossibleSessionExtension = string
 /**
+ * If true, `$ref` URLs inside identity schemas may not resolve to `file://`, `http://`, or `https://` sources. This blocks server-side file reads (`file://`) and server-side request forgery (`http(s)://`) via malicious identity schemas. Internal JSON-pointer refs (`#/definitions/...`) and self-contained `base64://` refs remain allowed. Leave at the default (false) to preserve existing behavior for operators who intentionally reference external schemas. Ory Network forces this to true.
+ */
+export type DisallowExternal$RefResolutionInIdentitySchemas = boolean
+/**
  * SemVer according to https://semver.org/ prefixed with `v` as in our releases.
  */
 export type TheKratosVersionThisConfigIsWrittenFor = string
@@ -857,9 +874,13 @@ export type MetricsPort = number
  */
 export type DisallowPrivateIPRanges = boolean
 /**
- * Allows the given URLs to be called despite them being in the private IP range. URLs need to have an exact and case-sensitive match to be excempt.
+ * Allows the given URLs to be called despite them being in the private IP range. URLs need to have an exact and case-sensitive match to be exempt.
  */
 export type AddExemptURLsToPrivateIPRanges = string[]
+/**
+ * Disallow all outgoing SMTP connections to private IP ranges. This feature can help protect against SSRF attacks.
+ */
+export type DisallowPrivateIPRanges1 = boolean
 /**
  * List of request headers that are forwarded to the web hook target in canonical form.
  */
@@ -902,6 +923,10 @@ export type RegistrationNodeGroup = "password" | "default"
  */
 export type RegistrationNodeGroupForOIDC = boolean
 /**
+ * If enabled, a code-strategy refresh (privileged re-authentication) login renders a "Send code to <address>" button per available code address instead of re-asking for the identifier. The identity is fixed by the active session, so re-entering the identifier is unnecessary and makes the privileged login look like a fresh login. It is safe to toggle this back and forth.
+ */
+export type EnableTheAddressPickerOnTheCodeRefreshLoginScreen = boolean
+/**
  * Please use selfservice.methods.b2b instead. This key will be removed. Only effective in the Ory Network.
  */
 export type Organizations = unknown[]
@@ -942,7 +967,8 @@ export interface SelfServiceAfterSettingsProfileMethod {
     | SelfServiceWebHook
     | SelfServiceShowVerificationUIHook
     | B2BSSOHook
-    | SelfServiceVerifyNewAddressHook
+    | VerifyNewAddressSettingsHook
+    | SelfServiceNotifyPreviousAddressesHook
   )[]
 }
 export interface SelfServiceShowVerificationUIHook {
@@ -950,12 +976,26 @@ export interface SelfServiceShowVerificationUIHook {
 }
 export interface B2BSSOHook {
   hook: "b2b_sso" | "organization"
-  config: {
-    [k: string]: unknown | undefined
-  }
+  [k: string]: unknown | undefined
 }
-export interface SelfServiceVerifyNewAddressHook {
+/**
+ * Defers email or phone changes made through the settings profile flow until the new address is verified. The identity's traits are applied only after the user completes a verification flow for the new address.
+ *
+ * Configuration note: do not configure `show_verification_ui` on the same `selfservice.flows.settings.after.profile.hooks` list. `verify_new_address` aborts the settings flow and triggers its own verification, so a `show_verification_ui` hook on the profile list would run twice: once when the settings flow is aborted and again after verification completes. Keep `show_verification_ui` off the `profile` hook list when `verify_new_address` is active.
+ *
+ * When the pending change is applied, the remaining post-persist hooks on the `profile` list (for example, `web_hook`) run against the updated identity. The pending change is rejected if the session that initiated it has been revoked, expired, or deleted before verification completes.
+ */
+export interface VerifyNewAddressSettingsHook {
   hook: "verify_new_address"
+}
+export interface SelfServiceNotifyPreviousAddressesHook {
+  hook: "notify_previous_addresses"
+  config?: {
+    /**
+     * Which previous addresses receive the change notification. 'removed' (default): only addresses that no longer exist after the change. 'all_verified': all addresses that were verified before the change. 'all': all addresses on the identity before the change.
+     */
+    recipients?: "removed" | "all_verified" | "all"
+  }
 }
 export interface SelfServiceBeforeSettings {
   hooks?: SelfServiceHooks
@@ -1064,6 +1104,7 @@ export interface SingleSignOnForB2B {
        */
       label?: string
       domains?: string[]
+      session_lifespan?: SessionLifespanOverride
       [k: string]: unknown | undefined
     }[]
   }
@@ -1170,7 +1211,7 @@ export interface RelyingPartyRPConfig1 {
  */
 export interface AuthenticatorSelectionCriteria {
   attachment?: AuthenticatorAttachment
-  resident_key?: ResidentKeyRequirement
+  resident_key?: ClientSideDiscoverableCredentialRequirement
   user_verification?: UserVerificationRequirement
 }
 /**
@@ -1268,6 +1309,10 @@ export interface CourierConfiguration {
         email: EmailCourierTemplate
         sms?: SmsCourierTemplate
       }
+    }
+    verifiable_address_changed?: {
+      email?: EmailCourierTemplate
+      sms?: SmsCourierTemplate
     }
   }
   template_override_path?: OverrideMessageTemplates
@@ -1508,6 +1553,7 @@ export interface TokenizerTemplates {
  */
 export interface GlobalOutgoingNetworkSettings {
   http?: GlobalHTTPClientConfiguration
+  smtp?: SMTPClientConfiguration
   web_hook?: GlobalWebHookHTTPClientConfiguration
   [k: string]: unknown | undefined
 }
@@ -1517,6 +1563,13 @@ export interface GlobalOutgoingNetworkSettings {
 export interface GlobalHTTPClientConfiguration {
   disallow_private_ip_ranges?: DisallowPrivateIPRanges
   private_ip_exception_urls?: AddExemptURLsToPrivateIPRanges
+  [k: string]: unknown | undefined
+}
+/**
+ * Configure how outgoing SMTP calls behave.
+ */
+export interface SMTPClientConfiguration {
+  disallow_private_ip_ranges?: DisallowPrivateIPRanges1
   [k: string]: unknown | undefined
 }
 /**
@@ -1536,6 +1589,7 @@ export interface FeatureFlags {
   faster_session_extend?: EnableFasterSessionExtension
   password_profile_registration_node_group?: RegistrationNodeGroup
   legacy_oidc_registration_node_group?: RegistrationNodeGroupForOIDC
+  refresh_login_choose_address?: EnableTheAddressPickerOnTheCodeRefreshLoginScreen
 }
 /**
  * Specifies enterprise features. Only effective in the Ory Network or with a valid license.

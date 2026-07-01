@@ -50,10 +50,12 @@ export const toConfig = ({
   style = "identifier_first",
   mitigateEnumeration = false,
   selfservice,
+  featureFlags,
 }: {
   style?: LoginFlowStyle
   mitigateEnumeration?: boolean
   selfservice?: Partial<OryKratosConfiguration["selfservice"]>
+  featureFlags?: OryKratosConfiguration["feature_flags"]
 }) => ({
   selfservice: {
     default_browser_return_url: "http://localhost:4455/welcome",
@@ -71,4 +73,5 @@ export const toConfig = ({
       mitigate: mitigateEnumeration,
     },
   },
+  ...(featureFlags ? { feature_flags: featureFlags } : {}),
 })
