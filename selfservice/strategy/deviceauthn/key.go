@@ -34,11 +34,19 @@ type Key struct {
 
 	// DeviceName is a human readable name for the device, helping the user to distinguish it from others.
 	DeviceName string `json:"device_name"`
-	// PublicKey is an EC (in v1) public key, used to verify signatures, stored as uncompressed bytes.
-	// The private key resides inside the device and does not exist on the server.
+	// PublicKey is the device's public key (EC P-256 in v1), used to verify
+	// signatures. It is stored in PKIX, ASN.1 DER form (the SubjectPublicKeyInfo
+	// encoding produced by x509.MarshalPKIXPublicKey). The private key resides
+	// inside the device and does not exist on the server.
 	PublicKey []byte `json:"public_key,omitempty"`
 
-	// ClientKeyID is a client-chosen id for the key and is unique per identity.
+	// ClientKeyID is the key's stable, unique-per-identity id, computed as
+	// hex(SHA-256(PublicKey)) — the lowercase-hex SHA-256 digest of the public
+	// key's PKIX, ASN.1 DER (SubjectPublicKeyInfo) encoding, exactly the bytes
+	// stored in PublicKey. It is a deterministic fingerprint of the enrolled
+	// signing key, so the device recomputes the identical value locally instead
+	// of receiving it from the server. Keys enrolled before the server derived
+	// the id keep their original client-chosen value.
 	ClientKeyID string `json:"client_key_id"`
 	// CreatedAt is the timestamp of when the key was created.
 	// Only used for troubleshooting/UI.

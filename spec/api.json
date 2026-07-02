@@ -121,7 +121,7 @@
             "$ref": "#/components/schemas/deviceAuthnAttestation"
           },
           "client_key_id": {
-            "description": "ClientKeyID is a client-chosen id for the key and is unique per identity.",
+            "description": "ClientKeyID is the key's stable, unique-per-identity id, computed as\nhex(SHA-256(PublicKey)) — the lowercase-hex SHA-256 digest of the public\nkey's PKIX, ASN.1 DER (SubjectPublicKeyInfo) encoding, exactly the bytes\nstored in PublicKey. It is a deterministic fingerprint of the enrolled\nsigning key, so the device recomputes the identical value locally instead\nof receiving it from the server. Keys enrolled before the server derived\nthe id keep their original client-chosen value.",
             "type": "string"
           },
           "created_at": {
@@ -137,7 +137,7 @@
             "$ref": "#/components/schemas/DeviceType"
           },
           "public_key": {
-            "description": "PublicKey is an EC (in v1) public key, used to verify signatures, stored as uncompressed bytes.\nThe private key resides inside the device and does not exist on the server.",
+            "description": "PublicKey is the device's public key (EC P-256 in v1), used to verify\nsignatures. It is stored in PKIX, ASN.1 DER form (the SubjectPublicKeyInfo\nencoding produced by x509.MarshalPKIXPublicKey). The private key resides\ninside the device and does not exist on the server.",
             "items": {
               "format": "uint8",
               "type": "integer"
