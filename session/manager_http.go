@@ -441,7 +441,7 @@ func (s *ManagerHTTP) MaybeRedirectAPICodeFlow(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	if err = s.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(r.Context(), f.GetID(), sessionID); err != nil {
+	if err = s.r.SessionTokenExchangePersister().UpdateSessionOnExchanger(ctx, f.GetID(), sessionID); err != nil {
 		return false, errors.WithStack(err)
 	}
 

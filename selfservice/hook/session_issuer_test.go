@@ -126,6 +126,50 @@ func TestSessionIssuer(t *testing.T) {
 			assert.Equal(t, s.ID.String(), gjson.GetBytes(body, "session.id").String())
 			assert.Empty(t, gjson.GetBytes(body, "session_token").String())
 		})
+
+		t.Run("flow=api with oidc code exchange", func(t *testing.T) {
+			// A native API OIDC flow with a session token exchange code redirects
+			// via MaybeRedirectAPICodeFlow. Once the redirect is written, the hook
+			// must abort the flow (ErrHookAbortFlow) so the executor's tail block
+			// does not call MaybeRedirectAPICodeFlow a second time and issue a
+			// redundant write to the GLOBAL session_token_exchanges table.
+			w := httptest.NewRecorder()
+
+			i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			s := &session.Session{
+				ID:              x.NewUUID(),
+				Identity:        i,
+				Token:           randx.MustString(12, randx.AlphaLowerNum),
+				LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+				AuthenticatedAt: time.Now().UTC(),
+			}
+			s.CompletedLoginFor(identity.CredentialsTypeOIDC, identity.AuthenticatorAssuranceLevel1)
+			f := &registration.Flow{ID: x.NewUUID(), Type: flow.TypeAPI}
+
+			require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+			require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+
+			ex, err := reg.SessionTokenExchangePersister().CreateSessionTokenExchanger(ctx, f.ID)
+			require.NoError(t, err)
+
+			req := httptest.NewRequest(http.MethodGet, "https://localhost/self-service/methods/oidc/callback/test", nil).WithContext(ctx)
+			req.Header.Set("Accept", "application/json")
+			err = h.ExecutePostRegistrationPostPersistHook(w, req, f, s)
+			require.ErrorIs(t, err, registration.ErrHookAbortFlow, "%+v", err)
+
+			// The redirect carries the return-to code, proving the OIDC handled
+			// branch ran before aborting.
+			assert.Equal(t, http.StatusSeeOther, w.Code)
+			assert.Contains(t, w.Header().Get("Location"), "code="+ex.ReturnToCode)
+
+			// The exchanger was bound to the session exactly once.
+			got, _, err := reg.SessionTokenExchangePersister().CodeForFlow(ctx, f.ID)
+			require.NoError(t, err)
+			assert.Equal(t, ex.ReturnToCode, got.ReturnToCode)
+			exchanged, err := reg.SessionTokenExchangePersister().GetExchangerFromCode(ctx, ex.InitCode, ex.ReturnToCode)
+			require.NoError(t, err)
+			assert.Equal(t, s.ID, exchanged.SessionID.UUID)
+		})
 	})
 
 	t.Run("method=sign-up with oauth2", func(t *testing.T) {

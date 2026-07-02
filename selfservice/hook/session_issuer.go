@@ -63,7 +63,11 @@ func (e *SessionIssuer) executePostRegistrationPostPersistHook(w http.ResponseWr
 			if handled, err := e.r.SessionManager().MaybeRedirectAPICodeFlow(w, r, a, s.ID, node.OpenIDConnectGroup); err != nil {
 				return errors.WithStack(err)
 			} else if handled {
-				return nil
+				// The redirect response has already been written. Abort the flow
+				// so the executor does not run its tail block, which would call
+				// MaybeRedirectAPICodeFlow a second time and issue a redundant
+				// (and slow) write to the GLOBAL session_token_exchanges table.
+				return errors.WithStack(registration.ErrHookAbortFlow)
 			}
 		}
 
