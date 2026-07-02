@@ -91,17 +91,35 @@ func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, con
 	return body, res
 }
 
+// newTestTransport returns a transport dedicated to a single test client.
+//
+// Test helpers spin up short-lived httptest.Server instances and close them
+// when the helper returns. httptest.Server.Close unconditionally calls
+// http.DefaultTransport.CloseIdleConnections as a courtesy for users of the
+// default transport. When many parallel subtests share http.DefaultTransport
+// (the zero value of http.Client.Transport), one subtest closing its server
+// tears down idle connections that another subtest's in-flight request is
+// using, surfacing as "http: CloseIdleConnections called". Giving every test
+// client its own transport means that courtesy close only ever affects the
+// unused global transport, never a live test client.
+func newTestTransport(t *testing.T) *http.Transport {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	t.Cleanup(transport.CloseIdleConnections)
+	return transport
+}
+
 func NewClientWithCookies(t *testing.T) *http.Client {
 	cj, err := cookiejar.New(&cookiejar.Options{})
 	require.NoError(t, err)
-	return &http.Client{Jar: cj}
+	return &http.Client{Jar: cj, Transport: newTestTransport(t)}
 }
 
 func NewNoRedirectClientWithCookies(t *testing.T) *http.Client {
 	cj, err := cookiejar.New(&cookiejar.Options{})
 	require.NoError(t, err)
 	return &http.Client{
-		Jar: cj,
+		Jar:       cj,
+		Transport: newTestTransport(t),
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
