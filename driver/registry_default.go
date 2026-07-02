@@ -419,6 +419,14 @@ nextStrategy:
 // test-mode single-provider UI. Returns nil if the OIDC strategy is not
 // registered or disabled in config; callers must handle that case as a
 // misconfiguration rather than crashing the process.
+//
+// The strategy list may contain several strategies that implement the test
+// interface: derivatives of the OIDC strategy registered under a different
+// credentials type (e.g. SAML or organization sign-in) inherit it through
+// embedding, but they resolve providers from their own method's config
+// section. Only the strategy with the OIDC credentials type reads
+// selfservice.methods.oidc.config.providers, so select by credentials type
+// rather than returning the first match.
 func (m *RegistryDefault) TestStrategy(ctx context.Context) login.TestStrategy {
 	type testStrategy interface {
 		login.TestStrategy
@@ -426,7 +434,7 @@ func (m *RegistryDefault) TestStrategy(ctx context.Context) login.TestStrategy {
 	}
 	for _, strategy := range m.selfServiceStrategies() {
 		if s, ok := strategy.(testStrategy); ok {
-			if m.strategyLoginEnabled(ctx, s.ID().String()) {
+			if s.ID() == identity.CredentialsTypeOIDC && m.strategyLoginEnabled(ctx, s.ID().String()) {
 				return s
 			}
 		}

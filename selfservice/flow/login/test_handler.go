@@ -95,6 +95,13 @@ type createTestLoginFlowBody struct {
 //	Extensions:
 //	  x-ory-ratelimit-bucket: kratos-admin-low
 func (h *Handler) adminCreateTestLoginFlow(w http.ResponseWriter, r *http.Request) {
+	// The strategy annotates this span with the provider lookup outcome
+	// (test_login_flow.* attributes); without it, a failed lookup is
+	// invisible in traces because the whole path is in-memory.
+	ctx, span := h.d.Tracer(r.Context()).Tracer().Start(r.Context(), "login.Handler.adminCreateTestLoginFlow")
+	defer span.End()
+	r = r.WithContext(ctx)
+
 	var body createTestLoginFlowBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReason("could not parse request body")))

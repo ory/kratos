@@ -17,6 +17,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -29,6 +32,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlxx"
 )
 
@@ -120,6 +124,53 @@ func TestHandler_AdminCreateTestLoginFlow_HappyPath(t *testing.T) {
 		}
 	}
 	assert.True(t, found, "expected provider=google submit node in UI: %s", body)
+}
+
+// TestHandler_AdminCreateTestLoginFlow_Tracing asserts that the handler
+// emits a span recording which strategy served the request and what the
+// provider lookup saw. A production incident where the wrong strategy was
+// selected (and thus an empty provider list was searched) was invisible in
+// traces because this path had no instrumentation.
+func TestHandler_AdminCreateTestLoginFlow_Tracing(t *testing.T) {
+	t.Parallel()
+	reg := newRegistryWithOIDCProvider(t)
+
+	recorder := tracetest.NewSpanRecorder()
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+	reg.SetTracer(otelx.NewNoop().WithOTLP(provider.Tracer("test")))
+
+	_, admin := testhelpers.NewKratosServer(t, reg)
+
+	res, body := doAdminPost(t, admin.URL, map[string]string{"provider_id": "google"})
+	require.Equal(t, http.StatusCreated, res.StatusCode, "%s", body)
+	res, body = doAdminPost(t, admin.URL, map[string]string{"provider_id": "nonesuch"})
+	require.Equal(t, http.StatusNotFound, res.StatusCode, "%s", body)
+
+	var spans []sdktrace.ReadOnlySpan
+	for _, sp := range recorder.Ended() {
+		if sp.Name() == "login.Handler.adminCreateTestLoginFlow" {
+			spans = append(spans, sp)
+		}
+	}
+	require.Len(t, spans, 2, "expected one handler span per request")
+
+	attrs := func(sp sdktrace.ReadOnlySpan) map[attribute.Key]attribute.Value {
+		out := make(map[attribute.Key]attribute.Value, len(sp.Attributes()))
+		for _, kv := range sp.Attributes() {
+			out[kv.Key] = kv.Value
+		}
+		return out
+	}
+
+	found := attrs(spans[0])
+	assert.Equal(t, "oidc", found["test_login_flow.strategy"].AsString())
+	assert.Equal(t, int64(1), found["test_login_flow.available_providers"].AsInt64())
+	assert.True(t, found["test_login_flow.provider_found"].AsBool())
+
+	notFound := attrs(spans[1])
+	assert.Equal(t, "oidc", notFound["test_login_flow.strategy"].AsString())
+	assert.Equal(t, int64(1), notFound["test_login_flow.available_providers"].AsInt64())
+	assert.False(t, notFound["test_login_flow.provider_found"].AsBool())
 }
 
 func TestHandler_AdminCreateTestLoginFlow_BadInput(t *testing.T) {
