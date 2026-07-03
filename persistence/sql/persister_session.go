@@ -413,18 +413,48 @@ func (p *Persister) DeleteSessionByToken(ctx context.Context, token string) (err
 	return nil
 }
 
-func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) (err error) {
+// RevokeSessionByToken marks the session with the given token inactive and
+// returns its IDs so the caller can attach them to observability events without
+// a separate GetSessionByToken round trip.
+// Returns sqlcon.ErrNoRows() when no matching session exists in the caller's
+// network; the returned RevokedSession is the zero value in that case.
+func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) (revoked session.RevokedSession, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.RevokeSessionByToken")
 	defer otelx.End(span, &err)
 
-	count, err := p.revokeMatchingSessions(ctx, "token = ? AND nid = ?", token, p.NetworkID(ctx))
+	con := p.GetConnection(ctx)
+	nid := p.NetworkID(ctx)
+	var dst struct {
+		ID         uuid.UUID `db:"id"`
+		IdentityID uuid.UUID `db:"identity_id"`
+	}
+
+	switch con.Dialect.Name() {
+	case dbal.DriverCockroachDB, dialectPostgreSQL:
+		// CTE: identify the row by (token, nid), conditionally flip active=false
+		// only when currently true, and return the matched row's identifiers in
+		// one round trip. See revokeMatchingSessions for the contention rationale.
+		const query = `WITH found AS (SELECT id, identity_id FROM sessions WHERE token = ? AND nid = ?),
+     upd AS (UPDATE sessions SET active = false FROM found WHERE sessions.id = found.id AND sessions.active = true RETURNING 1)
+SELECT id, identity_id FROM found`
+
+		err = p.runInReadCommittedOnCRDB(ctx, func(c *pop.Connection) error {
+			return c.RawQuery(query, token, nid).First(&dst)
+		})
+	default:
+		// SQLite and MySQL: data-modifying CTEs are not portable here, so issue
+		// a separate SELECT followed by the legacy UPDATE. Same two-statement
+		// shape as today's caller (GetSessionByToken + RevokeSessionByToken),
+		// so no regression on these dialects.
+		err = con.RawQuery("SELECT id, identity_id FROM sessions WHERE token = ? AND nid = ?", token, nid).First(&dst)
+		if err == nil {
+			err = con.RawQuery("UPDATE sessions SET active = false WHERE token = ? AND nid = ?", token, nid).Exec()
+		}
+	}
 	if err != nil {
-		return err
+		return session.RevokedSession{}, sqlcon.HandleError(err)
 	}
-	if count == 0 {
-		return errors.WithStack(sqlcon.ErrNoRows())
-	}
-	return nil
+	return session.RevokedSession{ID: dst.ID, IdentityID: dst.IdentityID}, nil
 }
 
 // RevokeSessionById revokes a given session. Returns sqlcon.ErrNoRows() when

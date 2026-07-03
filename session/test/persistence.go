@@ -410,15 +410,20 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			t.Run("on another network", func(t *testing.T) {
 				_, other := testhelpers.NewNetwork(t, ctx, p)
-				err := other.RevokeSessionByToken(ctx, expected.Token)
+				revoked, err := other.RevokeSessionByToken(ctx, expected.Token)
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows())
+				assert.Equal(t, uuid.Nil, revoked.ID, "session id must be nil when not found")
+				assert.Equal(t, uuid.Nil, revoked.IdentityID, "identity id must be nil when not found")
 
 				actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 				require.NoError(t, err)
 				assert.True(t, actual.Active)
 			})
 
-			require.NoError(t, p.RevokeSessionByToken(ctx, expected.Token))
+			revoked, err := p.RevokeSessionByToken(ctx, expected.Token)
+			require.NoError(t, err)
+			assert.Equal(t, expected.ID, revoked.ID, "must return the session id")
+			assert.Equal(t, expected.IdentityID, revoked.IdentityID, "must return the identity id")
 
 			actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err)
@@ -426,18 +431,23 @@ func TestPersister(ctx context.Context, conf *config.Config, p interface {
 
 			// Re-revoking an already-inactive session is silently
 			// idempotent — the CTE-based implementation returns the matched
-			// row count, not the flipped count.
-			require.NoError(t, p.RevokeSessionByToken(ctx, expected.Token),
+			// row, not the flipped one, so the IDs come back regardless.
+			revoked, err = p.RevokeSessionByToken(ctx, expected.Token)
+			require.NoError(t, err,
 				"re-revoking an already-inactive session must succeed silently on %s",
 				p.GetConnection(ctx).Dialect.Name())
+			assert.Equal(t, expected.ID, revoked.ID, "matched id must be returned on re-revoke")
+			assert.Equal(t, expected.IdentityID, revoked.IdentityID, "matched identity id must be returned on re-revoke")
 
 			actual, err = p.GetSession(ctx, expected.ID, session.ExpandNothing)
 			require.NoError(t, err, "session must still exist after re-revoke")
 			assert.False(t, actual.Active, "session must remain inactive after re-revoke")
 
 			t.Run("returns ErrNoRows for an unknown token", func(t *testing.T) {
-				err := p.RevokeSessionByToken(ctx, "this-token-does-not-exist-"+x.NewUUID().String())
+				revoked, err := p.RevokeSessionByToken(ctx, "this-token-does-not-exist-"+x.NewUUID().String())
 				assert.ErrorIs(t, err, sqlcon.ErrNoRows())
+				assert.Equal(t, uuid.Nil, revoked.ID)
+				assert.Equal(t, uuid.Nil, revoked.IdentityID)
 			})
 		})
 

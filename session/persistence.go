@@ -20,6 +20,16 @@ type PersistenceProvider interface {
 	SessionPersister() Persister
 }
 
+// RevokedSession identifies the session revoked by RevokeSessionByToken so
+// callers can attach the IDs to observability events. Grouping the two IDs in a
+// struct avoids confusing the session ID with the identity ID at the call site.
+type RevokedSession struct {
+	// ID is the ID of the revoked session.
+	ID uuid.UUID
+	// IdentityID is the ID of the identity that owned the revoked session.
+	IdentityID uuid.UUID
+}
+
 type Persister interface {
 	GetConnection(ctx context.Context) *pop.Connection
 
@@ -59,8 +69,12 @@ type Persister interface {
 	// instead of a session ID.
 	DeleteSessionByToken(context.Context, string) error
 
-	// RevokeSessionByToken marks a session inactive with the given token.
-	RevokeSessionByToken(ctx context.Context, token string) error
+	// RevokeSessionByToken marks a session inactive with the given token and
+	// returns the IDs of the revoked session so callers can emit observability
+	// events without a separate GetSessionByToken round trip.
+	// Returns sqlcon.ErrNoRows() if no matching session exists in the caller's
+	// network. The returned IDs are uuid.Nil in the error case.
+	RevokeSessionByToken(ctx context.Context, token string) (RevokedSession, error)
 
 	// RevokeSessionById marks a session inactive with the specified uuid
 	RevokeSessionById(ctx context.Context, sID uuid.UUID) error

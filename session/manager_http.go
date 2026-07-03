@@ -283,7 +283,8 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 	defer otelx.End(span, &err)
 
 	if token, ok := bearerTokenFromRequest(r); ok {
-		return errors.WithStack(s.r.SessionPersister().RevokeSessionByToken(ctx, token))
+		_, err := s.r.SessionPersister().RevokeSessionByToken(ctx, token)
+		return errors.WithStack(err)
 	}
 
 	cookie, _ := s.r.CookieManager(r.Context()).Get(r, s.cookieName(ctx))
@@ -292,7 +293,7 @@ func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWrite
 		return nil
 	}
 
-	if err := s.r.SessionPersister().RevokeSessionByToken(ctx, token); err != nil {
+	if _, err := s.r.SessionPersister().RevokeSessionByToken(ctx, token); err != nil {
 		return errors.WithStack(err)
 	}
 

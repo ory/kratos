@@ -16,7 +16,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x/events"
 
 	"github.com/ory/herodot"
@@ -238,7 +237,7 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request) {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
-	sess, err := h.d.SessionPersister().GetSessionByToken(r.Context(), p.SessionToken, session.ExpandNothing, identity.ExpandNothing)
+	revoked, err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken)
 	if err != nil {
 		if errors.Is(err, sqlcon.ErrNoRows()) {
 			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden().WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
@@ -249,17 +248,7 @@ func (h *Handler) performNativeLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.d.SessionPersister().RevokeSessionByToken(r.Context(), p.SessionToken); err != nil {
-		if errors.Is(err, sqlcon.ErrNoRows()) {
-			h.d.Writer().WriteError(w, r, errors.WithStack(herodot.ErrForbidden().WithReason("The provided Ory Session Token could not be found, is invalid, or otherwise malformed.")))
-			return
-		}
-
-		h.d.Writer().WriteError(w, r, err)
-		return
-	}
-
-	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), sess.ID, sess.IdentityID))
+	trace.SpanFromContext(r.Context()).AddEvent(events.NewSessionRevoked(r.Context(), revoked.ID, revoked.IdentityID))
 
 	w.WriteHeader(http.StatusNoContent)
 }
