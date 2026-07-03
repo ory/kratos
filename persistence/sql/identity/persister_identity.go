@@ -365,10 +365,16 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, ident
 			attribute.Stringer("network.id", p.NetworkID(ctx))))
 	defer otelx.End(span, &err)
 
+	type credentialSlot struct {
+		ident *identity.Identity
+		key   identity.CredentialsType
+	}
+
 	var (
 		nid         = p.NetworkID(ctx)
 		traceConn   = &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: p.GetConnection(ctx)}
 		credentials []*identity.Credentials
+		slots       = map[*identity.Credentials]credentialSlot{}
 		identifiers []*identity.CredentialIdentifier
 	)
 
@@ -379,7 +385,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, ident
 
 	for _, ident := range identities {
 		for k := range ident.Credentials {
-			cred := ident.Credentials[k]
+			cred := new(ident.Credentials[k])
 
 			if len(cred.Config) == 0 {
 				cred.Config = sqlxx.JSONRawMessage("{}")
@@ -390,10 +396,6 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, ident
 				return err
 			}
 
-			cred.ID, err = uuid.NewV4()
-			if err != nil {
-				return err
-			}
 			cred.IdentityID = ident.ID
 			cred.NID = nid
 			cred.IdentityCredentialTypeID = ct
@@ -414,12 +416,19 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, ident
 				cred.Identifiers = []string{ident.ID.String()}
 			}
 
-			credentials = append(credentials, &cred)
-
-			ident.Credentials[k] = cred
+			credentials = append(credentials, cred)
+			slots[cred] = credentialSlot{ident: ident, key: k}
 		}
 	}
-	if err = batch.Create(ctx, traceConn, credentials, opts...); err != nil {
+
+	err = batch.Create(ctx, traceConn, credentials, opts...)
+
+	for _, cred := range credentials {
+		slot := slots[cred]
+		slot.ident.Credentials[slot.key] = *cred
+	}
+
+	if err != nil {
 		return err
 	}
 
@@ -821,13 +830,11 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities []*
 				}
 			} else if partialErr := new(batch.PartialConflictError[identity.CredentialIdentifier]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
-					credID := k.IdentityCredentialsID
-					for _, ident := range identities {
-						for _, cred := range ident.Credentials {
-							if cred.ID == credID {
-								failedIdentityIDs[ident.ID] = struct{ created bool }{true}
-							}
-						}
+					// The failed identifier carries the owning identity ID
+					// directly, so map it back without scanning every
+					// identity's credentials by ID.
+					if k.IdentityID != nil {
+						failedIdentityIDs[*k.IdentityID] = struct{ created bool }{true}
 					}
 				}
 			} else {

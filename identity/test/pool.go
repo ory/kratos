@@ -646,6 +646,43 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					assert.NotNil(t, failed)
 				}
 			})
+
+			t.Run("case=conflict only on credential identifier marks the identity as failed", func(t *testing.T) {
+				// Regression test: OIDC identities carry no verifiable or recovery
+				// addresses, so a duplicate conflicts solely on the credential
+				// identifier. CreateIdentities must map that conflict back to the
+				// owning identity, mark it failed, and not leave a partially
+				// persisted identity behind.
+				if dbname == "mysql" {
+					// Partial inserts are not supported on mysql.
+					t.Skip()
+				}
+
+				oidcID := randx.MustString(16, randx.AlphaLowerNum)
+				initial := oidcIdentity("", oidcID)
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				unique := oidcIdentity("", randx.MustString(16, randx.AlphaLowerNum))
+				conflicting := oidcIdentity("", oidcID)
+				batch := []*identity.Identity{unique, conflicting}
+
+				err := p.CreateIdentities(ctx, batch)
+				errWithCtx := new(identity.CreateIdentitiesError)
+				require.ErrorAsf(t, err, &errWithCtx, "%#v", err)
+
+				// The conflicting identity must be reported as failed and must not
+				// exist in the database.
+				require.NotNil(t, errWithCtx.Find(conflicting))
+				_, err = p.GetIdentity(ctx, conflicting.ID, identity.ExpandNothing)
+				require.Error(t, err)
+
+				// The non-conflicting identity must succeed and be persisted.
+				require.Nil(t, errWithCtx.Find(unique))
+				_, err = p.GetIdentity(ctx, unique.ID, identity.ExpandNothing)
+				require.NoError(t, err)
+				createdIDs = append(createdIDs, unique.ID)
+			})
 		})
 
 		t.Run("case=external_id conflict in batch create returns partial error", func(t *testing.T) {
