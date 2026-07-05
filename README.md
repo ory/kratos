@@ -27,6 +27,7 @@ them.
 - [Deployment options](#deployment-options)
   - [Use Ory Kratos on the Ory Network](#use-ory-kratos-on-the-ory-network)
   - [Self-host Ory Kratos](#self-host-ory-kratos)
+- [Contract Testing with Specmatic](#contract-testing-with-specmatic)
 - [Quickstart](#quickstart)
   - [Who is using it?](#who-is-using-it)
 
@@ -149,6 +150,47 @@ support in production, you need a valid
 [Ory Enterprise License](https://www.ory.com/ory-enterprise-license) and access
 to the Ory Enterprise Docker registry. To learn more,
 [contact the Ory team](https://www.ory.com/contact/).
+
+## Contract Testing with Specmatic
+
+This project uses [Specmatic](https://specmatic.io/) for automated API contract
+testing. Specmatic transforms the Ory Kratos OpenAPI specification
+(`spec/api.json`) into an executable contract that ensures API correctness and
+prevents breaking changes.
+
+### What Specmatic Provides
+
+- **Backward Compatibility Checks** — Every PR is checked for breaking API
+  changes. If the OpenAPI spec is modified in a way that would break existing
+  consumers (removing fields, changing types, removing endpoints), the CI
+  pipeline blocks the merge.
+- **Contract Testing** — Specmatic auto-generates tests from the OpenAPI spec and
+  validates that the Kratos API implementation matches the documented schema.
+- **Service Virtualization** — Specmatic generates intelligent mock servers from
+  the spec, allowing consumer applications to test authentication flows without
+  running Kratos, PostgreSQL, or migrations.
+
+### Quick Commands
+
+```bash
+# Check for breaking API changes
+npx --yes specmatic backward-compatibility-check \
+  --target-path=spec/api.json \
+  --base-branch=origin/master
+
+# Run contract tests against a running Kratos instance
+npx --yes specmatic test \
+  --spec-file=spec/api.json \
+  --testBaseURL=http://localhost:4433
+
+# Start a mock Kratos server (no database needed)
+npx --yes specmatic stub spec/api.json --port=4433
+```
+
+For full documentation, see
+[docs/docs/guides/specmatic-contract-testing.md](docs/docs/guides/specmatic-contract-testing.md).
+For consumer-side mock examples, see
+[contrib/specmatic-mock-example/](contrib/specmatic-mock-example/).
 
 ## Quickstart
 

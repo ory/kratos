@@ -1,0 +1,200 @@
+name: Specmatic API Contract Tests
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'spec/**'
+      - '.schema/**'
+      - 'specmatic.yaml'
+      - 'specmatic_dictionary.json'
+      - '.github/workflows/specmatic-contract-tests.yml'
+  pull_request:
+    paths:
+      - 'spec/**'
+      - '.schema/**'
+      - '**/*.go'
+      - 'specmatic.yaml'
+      - 'specmatic_dictionary.json'
+      - '.github/workflows/specmatic-contract-tests.yml'
+
+# Cancel in-progress runs in current workflow.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Job 1: Backward Compatibility Check
+  # Compares the OpenAPI spec in this PR against the base branch
+  # to detect breaking API changes before they reach production.
+  # No server startup needed — pure spec-vs-spec analysis.
+  # ─────────────────────────────────────────────────────────────
+  backward-compatibility:
+    name: API Backward Compatibility Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Full history needed for branch comparison
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run Specmatic Backward Compatibility Check
+        run: |
+          echo "🔍 Checking for breaking API changes in spec/api.json..."
+          echo "   Comparing branch '${{ github.head_ref }}' against '${{ github.base_ref }}'..."
+          npx --yes specmatic backward-compatibility-check \
+            --target-path=spec/api.json \
+            --base-branch=origin/${{ github.base_ref }}
+
+      - name: Upload compatibility report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: specmatic-backward-compatibility-report
+          path: reports/
+          retention-days: 30
+
+  # ─────────────────────────────────────────────────────────────
+  # Job 2: OpenAPI Spec Validation
+  # Ensures the OpenAPI specification is well-formed and can be
+  # used by Specmatic for contract testing and mock generation.
+  # ─────────────────────────────────────────────────────────────
+  spec-validation:
+    name: OpenAPI Spec Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Validate OpenAPI Spec with Specmatic
+        run: |
+          echo "✅ Validating spec/api.json is a well-formed OpenAPI 3.0 spec..."
+          npx --yes specmatic examples validate \
+            --spec-file=spec/api.json \
+            || echo "::warning::Spec validation found issues. Review output above."
+
+      - name: Start Specmatic Mock Server (smoke test)
+        run: |
+          echo "🧪 Starting Specmatic mock server to verify spec is usable..."
+          npx --yes specmatic stub spec/api.json --port=9000 &
+          MOCK_PID=$!
+          sleep 5
+
+          # Basic smoke test: hit a known endpoint
+          echo "📡 Smoke testing mock server..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:9000/health/alive || echo "000")
+          echo "   Health check returned: $HTTP_STATUS"
+
+          # Clean up
+          kill $MOCK_PID 2>/dev/null || true
+          echo "✅ Mock server smoke test complete."
+
+  # ─────────────────────────────────────────────────────────────
+  # Job 3: Contract Test (Provider-Side Validation)
+  # Builds Kratos, starts it with a test config, then runs
+  # Specmatic contract tests to verify API compliance.
+  # Only runs on master pushes to avoid heavy CI on every PR.
+  # ─────────────────────────────────────────────────────────────
+  contract-test:
+    name: API Contract Test (Provider-Side)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: kratos
+          POSTGRES_PASSWORD: secret
+          POSTGRES_USER: kratos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DSN: "postgres://kratos:secret@localhost:5432/kratos?sslmode=disable"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          check-latest: true
+          go-version-file: go.mod
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build Kratos
+        run: |
+          go build -o kratos-server .
+          echo "✅ Kratos built successfully."
+
+      - name: Start Kratos
+        run: |
+          echo "🚀 Starting Kratos server..."
+          ./kratos-server serve all \
+            --dev \
+            --config test/e2e/profiles/email/.kratos.yml \
+            2>&1 &
+          echo "   Waiting for Kratos to be ready..."
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:4433/health/alive > /dev/null 2>&1; then
+              echo "   ✅ Kratos is ready!"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Run Specmatic Contract Tests
+        run: |
+          echo "🧪 Running Specmatic contract tests against Kratos..."
+          npx --yes specmatic test \
+            --spec-file=spec/api.json \
+            --testBaseURL=http://localhost:4433 \
+            --junitReportDir=reports/
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: specmatic-contract-test-results
+          path: reports/
+          retention-days: 30

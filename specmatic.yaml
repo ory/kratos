@@ -1,0 +1,30 @@
+# Specmatic Configuration for Ory Kratos
+# https://specmatic.io/documentation
+# This file configures Specmatic contract testing against the Kratos OpenAPI spec.
+
+version: 3
+
+sources:
+  - provider: filesystem
+    stub:
+      - spec/api.json
+    test:
+      - spec/api.json
+
+contract:
+  # Kratos public API default port
+  testBaseURL: http://localhost:4433
+
+report:
+  formatters:
+    - type: text
+    - type: junit
+  types:
+    apiCoverage:
+      openAPI:
+        successCriteria:
+          # Minimum percentage of endpoints that must be covered
+          minThresholdPercentage: 70
+          # Maximum number of endpoints that can be missed
+          maxMissedEndpointsInSpec: 10
+          enforce: true
