@@ -4871,6 +4871,11 @@
         "in": "header",
         "name": "Authorization",
         "type": "apiKey"
+      },
+      "sessionToken": {
+        "in": "header",
+        "name": "X-Ory-Session-Token",
+        "type": "apiKey"
       }
     }
   },

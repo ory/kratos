@@ -4,27 +4,29 @@
 
 version: 3
 
-sources:
-  - provider: filesystem
-    stub:
-      - spec/api.json
-    test:
-      - spec/api.json
+systemUnderTest:
+  service:
+    $ref: "#/components/services/kratosIdentityApi"
+    runOptions:
+      $ref: "#/components/runOptions/kratosTest"
 
-contract:
-  # Kratos public API default port
-  testBaseURL: http://localhost:4433
+components:
+  sources:
+    kratosLocalSpec:
+      filesystem:
+        directory: "."
 
-report:
-  formatters:
-    - type: text
-    - type: junit
-  types:
-    apiCoverage:
-      openAPI:
-        successCriteria:
-          # Minimum percentage of endpoints that must be covered
-          minThresholdPercentage: 70
-          # Maximum number of endpoints that can be missed
-          maxMissedEndpointsInSpec: 10
-          enforce: true
+  services:
+    kratosIdentityApi:
+      definitions:
+        - definition:
+            source:
+              $ref: "#/components/sources/kratosLocalSpec"
+            specs:
+              - spec/api.json
+
+  runOptions:
+    kratosTest:
+      openapi:
+        type: test
+        baseUrl: "http://localhost:4433"
