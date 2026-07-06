@@ -42,7 +42,7 @@ docker run --rm -p 4433:9000 \
 
 If you have an AI coding agent with MCP support:
 
-```
+```text
 "Start a mock Kratos server on port 4433 using spec/api.json"
 ```
 
@@ -69,7 +69,7 @@ curl -s -X POST http://localhost:4433/self-service/login \
 Create an `_expectations` directory next to your spec to provide custom response
 examples:
 
-```
+```text
 spec/
   api.json
   api_expectations/

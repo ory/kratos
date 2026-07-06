@@ -4874,7 +4874,7 @@
       },
       "sessionToken": {
         "in": "header",
-        "name": "X-Ory-Session-Token",
+        "name": "X-Session-Token",
         "type": "apiKey"
       }
     }

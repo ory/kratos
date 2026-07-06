@@ -5,24 +5,27 @@ on:
     branches:
       - master
     paths:
-      - 'spec/**'
-      - '.schema/**'
-      - 'specmatic.yaml'
-      - 'specmatic_dictionary.json'
-      - '.github/workflows/specmatic-contract-tests.yml'
+      - "spec/**"
+      - ".schema/**"
+      - "specmatic.yaml"
+      - "specmatic_dictionary.json"
+      - ".github/workflows/specmatic-contract-tests.yml"
   pull_request:
     paths:
-      - 'spec/**'
-      - '.schema/**'
-      - '**/*.go'
-      - 'specmatic.yaml'
-      - 'specmatic_dictionary.json'
-      - '.github/workflows/specmatic-contract-tests.yml'
+      - "spec/**"
+      - ".schema/**"
+      - "**/*.go"
+      - "specmatic.yaml"
+      - "specmatic_dictionary.json"
+      - ".github/workflows/specmatic-contract-tests.yml"
 
 # Cancel in-progress runs in current workflow.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   # ─────────────────────────────────────────────────────────────
@@ -41,25 +44,29 @@ jobs:
         with:
           # Full history needed for branch comparison
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Run Specmatic Backward Compatibility Check
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
           echo "🔍 Checking for breaking API changes in spec/api.json..."
-          echo "   Comparing branch '${{ github.head_ref }}' against '${{ github.base_ref }}'..."
+          echo "   Comparing branch '$HEAD_REF' against '$BASE_REF'..."
           npx --yes specmatic backward-compatibility-check \
             --target-path=spec/api.json \
-            --base-branch=origin/${{ github.base_ref }}
+            --base-branch="origin/$BASE_REF"
 
       - name: Upload compatibility report
         if: always()
@@ -80,17 +87,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Validate OpenAPI Spec with Specmatic
         run: |
@@ -128,6 +137,7 @@ jobs:
     services:
       postgres:
         image: postgres:18
+        # checkov:skip=CKV_SECRET_6:Test credentials for ephemeral CI service only
         env:
           POSTGRES_DB: kratos
           POSTGRES_PASSWORD: secret
@@ -135,15 +145,15 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s
           --health-retries 5
     env:
       DSN: "postgres://kratos:secret@localhost:5432/kratos?sslmode=disable"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -154,13 +164,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
 
       - name: Build Kratos
         run: |
@@ -187,7 +197,7 @@ jobs:
         run: |
           echo "🧪 Running Specmatic contract tests against Kratos..."
           npx --yes specmatic test \
-            --spec-file=spec/api.json \
+            spec/api.json \
             --testBaseURL=http://localhost:4433 \
             --junitReportDir=reports/
 
