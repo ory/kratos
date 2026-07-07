@@ -4,6 +4,7 @@
 package identity_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -870,6 +871,107 @@ func TestManager(t *testing.T) {
 			assert.Equal(t, conflicOnRecoveryAddress.ID, found.ID)
 			assert.Equal(t, "conflict-on-ra@example.com", foundConflictAddress)
 			assert.Equal(t, "email", addressType)
+		})
+
+		t.Run("case=identifier match wins over verifiable and recovery address conflicts", func(t *testing.T) {
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Identifiers: []string{"conflict-on-identifier@example.com"}},
+				},
+				VerifiableAddresses: []identity.VerifiableAddress{{
+					Value: "conflict-on-va@example.com",
+					Via:   "email",
+				}},
+				RecoveryAddresses: []identity.RecoveryAddress{{
+					Value: "conflict-on-ra@example.com",
+					Via:   "email",
+				}},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnIdentifier.ID, found.ID)
+			assert.Equal(t, "conflict-on-identifier@example.com", foundConflictAddress)
+			assert.EqualValues(t, string(identity.CredentialsTypePassword), addressType)
+		})
+
+		t.Run("case=verifiable address wins over recovery address", func(t *testing.T) {
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{
+				VerifiableAddresses: []identity.VerifiableAddress{{
+					Value: "conflict-on-va@example.com",
+					Via:   "email",
+				}},
+				RecoveryAddresses: []identity.RecoveryAddress{{
+					Value: "conflict-on-ra@example.com",
+					Via:   "email",
+				}},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnVerifiableAddress.ID, found.ID)
+			assert.Equal(t, "conflict-on-va@example.com", foundConflictAddress)
+			assert.Equal(t, "email", addressType)
+		})
+
+		t.Run("case=credential type order is deterministic", func(t *testing.T) {
+			oidcSubject := "google:" + x.NewUUID().String()
+			conflictOnOIDC := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			conflictOnOIDC.Traits = identity.Traits(`{"email":"conflict-on-oidc@example.com"}`)
+			conflictOnOIDC.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+				Type:        identity.CredentialsTypeOIDC,
+				Identifiers: []string{oidcSubject},
+				Config:      sqlxx.JSONRawMessage(`{"providers":[{"provider":"google"}]}`),
+			})
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), conflictOnOIDC))
+
+			conflictOnPassword := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			conflictOnPassword.Traits = identity.Traits(`{"email":"conflict-on-password@example.com"}`)
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), conflictOnPassword))
+
+			// Both credentials match a different identity. The lookup must
+			// check credential types in sorted order, so "oidc" wins over
+			// "password" on every run.
+			for range 10 {
+				found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{
+					Credentials: map[identity.CredentialsType]identity.Credentials{
+						identity.CredentialsTypeOIDC:     {Identifiers: []string{oidcSubject}},
+						identity.CredentialsTypePassword: {Identifiers: []string{"conflict-on-password@example.com"}},
+					},
+				})
+				require.NoError(t, err)
+				assert.Equal(t, conflictOnOIDC.ID, found.ID)
+				assert.Equal(t, oidcSubject, foundConflictAddress)
+				assert.EqualValues(t, string(identity.CredentialsTypeOIDC), addressType)
+			}
+		})
+
+		t.Run("case=second identifier within one credential type matches", func(t *testing.T) {
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Identifiers: []string{"no-conflict@example.com", "conflict-on-identifier@example.com"}},
+				},
+			})
+			require.NoError(t, err)
+			assert.Equal(t, conflicOnIdentifier.ID, found.ID)
+			assert.Equal(t, "conflict-on-identifier@example.com", foundConflictAddress)
+			assert.EqualValues(t, string(identity.CredentialsTypePassword), addressType)
+		})
+
+		t.Run("case=empty identity returns no rows", func(t *testing.T) {
+			found, foundConflictAddress, addressType, err := reg.IdentityManager().ConflictingIdentity(t.Context(), &identity.Identity{})
+			assert.ErrorIs(t, err, sqlcon.ErrNoRows())
+			assert.Nil(t, found)
+			assert.Empty(t, foundConflictAddress)
+			assert.Empty(t, addressType)
+		})
+
+		t.Run("case=canceled context propagates", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			cancel()
+			_, _, _, err := reg.IdentityManager().ConflictingIdentity(ctx, &identity.Identity{
+				Credentials: map[identity.CredentialsType]identity.Credentials{
+					identity.CredentialsTypePassword: {Identifiers: []string{"conflict-on-identifier@example.com"}},
+				},
+			})
+			assert.ErrorIs(t, err, context.Canceled)
+			assert.NotErrorIs(t, err, sqlcon.ErrNoRows())
 		})
 	})
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"slices"
 	"sort"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/mohae/deepcopy"
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
@@ -29,6 +31,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
+	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
 )
 
@@ -109,60 +112,137 @@ func (m *Manager) Create(ctx context.Context, i *Identity, opts ...ManagerOption
 	return nil
 }
 
-func (m *Manager) ConflictingIdentity(ctx context.Context, i *Identity) (found *Identity, foundConflictAddress string, conflictAddressType string, err error) {
-	for ct, cred := range i.Credentials {
-		for _, id := range cred.Identifiers {
-			found, _, err = m.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, ct, id)
-			if err != nil {
+// maxParallelConflictLookups bounds how many conflict lookups run against the
+// database concurrently.
+const maxParallelConflictLookups = 8
+
+// A match either carries the conflicting identity directly (credential lookup)
+// or just its ID (address lookup).
+type conflictMatch struct {
+	found       *Identity
+	identityID  uuid.UUID
+	address     string
+	addressType string
+}
+
+type conflictLookup func(ctx context.Context) (*conflictMatch, error)
+
+// findFirstConflict returns the match of the lowest-index lookup, or
+// sqlcon.ErrNoRows if no lookup matches. Outside a transaction all lookups run
+// concurrently, bounded by maxParallelConflictLookups.
+func findFirstConflict(ctx context.Context, lookups []conflictLookup) (*conflictMatch, error) {
+	// Inside a transaction the single connection must not run concurrent queries, so the lookups run
+	// sequentially and stop at the first match.
+	if popx.InTransaction(ctx) {
+		for _, lookup := range lookups {
+			match, err := lookup(ctx)
+			if errors.Is(err, sqlcon.ErrNoRows()) {
+				continue
+			} else if err != nil {
+				return nil, err
+			} else if match == nil {
 				continue
 			}
+			return match, nil
+		}
+		return nil, sqlcon.ErrNoRows()
+	}
 
-			// FindByCredentialsIdentifier does not expand identity credentials.
-			if err = m.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, found, ExpandCredentials); err != nil {
-				return nil, "", "", err
+	// Each goroutine records its own outcome (match and error) into a distinct
+	// slice element, then always returns nil so the group never cancels a
+	// still-running higher-priority lookup. After Wait the outcomes are resolved
+	// in priority order, matching the sequential path: a lower-priority error
+	// can neither mask a higher-priority match nor be returned
+	// non-deterministically.
+	type outcome struct {
+		match *conflictMatch
+		err   error
+	}
+	results := make([]outcome, len(lookups))
+	eg := new(errgroup.Group)
+	eg.SetLimit(maxParallelConflictLookups)
+	for i, lookup := range lookups {
+		eg.Go(func() error {
+			match, err := lookup(ctx)
+			if errors.Is(err, sqlcon.ErrNoRows()) {
+				return nil
 			}
-
-			return found, id, ct.String(), nil
+			results[i] = outcome{match: match, err: err}
+			return nil
+		})
+	}
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+	for _, r := range results {
+		if r.err != nil {
+			return nil, r.err
+		}
+		if r.match != nil {
+			return r.match, nil
 		}
 	}
+	return nil, sqlcon.ErrNoRows()
+}
 
-	// If the conflict is not in the identifiers table, it is coming from the verifiable or recovery address.
+func (m *Manager) ConflictingIdentity(ctx context.Context, i *Identity) (found *Identity, foundConflictAddress string, conflictAddressType string, err error) {
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.ConflictingIdentity")
+	defer otelx.End(span, &err)
+
+	// Lookups are ordered by priority: credential identifiers first, then
+	// verifiable addresses, then recovery addresses. The lowest-index match
+	// wins, so the reported conflict is deterministic.
+	var lookups []conflictLookup
+	for _, ct := range slices.Sorted(maps.Keys(i.Credentials)) {
+		for _, identifier := range i.Credentials[ct].Identifiers {
+			lookups = append(lookups, func(ctx context.Context) (*conflictMatch, error) {
+				conflicting, _, err := m.r.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, ct, identifier)
+				if err != nil {
+					return nil, err
+				}
+				return &conflictMatch{found: conflicting, address: identifier, addressType: ct.String()}, nil
+			})
+		}
+	}
 	for _, va := range i.VerifiableAddresses {
-		conflictingAddress, err := m.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, va.Via, va.Value)
-		if errors.Is(err, sqlcon.ErrNoRows()) {
-			continue
-		} else if err != nil {
-			return nil, "", "", err
-		}
-
-		foundConflictAddress = conflictingAddress.Value
-		found, err = m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
-		if err != nil {
-			return nil, "", "", err
-		}
-
-		return found, foundConflictAddress, va.Via, nil
+		lookups = append(lookups, func(ctx context.Context) (*conflictMatch, error) {
+			conflictingAddress, err := m.r.PrivilegedIdentityPool().FindVerifiableAddressByValue(ctx, va.Via, va.Value)
+			if err != nil {
+				return nil, err
+			}
+			return &conflictMatch{identityID: conflictingAddress.IdentityID, address: conflictingAddress.Value, addressType: va.Via}, nil
+		})
+	}
+	for _, ra := range i.RecoveryAddresses {
+		lookups = append(lookups, func(ctx context.Context) (*conflictMatch, error) {
+			conflictingAddress, err := m.r.PrivilegedIdentityPool().FindRecoveryAddressByValue(ctx, ra.Via, ra.Value)
+			if err != nil {
+				return nil, err
+			}
+			return &conflictMatch{identityID: conflictingAddress.IdentityID, address: conflictingAddress.Value, addressType: ra.Via}, nil
+		})
 	}
 
-	// Last option: check the recovery address
-	for _, va := range i.RecoveryAddresses {
-		conflictingAddress, err := m.r.PrivilegedIdentityPool().FindRecoveryAddressByValue(ctx, va.Via, va.Value)
-		if errors.Is(err, sqlcon.ErrNoRows()) {
-			continue
-		} else if err != nil {
-			return nil, "", "", err
-		}
-
-		foundConflictAddress = conflictingAddress.Value
-		found, err = m.r.PrivilegedIdentityPool().GetIdentity(ctx, conflictingAddress.IdentityID, ExpandCredentials)
-		if err != nil {
-			return nil, "", "", err
-		}
-
-		return found, foundConflictAddress, string(va.Via), nil
+	// Fanning out separate lookups (instead of a single UNION query in the
+	// persister) composes with both the OSS and the multi-region persister,
+	// which overrides FindByCredentialsIdentifier with region-aware logic.
+	match, err := findFirstConflict(ctx, lookups)
+	if err != nil {
+		return nil, "", "", err
 	}
 
-	return nil, "", "", sqlcon.ErrNoRows()
+	if match.found != nil {
+		// FindByCredentialsIdentifier does not expand identity credentials.
+		if err := m.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, match.found, ExpandCredentials); err != nil {
+			return nil, "", "", err
+		}
+		return match.found, match.address, match.addressType, nil
+	}
+	conflicting, err := m.r.PrivilegedIdentityPool().GetIdentity(ctx, match.identityID, ExpandCredentials)
+	if err != nil {
+		return nil, "", "", err
+	}
+	return conflicting, match.address, match.addressType, nil
 }
 
 func (m *Manager) findExistingAuthMethod(ctx context.Context, e error, i *Identity) (err error) {
