@@ -1533,6 +1533,57 @@ func TestConfigOrganizationSessionLifespan(t *testing.T) {
 	})
 }
 
+func TestSelfServiceBrowserAllowedReturnToDomains(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name    string
+		entry   string
+		allowed bool
+	}{
+		{name: "case=exact domain is kept", entry: "https://foo.com", allowed: true},
+		{name: "case=labelled wildcard is kept", entry: "https://*.foo.com", allowed: true},
+		{name: "case=path wildcard is kept", entry: "https://app.foo.com/*", allowed: true},
+		{name: "case=bare wildcard is rejected", entry: "https://*", allowed: false},
+		{name: "case=eTLD wildcard is rejected", entry: "https://*.com", allowed: false},
+		{name: "case=multi-label eTLD is rejected", entry: "https://*.co.uk", allowed: false},
+		{name: "case=dot-less wildcard is rejected", entry: "https://*foo.com", allowed: false},
+		{name: "case=mid-label wildcard is rejected", entry: "https://foo.*.com", allowed: false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+			p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.WithValues(map[string]interface{}{
+				config.ViperKeyURLsAllowedReturnToDomains: []string{tc.entry},
+			}), configx.SkipValidation())
+
+			domains := p.SelfServiceBrowserAllowedReturnToDomains(ctx)
+			if tc.allowed {
+				require.Len(t, domains, 1)
+				assert.Equal(t, tc.entry, domains[0].String())
+			} else {
+				assert.Empty(t, domains)
+			}
+		})
+	}
+}
+
+func TestSelfServiceBrowserAllowedReturnToDomainsLegacyInsecure(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+
+	// With legacy_allow_insecure_origins=true, unbounded wildcards that would
+	// otherwise be rejected must be kept.
+	p := config.MustNew(t, logrusx.New("", ""), &contextx.Default{}, configx.WithValues(map[string]interface{}{
+		config.ViperKeyURLsAllowedReturnToDomains: []string{"https://*.vercel.app"},
+		config.ViperKeyLegacyAllowInsecureOrigins: true,
+	}), configx.SkipValidation())
+
+	domains := p.SelfServiceBrowserAllowedReturnToDomains(ctx)
+	require.Len(t, domains, 1, "unbounded wildcard must be kept when legacy_allow_insecure_origins is true")
+	assert.Equal(t, "https://*.vercel.app", domains[0].String())
+}
+
 const (
 	keyPublicTLSCertBase64 = "serve.public.tls.cert.base64"
 	keyPublicTLSKeyBase64  = "serve.public.tls.key.base64"

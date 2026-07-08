@@ -93,6 +93,12 @@ func TestSecureRedirectToIsAllowedHost(t *testing.T) {
 		"case=Domain is not allowed":          {allowedURL: "https://foo.baz", redirectURL: "https://foo.bar/redir", valid: false},
 		"case=Domain wildcard is not allowed": {allowedURL: "https://*.foo.baz", redirectURL: "https://foo.bar/redir", valid: false},
 		"case=Subdomain is not allowed":       {allowedURL: "https://*.foo.baz", redirectURL: "https://auth.foo.bar/redir", valid: false},
+		// A labelled wildcard's leading-dot suffix keeps the label boundary:
+		// subdomains match, suffix-only hosts do not. (Unbound wildcards are
+		// dropped upstream by SelfServiceBrowserAllowedReturnToDomains, so the
+		// matcher never sees them outside grandfathered projects.)
+		"case=Labelled wildcard matches subdomain":          {allowedURL: "https://*.foo.com", redirectURL: "https://sub.foo.com/redir", valid: true},
+		"case=Labelled wildcard does not match suffix host": {allowedURL: "https://*.foo.com", redirectURL: "https://evilfoo.com/redir", valid: false},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

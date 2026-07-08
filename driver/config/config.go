@@ -26,7 +26,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/cors"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/net/publicsuffix"
 
 	"github.com/ory/herodot"
 	"github.com/ory/jsonschema/v3"
@@ -35,6 +34,7 @@ import (
 	"github.com/ory/kratos/request"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
+	"github.com/ory/x/corsx"
 	"github.com/ory/x/crdbx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonschemax"
@@ -106,6 +106,7 @@ const (
 	ViperKeyUseLegacyShowVerificationUI                      = "feature_flags.legacy_continue_with_verification_ui"
 	ViperKeyLegacyOIDCRegistrationGroup                      = "feature_flags.legacy_oidc_registration_node_group"
 	ViperKeyUseLegacyRequireVerifiedLoginError               = "feature_flags.legacy_require_verified_login_error"
+	ViperKeyLegacyAllowInsecureOrigins                       = "feature_flags.legacy_allow_insecure_origins"
 	ViperKeyRefreshLoginChooseAddress                        = "feature_flags.refresh_login_choose_address"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
@@ -1050,15 +1051,11 @@ func (p *Config) SelfServiceBrowserAllowedReturnToDomains(ctx context.Context) (
 			p.l.WithError(err).Warnf("Ignoring URL \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsAllowedReturnToDomains, k)
 			continue
 		}
-		if parsed.Host == "*" {
-			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsAllowedReturnToDomains, k)
-			continue
-		}
-		eTLD, icann := publicsuffix.PublicSuffix(parsed.Host)
-		if len(parsed.Host) > 0 &&
-			parsed.Host[:1] == "*" &&
-			icann &&
-			parsed.Host == fmt.Sprintf("*.%s", eTLD) {
+		// A wildcard host must use the labelled form "*.example.com" bounded at a
+		// registrable domain. Reject bare "*", dot-less "*foo.com", public-suffix
+		// "*.com", and mid-label "foo.*.com" wildcards — each would match an
+		// attacker-registrable host. See corsx.ClassifyOrigin.
+		if corsx.ClassifyOrigin(parsed.Host).IsUnsafeWildcard() && !p.LegacyAllowInsecureOrigins(ctx) {
 			p.l.Warnf("Ignoring wildcard \"%s\" from configuration key \"%s.%d\".", u, ViperKeyURLsAllowedReturnToDomains, k)
 			continue
 		}
@@ -1435,6 +1432,13 @@ func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
 
 func (p *Config) FeatureFlagFasterSessionExtend(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeyFeatureFlagFasterSessionExtend)
+}
+
+// LegacyAllowInsecureOrigins restores legacy behavior where wildcard return URLs
+// and CORS origins need not be bounded at a registrable domain. Insecure; only
+// set by the Ory Network for grandfathered projects. Default false.
+func (p *Config) LegacyAllowInsecureOrigins(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyLegacyAllowInsecureOrigins)
 }
 
 func (p *Config) SessionWhoAmICachingMaxAge(ctx context.Context) time.Duration {

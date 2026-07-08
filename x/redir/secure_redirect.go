@@ -70,7 +70,14 @@ func SecureRedirectOverrideDefaultReturnTo(defaultReturnTo *url.URL) SecureRedir
 	}
 }
 
-// SecureRedirectToIsAllowedHost validates if the redirect_to param is allowed for a given wildcard
+// SecureRedirectToIsAllowedHost validates if the redirect_to param is allowed for a given wildcard.
+//
+// The DNS-label boundary on wildcard hosts is enforced upstream, where the
+// allow-list is loaded: Config.SelfServiceBrowserAllowedReturnToDomains drops
+// unsafe wildcards (via corsx.ClassifyOrigin) unless the project is
+// grandfathered. This function trusts that and only matches; do not re-add a
+// boundary check here, or grandfathered projects would be enforced
+// inconsistently.
 func SecureRedirectToIsAllowedHost(returnTo *url.URL, allowed url.URL) bool {
 	if allowed.Host != "" && allowed.Host[:1] == "*" {
 		return strings.HasSuffix(strings.ToLower(returnTo.Host), strings.ToLower(allowed.Host)[1:])
