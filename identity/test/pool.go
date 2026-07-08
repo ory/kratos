@@ -5,11 +5,14 @@ package test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -27,10 +30,12 @@ import (
 	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/crdbx"
 	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/popx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
@@ -3148,6 +3153,150 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				assert.Equal(t, oldPasswordCredID, actual.Credentials[identity.CredentialsTypePassword].ID, "password credential should not be recreated when adding TOTP without fromDatabase")
 				assert.Equal(t, oldOIDCCredID, actual.Credentials[identity.CredentialsTypeOIDC].ID, "OIDC credential should not be recreated when adding TOTP without fromDatabase")
 			})
+
+			t.Run("case=WithoutCredentialTypes leaves the excluded credential untouched", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{"totp-excluded-" + x.NewUUID().String()},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/old"}`),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 2)
+				dbPasswordCred := fromDB.Credentials[identity.CredentialsTypePassword]
+				dbTOTPCred := fromDB.Credentials[identity.CredentialsTypeTOTP]
+
+				// The in-memory password config diverges from the database, as if a
+				// concurrent UpdateCredentialsConfig had won. Password is excluded,
+				// so its row must survive while TOTP still updates.
+				updated := *fromDB
+				updated.Credentials = nil
+				updated.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: dbPasswordCred.Identifiers,
+					Config:      sqlxx.JSONRawMessage(`{"foo":"stale-in-memory"}`),
+					Version:     dbPasswordCred.Version,
+				})
+				updated.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: dbTOTPCred.Identifiers,
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/new"}`),
+				})
+				updated.Traits = identity.Traits(`{"email":"excluded-update@ory.sh"}`)
+
+				require.NoError(t, p.UpdateIdentity(ctx, &updated,
+					identity.DiffAgainst(fromDB),
+					identity.WithoutCredentialTypes(identity.CredentialsTypePassword)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, actual.Credentials, 2)
+				// The excluded row is untouched: same row ID, same config.
+				assert.Equal(t, dbPasswordCred.ID, actual.Credentials[identity.CredentialsTypePassword].ID, "excluded credential must not be recreated")
+				assert.JSONEq(t, string(dbPasswordCred.Config), string(actual.Credentials[identity.CredentialsTypePassword].Config), "excluded credential config must not change")
+				// The non-excluded credential still updates.
+				assert.JSONEq(t, `{"totp_url":"otpauth://totp/new"}`, string(actual.Credentials[identity.CredentialsTypeTOTP].Config))
+				// Identity-level changes still persist.
+				assert.JSONEq(t, `{"email":"excluded-update@ory.sh"}`, string(actual.Traits))
+				// The returned identity carries the database state of the excluded
+				// type, not the stale in-memory copy.
+				assert.Equal(t, dbPasswordCred.ID, updated.Credentials[identity.CredentialsTypePassword].ID)
+				assert.JSONEq(t, string(dbPasswordCred.Config), string(updated.Credentials[identity.CredentialsTypePassword].Config))
+			})
+
+			t.Run("case=WithoutCredentialTypes without DiffAgainst leaves the excluded credential untouched", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				dbPasswordCred := fromDB.Credentials[identity.CredentialsTypePassword]
+
+				updated := *fromDB
+				updated.Credentials = nil
+				updated.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: dbPasswordCred.Identifiers,
+					Config:      sqlxx.JSONRawMessage(`{"foo":"stale-in-memory"}`),
+					Version:     dbPasswordCred.Version,
+				})
+
+				require.NoError(t, p.UpdateIdentity(ctx, &updated,
+					identity.WithoutCredentialTypes(identity.CredentialsTypePassword)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, actual.Credentials, 1)
+				assert.Equal(t, dbPasswordCred.ID, actual.Credentials[identity.CredentialsTypePassword].ID, "excluded credential must not be recreated")
+				assert.JSONEq(t, string(dbPasswordCred.Config), string(actual.Credentials[identity.CredentialsTypePassword].Config), "excluded credential config must not change")
+				// The returned identity carries the database state of the excluded type.
+				assert.JSONEq(t, string(dbPasswordCred.Config), string(updated.Credentials[identity.CredentialsTypePassword].Config))
+			})
+
+			t.Run("case=WithoutCredentialTypes excludes two credential types at once", func(t *testing.T) {
+				initial := passwordIdentity("", x.NewUUID().String())
+				initial.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: []string{"oidc-two-excluded-" + x.NewUUID().String()},
+					Config:      sqlxx.JSONRawMessage(`{}`),
+				})
+				initial.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: []string{"totp-two-excluded-" + x.NewUUID().String()},
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/old"}`),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, initial))
+				createdIDs = append(createdIDs, initial.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, fromDB.Credentials, 3)
+				dbPasswordCred := fromDB.Credentials[identity.CredentialsTypePassword]
+				dbOIDCCred := fromDB.Credentials[identity.CredentialsTypeOIDC]
+				dbTOTPCred := fromDB.Credentials[identity.CredentialsTypeTOTP]
+
+				// Both excluded types diverge in memory; both rows must survive
+				// while the non-excluded TOTP credential still updates.
+				updated := *fromDB
+				updated.Credentials = nil
+				updated.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: dbPasswordCred.Identifiers,
+					Config:      sqlxx.JSONRawMessage(`{"foo":"stale-password"}`),
+					Version:     dbPasswordCred.Version,
+				})
+				updated.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+					Type:        identity.CredentialsTypeOIDC,
+					Identifiers: dbOIDCCred.Identifiers,
+					Config:      sqlxx.JSONRawMessage(`{"foo":"stale-oidc"}`),
+					Version:     dbOIDCCred.Version,
+				})
+				updated.SetCredentials(identity.CredentialsTypeTOTP, identity.Credentials{
+					Type:        identity.CredentialsTypeTOTP,
+					Identifiers: dbTOTPCred.Identifiers,
+					Config:      sqlxx.JSONRawMessage(`{"totp_url":"otpauth://totp/new"}`),
+				})
+
+				require.NoError(t, p.UpdateIdentity(ctx, &updated,
+					identity.DiffAgainst(fromDB),
+					identity.WithoutCredentialTypes(identity.CredentialsTypePassword, identity.CredentialsTypeOIDC)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				require.Len(t, actual.Credentials, 3)
+				// Both excluded rows are untouched: same row IDs, same configs.
+				assert.Equal(t, dbPasswordCred.ID, actual.Credentials[identity.CredentialsTypePassword].ID, "excluded password credential must not be recreated")
+				assert.JSONEq(t, string(dbPasswordCred.Config), string(actual.Credentials[identity.CredentialsTypePassword].Config), "excluded password config must not change")
+				assert.Equal(t, dbOIDCCred.ID, actual.Credentials[identity.CredentialsTypeOIDC].ID, "excluded OIDC credential must not be recreated")
+				assert.JSONEq(t, string(dbOIDCCred.Config), string(actual.Credentials[identity.CredentialsTypeOIDC].Config), "excluded OIDC config must not change")
+				// The non-excluded credential still updates.
+				assert.JSONEq(t, `{"totp_url":"otpauth://totp/new"}`, string(actual.Credentials[identity.CredentialsTypeTOTP].Config))
+			})
 		})
 
 		t.Run("suite=update-combined-changes", func(t *testing.T) {
@@ -3193,7 +3342,635 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 				assert.True(t, hasTOTP)
 			})
 		})
+
+		t.Run("case=UpdateCredentialsConfig does not lose concurrent increments", func(t *testing.T) {
+			t.Parallel()
+
+			_, p := testhelpers.NewNetwork(t, ctx, p)
+
+			id := identity.NewIdentity("default")
+			id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+				Type:        identity.CredentialsTypeDeviceAuthn,
+				Identifiers: []string{"cas-key-1"},
+				Config:      sqlxx.JSONRawMessage(`{"failed_attempts":0}`),
+			})
+			require.NoError(t, p.CreateIdentity(ctx, id))
+
+			created, err := p.GetIdentityConfidential(ctx, id.ID)
+			require.NoError(t, err)
+			createdCreds, ok := created.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+			require.True(t, ok)
+			versionBefore := createdCreds.Version
+
+			// Fire N concurrent read-modify-write increments; the final counter
+			// must equal exactly N. SQLite serializes writes, so real contention
+			// is exercised on the concurrent engines.
+			const N = 12
+			var wg sync.WaitGroup
+			for range N {
+				wg.Go(func() {
+					err := p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+						func(cfg []byte) ([]byte, error) {
+							var parsed map[string]int
+							if err := json.Unmarshal(cfg, &parsed); err != nil {
+								return nil, err
+							}
+							parsed["failed_attempts"]++
+							return json.Marshal(parsed)
+						})
+					// Assert in a goroutine without FailNow to stay concurrency-safe.
+					assert.NoError(t, err)
+				})
+			}
+			wg.Wait()
+
+			reloaded, err := p.GetIdentityConfidential(ctx, id.ID)
+			require.NoError(t, err)
+			c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+			require.True(t, ok)
+			var counts map[string]int
+			require.NoError(t, json.Unmarshal(c.Config, &counts))
+			assert.Equal(t, N, counts["failed_attempts"], "no increment may be lost")
+			// The version column versions the *shape* of the config (its schema),
+			// not its content. Content updates must not consume it, or future
+			// schema migrations keyed on version become impossible.
+			assert.Equal(t, versionBefore, c.Version, "content updates must not bump the config-schema version column")
+		})
+
+		t.Run("case=UpdateCredentialsConfig no-op mutation succeeds", func(t *testing.T) {
+			t.Parallel()
+
+			_, p := testhelpers.NewNetwork(t, ctx, p)
+
+			id := identity.NewIdentity("default")
+			id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+				Type:        identity.CredentialsTypeDeviceAuthn,
+				Identifiers: []string{"cas-noop-1"},
+				Config:      sqlxx.JSONRawMessage(`{"failed_attempts":0}`),
+			})
+			require.NoError(t, p.CreateIdentity(ctx, id))
+
+			// A mutation that leaves the config unchanged must succeed without
+			// writing.
+			require.NoError(t, p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+				func(cfg []byte) ([]byte, error) { return cfg, nil }))
+
+			reloaded, err := p.GetIdentityConfidential(ctx, id.ID)
+			require.NoError(t, err)
+			c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+			require.True(t, ok)
+			var counts map[string]int
+			require.NoError(t, json.Unmarshal(c.Config, &counts))
+			assert.Equal(t, 0, counts["failed_attempts"], "config must be unchanged")
+		})
+
+		t.Run("case=UpdateCredentialsConfig serializes the whole read-mutate-write", func(t *testing.T) {
+			t.Parallel()
+
+			if dbname == "sqlite" {
+				// SQLite serializes writers at the engine level; the interleaving
+				// this test forces cannot occur there.
+				t.Skip("SQLite cannot interleave two writers")
+			}
+
+			_, p := testhelpers.NewNetwork(t, ctx, p)
+
+			id := identity.NewIdentity("default")
+			id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+				Type:        identity.CredentialsTypeDeviceAuthn,
+				Identifiers: []string{"lock-serialization-1"},
+				Config:      sqlxx.JSONRawMessage(`{"failed_attempts":0}`),
+			})
+			require.NoError(t, p.CreateIdentity(ctx, id))
+
+			// Writer A parks inside its mutate callback; writer B starts only once
+			// A is inside. Under an exclusive row lock B cannot run until A
+			// commits, so B must observe A's increment. Asserting on the value B
+			// reads (not on wall-clock ordering) is causally determined by the
+			// locking and immune to goroutine scheduling.
+			var aInsideOnce, bInsideOnce sync.Once
+			aInside := make(chan struct{})
+			bInside := make(chan struct{})
+			releaseA := make(chan struct{})
+
+			increment := func(cfg []byte) (map[string]int, error) {
+				var parsed map[string]int
+				if err := json.Unmarshal(cfg, &parsed); err != nil {
+					return nil, err
+				}
+				parsed["failed_attempts"]++
+				return parsed, nil
+			}
+
+			var wg sync.WaitGroup
+			wg.Go(func() {
+				err := p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					func(cfg []byte) ([]byte, error) {
+						// The callback may re-run on database retries, so the
+						// signal fires once and the park is re-entrant.
+						aInsideOnce.Do(func() { close(aInside) })
+						<-releaseA
+						parsed, err := increment(cfg)
+						if err != nil {
+							return nil, err
+						}
+						return json.Marshal(parsed)
+					})
+				assert.NoError(t, err)
+			})
+
+			<-aInside
+
+			// bSaw is written only from B's callback and read after wg.Wait.
+			bSaw := -1
+			wg.Go(func() {
+				err := p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					func(cfg []byte) ([]byte, error) {
+						bInsideOnce.Do(func() { close(bInside) })
+						parsed, err := increment(cfg)
+						if err != nil {
+							return nil, err
+						}
+						bSaw = parsed["failed_attempts"] - 1
+						return json.Marshal(parsed)
+					})
+				assert.NoError(t, err)
+			})
+
+			// Give B time to reach the row before releasing A; if B's callback
+			// runs during this window, the value assertion below fails.
+			select {
+			case <-bInside:
+			case <-time.After(500 * time.Millisecond):
+			}
+			close(releaseA)
+			wg.Wait()
+
+			assert.Equal(t, 1, bSaw,
+				"B's mutate must observe A's committed increment; observing the pre-A value means the read-mutate-write cycle is not exclusively locked")
+
+			reloaded, err := p.GetIdentityConfidential(ctx, id.ID)
+			require.NoError(t, err)
+			c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+			require.True(t, ok)
+			var counts map[string]int
+			require.NoError(t, json.Unmarshal(c.Config, &counts))
+			assert.Equal(t, 2, counts["failed_attempts"], "both increments must be committed")
+		})
+
+		t.Run("case=UpdateCredentialsConfig runs at READ COMMITTED", func(t *testing.T) {
+			t.Parallel()
+
+			// UpdateCredentialsConfig depends on READ COMMITTED so that its
+			// SELECT ... FOR UPDATE is a durable row lock on CockroachDB rather
+			// than the best-effort lock SERIALIZABLE gives. This guards that the
+			// isolation request is actually honored — not silently upgraded by
+			// the cluster or dropped by a pop/driver change — because under
+			// SERIALIZABLE the lock, and therefore the lost-update protection,
+			// would quietly weaken.
+			//
+			// Only PostgreSQL and CockroachDB are asserted here. SQLite has no
+			// configurable isolation and serializes writers at the engine level.
+			// MySQL's default REPEATABLE READ already takes durable FOR UPDATE
+			// locks (so RC is not needed for correctness there), and its
+			// per-transaction isolation override does not update
+			// @@transaction_isolation, so it cannot be observed with a query.
+			if dbname != "postgres" && dbname != "cockroach" {
+				t.Skipf("transaction isolation is not observable / not required on %s", dbname)
+			}
+
+			var got string
+			require.NoError(t, popx.TransactionWithOptions(ctx, p.GetConnection(ctx),
+				&sql.TxOptions{Isolation: sql.LevelReadCommitted},
+				func(ctx context.Context, tx *pop.Connection) error {
+					var row struct {
+						Level string `db:"transaction_isolation"`
+					}
+					if err := tx.RawQuery("SHOW transaction_isolation").First(&row); err != nil {
+						return err
+					}
+					got = row.Level
+					return nil
+				}))
+			assert.Equal(t, "read committed", got)
+		})
+
+		t.Run("case=UpdateCredentialsConfig bounds the wait for the row lock", func(t *testing.T) {
+			t.Parallel()
+
+			if dbname == "sqlite" {
+				t.Skip("SQLite has no row-lock wait to bound")
+			}
+			if testing.Short() {
+				t.Skip("holds a row lock for longer than the lock timeout")
+			}
+
+			_, p := testhelpers.NewNetwork(t, ctx, p)
+
+			id := identity.NewIdentity("default")
+			id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+				Type:        identity.CredentialsTypeDeviceAuthn,
+				Identifiers: []string{"lock-timeout-1"},
+				Config:      sqlxx.JSONRawMessage(`{"failed_attempts":0}`),
+			})
+			require.NoError(t, p.CreateIdentity(ctx, id))
+
+			// Writer A parks inside its mutate callback holding the row lock. The
+			// whole transaction runs under a bounded context, so neither the
+			// holder nor a waiter can occupy a pooled connection beyond the
+			// budget: A's transaction is rolled back when its budget expires, and
+			// B — whether it errors on its own deadline or acquires the lock
+			// freed by A's rollback — must return within the generous ceiling
+			// (5x the 5s budget) instead of parking for an engine default (e.g.
+			// MySQL's 50s innodb_lock_wait_timeout). Neither writer's outcome is
+			// asserted: A deliberately overstays its budget, and B's result
+			// depends on whose deadline fires first.
+			var aInsideOnce sync.Once
+			aInside := make(chan struct{})
+			releaseA := make(chan struct{})
+
+			var wg sync.WaitGroup
+			wg.Go(func() {
+				_ = p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					func(cfg []byte) ([]byte, error) {
+						aInsideOnce.Do(func() { close(aInside) })
+						<-releaseA
+						return cfg, nil
+					})
+			})
+			<-aInside
+
+			start := time.Now()
+			_ = p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+				func(cfg []byte) ([]byte, error) { return cfg, nil })
+			elapsed := time.Since(start)
+			close(releaseA)
+			wg.Wait()
+
+			assert.Less(t, elapsed, 25*time.Second, "the wait must be bounded near the configured lock timeout, not the engine default")
+		})
+
+		t.Run("case=UpdateCredentialsConfig refuses to run inside a surrounding transaction", func(t *testing.T) {
+			t.Parallel()
+
+			_, p := testhelpers.NewNetwork(t, ctx, p)
+
+			id := identity.NewIdentity("default")
+			id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+				Type:        identity.CredentialsTypeDeviceAuthn,
+				Identifiers: []string{"lock-ambient-tx-1"},
+				Config:      sqlxx.JSONRawMessage(`{"failed_attempts":0}`),
+			})
+			require.NoError(t, p.CreateIdentity(ctx, id))
+
+			// An ambient transaction would extend the lock and its timeout to the
+			// outer transaction's lifetime; the persister must fail loudly instead.
+			mutated := false
+			err := p.Transaction(ctx, func(ctx context.Context, _ *pop.Connection) error {
+				return p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					func(cfg []byte) ([]byte, error) {
+						mutated = true
+						return cfg, nil
+					})
+			})
+			require.Error(t, err, "calling UpdateCredentialsConfig inside a transaction must be rejected")
+			assert.False(t, mutated, "mutate must not run when the call is rejected")
+		})
+
+		t.Run("case=UpdateConfig typed adapter", func(t *testing.T) {
+			t.Parallel()
+
+			_, p := testhelpers.NewNetwork(t, ctx, p)
+
+			// The adapter is credential-type agnostic; this stand-in models a
+			// complete stored config shape (like a lockout or clone counter).
+			type counterConfig struct {
+				FailedAttempts int `json:"failed_attempts"`
+			}
+
+			newCounterIdentity := func(t *testing.T, rawConfig string) *identity.Identity {
+				t.Helper()
+				id := identity.NewIdentity("default")
+				id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+					Type:        identity.CredentialsTypeDeviceAuthn,
+					Identifiers: []string{x.NewUUID().String()},
+					Config:      sqlxx.JSONRawMessage(rawConfig),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, id))
+				return id
+			}
+
+			t.Run("decodes, mutates, and persists", func(t *testing.T) {
+				t.Parallel()
+
+				id := newCounterIdentity(t, `{"failed_attempts":41}`)
+
+				require.NoError(t, p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					identity.UpdateConfig(func(c *counterConfig) error {
+						c.FailedAttempts++
+						return nil
+					})))
+
+				reloaded, err := p.GetIdentityConfidential(ctx, id.ID)
+				require.NoError(t, err)
+				c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+				require.True(t, ok)
+				assert.Equal(t, int64(42), gjson.GetBytes(c.Config, "failed_attempts").Int())
+			})
+
+			t.Run("pins that fields T does not model are dropped", func(t *testing.T) {
+				t.Parallel()
+
+				// Pins the documented contract: T must model the COMPLETE stored
+				// shape, because a partial T silently drops sibling fields.
+				id := newCounterIdentity(t, `{"failed_attempts":5,"sibling":"not-modeled-by-T"}`)
+
+				require.NoError(t, p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					identity.UpdateConfig(func(c *counterConfig) error {
+						c.FailedAttempts++
+						return nil
+					})))
+
+				reloaded, err := p.GetIdentityConfidential(ctx, id.ID)
+				require.NoError(t, err)
+				c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+				require.True(t, ok)
+				assert.Equal(t, int64(6), gjson.GetBytes(c.Config, "failed_attempts").Int())
+				assert.False(t, gjson.GetBytes(c.Config, "sibling").Exists(),
+					"a field T does not model is dropped by the roundtrip — T must model the complete stored shape")
+			})
+
+			t.Run("null config is rejected without calling mutate", func(t *testing.T) {
+				t.Parallel()
+
+				// Mutating a zero value would silently replace whatever the row
+				// held. JSON null is the one undecodable state every dialect can
+				// store (JSON-typed columns refuse empty/whitespace outright).
+				id := newCounterIdentity(t, "null")
+
+				mutated := false
+				err := p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					identity.UpdateConfig(func(c *counterConfig) error {
+						mutated = true
+						return nil
+					}))
+				require.Error(t, err)
+				assert.False(t, mutated, "mutate must not run on an undecodable config")
+			})
+
+			t.Run("mutate error aborts without persisting", func(t *testing.T) {
+				t.Parallel()
+
+				id := newCounterIdentity(t, `{"failed_attempts":7}`)
+
+				bang := errors.New("mutation rejected")
+				err := p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					identity.UpdateConfig(func(c *counterConfig) error {
+						c.FailedAttempts = 999
+						return bang
+					}))
+				require.ErrorIs(t, err, bang)
+
+				reloaded, err := p.GetIdentityConfidential(ctx, id.ID)
+				require.NoError(t, err)
+				c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+				require.True(t, ok)
+				assert.Equal(t, int64(7), gjson.GetBytes(c.Config, "failed_attempts").Int(), "a failed mutation must not be persisted")
+			})
+		})
+
+		t.Run("case=UpdateCredentialsConfig not if on another network", func(t *testing.T) {
+			t.Parallel()
+
+			// Create the identity (and its credential row) on network A.
+			_, pA := testhelpers.NewNetwork(t, ctx, p)
+			id := identity.NewIdentity("default")
+			id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+				Type:        identity.CredentialsTypeDeviceAuthn,
+				Identifiers: []string{"cas-nid-isolation-1"},
+				Config:      sqlxx.JSONRawMessage(`{"failed_attempts":0}`),
+			})
+			require.NoError(t, pA.CreateIdentity(ctx, id))
+
+			// A persister scoped to a different network must not see the row.
+			// The locked SELECT is keyed by nid, so it returns not-found and never
+			// invokes mutate, guarding against a cross-tenant mutation.
+			_, pB := testhelpers.NewNetwork(t, ctx, p)
+			mutated := false
+			err := pB.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+				func(cfg []byte) ([]byte, error) {
+					mutated = true
+					return []byte(`{"failed_attempts":999}`), nil
+				})
+			require.ErrorIs(t, err, sqlcon.ErrNoRows())
+			assert.False(t, mutated, "mutate must not run for an identity on another network")
+
+			// The original row on network A must be untouched.
+			reloaded, err := pA.GetIdentityConfidential(ctx, id.ID)
+			require.NoError(t, err)
+			c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+			require.True(t, ok)
+			var counts map[string]int
+			require.NoError(t, json.Unmarshal(c.Config, &counts))
+			assert.Equal(t, 0, counts["failed_attempts"], "row must not be mutated across networks")
+		})
+
+		t.Run("case=UpdateCredentialsConfig syncs derived identifiers", func(t *testing.T) {
+			t.Parallel()
+
+			// The stand-in config stores a set of keys; the identifier rows are
+			// pure derived state of that set.
+			deriveKeys := func(cfg []byte) ([]string, error) {
+				var parsed struct {
+					Keys []string `json:"keys"`
+				}
+				if err := json.Unmarshal(cfg, &parsed); err != nil {
+					return nil, err
+				}
+				return parsed.Keys, nil
+			}
+
+			setKeys := func(keys ...string) func(cfg []byte) ([]byte, error) {
+				return func([]byte) ([]byte, error) {
+					return json.Marshal(map[string][]string{"keys": keys})
+				}
+			}
+
+			newKeyedIdentity := func(t *testing.T, p persistence.Persister, identifiers ...string) *identity.Identity {
+				t.Helper()
+				cfg, err := json.Marshal(map[string][]string{"keys": identifiers})
+				require.NoError(t, err)
+				id := identity.NewIdentity("default")
+				id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+					Type:        identity.CredentialsTypeDeviceAuthn,
+					Identifiers: identifiers,
+					Config:      sqlxx.JSONRawMessage(cfg),
+				})
+				require.NoError(t, p.CreateIdentity(ctx, id))
+				return id
+			}
+
+			credentials := func(t *testing.T, p persistence.Persister, identityID uuid.UUID) identity.Credentials {
+				t.Helper()
+				reloaded, err := p.GetIdentityConfidential(ctx, identityID)
+				require.NoError(t, err)
+				c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+				require.True(t, ok)
+				return *c
+			}
+
+			// identifierRows reads the credential's raw identifier rows so tests
+			// can observe row identity (a re-created row gets a new id).
+			identifierRows := func(t *testing.T, p persistence.Persister, credID uuid.UUID) map[string]uuid.UUID {
+				t.Helper()
+				var rows []struct {
+					ID         uuid.UUID `db:"id"`
+					Identifier string    `db:"identifier"`
+				}
+				require.NoError(t, p.GetConnection(ctx).RawQuery(
+					`SELECT id, identifier FROM identity_credential_identifiers WHERE identity_credential_id = ?`, credID).All(&rows))
+				out := make(map[string]uuid.UUID, len(rows))
+				for _, r := range rows {
+					out[r.Identifier] = r.ID
+				}
+				return out
+			}
+
+			t.Run("inserts the derived set on first sync", func(t *testing.T) {
+				t.Parallel()
+
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				id := newKeyedIdentity(t, p, "sync-seed-1")
+
+				require.NoError(t, p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					setKeys("sync-key-a", "sync-key-b"),
+					identity.WithDerivedIdentifiers(deriveKeys)))
+
+				c := credentials(t, p, id.ID)
+				assert.ElementsMatch(t, []string{"sync-key-a", "sync-key-b"}, c.Identifiers,
+					"identifier rows must reflect the post-mutation config")
+				assert.ElementsMatch(t, []string{"sync-key-a", "sync-key-b"}, gjsonStrings(c.Config, "keys"))
+			})
+
+			t.Run("removing a key removes its identifier row", func(t *testing.T) {
+				t.Parallel()
+
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				id := newKeyedIdentity(t, p, "rm-key-a", "rm-key-b")
+
+				require.NoError(t, p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					setKeys("rm-key-a"),
+					identity.WithDerivedIdentifiers(deriveKeys)))
+
+				c := credentials(t, p, id.ID)
+				assert.ElementsMatch(t, []string{"rm-key-a"}, c.Identifiers,
+					"the deleted key's identifier row must be gone")
+			})
+
+			t.Run("no-op config with unchanged identifiers writes nothing", func(t *testing.T) {
+				t.Parallel()
+
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				id := newKeyedIdentity(t, p, "noop-key-1")
+				before := identifierRows(t, p, credentials(t, p, id.ID).ID)
+
+				require.NoError(t, p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					func(cfg []byte) ([]byte, error) { return cfg, nil },
+					identity.WithDerivedIdentifiers(deriveKeys)))
+
+				c := credentials(t, p, id.ID)
+				assert.ElementsMatch(t, []string{"noop-key-1"}, c.Identifiers)
+				assert.Equal(t, before, identifierRows(t, p, c.ID),
+					"an unchanged identifier set must not re-create the rows")
+			})
+
+			t.Run("identifier rows are nid-scoped", func(t *testing.T) {
+				t.Parallel()
+
+				_, pA := testhelpers.NewNetwork(t, ctx, p)
+				idA := newKeyedIdentity(t, pA, "nid-scope-key")
+				rowsA := identifierRows(t, pA, credentials(t, pA, idA.ID).ID)
+
+				// A persister on another network must not see A's credential row;
+				// neither mutate nor derive may run.
+				_, pB := testhelpers.NewNetwork(t, ctx, p)
+				derived := false
+				err := pB.UpdateCredentialsConfig(ctx, idA.ID, identity.CredentialsTypeDeviceAuthn,
+					setKeys("nid-scope-clobber"),
+					identity.WithDerivedIdentifiers(func(cfg []byte) ([]string, error) {
+						derived = true
+						return deriveKeys(cfg)
+					}))
+				require.ErrorIs(t, err, sqlcon.ErrNoRows())
+				assert.False(t, derived, "derive must not run for an identity on another network")
+
+				// The identifier uniqueness is per network: B may claim the same
+				// value A holds.
+				idB := newKeyedIdentity(t, pB, "nid-scope-seed")
+				require.NoError(t, pB.UpdateCredentialsConfig(ctx, idB.ID, identity.CredentialsTypeDeviceAuthn,
+					setKeys("nid-scope-key"),
+					identity.WithDerivedIdentifiers(deriveKeys)))
+				assert.ElementsMatch(t, []string{"nid-scope-key"}, credentials(t, pB, idB.ID).Identifiers)
+
+				// A's rows must be untouched, down to the row ids.
+				assert.Equal(t, rowsA, identifierRows(t, pA, credentials(t, pA, idA.ID).ID),
+					"another network's sync must not clobber the rows")
+			})
+
+			t.Run("duplicate identifier on another identity fails with unique violation", func(t *testing.T) {
+				t.Parallel()
+
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				newKeyedIdentity(t, p, "dup-owned")
+				victim := newKeyedIdentity(t, p, "dup-seed")
+
+				err := p.UpdateCredentialsConfig(ctx, victim.ID, identity.CredentialsTypeDeviceAuthn,
+					setKeys("dup-owned"),
+					identity.WithDerivedIdentifiers(deriveKeys))
+				require.ErrorIs(t, err, sqlcon.ErrUniqueViolation())
+
+				// The transaction must roll back as a whole: neither the config
+				// nor the identifier rows may change.
+				c := credentials(t, p, victim.ID)
+				assert.ElementsMatch(t, []string{"dup-seed"}, gjsonStrings(c.Config, "keys"))
+				assert.ElementsMatch(t, []string{"dup-seed"}, c.Identifiers)
+			})
+
+			t.Run("derive error aborts and rolls back the config write", func(t *testing.T) {
+				t.Parallel()
+
+				_, p := testhelpers.NewNetwork(t, ctx, p)
+				id := newKeyedIdentity(t, p, "derive-err-seed")
+				before := identifierRows(t, p, credentials(t, p, id.ID).ID)
+
+				bang := errors.New("derive failed")
+				err := p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					setKeys("derive-err-new"),
+					identity.WithDerivedIdentifiers(func([]byte) ([]string, error) {
+						return nil, bang
+					}))
+				require.ErrorIs(t, err, bang, "the derive error must surface to the caller")
+
+				// The transaction must roll back as a whole: the config write
+				// that already executed is undone and the identifier rows are
+				// untouched, down to the row ids.
+				c := credentials(t, p, id.ID)
+				assert.ElementsMatch(t, []string{"derive-err-seed"}, gjsonStrings(c.Config, "keys"),
+					"the config write must roll back with the derive error")
+				assert.ElementsMatch(t, []string{"derive-err-seed"}, c.Identifiers)
+				assert.Equal(t, before, identifierRows(t, p, c.ID))
+			})
+		})
 	}
+}
+
+// gjsonStrings returns the string array at path in the JSON document.
+func gjsonStrings(doc []byte, path string) []string {
+	var out []string
+	for _, v := range gjson.GetBytes(doc, path).Array() {
+		out = append(out, v.String())
+	}
+	return out
 }
 
 func NewTestIdentity(numAddresses int, prefix string, i int) *identity.Identity {

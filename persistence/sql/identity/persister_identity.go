@@ -6,9 +6,13 @@ package identity
 import (
 	"cmp"
 	"context"
+	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"maps"
+	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync/atomic"
@@ -208,7 +212,8 @@ LIMIT ?`,
 	result := PreferExactMatch(res, identifier, func(r struct {
 		IdentityID uuid.UUID `db:"identity_id"`
 		Identifier string    `db:"identifier"`
-	}) string {
+	},
+	) string {
 		return r.Identifier
 	})
 	if len(res) > 1 {
@@ -284,7 +289,8 @@ func (p *IdentityPersister) FindByCredentialsIdentifier(ctx context.Context, ct 
 	result := PreferExactMatch(res, match, func(r struct {
 		IdentityID uuid.UUID `db:"identity_id"`
 		Identifier string    `db:"identifier"`
-	}) string {
+	},
+	) string {
 		return r.Identifier
 	})
 	if len(res) > 1 {
@@ -1322,6 +1328,268 @@ func (p *IdentityPersister) UpdateIdentityColumns(ctx context.Context, i *identi
 	return nil
 }
 
+// credentialsConfigLockTimeout bounds how long UpdateCredentialsConfig waits
+// for the credential-row lock, so a flood of requests against one row cannot
+// park waiters on pooled connections until the pool is exhausted. Enforced
+// via context cancellation, which aborts a blocked statement and rolls back
+// the transaction. It does not apply to SQLite (see UpdateCredentialsConfig).
+const credentialsConfigLockTimeout = 5 * time.Second
+
+// UpdateCredentialsConfig atomically read-modify-writes a single
+// identity_credentials row's config under READ COMMITTED, holding an exclusive
+// row lock (SELECT ... FOR UPDATE) across the whole read-mutate-write cycle:
+// concurrent updates to the same row serialize and mutate always observes the
+// latest committed config.
+//
+// The isolation level is deliberate. Under CockroachDB SERIALIZABLE,
+// SELECT ... FOR UPDATE is only best-effort — a waiter may not queue behind the
+// holder — whereas under READ COMMITTED it is a durable, replicated lock that
+// behaves like the textbook Postgres/MySQL row lock. So here the lock, not the
+// isolation level, is the correctness mechanism: it is the sole defense against
+// a lost update, and any change that weakens it (reintroducing a join, an index
+// hint that changes the plan, dropping FOR UPDATE) is a silent correctness bug
+// rather than a throughput regression. This is safe because the operation is a
+// single-row read-modify-write with no cross-row invariant, so the other READ
+// COMMITTED anomalies (read skew, phantoms, write skew) cannot arise. On a
+// cluster without READ COMMITTED the request is upgraded back to SERIALIZABLE,
+// which is fail-safe here; on SQLite pop serializes whole transactions on an
+// in-process mutex, which subsumes the row lock, and the isolation option is
+// ignored.
+//
+// mutate maps the current config JSON to the new one; a structurally equal
+// result skips the write. It must be pure: it may run more than once if the
+// database retries the transaction. Calls inside a surrounding transaction
+// are rejected — the lock and its timeout must be scoped to the transaction
+// opened here.
+//
+// opts may narrow the row set with ExtraColumns, applied as equality
+// predicates to both statements. WithDerivedIdentifiers additionally syncs
+// the credential's identifier rows to the set derived from the post-mutation
+// config, inside the same transaction and lock; like mutate, derive may run
+// more than once on database retries.
+func (p *IdentityPersister) UpdateCredentialsConfig(ctx context.Context, identityID uuid.UUID, ct identity.CredentialsType, mutate func(config []byte) ([]byte, error), opts ...identity.UpdateCredentialsConfigModifier) (err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateCredentialsConfig",
+		trace.WithAttributes(
+			attribute.Stringer("identity.id", identityID),
+			attribute.Stringer("network.id", p.NetworkID(ctx)),
+			attribute.String("credentials.type", string(ct))))
+	defer otelx.End(span, &err)
+
+	// An ambient transaction would be reused by popx, extending the lock to
+	// its lifetime — fail loudly instead.
+	if popx.InTransaction(ctx) {
+		return errors.WithStack(herodot.ErrInternalServerError().WithReason("UpdateCredentialsConfig must not be called inside a surrounding transaction: its row lock and lock timeout are scoped to the transaction it opens itself"))
+	}
+
+	// The lock-wait budget does not apply to SQLite: pop serializes whole
+	// SQLite transactions on an in-process per-connection mutex, so the row
+	// lock the budget bounds on the cluster databases does not exist — and a
+	// mutation queued on that mutex behind unrelated transactions on a loaded
+	// machine (parallel test runs) would burn the budget waiting without
+	// holding any pooled connection. The caller's context still cancels.
+	if p.c.Dialect.Name() != "sqlite3" {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, credentialsConfigLockTimeout)
+		defer cancel()
+	}
+
+	nid := p.NetworkID(ctx)
+
+	o := identity.NewUpdateCredentialsConfigOptions(opts)
+	var extraSQLBuilder strings.Builder
+	var extraArgs []any
+	for _, col := range o.ExtraColumns {
+		_, _ = fmt.Fprintf(&extraSQLBuilder, " AND %s = ?", col.K)
+		extraArgs = append(extraArgs, col.V)
+	}
+	extraSQL := extraSQLBuilder.String()
+
+	// READ COMMITTED so SELECT ... FOR UPDATE takes a real, durable row lock on
+	// CockroachDB (see the method doc). popx applies the isolation for
+	// Postgres/MySQL/CockroachDB and ignores it for SQLite.
+	txOpts := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	var wrote bool
+	if err := popx.TransactionWithOptions(ctx, p.c.WithContext(ctx), txOpts, func(ctx context.Context, tx *pop.Connection) error {
+		wrote = false
+		// Resolve the type id up front (cached) so the locking SELECT touches
+		// only identity_credentials: a join under FOR UPDATE would lock the
+		// shared type row and serialize all updates of that type globally.
+		typeID, err := FindIdentityCredentialsTypeByName(tx, ct)
+		if err != nil {
+			return err
+		}
+
+		// No index hint: the locking SELECT matches
+		// identity_credentials_identity_id_idx. Forcing @primary would make
+		// it a full-scan locking read that locks every scanned row.
+		selectQuery := `
+		SELECT ic.id, ic.config
+		FROM identity_credentials ic
+		WHERE ic.identity_id = ?
+		  AND ic.nid = ?
+		  AND ic.identity_credential_type_id = ?` + extraSQL + `
+		FOR UPDATE`
+		selectArgs := append([]any{identityID, nid, typeID}, extraArgs...)
+		if tx.Dialect.Name() == "sqlite3" {
+			// SQLite has no FOR UPDATE; pop serializes whole SQLite
+			// transactions on an in-process mutex instead.
+			selectQuery = `
+			SELECT ic.id, ic.config
+			FROM identity_credentials ic
+			WHERE ic.identity_id = ?
+			  AND ic.nid = ?
+			  AND ic.identity_credential_type_id = ?` + extraSQL
+		}
+
+		var row struct {
+			ID     uuid.UUID            `db:"id"`
+			Config sqlxx.JSONRawMessage `db:"config"`
+		}
+		if err := tx.RawQuery(selectQuery, selectArgs...).First(&row); err != nil {
+			return sqlcon.HandleError(err)
+		}
+
+		newConfig, err := mutate(row.Config)
+		if err != nil {
+			return err
+		}
+
+		// A no-op mutation needs no write; the lock still linearizes it with
+		// concurrent writers.
+		if !jsonContentEqual(row.Config, newConfig) {
+			updateQuery := `
+			UPDATE identity_credentials
+			SET config = ?
+			WHERE id = ? AND nid = ?` + extraSQL
+
+			updateArgs := append([]any{sqlxx.JSONRawMessage(newConfig), row.ID, nid}, extraArgs...)
+			if err := tx.RawQuery(updateQuery, updateArgs...).Exec(); err != nil {
+				return sqlcon.HandleError(err)
+			}
+			wrote = true
+		}
+
+		// The identifier rows are derived state of the config; sync them under
+		// the same lock even when the config write was skipped as a no-op, so
+		// a previously diverged set converges.
+		if o.DeriveIdentifiers != nil {
+			derived, err := o.DeriveIdentifiers(newConfig)
+			if err != nil {
+				return err
+			}
+			conn := &batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: tx}
+			proto := identity.CredentialIdentifier{
+				IdentityID:                new(identityID),
+				IdentityCredentialsID:     row.ID,
+				IdentityCredentialsTypeID: typeID,
+				NID:                       nid,
+			}
+			changed, err := syncDerivedIdentifiers(ctx, conn, ct, proto, derived, o.ExtraColumns)
+			if err != nil {
+				return err
+			}
+			// An identifier-only change still updates the identity.
+			wrote = wrote || changed
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// Only a real write is an identity update; the no-op path changed nothing.
+	if wrote {
+		span.AddEvent(events.NewIdentityUpdated(ctx, identityID))
+	}
+	return nil
+}
+
+// jsonContentEqual reports whether a and b encode structurally equal JSON
+// documents. Byte equality is not enough: databases normalize stored JSON
+// (jsonb key order on PostgreSQL/CockroachDB, binary JSON on MySQL), so a
+// re-marshaled but semantically unchanged config rarely matches byte-for-byte.
+func jsonContentEqual(a, b []byte) bool {
+	var av, bv any
+	if json.Unmarshal(a, &av) != nil || json.Unmarshal(b, &bv) != nil {
+		return false
+	}
+	return reflect.DeepEqual(av, bv)
+}
+
+// syncDerivedIdentifiers reconciles a credential row's identifier rows with
+// the derived set, inside the caller's locked transaction, and reports
+// whether any row changed. proto is the template for inserted rows: the
+// credential/type/identity/network references are already set, and each
+// insert copies it and fills in ID and Identifier. Identifiers are
+// normalized like createIdentityCredentials does; an unchanged set writes
+// nothing, a changed set is replaced wholesale. extra narrows the read and
+// the delete like the caller's config statements and is written explicitly
+// on the inserts (the cloud multi-region persister pins crdb_region; the
+// explicit write spares the infer_rbr_region_col_using_constraint lookup,
+// mirroring UpdateIdentity).
+func syncDerivedIdentifiers(ctx context.Context, conn *batch.TracerConnection, ct identity.CredentialsType, proto identity.CredentialIdentifier, derived []string, extra []identity.ExtraColumn) (changed bool, err error) {
+	tx := conn.Connection
+
+	var extraSQLBuilder strings.Builder
+	extraArgs := make([]any, 0, len(extra))
+	for _, col := range extra {
+		_, _ = fmt.Fprintf(&extraSQLBuilder, " AND %s = ?", col.K)
+		extraArgs = append(extraArgs, col.V)
+	}
+	extraSQL := extraSQLBuilder.String()
+
+	target := make([]string, 0, len(derived))
+	for _, identifier := range derived {
+		identifier = NormalizeIdentifier(ct, identifier)
+		if identifier == "" {
+			return false, errors.WithStack(herodot.ErrMisconfiguration().WithReason("Unable to sync identity credential identifiers with missing or empty identifier."))
+		}
+		target = append(target, identifier)
+	}
+	slices.Sort(target)
+	target = slices.Compact(target)
+
+	var rows []struct {
+		Identifier string `db:"identifier"`
+	}
+	if err := tx.RawQuery(
+		`SELECT identifier FROM identity_credential_identifiers WHERE identity_credential_id = ? AND nid = ?`+extraSQL,
+		append([]any{proto.IdentityCredentialsID, proto.NID}, extraArgs...)...).All(&rows); err != nil {
+		return false, sqlcon.HandleError(err)
+	}
+	current := make([]string, len(rows))
+	for i, r := range rows {
+		current[i] = r.Identifier
+	}
+	slices.Sort(current)
+
+	if slices.Equal(current, target) {
+		return false, nil
+	}
+
+	// Replace wholesale, deleting first so values kept across the change do
+	// not trip the (nid, type, identifier) unique index on insert.
+	if err := tx.RawQuery(
+		`DELETE FROM identity_credential_identifiers WHERE identity_credential_id = ? AND nid = ?`+extraSQL,
+		append([]any{proto.IdentityCredentialsID, proto.NID}, extraArgs...)...).Exec(); err != nil {
+		return false, sqlcon.HandleError(err)
+	}
+	identifiers := make([]*identity.CredentialIdentifier, len(target))
+	for i, identifier := range target {
+		ci := proto
+		ci.ID = x.NewUUID()
+		ci.Identifier = identifier
+		identifiers[i] = &ci
+	}
+	// One batched INSERT keeps the lock hold time flat in the identifier
+	// count. A duplicate identifier owned by another identity surfaces here
+	// as sqlcon.ErrUniqueViolation (batch.Create normalizes driver errors
+	// via sqlcon.HandleError) and rolls back the whole transaction.
+	if err := batch.Create(ctx, conn, identifiers, batch.WithExtraColumns(extra)); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Identity, mods ...identity.UpdateIdentityModifier) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.UpdateIdentity",
 		trace.WithAttributes(
@@ -1394,8 +1662,18 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			}
 		}
 
+		// Excluded credential types are invisible to the diff: their rows are
+		// neither deleted, recreated, nor updated. Their database entries are
+		// kept aside and merged back into the returned identity below.
+		excludedTypes := o.ExcludedCredentialTypes()
+		excludedCreds := make(map[identity.CredentialsType]identity.Credentials, len(excludedTypes))
+
 		oldCredentials := make([]identity.Credentials, 0, len(identityCreds))
-		for _, cred := range identityCreds {
+		for ct, cred := range identityCreds {
+			if slices.Contains(excludedTypes, ct) {
+				excludedCreds[ct] = cred
+				continue
+			}
 			oldCredentials = append(oldCredentials, cred)
 		}
 
@@ -1406,12 +1684,22 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 
 		// Convert new credentials map to slice
 		newCredentials := make([]identity.Credentials, 0, len(i.Credentials))
-		for _, cred := range i.Credentials {
+		for ct, cred := range i.Credentials {
+			if slices.Contains(excludedTypes, ct) {
+				continue
+			}
 			newCredentials = append(newCredentials, cred)
 		}
 
-		i.Credentials, err = p.updateCredentialsAssociation(ctx, o.ExtraColumns(), i.ID, oldCredentials, newCredentials)
-		return err
+		updatedCreds, err := p.updateCredentialsAssociation(ctx, o.ExtraColumns(), i.ID, oldCredentials, newCredentials)
+		if err != nil {
+			return err
+		}
+		// The excluded types' rows were left untouched; surface their database
+		// state on the returned identity instead of the in-memory copy.
+		maps.Copy(updatedCreds, excludedCreds)
+		i.Credentials = updatedCreds
+		return nil
 	})); err != nil {
 		return err
 	}

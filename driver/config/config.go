@@ -70,6 +70,8 @@ const (
 	ViperKeyCourierTemplatesRegistrationCodeValidSMS         = "courier.templates.registration_code.valid.sms"
 	ViperKeyCourierTemplatesVerifiableAddressChangedEmail    = "courier.templates.verifiable_address_changed.email"
 	ViperKeyCourierTemplatesVerifiableAddressChangedSMS      = "courier.templates.verifiable_address_changed.sms"
+	ViperKeyCourierTemplatesAuthenticatorKeyAddedEmail       = "courier.templates.authenticator_key_added.email"
+	ViperKeyCourierTemplatesAuthenticatorKeyAddedSMS         = "courier.templates.authenticator_key_added.sms"
 	ViperKeyCourierDeliveryStrategy                          = "courier.delivery_strategy"
 	ViperKeyCourierHTTPRequestConfig                         = "courier.http.request_config"
 	ViperKeyCourierTemplatesLoginCodeValidEmail              = "courier.templates.login_code.valid.email"
@@ -330,6 +332,8 @@ type (
 		CourierSMSTemplatesRegistrationCodeValid(ctx context.Context) *CourierSMSTemplate
 		CourierTemplatesVerifiableAddressChanged(ctx context.Context) *CourierEmailTemplate
 		CourierSMSTemplatesVerifiableAddressChanged(ctx context.Context) *CourierSMSTemplate
+		CourierTemplatesAuthenticatorKeyAdded(ctx context.Context) *CourierEmailTemplate
+		CourierSMSTemplatesAuthenticatorKeyAdded(ctx context.Context) *CourierSMSTemplate
 		CourierMessageRetries(ctx context.Context) int
 		CourierWorkerPullCount(ctx context.Context) int
 		CourierWorkerPullWait(ctx context.Context) time.Duration
@@ -1208,6 +1212,14 @@ func (p *Config) CourierTemplatesVerifiableAddressChanged(ctx context.Context) *
 
 func (p *Config) CourierSMSTemplatesVerifiableAddressChanged(ctx context.Context) *CourierSMSTemplate {
 	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesVerifiableAddressChangedSMS)
+}
+
+func (p *Config) CourierTemplatesAuthenticatorKeyAdded(ctx context.Context) *CourierEmailTemplate {
+	return p.CourierEmailTemplatesHelper(ctx, ViperKeyCourierTemplatesAuthenticatorKeyAddedEmail)
+}
+
+func (p *Config) CourierSMSTemplatesAuthenticatorKeyAdded(ctx context.Context) *CourierSMSTemplate {
+	return p.CourierSMSTemplatesHelper(ctx, ViperKeyCourierTemplatesAuthenticatorKeyAddedSMS)
 }
 
 func (p *Config) CourierTemplatesLoginCodeValid(ctx context.Context) *CourierEmailTemplate {

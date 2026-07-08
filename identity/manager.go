@@ -64,6 +64,7 @@ type (
 	ManagerOptions struct {
 		ExposeValidationErrors    bool
 		AllowWriteProtectedTraits bool
+		ExcludedCredentialTypes   []CredentialsType
 	}
 
 	ManagerOption func(*ManagerOptions)
@@ -79,6 +80,17 @@ func ManagerExposeValidationErrorsForInternalTypeAssertion(options *ManagerOptio
 
 func ManagerAllowWriteProtectedTraits(options *ManagerOptions) {
 	options.AllowWriteProtectedTraits = true
+}
+
+// ManagerWithoutCredentialTypes excludes the given credential types from the
+// identity persist: Update leaves their rows untouched. Strategies that
+// persist those credentials themselves (e.g. through the locked
+// UpdateCredentialsConfig path) set this so the persist cannot clobber a
+// concurrent locked write.
+func ManagerWithoutCredentialTypes(cts ...CredentialsType) ManagerOption {
+	return func(options *ManagerOptions) {
+		options.ExcludedCredentialTypes = append(options.ExcludedCredentialTypes, cts...)
+	}
 }
 
 func newManagerOptions(opts []ManagerOption) *ManagerOptions {
@@ -545,7 +557,11 @@ func (m *Manager) Update(ctx context.Context, updated *Identity, opts ...Manager
 		return err
 	}
 
-	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated, DiffAgainst(original))
+	mods := []UpdateIdentityModifier{DiffAgainst(original)}
+	if len(o.ExcludedCredentialTypes) > 0 {
+		mods = append(mods, WithoutCredentialTypes(o.ExcludedCredentialTypes...))
+	}
+	return m.r.PrivilegedIdentityPool().UpdateIdentity(ctx, updated, mods...)
 }
 
 func (m *Manager) UpdateSchemaID(ctx context.Context, id uuid.UUID, schemaID string, opts ...ManagerOption) (err error) {
@@ -698,17 +714,23 @@ type AddressRef struct {
 	Via   string `json:"via"`
 }
 
-// SendVerifiableAddressChangedNotifications queues a change notification to
-// each target via the appropriate courier channel. Errors from individual
-// targets are collected and returned as a joined error but do not
-// short-circuit the batch — a failure to notify one recipient should not
-// prevent others from receiving their notification.
-func (m *Manager) SendVerifiableAddressChangedNotifications(
+// sendIdentityNotifications queues a notification template to each target via
+// the appropriate courier channel, sharing the courier, identity-model, and
+// error-collection plumbing across the concrete notification types. buildEmail
+// and buildSMS construct the channel-specific template for a single recipient
+// from the identity model and a shared RFC3339 timestamp. Errors from individual
+// targets are collected and returned as a joined error but do not short-circuit
+// the batch — a failure to notify one recipient must not prevent others from
+// being notified.
+func (m *Manager) sendIdentityNotifications(
 	ctx context.Context,
+	spanName string,
 	targets []AddressRef,
 	i *Identity,
+	buildEmail func(to string, identity map[string]any, at string) courier.EmailTemplate,
+	buildSMS func(to string, identity map[string]any, at string) courier.SMSTemplate,
 ) (err error) {
-	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.SendVerifiableAddressChangedNotifications")
+	ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, spanName)
 	defer otelx.End(span, &err)
 
 	if len(targets) == 0 {
@@ -724,41 +746,64 @@ func (m *Manager) SendVerifiableAddressChangedNotifications(
 	if err != nil {
 		return errors.WithStack(err)
 	}
-	changedAt := time.Now().UTC().Format(time.RFC3339)
+	at := time.Now().UTC().Format(time.RFC3339)
 
 	var errs []error
 	for _, t := range targets {
 		switch t.Via {
 		case AddressTypeEmail:
-			tpl := email.NewVerifiableAddressChanged(m.r, &email.VerifiableAddressChangedModel{
-				To:        t.Value,
-				Identity:  model,
-				ChangedAt: changedAt,
-			})
-			if _, qerr := c.QueueEmail(ctx, tpl); qerr != nil {
+			if _, qerr := c.QueueEmail(ctx, buildEmail(t.Value, model, at)); qerr != nil {
 				m.r.Logger().WithError(qerr).
 					WithField("via", t.Via).
-					Warn("Failed to queue verifiable-address-change email.")
+					Warn("Failed to queue identity notification email.")
 				errs = append(errs, qerr)
 			}
 		case AddressTypeSMS:
-			tpl := sms.NewVerifiableAddressChanged(m.r, &sms.VerifiableAddressChangedModel{
-				To:        t.Value,
-				Identity:  model,
-				ChangedAt: changedAt,
-			})
-			if _, qerr := c.QueueSMS(ctx, tpl); qerr != nil {
+			if _, qerr := c.QueueSMS(ctx, buildSMS(t.Value, model, at)); qerr != nil {
 				m.r.Logger().WithError(qerr).
 					WithField("via", t.Via).
-					Warn("Failed to queue verifiable-address-change SMS.")
+					Warn("Failed to queue identity notification SMS.")
 				errs = append(errs, qerr)
 			}
 		default:
 			m.r.Logger().
 				WithField("via", t.Via).
-				Warn("Skipping verifiable-address-change notification target with unsupported Via.")
+				Warn("Skipping identity notification target with unsupported Via.")
 		}
 	}
 
 	return stderrors.Join(errs...)
+}
+
+// SendVerifiableAddressChangedNotifications queues a change notification to
+// each target via the appropriate courier channel. Errors from individual
+// targets are collected and returned as a joined error but do not
+// short-circuit the batch — a failure to notify one recipient should not
+// prevent others from receiving their notification.
+func (m *Manager) SendVerifiableAddressChangedNotifications(ctx context.Context, targets []AddressRef, i *Identity) error {
+	return m.sendIdentityNotifications(ctx, "identity.Manager.SendVerifiableAddressChangedNotifications", targets, i,
+		func(to string, identity map[string]any, at string) courier.EmailTemplate {
+			return email.NewVerifiableAddressChanged(m.r, &email.VerifiableAddressChangedModel{To: to, Identity: identity, ChangedAt: at})
+		},
+		func(to string, identity map[string]any, at string) courier.SMSTemplate {
+			return sms.NewVerifiableAddressChanged(m.r, &sms.VerifiableAddressChangedModel{To: to, Identity: identity, ChangedAt: at})
+		},
+	)
+}
+
+// SendAuthenticatorKeyAddedNotifications queues a security notification to each
+// target via the appropriate courier channel after a new authenticator key was
+// enrolled or an existing key's secret was rotated. Errors from individual
+// targets are collected and returned as a joined error but do not short-circuit
+// the batch — callers must never fail the enrollment/rotate flow on a courier
+// error; they should log and continue.
+func (m *Manager) SendAuthenticatorKeyAddedNotifications(ctx context.Context, targets []AddressRef, i *Identity) error {
+	return m.sendIdentityNotifications(ctx, "identity.Manager.SendAuthenticatorKeyAddedNotifications", targets, i,
+		func(to string, identity map[string]any, at string) courier.EmailTemplate {
+			return email.NewAuthenticatorKeyAdded(m.r, &email.AuthenticatorKeyAddedModel{To: to, Identity: identity, AddedAt: at})
+		},
+		func(to string, identity map[string]any, at string) courier.SMSTemplate {
+			return sms.NewAuthenticatorKeyAdded(m.r, &sms.AuthenticatorKeyAddedModel{To: to, Identity: identity, AddedAt: at})
+		},
+	)
 }

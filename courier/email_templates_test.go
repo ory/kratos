@@ -22,17 +22,19 @@ func TestNewEmailTemplateFromMessage(t *testing.T) {
 	ctx := context.Background()
 
 	for tmplType, expectedTmpl := range map[template.TemplateType]courier.EmailTemplate{
-		template.TypeRecoveryInvalid:         email.NewRecoveryInvalid(reg, &email.RecoveryInvalidModel{To: "foo"}),
-		template.TypeRecoveryValid:           email.NewRecoveryValid(reg, &email.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
-		template.TypeRecoveryCodeValid:       email.NewRecoveryCodeValid(reg, &email.RecoveryCodeValidModel{To: "bar", RecoveryCode: "12345678"}),
-		template.TypeRecoveryCodeInvalid:     email.NewRecoveryCodeInvalid(reg, &email.RecoveryCodeInvalidModel{To: "bar"}),
-		template.TypeVerificationInvalid:     email.NewVerificationInvalid(reg, &email.VerificationInvalidModel{To: "baz"}),
-		template.TypeVerificationValid:       email.NewVerificationValid(reg, &email.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
-		template.TypeVerificationCodeInvalid: email.NewVerificationCodeInvalid(reg, &email.VerificationCodeInvalidModel{To: "baz"}),
-		template.TypeVerificationCodeValid:   email.NewVerificationCodeValid(reg, &email.VerificationCodeValidModel{To: "faz", VerificationURL: "http://bar.foo", VerificationCode: "123456678"}),
-		template.TypeTestStub:                email.NewTestStub(&email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
-		template.TypeLoginCodeValid:          email.NewLoginCodeValid(reg, &email.LoginCodeValidModel{To: "far", LoginCode: "123456"}),
-		template.TypeRegistrationCodeValid:   email.NewRegistrationCodeValid(reg, &email.RegistrationCodeValidModel{To: "far", RegistrationCode: "123456"}),
+		template.TypeRecoveryInvalid:          email.NewRecoveryInvalid(reg, &email.RecoveryInvalidModel{To: "foo"}),
+		template.TypeRecoveryValid:            email.NewRecoveryValid(reg, &email.RecoveryValidModel{To: "bar", RecoveryURL: "http://foo.bar"}),
+		template.TypeRecoveryCodeValid:        email.NewRecoveryCodeValid(reg, &email.RecoveryCodeValidModel{To: "bar", RecoveryCode: "12345678"}),
+		template.TypeRecoveryCodeInvalid:      email.NewRecoveryCodeInvalid(reg, &email.RecoveryCodeInvalidModel{To: "bar"}),
+		template.TypeVerificationInvalid:      email.NewVerificationInvalid(reg, &email.VerificationInvalidModel{To: "baz"}),
+		template.TypeVerificationValid:        email.NewVerificationValid(reg, &email.VerificationValidModel{To: "faz", VerificationURL: "http://bar.foo"}),
+		template.TypeVerificationCodeInvalid:  email.NewVerificationCodeInvalid(reg, &email.VerificationCodeInvalidModel{To: "baz"}),
+		template.TypeVerificationCodeValid:    email.NewVerificationCodeValid(reg, &email.VerificationCodeValidModel{To: "faz", VerificationURL: "http://bar.foo", VerificationCode: "123456678"}),
+		template.TypeTestStub:                 email.NewTestStub(&email.TestStubModel{To: "far", Subject: "test subject", Body: "test body"}),
+		template.TypeLoginCodeValid:           email.NewLoginCodeValid(reg, &email.LoginCodeValidModel{To: "far", LoginCode: "123456"}),
+		template.TypeRegistrationCodeValid:    email.NewRegistrationCodeValid(reg, &email.RegistrationCodeValidModel{To: "far", RegistrationCode: "123456"}),
+		template.TypeVerifiableAddressChanged: email.NewVerifiableAddressChanged(reg, &email.VerifiableAddressChangedModel{To: "far", ChangedAt: "2026-04-21T12:00:00Z", Identity: map[string]any{"ID": "00000000-0000-0000-0000-000000000001"}}),
+		template.TypeAuthenticatorKeyAdded:    email.NewAuthenticatorKeyAdded(reg, &email.AuthenticatorKeyAddedModel{To: "far", AddedAt: "2026-04-21T12:00:00Z", Identity: map[string]any{"ID": "00000000-0000-0000-0000-000000000001"}}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {
 			tmplData, err := json.Marshal(expectedTmpl)

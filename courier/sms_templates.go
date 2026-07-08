@@ -57,6 +57,12 @@ func NewSMSTemplateFromMessage(d template.Dependencies, m Message) (SMSTemplate,
 			return nil, err
 		}
 		return sms.NewVerifiableAddressChanged(d, &t), nil
+	case template.TypeAuthenticatorKeyAdded:
+		var t sms.AuthenticatorKeyAddedModel
+		if err := json.Unmarshal(m.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return sms.NewAuthenticatorKeyAdded(d, &t), nil
 	default:
 		return nil, errors.Errorf("received unexpected message template type: %s", m.TemplateType)
 	}

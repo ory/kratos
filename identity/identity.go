@@ -546,6 +546,23 @@ func (i *Identity) WithDeclassifiedCredentials(ctx context.Context, c cipher.Pro
 			}
 
 			credsToPublish[ct] = toPublish
+		case CredentialsTypeDeviceAuthn:
+			// The deviceauthn config stores per-key PIN state, including
+			// `pin_secret`, the at-rest HPKE ciphertext of the user's PIN
+			// secret. Strip the whole `pin` object from every key before
+			// publishing so the admin include_credential path never leaks it.
+			toPublish := original
+
+			var err error
+			gjson.GetBytes(original.Config, "credentials").ForEach(func(key, _ gjson.Result) bool {
+				toPublish.Config, err = sjson.DeleteBytes(toPublish.Config, fmt.Sprintf("credentials.%d.pin", key.Int()))
+				return err == nil
+			})
+			if err != nil {
+				return nil, err
+			}
+
+			credsToPublish[ct] = toPublish
 		default:
 			credsToPublish[ct] = original
 		}

@@ -59,7 +59,10 @@ func TestNonStandardCredentialTypes(t *testing.T) {
 	_, reg := pkg.NewRegistryDefaultWithDSN(t, dbal.NewSQLiteTestDatabase(t))
 	_, p := testhelpers.NewNetwork(t, t.Context(), reg.Persister())
 
-	// Replace the content of the table with custom UUIDs.
+	// Replace the content of the table with custom UUIDs. This relies on the
+	// process-global credential-types cache being pristine, which the header
+	// comment's package isolation guarantees — no other test in this package
+	// touches the cache first.
 	{
 		require.NoError(t, p.GetConnection(t.Context()).RawQuery(`DELETE FROM identity_credential_types`, x.NewUUID()).Exec())
 

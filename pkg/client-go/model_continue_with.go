@@ -18,11 +18,19 @@ import (
 
 // ContinueWith - struct for ContinueWith
 type ContinueWith struct {
-	ContinueWithRecoveryUi         *ContinueWithRecoveryUi
-	ContinueWithRedirectBrowserTo  *ContinueWithRedirectBrowserTo
-	ContinueWithSetOrySessionToken *ContinueWithSetOrySessionToken
-	ContinueWithSettingsUi         *ContinueWithSettingsUi
-	ContinueWithVerificationUi     *ContinueWithVerificationUi
+	ContinueWithDeviceAuthnPinEntryUi *ContinueWithDeviceAuthnPinEntryUi
+	ContinueWithRecoveryUi            *ContinueWithRecoveryUi
+	ContinueWithRedirectBrowserTo     *ContinueWithRedirectBrowserTo
+	ContinueWithSetOrySessionToken    *ContinueWithSetOrySessionToken
+	ContinueWithSettingsUi            *ContinueWithSettingsUi
+	ContinueWithVerificationUi        *ContinueWithVerificationUi
+}
+
+// ContinueWithDeviceAuthnPinEntryUiAsContinueWith is a convenience function that returns ContinueWithDeviceAuthnPinEntryUi wrapped in ContinueWith
+func ContinueWithDeviceAuthnPinEntryUiAsContinueWith(v *ContinueWithDeviceAuthnPinEntryUi) ContinueWith {
+	return ContinueWith{
+		ContinueWithDeviceAuthnPinEntryUi: v,
+	}
 }
 
 // ContinueWithRecoveryUiAsContinueWith is a convenience function that returns ContinueWithRecoveryUi wrapped in ContinueWith
@@ -94,6 +102,18 @@ func (dst *ContinueWith) UnmarshalJSON(data []byte) error {
 		}
 	}
 
+	// check if the discriminator value is 'show_pin_entry_ui'
+	if jsonDict["action"] == "show_pin_entry_ui" {
+		// try to unmarshal JSON data into ContinueWithDeviceAuthnPinEntryUi
+		err = json.Unmarshal(data, &dst.ContinueWithDeviceAuthnPinEntryUi)
+		if err == nil {
+			return nil // data stored in dst.ContinueWithDeviceAuthnPinEntryUi, return on the first match
+		} else {
+			dst.ContinueWithDeviceAuthnPinEntryUi = nil
+			return fmt.Errorf("failed to unmarshal ContinueWith as ContinueWithDeviceAuthnPinEntryUi: %s", err.Error())
+		}
+	}
+
 	// check if the discriminator value is 'show_recovery_ui'
 	if jsonDict["action"] == "show_recovery_ui" {
 		// try to unmarshal JSON data into ContinueWithRecoveryUi
@@ -127,6 +147,18 @@ func (dst *ContinueWith) UnmarshalJSON(data []byte) error {
 		} else {
 			dst.ContinueWithVerificationUi = nil
 			return fmt.Errorf("failed to unmarshal ContinueWith as ContinueWithVerificationUi: %s", err.Error())
+		}
+	}
+
+	// check if the discriminator value is 'continueWithDeviceAuthnPinEntryUi'
+	if jsonDict["action"] == "continueWithDeviceAuthnPinEntryUi" {
+		// try to unmarshal JSON data into ContinueWithDeviceAuthnPinEntryUi
+		err = json.Unmarshal(data, &dst.ContinueWithDeviceAuthnPinEntryUi)
+		if err == nil {
+			return nil // data stored in dst.ContinueWithDeviceAuthnPinEntryUi, return on the first match
+		} else {
+			dst.ContinueWithDeviceAuthnPinEntryUi = nil
+			return fmt.Errorf("failed to unmarshal ContinueWith as ContinueWithDeviceAuthnPinEntryUi: %s", err.Error())
 		}
 	}
 
@@ -195,6 +227,10 @@ func (dst *ContinueWith) UnmarshalJSON(data []byte) error {
 
 // Marshal data from the first non-nil pointers in the struct to JSON
 func (src ContinueWith) MarshalJSON() ([]byte, error) {
+	if src.ContinueWithDeviceAuthnPinEntryUi != nil {
+		return json.Marshal(&src.ContinueWithDeviceAuthnPinEntryUi)
+	}
+
 	if src.ContinueWithRecoveryUi != nil {
 		return json.Marshal(&src.ContinueWithRecoveryUi)
 	}
@@ -223,6 +259,10 @@ func (obj *ContinueWith) GetActualInstance() interface{} {
 	if obj == nil {
 		return nil
 	}
+	if obj.ContinueWithDeviceAuthnPinEntryUi != nil {
+		return obj.ContinueWithDeviceAuthnPinEntryUi
+	}
+
 	if obj.ContinueWithRecoveryUi != nil {
 		return obj.ContinueWithRecoveryUi
 	}
@@ -249,6 +289,10 @@ func (obj *ContinueWith) GetActualInstance() interface{} {
 
 // Get the actual instance value
 func (obj ContinueWith) GetActualInstanceValue() interface{} {
+	if obj.ContinueWithDeviceAuthnPinEntryUi != nil {
+		return *obj.ContinueWithDeviceAuthnPinEntryUi
+	}
+
 	if obj.ContinueWithRecoveryUi != nil {
 		return *obj.ContinueWithRecoveryUi
 	}

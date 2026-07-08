@@ -406,6 +406,14 @@ func NewErrorValidationDeviceAuthnRelaxedAttestationNoLongerValid() *Message {
 	}
 }
 
+func NewErrorValidationDeviceAuthnKeyReenrollmentRequired() *Message {
+	return &Message{
+		ID:   ErrorValidationDeviceAuthnKeyReenrollmentRequired,
+		Text: "This DeviceAuthn key was enrolled before user verification was introduced and can no longer be used. Please enroll your device again.",
+		Type: Error,
+	}
+}
+
 func NewErrorValidationLookupAlreadyUsed() *Message {
 	return &Message{
 		ID:   ErrorValidationLookupAlreadyUsed,

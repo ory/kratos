@@ -174,6 +174,7 @@ const (
 	ErrorValidationWebAuthnVerifierWrong
 	ErrorValidationDeviceAuthnVerifierWrong
 	ErrorValidationDeviceAuthnRelaxedAttestationNoLongerValid
+	ErrorValidationDeviceAuthnKeyReenrollmentRequired
 )
 
 const (

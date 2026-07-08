@@ -4,6 +4,7 @@
 package flow
 
 import (
+	"encoding/base64"
 	"net/url"
 
 	"github.com/ory/herodot"
@@ -264,6 +265,70 @@ func NewContinueWithRedirectBrowserTo(redirectTo string) *ContinueWithRedirectBr
 }
 
 func (c ContinueWithRedirectBrowserTo) GetAction() string {
+	return string(c.Action)
+}
+
+// swagger:enum ContinueWithActionShowPINEntryUI
+type ContinueWithActionShowPINEntryUI string
+
+// #nosec G101 -- only an action constant
+const (
+	ContinueWithActionShowPINEntryUIString ContinueWithActionShowPINEntryUI = "show_pin_entry_ui"
+)
+
+var _ ContinueWith = new(ContinueWithDeviceAuthnPINEntryUI)
+
+// Instructs the client to show its PIN entry UI after a PIN-protected DeviceAuthn
+// enrollment or secret rotation. It carries the one-time HPKE-sealed pin_secret,
+// which the device opens with the transport private key it generated for this
+// enrollment to bind the user's PIN. The plaintext secret never leaves the
+// device; the server only ever stores its at-rest ciphertext.
+//
+// The enrolled key's client_key_id is not included: it is the SHA-256 fingerprint
+// of the device's own public key, which the device derives locally. Non-PIN keys
+// need no client action at all and therefore produce no continue_with.
+//
+// swagger:model continueWithDeviceAuthnPinEntryUi
+type ContinueWithDeviceAuthnPINEntryUI struct {
+	// Action will always be `show_pin_entry_ui`
+	//
+	// required: true
+	Action ContinueWithActionShowPINEntryUI `json:"action"`
+
+	// Data carries the sealed pin_secret material.
+	//
+	// required: true
+	Data ContinueWithDeviceAuthnPINEntryUIData `json:"data"`
+}
+
+// Carries the one-time HPKE-sealed pin_secret material — the encapsulated key and
+// the sealed ciphertext — that the device opens with the transport private key it
+// generated for this enrollment.
+//
+// swagger:model continueWithDeviceAuthnPinEntryUiData
+type ContinueWithDeviceAuthnPINEntryUIData struct {
+	// Enc is the base64-encoded HPKE encapsulated key.
+	//
+	// required: true
+	Enc string `json:"enc"`
+
+	// Ciphertext is the base64-encoded HPKE-sealed pin_secret.
+	//
+	// required: true
+	Ciphertext string `json:"ciphertext"`
+}
+
+func NewContinueWithDeviceAuthnPINEntryUI(enc, ciphertext []byte) *ContinueWithDeviceAuthnPINEntryUI {
+	return &ContinueWithDeviceAuthnPINEntryUI{
+		Action: ContinueWithActionShowPINEntryUIString,
+		Data: ContinueWithDeviceAuthnPINEntryUIData{
+			Enc:        base64.StdEncoding.EncodeToString(enc),
+			Ciphertext: base64.StdEncoding.EncodeToString(ciphertext),
+		},
+	}
+}
+
+func (c ContinueWithDeviceAuthnPINEntryUI) GetAction() string {
 	return string(c.Action)
 }
 

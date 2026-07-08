@@ -15,6 +15,8 @@ docs/AuthenticatorAssuranceLevel.md
 docs/BatchPatchIdentitiesResponse.md
 docs/ConsistencyRequestParameters.md
 docs/ContinueWith.md
+docs/ContinueWithDeviceAuthnPinEntryUi.md
+docs/ContinueWithDeviceAuthnPinEntryUiData.md
 docs/ContinueWithRecoveryUi.md
 docs/ContinueWithRecoveryUiFlow.md
 docs/ContinueWithRedirectBrowserTo.md
@@ -99,6 +101,7 @@ docs/NeedsPrivilegedSessionError.md
 docs/OAuth2Client.md
 docs/OAuth2ConsentRequestOpenIDConnectContext.md
 docs/OAuth2LoginRequest.md
+docs/PINConfig.md
 docs/PatchIdentitiesBody.md
 docs/PerformNativeLogoutBody.md
 docs/Provider.md
@@ -167,6 +170,7 @@ docs/UpdateSettingsFlowWithWebAuthnMethod.md
 docs/UpdateVerificationFlowBody.md
 docs/UpdateVerificationFlowWithCodeMethod.md
 docs/UpdateVerificationFlowWithLinkMethod.md
+docs/UserVerification.md
 docs/VerifiableIdentityAddress.md
 docs/VerificationFlow.md
 docs/VerificationFlowState.md
@@ -180,6 +184,8 @@ model_authenticator_assurance_level.go
 model_batch_patch_identities_response.go
 model_consistency_request_parameters.go
 model_continue_with.go
+model_continue_with_device_authn_pin_entry_ui.go
+model_continue_with_device_authn_pin_entry_ui_data.go
 model_continue_with_recovery_ui.go
 model_continue_with_recovery_ui_flow.go
 model_continue_with_redirect_browser_to.go
@@ -262,6 +268,7 @@ model_o_auth2_consent_request_open_id_connect_context.go
 model_o_auth2_login_request.go
 model_patch_identities_body.go
 model_perform_native_logout_body.go
+model_pin_config.go
 model_provider.go
 model_recovery_code_for_identity.go
 model_recovery_flow.go
@@ -328,6 +335,7 @@ model_update_settings_flow_with_web_authn_method.go
 model_update_verification_flow_body.go
 model_update_verification_flow_with_code_method.go
 model_update_verification_flow_with_link_method.go
+model_user_verification.go
 model_verifiable_identity_address.go
 model_verification_flow.go
 model_verification_flow_state.go

@@ -76,8 +76,11 @@ func (c *XChaCha20Poly1305) Decrypt(ctx context.Context, ciphertext string) ([]b
 			return nil, errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReason("Unable to instantiate chacha20"))
 		}
 
-		if len(ciphertext) < aead.NonceSize() {
-			return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("cipher text too short"))
+		// Guard the DECODED length, not the hex string length: a hex string of
+		// 24+ chars passes a hex-length check while decoding to fewer than
+		// NonceSize bytes, and the slice below would then panic.
+		if len(rawCiphertext) < aead.NonceSize() {
+			return nil, errors.WithStack(herodot.ErrBadRequest().WithReason("cipher text too short"))
 		}
 
 		nonce, ciphertext := rawCiphertext[:aead.NonceSize()], rawCiphertext[aead.NonceSize():]

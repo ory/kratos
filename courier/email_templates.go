@@ -108,6 +108,12 @@ func NewEmailTemplateFromMessage(d template.Dependencies, msg Message) (EmailTem
 			return nil, err
 		}
 		return email.NewVerifiableAddressChanged(d, &t), nil
+	case template.TypeAuthenticatorKeyAdded:
+		var t email.AuthenticatorKeyAddedModel
+		if err := json.Unmarshal(msg.TemplateData, &t); err != nil {
+			return nil, err
+		}
+		return email.NewAuthenticatorKeyAdded(d, &t), nil
 	default:
 		return nil, errors.Errorf("received unexpected message template type: %s", msg.TemplateType)
 	}

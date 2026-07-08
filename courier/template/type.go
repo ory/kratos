@@ -21,4 +21,5 @@ const (
 	TypeLoginCodeValid           TemplateType = "login_code_valid"
 	TypeRegistrationCodeValid    TemplateType = "registration_code_valid"
 	TypeVerifiableAddressChanged TemplateType = "verifiable_address_changed"
+	TypeAuthenticatorKeyAdded    TemplateType = "authenticator_key_added"
 )

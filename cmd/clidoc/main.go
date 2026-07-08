@@ -118,6 +118,7 @@ func init() {
 		"NewErrorValidationWebAuthnVerifierWrong":                      text.NewErrorValidationWebAuthnVerifierWrong(),
 		"NewErrorValidationDeviceAuthnVerifierWrong":                   text.NewErrorValidationDeviceAuthnVerifierWrong(),
 		"NewErrorValidationDeviceAuthnRelaxedAttestationNoLongerValid": text.NewErrorValidationDeviceAuthnRelaxedAttestationNoLongerValid(),
+		"NewErrorValidationDeviceAuthnKeyReenrollmentRequired":         text.NewErrorValidationDeviceAuthnKeyReenrollmentRequired(),
 		"NewErrorValidationLookupAlreadyUsed":                          text.NewErrorValidationLookupAlreadyUsed(),
 		"NewErrorValidationLookupInvalid":                              text.NewErrorValidationLookupInvalid(),
 		"NewErrorValidationIdentifierMissing":                          text.NewErrorValidationIdentifierMissing(),

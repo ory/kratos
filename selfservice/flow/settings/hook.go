@@ -252,6 +252,9 @@ func (e *HookExecutor) PostSettingsHook(ctx context.Context, w http.ResponseWrit
 	if e.d.SessionManager().IsPrivileged(ctx, ctxUpdate.Session) {
 		options = append(options, identity.ManagerAllowWriteProtectedTraits)
 	}
+	if len(ctxUpdate.excludeCredentialTypesFromUpdate) > 0 {
+		options = append(options, identity.ManagerWithoutCredentialTypes(ctxUpdate.excludeCredentialTypesFromUpdate...))
+	}
 
 	if err := e.d.IdentityManager().Update(ctx, i, options...); err != nil {
 		if errors.Is(err, identity.ErrProtectedFieldModified()) {

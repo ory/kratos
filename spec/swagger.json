@@ -3811,6 +3811,9 @@
         "device_type": {
           "$ref": "#/definitions/DeviceType"
         },
+        "pin": {
+          "$ref": "#/definitions/PINConfig"
+        },
         "public_key": {
           "description": "PublicKey is the device's public key (EC P-256 in v1), used to verify\nsignatures. It is stored in PKIX, ASN.1 DER form (the SubjectPublicKeyInfo\nencoding produced by x509.MarshalPKIXPublicKey). The private key resides\ninside the device and does not exist on the server.",
           "type": "array",
@@ -3826,6 +3829,9 @@
         },
         "state": {
           "$ref": "#/definitions/KeyState"
+        },
+        "user_verification": {
+          "$ref": "#/definitions/UserVerification"
         },
         "version": {
           "description": "v1 uses SHA256 + EC256.\nv2 (in the future) may use ML-DSA which is post-quantum resistant.\nThis requires Android/iOS support so we have to wait.\nWe intentionally avoid storing the cryptographic algorithm here a la JWT/TLS\nto avoid security issues and algorithm negotiation.",
@@ -4177,6 +4183,31 @@
         }
       }
     },
+    "PINConfig": {
+      "description": "PINConfig is the per-key PIN state. The pin_secret field holds the at-rest\nciphertext; the plaintext exists only transiently in memory during\nverification and is cleared once the key locks.",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "description": "CreatedAt is when the pin_secret was first issued.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "failed_attempts": {
+          "description": "FailedAttempts counts consecutive wrong-PIN attempts; the key locks when it\nreaches the configured maximum.",
+          "type": "integer",
+          "format": "uint64"
+        },
+        "pin_secret": {
+          "description": "PINSecret is the at-rest pin_secret ciphertext. Server-internal: never\nlogged or transmitted. Empty once the key locks.",
+          "type": "string"
+        },
+        "rotated_at": {
+          "description": "RotatedAt is when the pin_secret was last rotated; the zero value means\nnever rotated. omitzero (not omitempty) drops the zero timestamp from the\nJSON, since omitempty never treats a time.Time value as empty.",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "Provider": {
       "type": "object",
       "properties": {
@@ -4242,6 +4273,11 @@
         }
       }
     },
+    "UserVerification": {
+      "description": "The empty value marks a legacy key from before user verification existed;\nsuch keys are rejected at login and must be re-enrolled.",
+      "type": "string",
+      "title": "UserVerification records how the key's holder is verified at use time."
+    },
     "authenticatorAssuranceLevel": {
       "description": "The authenticator assurance level can be one of \"aal1\", \"aal2\", or \"aal3\". A higher number means that it is harder\nfor an attacker to compromise the account.\n\nGenerally, \"aal1\" implies that one authentication factor was used while AAL2 implies that two factors (e.g.\npassword + TOTP) have been used.\n\nTo learn more about these levels please head over to: https://www.ory.com/kratos/docs/concepts/credentials",
       "type": "string",
@@ -4278,6 +4314,46 @@
     },
     "continueWith": {
       "type": "object"
+    },
+    "continueWithDeviceAuthnPinEntryUi": {
+      "description": "The enrolled key's client_key_id is not included: it is the SHA-256 fingerprint\nof the device's own public key, which the device derives locally. Non-PIN keys\nneed no client action at all and therefore produce no continue_with.",
+      "type": "object",
+      "title": "Instructs the client to show its PIN entry UI after a PIN-protected DeviceAuthn\nenrollment or secret rotation. It carries the one-time HPKE-sealed pin_secret,\nwhich the device opens with the transport private key it generated for this\nenrollment to bind the user's PIN. The plaintext secret never leaves the\ndevice; the server only ever stores its at-rest ciphertext.",
+      "required": [
+        "action",
+        "data"
+      ],
+      "properties": {
+        "action": {
+          "description": "Action will always be `show_pin_entry_ui`\nshow_pin_entry_ui ContinueWithActionShowPINEntryUIString",
+          "type": "string",
+          "enum": [
+            "show_pin_entry_ui"
+          ],
+          "x-go-enum-desc": "show_pin_entry_ui ContinueWithActionShowPINEntryUIString"
+        },
+        "data": {
+          "$ref": "#/definitions/continueWithDeviceAuthnPinEntryUiData"
+        }
+      }
+    },
+    "continueWithDeviceAuthnPinEntryUiData": {
+      "description": "Carries the one-time HPKE-sealed pin_secret material — the encapsulated key and\nthe sealed ciphertext — that the device opens with the transport private key it\ngenerated for this enrollment.",
+      "type": "object",
+      "required": [
+        "enc",
+        "ciphertext"
+      ],
+      "properties": {
+        "ciphertext": {
+          "description": "Ciphertext is the base64-encoded HPKE-sealed pin_secret.",
+          "type": "string"
+        },
+        "enc": {
+          "description": "Enc is the base64-encoded HPKE encapsulated key.",
+          "type": "string"
+        }
+      }
     },
     "continueWithRecoveryUi": {
       "description": "Indicates, that the UI flow could be continued by showing a recovery ui",
@@ -6043,7 +6119,7 @@
           "type": "string"
         },
         "template_type": {
-          "description": "\nrecovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\nstub TypeTestStub\nlogin_code_valid TypeLoginCodeValid\nregistration_code_valid TypeRegistrationCodeValid\nverifiable_address_changed TypeVerifiableAddressChanged",
+          "description": "\nrecovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\nstub TypeTestStub\nlogin_code_valid TypeLoginCodeValid\nregistration_code_valid TypeRegistrationCodeValid\nverifiable_address_changed TypeVerifiableAddressChanged\nauthenticator_key_added TypeAuthenticatorKeyAdded",
           "type": "string",
           "enum": [
             "recovery_invalid",
@@ -6057,9 +6133,10 @@
             "stub",
             "login_code_valid",
             "registration_code_valid",
-            "verifiable_address_changed"
+            "verifiable_address_changed",
+            "authenticator_key_added"
           ],
-          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\nstub TypeTestStub\nlogin_code_valid TypeLoginCodeValid\nregistration_code_valid TypeRegistrationCodeValid\nverifiable_address_changed TypeVerifiableAddressChanged"
+          "x-go-enum-desc": "recovery_invalid TypeRecoveryInvalid\nrecovery_valid TypeRecoveryValid\nrecovery_code_invalid TypeRecoveryCodeInvalid\nrecovery_code_valid TypeRecoveryCodeValid\nverification_invalid TypeVerificationInvalid\nverification_valid TypeVerificationValid\nverification_code_invalid TypeVerificationCodeInvalid\nverification_code_valid TypeVerificationCodeValid\nstub TypeTestStub\nlogin_code_valid TypeLoginCodeValid\nregistration_code_valid TypeRegistrationCodeValid\nverifiable_address_changed TypeVerifiableAddressChanged\nauthenticator_key_added TypeAuthenticatorKeyAdded"
         },
         "type": {
           "$ref": "#/definitions/courierMessageType"

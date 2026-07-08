@@ -19,7 +19,76 @@ type KeyState string
 const (
 	KeyStateInitial   KeyState = "initial"
 	KeyStateConfirmed KeyState = "confirmed"
+	// KeyStateLocked marks a PIN key disabled after too many wrong-PIN attempts.
+	KeyStateLocked KeyState = "locked"
 )
+
+// The schema name stays UpperCamelCase on purpose: it is part of the published
+// DeviceAuthn schema family (DeviceAuthnKey, DeviceType, KeyState, PINConfig),
+// which all use UpperCamelCase. Renaming it to the lowerCamelCase the core
+// naming convention prefers would be a breaking change to the public SDK and
+// would split the family's casing, so the deliberate exception is kept.
+// The valid values (pin, platform, none) are pinned as an enum via the OpenAPI
+// patch in .schema/openapi/patches/schema.yaml. (Detached from the doc comment
+// to stay out of the generated API description.)
+
+// UserVerification records how the key's holder is verified at use time.
+//
+// The empty value marks a legacy key from before user verification existed;
+// such keys are rejected at login and must be re-enrolled.
+type UserVerification string
+
+const (
+	UserVerificationPIN      UserVerification = "pin"
+	UserVerificationPlatform UserVerification = "platform"
+	// UserVerificationNone marks a possession-only key: usable as a second
+	// factor (step-up) but never as a first factor, which login enforces.
+	// Unlike JWT's alg=none the value strictly reduces what the key may do —
+	// it bypasses no verification. It covers keys deliberately enrolled
+	// without PIN or platform verification.
+	UserVerificationNone UserVerification = "none"
+)
+
+// PINConfig holds only scalar fields, so it is safe to shallow copy; the pointer
+// on Key.PIN encodes optionality (nil means no PIN), not copy safety.
+//
+// The schema name stays UpperCamelCase: it belongs to the published DeviceAuthn
+// schema family (DeviceAuthnKey, DeviceType, KeyState, UserVerification), and
+// renaming it would break the public SDK.
+// (Detached from the doc comment to stay out of the generated API description.)
+
+// PINConfig is the per-key PIN state. The pin_secret field holds the at-rest
+// ciphertext; the plaintext exists only transiently in memory during
+// verification and is cleared once the key locks.
+type PINConfig struct {
+	// pin_secret holds ciphertext of the kratos cipher (hex) and must never be
+	// returned to or logged by clients; the OpenAPI patch in
+	// .schema/openapi/patches/schema.yaml marks it write-only.
+	// (Detached from the doc comment to stay out of the API description.)
+
+	// PINSecret is the at-rest pin_secret ciphertext. Server-internal: never
+	// logged or transmitted. Empty once the key locks.
+	PINSecret string `json:"pin_secret"`
+	// A negative stored value must be a decode error instead of silently
+	// extending the attempt budget, hence uint. (Detached from the doc comment
+	// to stay out of the generated API description.)
+
+	// FailedAttempts counts consecutive wrong-PIN attempts; the key locks when it
+	// reaches the configured maximum.
+	FailedAttempts uint `json:"failed_attempts"`
+	// CreatedAt is when the pin_secret was first issued.
+	CreatedAt time.Time `json:"created_at"`
+	// RotatedAt is when the pin_secret was last rotated; the zero value means
+	// never rotated. omitzero (not omitempty) drops the zero timestamp from the
+	// JSON, since omitempty never treats a time.Time value as empty.
+	RotatedAt time.Time `json:"rotated_at,omitzero"`
+}
+
+// Key is safe to shallow copy as long as the shared reference fields (PublicKey,
+// PIN, Attestation, RelaxedAttestationExpiresAt) are treated as read-only:
+// in-place mutation goes through a *Key into the backing slice, and the merge
+// copies PIN rather than aliasing it. Kept out of the doc comment so it stays
+// out of the generated API description.
 
 // Key represents an enrolled hardware security key used for device authentication (DeviceAuthn).
 //
@@ -60,6 +129,12 @@ type Key struct {
 	// or it must be set to 'confirmed' with an admin API call.
 	// This is to support out-of-band KYC processes e.g. sending a physical letter with a code to the device owner.
 	State KeyState `json:"state"`
+
+	// UserVerification records how the key's holder is verified at use time.
+	// Empty for v1 (legacy step-up-only) keys.
+	UserVerification UserVerification `json:"user_verification,omitempty"`
+	// PIN holds the per-key PIN state. Nil for v1 (legacy step-up-only) keys.
+	PIN *PINConfig `json:"pin,omitempty"`
 
 	// Attestation holds the platform-specific attestation captured at
 	// enrollment. Useful for distinguishing keys in the UI (e.g. OS

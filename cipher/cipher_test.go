@@ -72,6 +72,14 @@ func TestCipher(t *testing.T) {
 
 				_, err = c.Decrypt(contextx.WithConfigValue(ctx, config.ViperKeySecretsCipher, []string{""}), "not-empty")
 				require.Error(t, err)
+
+				// Valid hex that decodes to fewer bytes than the AEAD nonce must be
+				// a clean error, not a panic: a corrupt or truncated stored
+				// ciphertext must never crash the caller. 16 bytes (32 hex chars)
+				// clears the hex-length check but is shorter than XChaCha20's
+				// 24-byte nonce.
+				_, err = c.Decrypt(ctx, hex.EncodeToString([]byte("sixteen-bytes!!!")))
+				require.Error(t, err)
 			})
 		})
 	}

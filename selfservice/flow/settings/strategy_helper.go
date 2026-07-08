@@ -37,10 +37,23 @@ type UpdateContext struct {
 	Session  *session.Session
 	Flow     *Flow
 	toUpdate *identity.Identity
+
+	// excludeCredentialTypesFromUpdate lists credential types the
+	// post-settings identity persist must not touch; strategies that persist
+	// those credentials themselves (e.g. through a locked credential-config
+	// update) set this via ExcludeCredentialTypesFromUpdate.
+	excludeCredentialTypesFromUpdate []identity.CredentialsType
 }
 
 func (c *UpdateContext) UpdateIdentity(i *identity.Identity) {
 	c.toUpdate = i
+}
+
+// ExcludeCredentialTypesFromUpdate marks the given credential types as
+// self-persisted: the post-settings identity persist leaves their rows
+// untouched.
+func (c *UpdateContext) ExcludeCredentialTypesFromUpdate(cts ...identity.CredentialsType) {
+	c.excludeCredentialTypesFromUpdate = append(c.excludeCredentialTypesFromUpdate, cts...)
 }
 
 func (c *UpdateContext) GetIdentityToUpdate() (*identity.Identity, error) {

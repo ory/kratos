@@ -4,6 +4,7 @@
 package identity
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -323,4 +324,33 @@ func CredentialsEqual(a, b map[CredentialsType]Credentials) bool {
 	}
 
 	return true
+}
+
+// UpdateConfig adapts a typed, in-place credential-config mutation into the
+// raw mutate form PrivilegedPool.UpdateCredentialsConfig takes:
+//
+//	pool.UpdateCredentialsConfig(ctx, id, ct, identity.UpdateConfig(mutate))
+//
+// T must model the complete stored config shape: unknown fields do not
+// survive the roundtrip. An empty or JSON-null config is rejected before
+// mutate runs. mutate must be pure (it may run more than once on database
+// retries); returning an error aborts without persisting.
+func UpdateConfig[T any](mutate func(*T) error) func(config []byte) ([]byte, error) {
+	return func(config []byte) ([]byte, error) {
+		if len(config) == 0 || bytes.Equal(config, []byte("null")) {
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("The stored credential configuration is empty and cannot be updated."))
+		}
+		var decoded T
+		if err := json.Unmarshal(config, &decoded); err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("The stored credential configuration could not be decoded.").WithDebug(err.Error()).WithWrap(err))
+		}
+		if err := mutate(&decoded); err != nil {
+			return nil, err
+		}
+		encoded, err := json.Marshal(&decoded)
+		if err != nil {
+			return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("The updated credential configuration could not be encoded.").WithDebug(err.Error()).WithWrap(err))
+		}
+		return encoded, nil
+	}
 }

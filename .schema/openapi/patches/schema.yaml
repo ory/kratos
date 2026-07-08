@@ -75,6 +75,7 @@
       show_settings_ui: "#/components/schemas/continueWithSettingsUi"
       show_recovery_ui: "#/components/schemas/continueWithRecoveryUi"
       redirect_browser_to: "#/components/schemas/continueWithRedirectBrowserTo"
+      show_pin_entry_ui: "#/components/schemas/continueWithDeviceAuthnPinEntryUi"
 
 - op: add
   path: /components/schemas/continueWith/oneOf
@@ -84,3 +85,34 @@
     - "$ref": "#/components/schemas/continueWithSettingsUi"
     - "$ref": "#/components/schemas/continueWithRecoveryUi"
     - "$ref": "#/components/schemas/continueWithRedirectBrowserTo"
+    - "$ref": "#/components/schemas/continueWithDeviceAuthnPinEntryUi"
+
+# DeviceAuthn: constrain UserVerification to its known values. go-swagger renders
+# the `type UserVerification string` alias as a plain string, so the enum is
+# pinned here. The valid values are pin, platform, and none.
+- op: add
+  path: /components/schemas/UserVerification/enum
+  value:
+    - pin
+    - platform
+    - none
+
+# DeviceAuthn: the at-rest pin_secret ciphertext is server-internal and must
+# never be returned to clients. Mark it write-only so the SDK and docs flag it
+# as not-readable (Swagger 2.0 cannot express writeOnly, so this lands in the
+# OpenAPI 3.0 spec only).
+- op: add
+  path: /components/schemas/PINConfig/properties/pin_secret/writeOnly
+  value: true
+
+# DeviceAuthn: attach a description to the `data` property. go-swagger
+# drops a description next to a bare $ref, so wrap the $ref in allOf to keep the
+# reference and carry the description.
+- op: replace
+  path: /components/schemas/continueWithDeviceAuthnPinEntryUi/properties/data
+  value:
+    description: >-
+      The one-time HPKE-sealed pin_secret material the device opens to bind the
+      user's PIN after a PIN-protected DeviceAuthn enrollment or secret rotation.
+    allOf:
+      - "$ref": "#/components/schemas/continueWithDeviceAuthnPinEntryUiData"

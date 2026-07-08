@@ -33,8 +33,10 @@ func TestNewSMSTemplateFromMessage(t *testing.T) {
 	ctx := context.Background()
 
 	for tmplType, expectedTmpl := range map[template.TemplateType]courier.SMSTemplate{
-		template.TypeVerificationCodeValid: sms.NewVerificationCodeValid(reg, &sms.VerificationCodeValidModel{To: "+12345678901"}),
-		template.TypeTestStub:              sms.NewTestStub(&sms.TestStubModel{To: "+12345678901", Body: "test body"}),
+		template.TypeVerificationCodeValid:    sms.NewVerificationCodeValid(reg, &sms.VerificationCodeValidModel{To: "+12345678901"}),
+		template.TypeTestStub:                 sms.NewTestStub(&sms.TestStubModel{To: "+12345678901", Body: "test body"}),
+		template.TypeVerifiableAddressChanged: sms.NewVerifiableAddressChanged(reg, &sms.VerifiableAddressChangedModel{To: "+12345678901", ChangedAt: "2026-04-21T12:00:00Z", Identity: map[string]any{"ID": "00000000-0000-0000-0000-000000000001"}}),
+		template.TypeAuthenticatorKeyAdded:    sms.NewAuthenticatorKeyAdded(reg, &sms.AuthenticatorKeyAddedModel{To: "+12345678901", AddedAt: "2026-04-21T12:00:00Z", Identity: map[string]any{"ID": "00000000-0000-0000-0000-000000000001"}}),
 	} {
 		t.Run(fmt.Sprintf("case=%s", tmplType), func(t *testing.T) {
 			tmplData, err := json.Marshal(expectedTmpl)

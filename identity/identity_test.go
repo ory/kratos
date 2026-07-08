@@ -435,6 +435,38 @@ func TestWithDeclassifiedCredentials(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("case=deviceauthn", func(t *testing.T) {
+		di := NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		di.Credentials = map[CredentialsType]Credentials{
+			CredentialsTypeDeviceAuthn: {
+				Type:        CredentialsTypeDeviceAuthn,
+				Identifiers: []string{di.ID.String()},
+				Config: sqlxx.JSONRawMessage(`{"credentials":[` +
+					`{"client_key_id":"key-with-pin","device_name":"Pixel","state":"confirmed","pin":{"pin_secret":"deadbeefciphertext","failed_attempts":1}},` +
+					`{"client_key_id":"key-without-pin","device_name":"iPhone","state":"confirmed"}` +
+					`]}`),
+			},
+		}
+
+		actualIdentity, err := di.WithDeclassifiedCredentials(t.Context(), &cipherProvider{}, []CredentialsType{CredentialsTypeDeviceAuthn})
+		require.NoError(t, err)
+
+		actual, ok := actualIdentity.Credentials[CredentialsTypeDeviceAuthn]
+		require.True(t, ok)
+
+		// The PIN secret (and the whole pin object) must never reach the admin API.
+		assert.NotContains(t, string(actual.Config), "pin_secret")
+		assert.NotContains(t, string(actual.Config), "deadbeefciphertext")
+		assert.False(t, gjson.GetBytes(actual.Config, "credentials.0.pin").Exists(), "pin object must be stripped")
+
+		// Non-secret fields must be preserved.
+		assert.Equal(t, "key-with-pin", gjson.GetBytes(actual.Config, "credentials.0.client_key_id").String())
+		assert.Equal(t, "Pixel", gjson.GetBytes(actual.Config, "credentials.0.device_name").String())
+		assert.Equal(t, "confirmed", gjson.GetBytes(actual.Config, "credentials.0.state").String())
+		assert.Equal(t, "key-without-pin", gjson.GetBytes(actual.Config, "credentials.1.client_key_id").String())
+		assert.Equal(t, "iPhone", gjson.GetBytes(actual.Config, "credentials.1.device_name").String())
+	})
 }
 
 func TestDeleteCredentialOIDCSAMLFromIdentity(t *testing.T) {

@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
@@ -474,6 +475,46 @@ func TestManager(t *testing.T) {
 			assert.Equal(t, identity.CredentialsTypePassword, cred.Type)
 			assert.Equal(t, []string{email}, cred.Identifiers)
 			assert.JSONEq(t, `{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`, string(cred.Config))
+		})
+
+		t.Run("case=should not touch credentials excluded from the update", func(t *testing.T) {
+			email := uuid.Must(uuid.NewV4()).String() + "@ory.sh"
+			original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+			original.Traits = newTraits(email, "")
+			original.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$.cOYmAd.vCpDOoiVJrO5B.hjTLKQQ6cAK40u8uB.FnZDyPvVvQ9Q."}`),
+			})
+			require.NoError(t, reg.IdentityManager().Create(t.Context(), original))
+
+			fromDB, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
+			require.NoError(t, err)
+			dbCred := fromDB.Credentials[identity.CredentialsTypePassword]
+
+			// The in-memory password config diverges from the database, as if a
+			// concurrent locked credential-config write had won. The excluded
+			// type must survive the persist.
+			original.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+				Type:        identity.CredentialsTypePassword,
+				Identifiers: []string{email},
+				Config:      sqlxx.JSONRawMessage(`{"hashed_password":"stale-in-memory"}`),
+				Version:     dbCred.Version,
+			})
+			original.Traits = newTraits(email, "updated")
+
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), original,
+				identity.ManagerAllowWriteProtectedTraits,
+				identity.ManagerWithoutCredentialTypes(identity.CredentialsTypePassword)))
+
+			reloaded, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), original.ID)
+			require.NoError(t, err)
+			cred := reloaded.Credentials[identity.CredentialsTypePassword]
+			assert.Equal(t, dbCred.ID, cred.ID, "excluded credential must not be recreated")
+			assert.JSONEq(t, string(dbCred.Config), string(cred.Config), "excluded credential config must not change")
+			assert.JSONEq(t, string(newTraits(email, "updated")), string(reloaded.Traits), "traits must still update")
+			// The identity now carries the database state of the excluded type.
+			assert.JSONEq(t, string(dbCred.Config), string(original.Credentials[identity.CredentialsTypePassword].Config))
 		})
 
 		t.Run("case=should set AAL to 1 if password is set", func(t *testing.T) {
@@ -1065,5 +1106,77 @@ func TestManager_SendVerifiableAddressChangedNotifications(t *testing.T) {
 		require.NoError(t, reg.IdentityManager().Create(ctx, i))
 
 		require.NoError(t, reg.IdentityManager().SendVerifiableAddressChangedNotifications(ctx, nil, i))
+	})
+}
+
+func TestManager_SendAuthenticatorKeyAddedNotifications(t *testing.T) {
+	_, reg := pkg.NewFastRegistryWithMocks(t,
+		configx.WithValues(map[string]interface{}{
+			config.ViperKeyCourierSMTPURL:          "smtp://foo@bar@dev.null/",
+			config.ViperKeyDefaultIdentitySchemaID: "default",
+		}),
+		configx.WithValues(testhelpers.IdentitySchemasConfig(map[string]string{
+			"default": "file://./stub/manager.schema.json",
+		})),
+	)
+
+	t.Run("case=queues email and sms for supported targets", func(t *testing.T) {
+		ctx := t.Context()
+		i := identity.NewIdentity("default")
+		i.Traits = identity.Traits(`{"email":"key-added@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, i))
+
+		targets := []identity.AddressRef{
+			{Value: "owner@example.com", Via: identity.AddressTypeEmail},
+			{Value: "+15557654321", Via: identity.AddressTypeSMS},
+		}
+
+		require.NoError(t, reg.IdentityManager().SendAuthenticatorKeyAddedNotifications(ctx, targets, i))
+
+		messages, err := reg.CourierPersister().NextMessages(ctx, 10)
+		require.NoError(t, err)
+		require.Len(t, messages, 2)
+
+		var gotEmail, gotSMS bool
+		for _, m := range messages {
+			assert.Equal(t, template.TypeAuthenticatorKeyAdded, m.TemplateType)
+			switch m.Type {
+			case courier.MessageTypeEmail:
+				assert.Equal(t, "owner@example.com", m.Recipient)
+				gotEmail = true
+			case courier.MessageTypeSMS:
+				assert.Equal(t, "+15557654321", m.Recipient)
+				gotSMS = true
+			}
+		}
+		assert.True(t, gotEmail, "expected an email message")
+		assert.True(t, gotSMS, "expected an SMS message")
+	})
+
+	t.Run("case=unsupported Via skipped", func(t *testing.T) {
+		ctx := t.Context()
+		i := identity.NewIdentity("default")
+		i.Traits = identity.Traits(`{"email":"skip-key@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, i))
+
+		require.NoError(t, reg.IdentityManager().SendAuthenticatorKeyAddedNotifications(ctx, []identity.AddressRef{
+			{Value: "fax:+123", Via: "fax"},
+		}, i))
+
+		messages, err := reg.CourierPersister().NextMessages(ctx, 10)
+		if err == nil {
+			for _, m := range messages {
+				assert.NotEqual(t, "fax:+123", m.Recipient, "fax target must not be queued")
+			}
+		}
+	})
+
+	t.Run("case=empty targets is noop", func(t *testing.T) {
+		ctx := t.Context()
+		i := identity.NewIdentity("default")
+		i.Traits = identity.Traits(`{"email":"noop-key@example.com"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, i))
+
+		require.NoError(t, reg.IdentityManager().SendAuthenticatorKeyAddedNotifications(ctx, nil, i))
 	})
 }
