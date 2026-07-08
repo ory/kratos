@@ -9,8 +9,10 @@ import (
 
 	"github.com/gofrs/uuid"
 
+	"github.com/ory/kratos/persistence/sql/batch"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/code"
+	"github.com/ory/pop/v6"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
 )
@@ -30,6 +32,23 @@ func (p *Persister) CreateLoginCode(ctx context.Context, params *code.CreateLogi
 		FlowID:      params.FlowID,
 		NID:         p.NetworkID(ctx),
 		ID:          uuid.Nil,
+	}
+
+	// Extra columns are values the caller already knows for columns that are
+	// not part of the OSS model (e.g. crdb_region on CockroachDB
+	// multi-region). Writing them with the insert avoids the server-side
+	// fallback (a column default or a lookup derived from a foreign key),
+	// which for region columns costs a cross-region round trip per statement.
+	if len(params.InsertExtraColumns) > 0 {
+		if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+			return batch.Create(ctx,
+				&batch.TracerConnection{Tracer: p.r.Tracer(ctx), Connection: tx},
+				[]*code.LoginCode{loginCode},
+				batch.WithExtraColumns(params.InsertExtraColumns))
+		}); err != nil {
+			return nil, sqlcon.HandleError(err)
+		}
+		return loginCode, nil
 	}
 
 	if err := p.GetConnection(ctx).Create(loginCode); err != nil {

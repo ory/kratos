@@ -55,6 +55,18 @@ func (o UpdateIdentityOptions) FromDatabase() *Identity {
 	return o.fromDatabase
 }
 
+// WithUpdateExtraColumns appends fixed (key, value) columns to the inserts
+// that UpdateIdentity performs for associated rows (addresses, credentials).
+func WithUpdateExtraColumns(cols []ExtraColumn) UpdateIdentityModifier {
+	return func(o *UpdateIdentityOptions) {
+		o.extraColumns = append(o.extraColumns, cols...)
+	}
+}
+
+func (o UpdateIdentityOptions) ExtraColumns() []ExtraColumn {
+	return o.extraColumns
+}
+
 type (
 	ListIdentityParameters struct {
 		Expand                       Expandables
@@ -84,6 +96,7 @@ type (
 	UpdateIdentityModifier func(*UpdateIdentityOptions)
 	UpdateIdentityOptions  struct {
 		fromDatabase *Identity
+		extraColumns []ExtraColumn
 	}
 
 	// ExtraColumn carries a (key, value) pair for an extra SQL column on a

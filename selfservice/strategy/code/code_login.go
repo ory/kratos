@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/x/clock"
+	"github.com/ory/x/region"
 )
 
 // swagger:ignore
@@ -104,4 +105,13 @@ type CreateLoginCodeParams struct {
 	// IdentityID is the identity that this code is for
 	// required: true
 	IdentityID uuid.UUID
+
+	// IdentityRegion optionally carries the already-known region of the
+	// identity the code is for, so persisters can use it without re-reading
+	// the identity row.
+	IdentityRegion region.Region `json:"-" db:"-" faker:"-"`
+
+	// InsertExtraColumns appends fixed (key, value) columns to the INSERT
+	// statement (e.g. crdb_region).
+	InsertExtraColumns []identity.ExtraColumn `json:"-" db:"-" faker:"-"`
 }

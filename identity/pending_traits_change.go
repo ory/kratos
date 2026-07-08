@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+
+	"github.com/ory/x/region"
 )
 
 const (
@@ -29,6 +31,11 @@ type PendingTraitsChange struct {
 
 	// IdentityID is the identity this change belongs to.
 	IdentityID uuid.UUID `json:"identity_id" db:"identity_id"`
+
+	// IdentityRegion optionally carries the already-known region of the
+	// identity the change belongs to, so persisters can use it without
+	// re-reading the identity row. It is never persisted.
+	IdentityRegion region.Region `json:"-" db:"-" faker:"-"`
 
 	// NID is the network ID (multi-tenant discriminator).
 	NID uuid.UUID `json:"-" db:"nid"`

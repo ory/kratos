@@ -358,7 +358,7 @@ LIMIT 1`, columns,
 	return &id, nil
 }
 
-func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, identities ...*identity.Identity) (err error) {
+func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, extraColumns []identity.ExtraColumn, identities ...*identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createIdentityCredentials",
 		trace.WithAttributes(
 			attribute.Int("num_identities", len(identities)),
@@ -379,6 +379,14 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, ident
 	)
 
 	var opts []batch.CreateOpts
+	if len(extraColumns) > 0 {
+		// Extra columns are values the caller already knows for columns that are
+		// not part of the OSS model (e.g. crdb_region on CockroachDB
+		// multi-region). Writing them with the insert avoids the server-side
+		// fallback (a column default or a lookup derived from a foreign key),
+		// which for region columns costs a cross-region round trip per statement.
+		opts = append(opts, batch.WithExtraColumns(extraColumns))
+	}
 	if len(identities) > 1 {
 		opts = append(opts, batch.WithPartialInserts)
 	}
@@ -464,7 +472,7 @@ func (p *IdentityPersister) createIdentityCredentials(ctx context.Context, ident
 	return nil
 }
 
-func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, conn *pop.Connection, identities ...*identity.Identity) (err error) {
+func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, conn *pop.Connection, extraColumns []identity.ExtraColumn, identities ...*identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createVerifiableAddresses",
 		trace.WithAttributes(
 			attribute.Int("num_identities", len(identities)),
@@ -478,6 +486,14 @@ func (p *IdentityPersister) createVerifiableAddresses(ctx context.Context, conn 
 		}
 	}
 	var opts []batch.CreateOpts
+	if len(extraColumns) > 0 {
+		// Extra columns are values the caller already knows for columns that are
+		// not part of the OSS model (e.g. crdb_region on CockroachDB
+		// multi-region). Writing them with the insert avoids the server-side
+		// fallback (a column default or a lookup derived from a foreign key),
+		// which for region columns costs a cross-region round trip per statement.
+		opts = append(opts, batch.WithExtraColumns(extraColumns))
+	}
 	if len(identities) > 1 {
 		opts = append(opts, batch.WithPartialInserts)
 	}
@@ -490,7 +506,7 @@ type differ interface {
 	GetID() uuid.UUID
 }
 
-func updateAssociationWith[T differ](ctx context.Context, p *IdentityPersister, fromDatabase, updateTo []T,
+func updateAssociationWith[T differ](ctx context.Context, p *IdentityPersister, extraColumns []identity.ExtraColumn, fromDatabase, updateTo []T,
 ) (result []T, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.updateAssociationWith",
 		trace.WithAttributes(
@@ -509,12 +525,22 @@ func updateAssociationWith[T differ](ctx context.Context, p *IdentityPersister, 
 	}
 
 	if len(toCreate) > 0 {
+		var opts []batch.CreateOpts
+		if len(extraColumns) > 0 {
+			// Extra columns are values the caller already knows for columns that are
+			// not part of the OSS model (e.g. crdb_region on CockroachDB
+			// multi-region). Writing them with the insert avoids the server-side
+			// fallback (a column default or a lookup derived from a foreign key),
+			// which for region columns costs a cross-region round trip per statement.
+			opts = append(opts, batch.WithExtraColumns(extraColumns))
+		}
 		if err := batch.Create(ctx,
 			&batch.TracerConnection{
 				Tracer:     p.r.Tracer(ctx),
 				Connection: p.GetConnection(ctx),
 			},
 			toCreate,
+			opts...,
 		); err != nil {
 			return nil, err
 		}
@@ -531,7 +557,7 @@ func updateAssociationWith[T differ](ctx context.Context, p *IdentityPersister, 
 	return result, nil
 }
 
-func updateAssociation[T differ](ctx context.Context, p *IdentityPersister, i *identity.Identity, inID []T,
+func updateAssociation[T differ](ctx context.Context, p *IdentityPersister, extraColumns []identity.ExtraColumn, i *identity.Identity, inID []T,
 ) (result []T, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.updateAssociation",
 		trace.WithAttributes(
@@ -546,10 +572,10 @@ func updateAssociation[T differ](ctx context.Context, p *IdentityPersister, i *i
 		return nil, sqlcon.HandleError(err)
 	}
 
-	return updateAssociationWith(ctx, p, inDB, inID)
+	return updateAssociationWith(ctx, p, extraColumns, inDB, inID)
 }
 
-func (p *IdentityPersister) updateCredentialsAssociation(ctx context.Context, identityID uuid.UUID, fromDatabase []identity.Credentials, updateTo []identity.Credentials) (result map[identity.CredentialsType]identity.Credentials, err error) {
+func (p *IdentityPersister) updateCredentialsAssociation(ctx context.Context, extraColumns []identity.ExtraColumn, identityID uuid.UUID, fromDatabase []identity.Credentials, updateTo []identity.Credentials) (result map[identity.CredentialsType]identity.Credentials, err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.updateCredentialsAssociation",
 		trace.WithAttributes(
 			attribute.Stringer("identity.id", identityID),
@@ -591,7 +617,7 @@ func (p *IdentityPersister) updateCredentialsAssociation(ctx context.Context, id
 	}
 
 	if len(credsToCreate) > 0 {
-		if err := p.createIdentityCredentials(ctx, &identity.Identity{
+		if err := p.createIdentityCredentials(ctx, extraColumns, &identity.Identity{
 			ID:          identityID,
 			Credentials: credsToCreate,
 		}); err != nil {
@@ -682,7 +708,7 @@ func (p *IdentityPersister) normalizeRecoveryAddresses(ctx context.Context, id *
 	}
 }
 
-func (p *IdentityPersister) createRecoveryAddresses(ctx context.Context, conn *pop.Connection, identities ...*identity.Identity) (err error) {
+func (p *IdentityPersister) createRecoveryAddresses(ctx context.Context, conn *pop.Connection, extraColumns []identity.ExtraColumn, identities ...*identity.Identity) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.createRecoveryAddresses",
 		trace.WithAttributes(
 			attribute.Int("num_identities", len(identities)),
@@ -698,6 +724,14 @@ func (p *IdentityPersister) createRecoveryAddresses(ctx context.Context, conn *p
 	}
 
 	var opts []batch.CreateOpts
+	if len(extraColumns) > 0 {
+		// Extra columns are values the caller already knows for columns that are
+		// not part of the OSS model (e.g. crdb_region on CockroachDB
+		// multi-region). Writing them with the insert avoids the server-side
+		// fallback (a column default or a lookup derived from a foreign key),
+		// which for region columns costs a cross-region round trip per statement.
+		opts = append(opts, batch.WithExtraColumns(extraColumns))
+	}
 	if len(identities) > 1 {
 		opts = append(opts, batch.WithPartialInserts)
 	}
@@ -805,7 +839,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities []*
 
 		p.normalizeAllAddresses(ctx, createdIdentities...)
 
-		if err = p.createVerifiableAddresses(ctx, tx, createdIdentities...); err != nil {
+		if err = p.createVerifiableAddresses(ctx, tx, options.ExtraColumns, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.VerifiableAddress]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{ created bool }{true}
@@ -814,7 +848,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities []*
 				return sqlcon.HandleError(err)
 			}
 		}
-		if err = p.createRecoveryAddresses(ctx, tx, createdIdentities...); err != nil {
+		if err = p.createRecoveryAddresses(ctx, tx, options.ExtraColumns, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.RecoveryAddress]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{ created bool }{true}
@@ -823,7 +857,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities []*
 				return sqlcon.HandleError(err)
 			}
 		}
-		if err = p.createIdentityCredentials(ctx, createdIdentities...); err != nil {
+		if err = p.createIdentityCredentials(ctx, options.ExtraColumns, createdIdentities...); err != nil {
 			if partialErr := new(batch.PartialConflictError[identity.Credentials]); errors.As(err, &partialErr) {
 				for _, k := range partialErr.Failed {
 					failedIdentityIDs[k.IdentityID] = struct{ created bool }{true}
@@ -1318,21 +1352,21 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 				return errors.New("mismatched identity ID: this is a bug")
 			}
 			var err error
-			i.RecoveryAddresses, err = updateAssociationWith(ctx, p, o.FromDatabase().RecoveryAddresses, i.RecoveryAddresses)
+			i.RecoveryAddresses, err = updateAssociationWith(ctx, p, o.ExtraColumns(), o.FromDatabase().RecoveryAddresses, i.RecoveryAddresses)
 			if err != nil {
 				return err
 			}
-			i.VerifiableAddresses, err = updateAssociationWith(ctx, p, o.FromDatabase().VerifiableAddresses, i.VerifiableAddresses)
+			i.VerifiableAddresses, err = updateAssociationWith(ctx, p, o.ExtraColumns(), o.FromDatabase().VerifiableAddresses, i.VerifiableAddresses)
 			if err != nil {
 				return err
 			}
 			identityCreds = o.FromDatabase().Credentials
 		} else {
-			i.RecoveryAddresses, err = updateAssociation(ctx, p, i, i.RecoveryAddresses)
+			i.RecoveryAddresses, err = updateAssociation(ctx, p, o.ExtraColumns(), i, i.RecoveryAddresses)
 			if err != nil {
 				return err
 			}
-			i.VerifiableAddresses, err = updateAssociation(ctx, p, i, i.VerifiableAddresses)
+			i.VerifiableAddresses, err = updateAssociation(ctx, p, o.ExtraColumns(), i, i.VerifiableAddresses)
 			if err != nil {
 				return err
 			}
@@ -1376,7 +1410,7 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 			newCredentials = append(newCredentials, cred)
 		}
 
-		i.Credentials, err = p.updateCredentialsAssociation(ctx, i.ID, oldCredentials, newCredentials)
+		i.Credentials, err = p.updateCredentialsAssociation(ctx, o.ExtraColumns(), i.ID, oldCredentials, newCredentials)
 		return err
 	})); err != nil {
 		return err

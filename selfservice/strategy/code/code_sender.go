@@ -144,12 +144,13 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 			code, err := s.deps.
 				LoginCodePersister().
 				CreateLoginCode(ctx, &CreateLoginCodeParams{
-					AddressType: address.Via,
-					Address:     address.To,
-					RawCode:     rawCode,
-					ExpiresIn:   s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
-					FlowID:      f.GetID(),
-					IdentityID:  id.ID,
+					AddressType:    address.Via,
+					Address:        address.To,
+					RawCode:        rawCode,
+					ExpiresIn:      s.deps.Config().SelfServiceCodeMethodLifespan(ctx),
+					FlowID:         f.GetID(),
+					IdentityID:     id.ID,
+					IdentityRegion: id.Region,
 				})
 			if err != nil {
 				return err

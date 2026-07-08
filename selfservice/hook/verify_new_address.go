@@ -169,6 +169,7 @@ func (e *VerifyNewAddress) execute(
 	originFlowID := f.ID
 	ptc := &identity.PendingTraitsChange{
 		IdentityID:           original.ID,
+		IdentityRegion:       original.Region,
 		SessionID:            uuid.NullUUID{UUID: sessionID, Valid: true},
 		OriginSettingsFlowID: uuid.NullUUID{UUID: originFlowID, Valid: true},
 		NewAddressValue:      addr.Value,

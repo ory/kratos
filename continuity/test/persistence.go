@@ -72,14 +72,15 @@ func TestPersister(ctx context.Context, p interface {
 		})
 
 		t.Run("case=network", func(t *testing.T) {
-			id := x.NewUUID()
+			var id uuid.UUID
 
 			t.Run("sets id on creation", func(t *testing.T) {
 				expected := createContainer(t)
-				expected.ID = id
 				require.NoError(t, p.SaveContinuitySession(ctx, &expected))
 
-				assert.EqualValues(t, id, expected.ID)
+				// The persister assigns the ID; callers must not choose it.
+				require.NotEqual(t, uuid.Nil, expected.ID)
+				id = expected.ID
 				assert.EqualValues(t, nid, expected.NID)
 
 				actual, err := p.GetContinuitySession(ctx, id)
@@ -126,24 +127,23 @@ func TestPersister(ctx context.Context, p interface {
 		})
 
 		t.Run("case=cleanup", func(t *testing.T) {
-			id := x.NewUUID()
 			yesterday := time.Now().Add(-24 * time.Hour).UTC().Truncate(time.Second)
 			m := sqlxx.NullJSONRawMessage(`{"foo": "bar"}`)
 			expected := continuity.Container{Name: "foo", IdentityID: x.PointToUUID(createIdentity(t).ID),
 				ExpiresAt: yesterday,
 				Payload:   m,
 			}
-			expected.ID = id
 
 			t.Run("can cleanup", func(t *testing.T) {
 				require.NoError(t, p.SaveContinuitySession(ctx, &expected))
 
-				assert.EqualValues(t, id, expected.ID)
+				// The persister assigns the ID; callers must not choose it.
+				require.NotEqual(t, uuid.Nil, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)
 
 				require.NoError(t, p.DeleteExpiredContinuitySessions(ctx, time.Now(), 5))
 
-				_, err := p.GetContinuitySession(ctx, id)
+				_, err := p.GetContinuitySession(ctx, expected.ID)
 				require.Error(t, err)
 			})
 		})
