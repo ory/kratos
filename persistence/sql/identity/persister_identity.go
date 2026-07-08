@@ -1576,7 +1576,8 @@ func syncDerivedIdentifiers(ctx context.Context, conn *batch.TracerConnection, c
 	identifiers := make([]*identity.CredentialIdentifier, len(target))
 	for i, identifier := range target {
 		ci := proto
-		ci.ID = x.NewUUID()
+		// The ID stays Nil so batch.Create generates it: gen_random_uuid()
+		// in the statement on CockroachDB, a client-side UUID elsewhere.
 		ci.Identifier = identifier
 		identifiers[i] = &ci
 	}
