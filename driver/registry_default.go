@@ -121,6 +121,7 @@ type RegistryDefault struct {
 	sessionTokenizer initOnce[*session.Tokenizer]
 
 	passwordHasher    initOnce[hash.Hasher]
+	extraHashers      map[string]NewHasherFn
 	passwordValidator initOnce[password.Validator]
 
 	crypter initOnce[cipher.Cipher]
@@ -546,9 +547,19 @@ func (m *RegistryDefault) Cipher(ctx context.Context) cipher.Cipher {
 	})
 }
 
+// WithHashers registers additional password hashers, keyed by the
+// hashers.algorithm value that selects them. See WithExtraHashers.
+func (m *RegistryDefault) WithHashers(hashers map[string]NewHasherFn) {
+	m.extraHashers = hashers
+}
+
 func (m *RegistryDefault) Hasher(ctx context.Context) hash.Hasher {
 	return m.passwordHasher.Get(func() hash.Hasher {
-		if m.c.HasherPasswordHashingAlgorithm(ctx) == "bcrypt" {
+		alg := m.c.HasherPasswordHashingAlgorithm(ctx)
+		if newHasher, ok := m.extraHashers[alg]; ok {
+			return newHasher(m)
+		}
+		if alg == "bcrypt" {
 			return hash.NewHasherBcrypt(m)
 		}
 		return hash.NewHasherArgon2(m)
@@ -662,6 +673,9 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 
 	if o.extraHooks != nil {
 		m.WithHooks(o.extraHooks)
+	}
+	if o.extraHashers != nil {
+		m.WithHashers(o.extraHashers)
 	}
 	if o.extraHandlers != nil {
 		m.WithExtraHandlers(o.extraHandlers)

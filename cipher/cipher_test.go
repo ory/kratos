@@ -91,6 +91,31 @@ func TestCipher(t *testing.T) {
 	})
 }
 
+func TestAESBackwardsCompatibility(t *testing.T) {
+	t.Parallel()
+	// Ciphertext produced by the previous implementation
+	// (github.com/gtank/cryptopasta: caller-generated GCM nonce). The new
+	// stdlib NewGCMWithRandomNonce implementation must keep decrypting it.
+	// Key (32 bytes): the literal config secret below.
+	// Plaintext: "fixture: encrypted with caller-supplied nonce".
+	const legacyCiphertext = "74756223e46170ef0579f207af41b7ed435d649ae94f22bd57934398e9861870e58feba1e949d28f18dfdda6395eabf4d2d31fdeb2b07c4c428e9829509470f6d8e23c17708f1368b6"
+
+	ctx := t.Context()
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeySecretsCipher, []string{"change this password to a secret"}))
+	c := cipher.NewCryptAES(reg.Config())
+
+	plain, err := c.Decrypt(ctx, legacyCiphertext)
+	require.NoError(t, err)
+	assert.Equal(t, "fixture: encrypted with caller-supplied nonce", string(plain))
+
+	// Round-trip with the current implementation.
+	out, err := c.Encrypt(ctx, []byte("fixture: encrypted with caller-supplied nonce"))
+	require.NoError(t, err)
+	plain2, err := c.Decrypt(ctx, out)
+	require.NoError(t, err)
+	assert.Equal(t, "fixture: encrypted with caller-supplied nonce", string(plain2))
+}
+
 func testAllWork(ctx context.Context, t *testing.T, c cipher.Cipher) {
 	message := "my secret message!"
 

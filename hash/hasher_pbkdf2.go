@@ -6,9 +6,11 @@ package hash
 import (
 	"bytes"
 	"context"
+	"crypto/pbkdf2"
 	"crypto/rand"
 	"crypto/sha1" //#nosec G505 -- compatibility for imported passwords
 	"crypto/sha256"
+	"crypto/sha3"
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
@@ -17,10 +19,7 @@ import (
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/crypto/pbkdf2"
-	"golang.org/x/crypto/sha3"
 
 	"github.com/ory/x/otelx"
 )
@@ -41,7 +40,7 @@ func (h *Pbkdf2) Generate(ctx context.Context, password []byte) (_ []byte, err e
 
 	salt := make([]byte, h.SaltLength)
 	if _, err := rand.Read(salt); err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// ensure that the context is not canceled before doing the heavy lifting
@@ -49,7 +48,10 @@ func (h *Pbkdf2) Generate(ctx context.Context, password []byte) (_ []byte, err e
 		return nil, ctx.Err()
 	}
 
-	key := pbkdf2.Key(password, salt, int(h.Iterations), int(h.KeyLength), getPseudorandomFunctionForPbkdf2(h.Algorithm))
+	key, err := pbkdf2.Key(getPseudorandomFunctionForPbkdf2(h.Algorithm), string(password), salt, int(h.Iterations), int(h.KeyLength))
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 
 	var b bytes.Buffer
 	if _, err := fmt.Fprintf(
@@ -61,8 +63,6 @@ func (h *Pbkdf2) Generate(ctx context.Context, password []byte) (_ []byte, err e
 		base64.RawStdEncoding.EncodeToString(salt),
 		base64.RawStdEncoding.EncodeToString(key),
 	); err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
 		return nil, errors.WithStack(err)
 	}
 
@@ -78,11 +78,15 @@ func getPseudorandomFunctionForPbkdf2(alg string) func() hash.Hash {
 	case "sha1":
 		return sha1.New
 	case "sha224":
-		return sha3.New224
+		// Kept for backwards compatibility: this historically mapped to
+		// SHA3-224, not SHA2-224. Changing it would break verification of
+		// previously imported hashes.
+		return func() hash.Hash { return sha3.New224() }
 	case "sha256":
 		return sha256.New
 	case "sha384":
-		return sha3.New384
+		// Kept for backwards compatibility: SHA3-384, see above.
+		return func() hash.Hash { return sha3.New384() }
 	case "sha512":
 		return sha512.New
 	default:

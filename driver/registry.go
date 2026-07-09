@@ -184,6 +184,7 @@ type options struct {
 	extraGoMigrations             popx.Migrations
 	replacementStrategies         []NewStrategy
 	extraHooks                    map[string]NewHookFn
+	extraHashers                  map[string]NewHasherFn
 	extraHandlers                 []NewHandler
 	disableMigrationLogging       bool
 	jsonnetPool                   jsonnetsecure.Pool
@@ -251,6 +252,17 @@ type NewHookFn func(config.SelfServiceHook, Registry) any
 func WithExtraHooks(hooks map[string]NewHookFn) RegistryOption {
 	return func(o *options) {
 		o.extraHooks = hooks
+	}
+}
+
+type NewHasherFn func(reg Registry) hash.Hasher
+
+// WithExtraHashers registers additional password hashers, keyed by the
+// hashers.algorithm value that selects them. An extra hasher takes precedence
+// over a built-in hasher with the same name.
+func WithExtraHashers(hashers map[string]NewHasherFn) RegistryOption {
+	return func(o *options) {
+		o.extraHashers = hashers
 	}
 }
 

@@ -9,7 +9,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
-	"crypto/md5"  //nolint:all // System compatibility for imported passwords
+	"crypto/md5" //nolint:all // System compatibility for imported passwords
+	"crypto/pbkdf2"
 	"crypto/sha1" //nolint:all // System compatibility for imported passwords
 	"crypto/sha256"
 	"crypto/sha512"
@@ -33,7 +34,6 @@ import (
 	//nolint:staticcheck
 	//lint:ignore SA1019 compatibility for imported passwords
 	"golang.org/x/crypto/md4" //nolint:gosec // disable G115 G501 -- compatibility for imported passwords
-	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/crypto/scrypt"
 
 	"github.com/ory/kratos/driver/config"
@@ -254,7 +254,10 @@ func ComparePbkdf2(ctx context.Context, password, hash []byte) error {
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := pbkdf2.Key(password, salt, int(p.Iterations), int(p.KeyLength), getPseudorandomFunctionForPbkdf2(p.Algorithm))
+	otherHash, err := pbkdf2.Key(getPseudorandomFunctionForPbkdf2(p.Algorithm), string(password), salt, int(p.Iterations), int(p.KeyLength))
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	return comparePasswordHashConstantTime(hash, otherHash)
 }
@@ -402,6 +405,7 @@ var (
 	isArgon2idHash       = regexp.MustCompile(`^\$argon2id\$`)
 	isArgon2iHash        = regexp.MustCompile(`^\$argon2i\$`)
 	isPbkdf2Hash         = regexp.MustCompile(`^\$pbkdf2-sha[0-9]{1,3}\$`)
+	isPbkdf2Sha256Hash   = regexp.MustCompile(`^\$pbkdf2-sha256\$`)
 	isScryptHash         = regexp.MustCompile(`^\$scrypt\$`)
 	isSSHAHash           = regexp.MustCompile(`^{SSHA(256|512)?}.*`)
 	isSHAHash            = regexp.MustCompile(`^\$sha(1|256|512)\$`)
@@ -417,6 +421,7 @@ func IsSHA512CryptHash(hash []byte) bool    { return isSHA512CryptHash.Match(has
 func IsArgon2idHash(hash []byte) bool       { return isArgon2idHash.Match(hash) }
 func IsArgon2iHash(hash []byte) bool        { return isArgon2iHash.Match(hash) }
 func IsPbkdf2Hash(hash []byte) bool         { return isPbkdf2Hash.Match(hash) }
+func IsPbkdf2Sha256Hash(hash []byte) bool   { return isPbkdf2Sha256Hash.Match(hash) }
 func IsScryptHash(hash []byte) bool         { return isScryptHash.Match(hash) }
 func IsSSHAHash(hash []byte) bool           { return isSSHAHash.Match(hash) }
 func IsSHAHash(hash []byte) bool            { return isSHAHash.Match(hash) }
@@ -473,15 +478,25 @@ func decodeArgon2idHash(encodedHash string) (p *config.Argon2, salt, hash []byte
 	return p, salt, hash, nil
 }
 
+// pbkdf2Params carries the cost parameters decoded from a stored PBKDF2 hash.
+// The configurable hasher is hash.Pbkdf2; this type only serves comparison of
+// stored or imported hashes.
+type pbkdf2Params struct {
+	Algorithm  string
+	Iterations uint32
+	SaltLength uint32
+	KeyLength  uint32
+}
+
 // decodePbkdf2Hash decodes PBKDF2 encoded password hash.
 // format: $pbkdf2-<digest>$i=<iterations>,l=<length>$<salt>$<hash>
-func decodePbkdf2Hash(encodedHash string) (p *Pbkdf2, salt, hash []byte, err error) {
+func decodePbkdf2Hash(encodedHash string) (p *pbkdf2Params, salt, hash []byte, err error) {
 	parts := strings.Split(encodedHash, "$")
 	if len(parts) != 5 {
 		return nil, nil, nil, ErrInvalidHash
 	}
 
-	p = new(Pbkdf2)
+	p = new(pbkdf2Params)
 	digestParts := strings.SplitN(parts[1], "-", 2)
 	if len(digestParts) != 2 {
 		return nil, nil, nil, ErrInvalidHash

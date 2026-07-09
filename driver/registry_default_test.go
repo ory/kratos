@@ -17,6 +17,7 @@ import (
 
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hash"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/request"
@@ -969,4 +970,26 @@ func TestGetActiveVerificationStrategy(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestDriverDefault_ExtraHashers(t *testing.T) {
+	t.Parallel()
+	// The OSS config schema only allows argon2 and bcrypt. The context
+	// override simulates a downstream distribution whose patched schema
+	// permits the extra algorithm.
+	ctx := contextx.WithConfigValue(t.Context(), config.ViperKeyHasherAlgorithm, "pbkdf2")
+	_, reg := pkg.NewFastRegistryWithMocks(t)
+	reg.WithHashers(map[string]driver.NewHasherFn{
+		"pbkdf2": func(_ driver.Registry) hash.Hasher {
+			return &hash.Pbkdf2{Algorithm: "sha256", Iterations: 100_000, SaltLength: 16, KeyLength: 32}
+		},
+	})
+
+	h := reg.Hasher(ctx)
+	require.IsType(t, &hash.Pbkdf2{}, h)
+
+	generated, err := h.Generate(ctx, []byte("password"))
+	require.NoError(t, err)
+	assert.True(t, hash.IsPbkdf2Sha256Hash(generated), "%s", generated)
+	require.NoError(t, hash.Compare(ctx, []byte("password"), generated))
 }

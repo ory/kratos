@@ -252,6 +252,16 @@ func TestCompare(t *testing.T) {
 		assert.Nil(t, hash.ComparePbkdf2(ctx, []byte("test"), []byte("$pbkdf2-sha512$i=100000,l=32$bdHBpn7OWOivJMVJypy2UqR0UnaD5prQXRZevj/05YU$+wArTfv1a+bNGO1iZrmEdVjhA+lL11wF4/IxpgYfPwc")))
 		assert.Error(t, hash.Compare(ctx, []byte("test"), []byte("$pbkdf2-sha512$i=100000,l=32$bdHBpn7OWOivJMVJypy2UqR0UnaD5prQXRZevj/05YU$+wArTfv1a+bNGO1iZrmEdVjhA+lL11wF4/IxpgYfPww")))
 
+		// The sha224 and sha384 variants historically map to SHA3-224 and
+		// SHA3-384 (not SHA2), see getPseudorandomFunctionForPbkdf2. These
+		// fixtures were generated with that mapping and pin it.
+		assert.Nil(t, hash.Compare(ctx, []byte("test"), []byte("$pbkdf2-sha224$i=100000,l=32$A2nzbFd+wwzPSb+TqkF5Pw$9M4GM2yOYw/fZvsvQbF/0Ec8JO2u9O1MYRTfrDimX6o")))
+		assert.Nil(t, hash.ComparePbkdf2(ctx, []byte("test"), []byte("$pbkdf2-sha224$i=100000,l=32$A2nzbFd+wwzPSb+TqkF5Pw$9M4GM2yOYw/fZvsvQbF/0Ec8JO2u9O1MYRTfrDimX6o")))
+		assert.Error(t, hash.Compare(ctx, []byte("wrong"), []byte("$pbkdf2-sha224$i=100000,l=32$A2nzbFd+wwzPSb+TqkF5Pw$9M4GM2yOYw/fZvsvQbF/0Ec8JO2u9O1MYRTfrDimX6o")))
+		assert.Nil(t, hash.Compare(ctx, []byte("test"), []byte("$pbkdf2-sha384$i=100000,l=32$xDInuz7Y/DPzZUnCaQXJmg$7ICaEa6jEqxbbCBbv4YzrBf39KYNAtc3Bj0QWKeB3Ck")))
+		assert.Nil(t, hash.ComparePbkdf2(ctx, []byte("test"), []byte("$pbkdf2-sha384$i=100000,l=32$xDInuz7Y/DPzZUnCaQXJmg$7ICaEa6jEqxbbCBbv4YzrBf39KYNAtc3Bj0QWKeB3Ck")))
+		assert.Error(t, hash.Compare(ctx, []byte("wrong"), []byte("$pbkdf2-sha384$i=100000,l=32$xDInuz7Y/DPzZUnCaQXJmg$7ICaEa6jEqxbbCBbv4YzrBf39KYNAtc3Bj0QWKeB3Ck")))
+
 		assert.Error(t, hash.Compare(ctx, []byte("test"), []byte("$pbkdf2-sha256$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpI")))
 		assert.Error(t, hash.Compare(ctx, []byte("test"), []byte("$pbkdf2-sha256$aaaa$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpI")))
 		assert.Error(t, hash.Compare(ctx, []byte("test"), []byte("$pbkdf2-sha256$i=100000,l=32$1jP+5Zxpxgtee/iPxGgOz0RfE9/KJuDElP1ley4VxXcc$QJxzfvdbHYBpydCbHoFg3GJEqMFULwskiuqiJctoYpI")))

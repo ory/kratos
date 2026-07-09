@@ -28,7 +28,7 @@ import (
 	templates "github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/pkg"
-	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/pkg/testhelpers"
 	gomail "github.com/ory/mail/v3"
 	"github.com/ory/x/configx"
 )
@@ -102,7 +102,7 @@ func TestNewSMTP(t *testing.T) {
 }
 
 func TestNotAllowedPrivateIPs(t *testing.T) {
-	smtp, _ := x.StartMailhog(t, false)
+	smtp, _ := testhelpers.StartMailhog(t, false)
 
 	_, reg := pkg.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
 		config.ViperKeyCourierSMTPURL:                            smtp,
@@ -131,7 +131,7 @@ func TestNotAllowedPrivateIPs(t *testing.T) {
 }
 
 func TestQueueEmail(t *testing.T) {
-	smtp, api := x.StartMailhog(t, true)
+	smtp, api := testhelpers.StartMailhog(t, true)
 
 	_, reg := pkg.NewRegistryDefaultWithDSN(t, "", configx.WithValues(map[string]any{
 		config.ViperKeyCourierSMTPURL:                            smtp,

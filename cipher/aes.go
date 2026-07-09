@@ -5,13 +5,13 @@ package cipher
 
 import (
 	"context"
+	"crypto/aes"
+	stdcipher "crypto/cipher"
 	"encoding/hex"
 
-	"github.com/gtank/cryptopasta"
+	"github.com/pkg/errors"
 
 	"github.com/ory/herodot"
-
-	"github.com/pkg/errors"
 )
 
 type AES struct {
@@ -22,11 +22,23 @@ func NewCryptAES(c SecretsProvider) *AES {
 	return &AES{c: c}
 }
 
-// Encrypt return a AES encrypt of plaintext
+// aesGCM returns an AES-256-GCM AEAD that generates a random nonce internally
+// and prepends it to the ciphertext (nonce | ciphertext | tag).
+func aesGCM(key *[32]byte) (stdcipher.AEAD, error) {
+	block, err := aes.NewCipher(key[:])
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	gcm, err := stdcipher.NewGCMWithRandomNonce(block)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return gcm, nil
+}
+
+// Encrypt returns the AES-256-GCM encryption of plaintext.
 func (a *AES) Encrypt(ctx context.Context, message []byte) (string, error) {
 	if len(message) == 0 {
-		// do nothing if empty instead of return an error
-		// return nil, errors.WithStack(herodot.ErrInternalServerError.WithReason("Can not encrypt empty string."))
 		return "", nil
 	}
 
@@ -34,18 +46,17 @@ func (a *AES) Encrypt(ctx context.Context, message []byte) (string, error) {
 		return "", errors.WithStack(herodot.ErrMisconfiguration().WithReason("Unable to encrypt message because no cipher secrets were configured."))
 	}
 
-	ciphertext, err := cryptopasta.Encrypt(message, &a.c.SecretsCipher(ctx)[0])
+	gcm, err := aesGCM(&a.c.SecretsCipher(ctx)[0])
 	if err != nil {
 		return "", errors.WithStack(herodot.ErrForbidden().WithWrap(err))
 	}
-	return hex.EncodeToString(ciphertext), nil
+
+	return hex.EncodeToString(gcm.Seal(nil, nil, message, nil)), nil
 }
 
-// Decrypt returns the decrypted aes data
+// Decrypt returns the decrypted AES data.
 func (a *AES) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
 	if len(ciphertext) == 0 {
-		// do nothing if empty instead of return an error
-		// return "", errors.WithStack(herodot.ErrInternalServerError.WithReason("Can not decrypt empty message."))
 		return nil, nil
 	}
 
@@ -60,8 +71,11 @@ func (a *AES) Decrypt(ctx context.Context, ciphertext string) ([]byte, error) {
 	}
 
 	for i := range secrets {
-		plaintext, err := cryptopasta.Decrypt(decode, &secrets[i])
-		if err == nil {
+		gcm, err := aesGCM(&secrets[i])
+		if err != nil {
+			continue
+		}
+		if plaintext, err := gcm.Open(nil, nil, decode, nil); err == nil {
 			return plaintext, nil
 		}
 	}

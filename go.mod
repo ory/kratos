@@ -42,7 +42,6 @@ require (
 	github.com/google/go-github/v38 v38.1.0
 	github.com/google/go-jsonnet v0.21.0
 	github.com/gorilla/sessions v1.3.0
-	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf
