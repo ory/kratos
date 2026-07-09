@@ -161,12 +161,22 @@ func (s *ManagerHTTP) IssueCookie(ctx context.Context, w http.ResponseWriter, r 
 		cookie.Options.Path = alias.Path
 	}
 
-	old, err := s.FetchFromRequest(ctx, r)
-	if err != nil {
-		// No session was set prior -> regenerate anti-csrf token
-		_ = s.r.CSRFHandler().RegenerateToken(w, r)
-	} else if old.Identity.ID != session.Identity.ID {
-		// No session was set prior -> regenerate anti-csrf token
+	// Rotate the anti-CSRF token unless the request was already authenticated
+	// as the same identity: regenerate when there is no prior active session or
+	// when it belongs to a different identity. This decision only needs the
+	// prior session's identity ID, so we deliberately do not expand the
+	// identity. Expanding it here loads the full identity graph, which on a
+	// multi-region deployment can trigger a slow cross-region read (observed at
+	// ~2.4s on the login path) purely to read a single UUID.
+	var priorIdentityID uuid.UUID
+	hasPriorSession := false
+	if token := s.extractToken(r.WithContext(ctx)); token != "" {
+		if prior, ferr := s.r.SessionPersister().GetSessionByToken(ctx, token, ExpandNothing, identity.ExpandNothing); ferr == nil && prior.IsActive() {
+			priorIdentityID = prior.IdentityID
+			hasPriorSession = true
+		}
+	}
+	if !hasPriorSession || priorIdentityID != session.IdentityID {
 		_ = s.r.CSRFHandler().RegenerateToken(w, r)
 	}
 

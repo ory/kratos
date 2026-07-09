@@ -101,6 +101,57 @@ func TestManagerHTTP(t *testing.T) {
 		assert.Equal(t, 1, mock.c)
 	})
 
+	t.Run("case=csrf rotation depends on the prior session identity", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := t.Context()
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		_, reg := pkg.NewFastRegistryWithMocks(t,
+			configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/fake-session.schema.json")),
+		)
+		mock := new(mockCSRFHandler)
+		reg.WithCSRFHandler(mock)
+
+		// Two persisted, active sessions for two different identities.
+		idA := identity.Identity{Traits: []byte("{}")}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &idA))
+		sA, err := testhelpers.NewActiveSession(req, reg, &idA, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sA))
+
+		idB := identity.Identity{Traits: []byte("{}")}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &idB))
+		sB, err := testhelpers.NewActiveSession(req, reg, &idB, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sB))
+
+		// issue calls IssueCookie with priorToken as the request's existing
+		// session token and returns how many times the anti-CSRF token was
+		// rotated by that call.
+		issue := func(t *testing.T, priorToken string, issued *session.Session) int {
+			before := mock.c
+			r := httptest.NewRequest("GET", "https://example.com/", nil)
+			if priorToken != "" {
+				r.Header.Set("X-Session-Token", priorToken)
+			}
+			require.NoError(t, reg.SessionManager().IssueCookie(ctx, httptest.NewRecorder(), r, issued))
+			return mock.c - before
+		}
+
+		t.Run("no prior session rotates", func(t *testing.T) {
+			assert.Equal(t, 1, issue(t, "", sA))
+		})
+		t.Run("same identity keeps the token", func(t *testing.T) {
+			assert.Equal(t, 0, issue(t, sA.Token, sA))
+		})
+		t.Run("different identity rotates", func(t *testing.T) {
+			assert.Equal(t, 1, issue(t, sA.Token, sB))
+		})
+		t.Run("unknown prior token rotates", func(t *testing.T) {
+			assert.Equal(t, 1, issue(t, "unknown-token", sA))
+		})
+	})
+
 	t.Run("case=cookie settings", func(t *testing.T) {
 		t.Parallel()
 
