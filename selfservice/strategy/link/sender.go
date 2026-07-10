@@ -10,8 +10,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow/recovery"
 	"github.com/ory/kratos/selfservice/flow/verification"
@@ -36,6 +38,7 @@ type (
 		VerificationTokenPersistenceProvider
 		RecoveryTokenPersistenceProvider
 
+		hydra.Provider
 		httpx.ClientProvider
 	}
 	SenderProvider interface {
@@ -228,6 +231,17 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 		return errors.WithStack(err)
 	}
 
+	// If the flow was initiated by an OAuth2 login challenge, expose a scoped
+	// view of the OAuth2 client to the courier templates so that messages can
+	// be branded per client.
+	if f.OAuth2LoginChallenge != "" && f.HydraLoginRequest == nil {
+		hlr, err := s.r.Hydra().GetLoginRequest(ctx, string(f.OAuth2LoginChallenge))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		f.HydraLoginRequest = hlr
+	}
+
 	verificationUrl := urlx.CopyWithQuery(
 		urlx.AppendPaths(x.CourierBaseURL(f.GetCourierBaseURL(), s.r.Config().SelfPublicURL(ctx)), verification.RouteSubmitFlow),
 		url.Values{
@@ -237,12 +251,13 @@ func (s *Sender) SendVerificationTokenTo(ctx context.Context, f *verification.Fl
 
 	if err := s.send(ctx, via, email.NewVerificationValid(s.r,
 		&email.VerificationValidModel{
-			To:               address,
-			VerificationURL:  verificationUrl,
-			Identity:         model,
-			RequestURL:       f.GetRequestURL(),
-			TransientPayload: transientPayload,
-			ExpiresInMinutes: int(s.r.Config().SelfServiceLinkMethodLifespan(ctx).Minutes()),
+			To:                 address,
+			VerificationURL:    verificationUrl,
+			Identity:           model,
+			RequestURL:         f.GetRequestURL(),
+			TransientPayload:   transientPayload,
+			ExpiresInMinutes:   int(s.r.Config().SelfServiceLinkMethodLifespan(ctx).Minutes()),
+			OAuth2LoginRequest: template.NewOAuth2LoginRequest(f.HydraLoginRequest),
 		})); err != nil {
 		return err
 	}

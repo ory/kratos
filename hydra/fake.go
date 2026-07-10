@@ -15,6 +15,9 @@ const (
 	FakeInvalidLoginChallenge = "2e98454e-031b-4870-9ad6-8517df1ce604"
 	FakeValidLoginChallenge   = "5ff59a39-ecc5-467e-bb10-26644c0700ee"
 	FakePostLoginURL          = "https://www.example.com/fake-post-login"
+	FakeClientID              = "fake-oauth2-client-id"
+	FakeClientName            = "Fake OAuth2 Client"
+	FakeClientLogoURI         = "https://www.example.com/logo.png"
 )
 
 var ErrFakeAcceptLoginRequestFailed = errors.New("failed to accept login request")
@@ -52,8 +55,14 @@ func (h *FakeHydra) GetLoginRequest(_ context.Context, loginChallenge string) (*
 		return nil, herodot.ErrBadRequest().WithReasonf("Unable to get OAuth 2.0 Login Challenge.")
 	case FakeValidLoginChallenge:
 		return &hydraclientgo.OAuth2LoginRequest{
+			Challenge:  loginChallenge,
 			RequestUrl: h.RequestURL,
 			Skip:       h.Skip,
+			Client: hydraclientgo.OAuth2Client{
+				ClientId:   hydraclientgo.PtrString(FakeClientID),
+				ClientName: hydraclientgo.PtrString(FakeClientName),
+				LogoUri:    hydraclientgo.PtrString(FakeClientLogoURI),
+			},
 		}, nil
 	default:
 		panic("unknown fake login_challenge " + loginChallenge)

@@ -4,6 +4,7 @@
 package courier_test
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,7 +15,9 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/pkg"
@@ -112,4 +115,55 @@ func TestQueueHTTPEmail(t *testing.T) {
 
 		i++
 	}
+}
+
+func TestQueueHTTPEmailWithOAuth2LoginRequest(t *testing.T) {
+	actual := make(chan []byte, 1)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rb, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+		actual <- rb
+	}))
+	t.Cleanup(srv.Close)
+
+	requestConfig := fmt.Sprintf(`{
+		"url": "%s",
+		"method": "POST",
+		"body": "base64://%s"
+	}`, srv.URL, base64.StdEncoding.EncodeToString([]byte("function(ctx) ctx")))
+
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValues(map[string]any{
+		config.ViperKeyCourierDeliveryStrategy:  "http",
+		config.ViperKeyCourierHTTPRequestConfig: requestConfig,
+		config.ViperKeyCourierSMTPURL:           "http://foo.url",
+	}))
+
+	c, err := reg.Courier(t.Context())
+	require.NoError(t, err)
+
+	_, err = c.QueueEmail(t.Context(), email.NewLoginCodeValid(reg, &email.LoginCodeValidModel{
+		To:        "test@test.com",
+		LoginCode: "123456",
+		OAuth2LoginRequest: &template.OAuth2LoginRequest{
+			Challenge: "test-challenge",
+			Client: template.OAuth2Client{
+				ClientID:   "test-client-id",
+				ClientName: "Test Client",
+				ClientURI:  "https://client.example.com",
+				LogoURI:    "https://client.example.com/logo.png",
+				Metadata:   map[string]any{"brand": "acme"},
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	require.NoError(t, c.DispatchQueue(t.Context()))
+
+	body := <-actual
+	assert.Equal(t, "test-challenge", gjson.GetBytes(body, "template_data.oauth2_login_request.challenge").String())
+	assert.Equal(t, "test-client-id", gjson.GetBytes(body, "template_data.oauth2_login_request.client.client_id").String())
+	assert.Equal(t, "Test Client", gjson.GetBytes(body, "template_data.oauth2_login_request.client.client_name").String())
+	assert.Equal(t, "https://client.example.com", gjson.GetBytes(body, "template_data.oauth2_login_request.client.client_uri").String())
+	assert.Equal(t, "https://client.example.com/logo.png", gjson.GetBytes(body, "template_data.oauth2_login_request.client.logo_uri").String())
+	assert.Equal(t, "acme", gjson.GetBytes(body, "template_data.oauth2_login_request.client.metadata.brand").String())
 }

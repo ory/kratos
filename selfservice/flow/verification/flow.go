@@ -13,6 +13,8 @@ import (
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
+
 	"github.com/ory/kratos/x/redir"
 
 	"github.com/ory/pop/v6"
@@ -90,6 +92,11 @@ type Flow struct {
 	// OAuth2LoginChallenge holds the login challenge originally set during the registration flow.
 	OAuth2LoginChallenge sqlxx.NullString `json:"-" db:"oauth2_login_challenge"`
 	OAuth2LoginChallengeParams
+
+	// HydraLoginRequest is the OAuth2 login request behind OAuth2LoginChallenge. It is
+	// hydrated on demand when a message is sent for this flow so that courier templates
+	// can brand messages per OAuth2 client. It is neither persisted nor exposed via the API.
+	HydraLoginRequest *hydraclientgo.OAuth2LoginRequest `json:"-" faker:"-" db:"-"`
 
 	// CSRFToken contains the anti-csrf token associated with this request.
 	CSRFToken string `json:"-" db:"csrf_token"`
@@ -224,6 +231,9 @@ func (Flow) GetFlowName() flow.FlowName                   { return flow.Verifica
 func (f *Flow) SetState(state State)                      { f.State = state }
 func (f *Flow) GetTransientPayload() json.RawMessage      { return f.TransientPayload }
 func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString { return f.OAuth2LoginChallenge }
+func (f *Flow) GetHydraLoginRequest() *hydraclientgo.OAuth2LoginRequest {
+	return f.HydraLoginRequest
+}
 func (f *Flow) GetUI() *container.Container               { return f.UI }
 func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage  { return f.InternalContext }
 func (f *Flow) SetInternalContext(c sqlxx.JSONRawMessage) { f.InternalContext = c }
@@ -334,11 +344,11 @@ func (f *Flow) ContinueURL(ctx context.Context, config *config.Config) *url.URL 
 	return returnTo
 }
 
-func (f *Flow) ToLoggerField() map[string]interface{} {
+func (f *Flow) ToLoggerField() map[string]any {
 	if f == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
-	return map[string]interface{}{
+	return map[string]any{
 		"id":          f.ID.String(),
 		"return_to":   f.ReturnTo,
 		"request_url": f.RequestURL,

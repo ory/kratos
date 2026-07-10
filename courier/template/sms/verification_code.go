@@ -18,13 +18,14 @@ type (
 	}
 
 	VerificationCodeValidModel struct {
-		To               string                 `json:"to"`
-		VerificationCode string                 `json:"verification_code"`
-		Identity         map[string]interface{} `json:"identity"`
-		RequestURL       string                 `json:"request_url"`
-		RequestURLDomain string                 `json:"request_url_domain"`
-		TransientPayload map[string]interface{} `json:"transient_payload"`
-		ExpiresInMinutes int                    `json:"expires_in_minutes"`
+		To                 string                       `json:"to"`
+		VerificationCode   string                       `json:"verification_code"`
+		Identity           map[string]any               `json:"identity"`
+		RequestURL         string                       `json:"request_url"`
+		RequestURLDomain   string                       `json:"request_url_domain"`
+		TransientPayload   map[string]any               `json:"transient_payload"`
+		ExpiresInMinutes   int                          `json:"expires_in_minutes"`
+		OAuth2LoginRequest *template.OAuth2LoginRequest `json:"oauth2_login_request,omitempty"`
 	}
 )
 

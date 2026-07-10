@@ -199,20 +199,21 @@ func NewFlow(reg flowDependencies, r *http.Request, ft flow.Type) (*Flow, error)
 	return f, nil
 }
 
-func (Flow) TableName() string                                { return "selfservice_registration_flows" }
-func (f Flow) GetID() uuid.UUID                               { return f.ID }
-func (f *Flow) AppendTo(src *url.URL) *url.URL                { return flow.AppendFlowTo(src, f.ID) }
-func (f *Flow) GetType() flow.Type                            { return f.Type }
-func (f *Flow) GetRequestURL() string                         { return f.RequestURL }
-func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage      { return f.InternalContext }
-func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage) { f.InternalContext = bytes }
-func (f *Flow) GetUI() *container.Container                   { return f.UI }
-func (f *Flow) GetState() State                               { return f.State }
-func (Flow) GetFlowName() flow.FlowName                       { return flow.RegistrationFlow }
-func (f *Flow) SetState(state State)                          { f.State = state }
-func (f *Flow) GetTransientPayload() json.RawMessage          { return f.TransientPayload }
-func (f *Flow) SetReturnToVerification(to string)             { f.ReturnToVerification = to }
-func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString     { return f.OAuth2LoginChallenge }
+func (Flow) TableName() string                                          { return "selfservice_registration_flows" }
+func (f Flow) GetID() uuid.UUID                                         { return f.ID }
+func (f *Flow) AppendTo(src *url.URL) *url.URL                          { return flow.AppendFlowTo(src, f.ID) }
+func (f *Flow) GetType() flow.Type                                      { return f.Type }
+func (f *Flow) GetRequestURL() string                                   { return f.RequestURL }
+func (f *Flow) GetInternalContext() sqlxx.JSONRawMessage                { return f.InternalContext }
+func (f *Flow) SetInternalContext(bytes sqlxx.JSONRawMessage)           { f.InternalContext = bytes }
+func (f *Flow) GetUI() *container.Container                             { return f.UI }
+func (f *Flow) GetState() State                                         { return f.State }
+func (Flow) GetFlowName() flow.FlowName                                 { return flow.RegistrationFlow }
+func (f *Flow) SetState(state State)                                    { f.State = state }
+func (f *Flow) GetTransientPayload() json.RawMessage                    { return f.TransientPayload }
+func (f *Flow) SetReturnToVerification(to string)                       { f.ReturnToVerification = to }
+func (f *Flow) GetOAuth2LoginChallenge() sqlxx.NullString               { return f.OAuth2LoginChallenge }
+func (f *Flow) GetHydraLoginRequest() *hydraclientgo.OAuth2LoginRequest { return f.HydraLoginRequest }
 
 func (f *Flow) Valid(c clock.Clock) error {
 	if f.ExpiresAt.Before(c.Now()) {

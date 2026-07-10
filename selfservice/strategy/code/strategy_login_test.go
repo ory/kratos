@@ -1449,7 +1449,7 @@ func TestFormHydration(t *testing.T) {
 	t.Parallel()
 
 	_, reg := pkg.NewFastRegistryWithMocks(t,
-		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]any{
 			"enabled":              true,
 			"passwordless_enabled": true,
 		}),
@@ -1479,7 +1479,7 @@ func TestFormHydration(t *testing.T) {
 	}
 
 	passwordlessEnabled := func(ctx context.Context) context.Context {
-		return contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+		return contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]any{
 			"enabled":              true,
 			"passwordless_enabled": true,
 			"mfa_enabled":          false,
@@ -1487,7 +1487,7 @@ func TestFormHydration(t *testing.T) {
 	}
 
 	mfaEnabled := func(ctx context.Context) context.Context {
-		return contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+		return contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]any{
 			"enabled":              true,
 			"passwordless_enabled": false,
 			"mfa_enabled":          true,
@@ -1738,7 +1738,7 @@ func TestCodeLoginWithLoginChallenge(t *testing.T) {
 	t.Parallel()
 
 	_, reg := pkg.NewFastRegistryWithMocks(t,
-		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]interface{}{
+		configx.WithValue(config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeCodeAuth), map[string]any{
 			"enabled":              true,
 			"passwordless_enabled": true,
 		}),
@@ -1777,6 +1777,14 @@ func TestCodeLoginWithLoginChallenge(t *testing.T) {
 		_, err := s.Login(httptest.NewRecorder(), r, f, nil)
 		require.ErrorIs(t, err, flow.ErrCompletedByStrategy)
 		require.NotNil(t, f.HydraLoginRequest)
+
+		messages, err := reg.CourierPersister().NextMessages(t.Context(), 10)
+		require.NoError(t, err)
+		require.Len(t, messages, 1)
+		assert.Equal(t, loginChallenge, gjson.GetBytes(messages[0].TemplateData, "oauth2_login_request.challenge").String())
+		assert.Equal(t, hydra.FakeClientID, gjson.GetBytes(messages[0].TemplateData, "oauth2_login_request.client.client_id").String())
+		assert.Equal(t, hydra.FakeClientName, gjson.GetBytes(messages[0].TemplateData, "oauth2_login_request.client.client_name").String())
+		assert.Equal(t, hydra.FakeClientLogoURI, gjson.GetBytes(messages[0].TemplateData, "oauth2_login_request.client.logo_uri").String())
 	})
 
 	t.Run("case=returns error if login challenge is invalid", func(t *testing.T) {
@@ -1796,5 +1804,9 @@ func TestCodeLoginWithLoginChallenge(t *testing.T) {
 		_, err := s.Login(httptest.NewRecorder(), r, f, nil)
 		require.ErrorIs(t, err, herodot.ErrBadRequest())
 		require.Nil(t, f.HydraLoginRequest)
+
+		// Pin that the invalid login challenge aborts before any one-time code is queued.
+		_, err = reg.CourierPersister().NextMessages(t.Context(), 1)
+		require.ErrorIs(t, err, courier.ErrQueueEmpty)
 	})
 }

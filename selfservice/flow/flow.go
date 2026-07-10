@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
+
 	"github.com/ory/x/sqlxx"
 
 	"github.com/ory/kratos/x/redir"
@@ -59,4 +61,10 @@ type InternalContexter interface {
 
 type OAuth2ChallengeProvider interface {
 	GetOAuth2LoginChallenge() sqlxx.NullString
+}
+
+// HydraLoginRequestProvider is implemented by flows that can carry the OAuth2
+// login request that initiated them.
+type HydraLoginRequestProvider interface {
+	GetHydraLoginRequest() *hydraclientgo.OAuth2LoginRequest
 }

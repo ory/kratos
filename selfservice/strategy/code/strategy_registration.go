@@ -236,6 +236,16 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 		addresses = append(addresses, Address{To: address.Address, Via: address.Channel})
 	}
 
+	// Fetch the OAuth2 login request before sending out the code so that
+	// courier templates can access the OAuth2 client that initiated the flow.
+	if f.OAuth2LoginChallenge != "" {
+		hlr, err := s.deps.Hydra().GetLoginRequest(ctx, string(f.OAuth2LoginChallenge))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		f.HydraLoginRequest = hlr
+	}
+
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above
 	if err := s.deps.CodeSender().SendCode(ctx, f, i, r.Header, addresses...); err != nil {
@@ -255,14 +265,6 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 	f.Active = identity.CredentialsTypeCodeAuth
 	if err := s.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
 		return errors.WithStack(err)
-	}
-
-	if f.OAuth2LoginChallenge != "" {
-		hlr, err := s.deps.Hydra().GetLoginRequest(ctx, string(f.OAuth2LoginChallenge))
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		f.HydraLoginRequest = hlr
 	}
 
 	if x.IsJSONRequest(r) {

@@ -13,9 +13,11 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/courier/template/email"
 	"github.com/ory/kratos/courier/template/sms"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/recovery"
@@ -45,6 +47,7 @@ type (
 		RegistrationCodePersistenceProvider
 		LoginCodePersistenceProvider
 
+		hydra.Provider
 		httpx.ClientProvider
 	}
 	SenderProvider interface {
@@ -76,6 +79,14 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 	transientPayload, err := x.ParseRawMessageOrEmpty(f.GetTransientPayload())
 	if err != nil {
 		return errors.WithStack(err)
+	}
+
+	// If the flow was initiated by an OAuth2 login challenge, expose a scoped
+	// view of the OAuth2 client to the courier templates so that messages can
+	// be branded per client.
+	var oauth2LoginRequest *template.OAuth2LoginRequest
+	if p, ok := f.(flow.HydraLoginRequestProvider); ok {
+		oauth2LoginRequest = template.NewOAuth2LoginRequest(p.GetHydraLoginRequest())
 	}
 
 	// send to all addresses
@@ -121,6 +132,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					RequestURL:         f.GetRequestURL(),
 					TransientPayload:   transientPayload,
 					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					OAuth2LoginRequest: oauth2LoginRequest,
 					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 				})
 			case identity.ChannelTypeSMS:
@@ -132,6 +144,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					RequestURLDomain:   requestURLDomain(f.GetRequestURL()),
 					TransientPayload:   transientPayload,
 					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					OAuth2LoginRequest: oauth2LoginRequest,
 					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 				})
 			}
@@ -176,6 +189,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					RequestURL:         f.GetRequestURL(),
 					TransientPayload:   transientPayload,
 					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					OAuth2LoginRequest: oauth2LoginRequest,
 					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 				})
 			case identity.ChannelTypeSMS:
@@ -187,6 +201,7 @@ func (s *Sender) SendCode(ctx context.Context, f flow.Flow, id *identity.Identit
 					RequestURLDomain:   requestURLDomain(f.GetRequestURL()),
 					TransientPayload:   transientPayload,
 					ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+					OAuth2LoginRequest: oauth2LoginRequest,
 					UserRequestHeaders: hook.RemoveDisallowedHeaders(header, s.deps.Config().WebhookHeaderAllowlist(ctx)),
 				})
 			}
@@ -421,29 +436,43 @@ func (s *Sender) SendVerificationCodeTo(ctx context.Context, f *verification.Flo
 		return errors.WithStack(err)
 	}
 
+	// If the flow was initiated by an OAuth2 login challenge, expose a scoped
+	// view of the OAuth2 client to the courier templates so that messages can
+	// be branded per client.
+	if f.OAuth2LoginChallenge != "" && f.HydraLoginRequest == nil {
+		hlr, err := s.deps.Hydra().GetLoginRequest(ctx, string(f.OAuth2LoginChallenge))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		f.HydraLoginRequest = hlr
+	}
+	oauth2LoginRequest := template.NewOAuth2LoginRequest(f.HydraLoginRequest)
+
 	var t courier.Template
 
 	// TODO: this can likely be abstracted by making templates not specific to the channel they're using
 	switch via {
 	case identity.ChannelTypeEmail:
 		t = email.NewVerificationCodeValid(s.deps, &email.VerificationCodeValidModel{
-			To:               to,
-			VerificationURL:  s.constructVerificationLink(ctx, f, codeString),
-			Identity:         model,
-			VerificationCode: codeString,
-			RequestURL:       f.GetRequestURL(),
-			TransientPayload: transientPayload,
-			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+			To:                 to,
+			VerificationURL:    s.constructVerificationLink(ctx, f, codeString),
+			Identity:           model,
+			VerificationCode:   codeString,
+			RequestURL:         f.GetRequestURL(),
+			TransientPayload:   transientPayload,
+			ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+			OAuth2LoginRequest: oauth2LoginRequest,
 		})
 	case identity.ChannelTypeSMS:
 		t = sms.NewVerificationCodeValid(s.deps, &sms.VerificationCodeValidModel{
-			To:               to,
-			VerificationCode: codeString,
-			Identity:         model,
-			RequestURL:       f.GetRequestURL(),
-			RequestURLDomain: requestURLDomain(f.GetRequestURL()),
-			TransientPayload: transientPayload,
-			ExpiresInMinutes: int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+			To:                 to,
+			VerificationCode:   codeString,
+			Identity:           model,
+			RequestURL:         f.GetRequestURL(),
+			RequestURLDomain:   requestURLDomain(f.GetRequestURL()),
+			TransientPayload:   transientPayload,
+			ExpiresInMinutes:   int(s.deps.Config().SelfServiceCodeMethodLifespan(ctx).Minutes()),
+			OAuth2LoginRequest: oauth2LoginRequest,
 		})
 	default:
 		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Expected email or sms but got %s", via))

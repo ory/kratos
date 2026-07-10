@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -15,18 +16,25 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
+	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/x/configx"
 
 	"github.com/ory/kratos/courier"
+	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/hydra"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
+	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/recovery"
+	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/flow/verification"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
 
@@ -294,4 +302,132 @@ func TestSender(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("method=SendCode with OAuth2 login request", func(t *testing.T) {
+		reg.WithCSRFTokenGenerator(nosurfx.FakeCSRFTokenGenerator)
+		// Drain messages queued by earlier subtests.
+		_, _ = reg.CourierPersister().NextMessages(ctx, 100)
+
+		hlr := &hydraclientgo.OAuth2LoginRequest{
+			Challenge: "test-challenge",
+			Client: hydraclientgo.OAuth2Client{
+				ClientId:   hydraclientgo.PtrString("test-client-id"),
+				ClientName: hydraclientgo.PtrString("Test Client"),
+				ClientUri:  hydraclientgo.PtrString("https://client.example.com"),
+				LogoUri:    hydraclientgo.PtrString("https://client.example.com/logo.png"),
+				Metadata:   map[string]any{"brand": "acme"},
+			},
+		}
+
+		expectScopedRequest := func(t *testing.T, templateData []byte) {
+			t.Helper()
+			assert.Equal(t, "test-challenge", gjson.GetBytes(templateData, "oauth2_login_request.challenge").String())
+			assert.Equal(t, "test-client-id", gjson.GetBytes(templateData, "oauth2_login_request.client.client_id").String())
+			assert.Equal(t, "Test Client", gjson.GetBytes(templateData, "oauth2_login_request.client.client_name").String())
+			assert.Equal(t, "https://client.example.com", gjson.GetBytes(templateData, "oauth2_login_request.client.client_uri").String())
+			assert.Equal(t, "https://client.example.com/logo.png", gjson.GetBytes(templateData, "oauth2_login_request.client.logo_uri").String())
+			assert.Equal(t, "acme", gjson.GetBytes(templateData, "oauth2_login_request.client.metadata.brand").String())
+			// Only the scoped fields may be exposed to messaging channels.
+			assert.ElementsMatch(t, []string{"challenge", "client"}, jsonKeys(templateData, "oauth2_login_request"))
+			assert.ElementsMatch(t, []string{"client_id", "client_name", "client_uri", "logo_uri", "metadata"}, jsonKeys(templateData, "oauth2_login_request.client"))
+		}
+
+		t.Run("flow=login", func(t *testing.T) {
+			r := httptest.NewRequest("GET", "https://www.ory.com/self-service/login/browser", nil)
+			f, err := login.NewFlow(reg, r, flow.TypeBrowser)
+			require.NoError(t, err)
+			f.HydraLoginRequest = hlr
+			require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(ctx, f))
+
+			require.NoError(t, reg.CodeSender().SendCode(ctx, f, i, http.Header{},
+				code.Address{To: "tracked@ory.sh", Via: identity.ChannelTypeEmail},
+				code.Address{To: phoneNumberKnown, Via: identity.ChannelTypeSMS},
+			))
+
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 2)
+			for _, m := range messages {
+				assert.EqualValues(t, template.TypeLoginCodeValid, m.TemplateType)
+				expectScopedRequest(t, m.TemplateData)
+			}
+		})
+
+		t.Run("flow=registration", func(t *testing.T) {
+			r := httptest.NewRequest("GET", "https://www.ory.com/self-service/registration/browser", nil)
+			f, err := registration.NewFlow(reg, r, flow.TypeBrowser)
+			require.NoError(t, err)
+			f.HydraLoginRequest = hlr
+			require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(ctx, f))
+
+			require.NoError(t, reg.CodeSender().SendCode(ctx, f, i, http.Header{},
+				code.Address{To: "tracked@ory.sh", Via: identity.ChannelTypeEmail},
+				code.Address{To: phoneNumberKnown, Via: identity.ChannelTypeSMS},
+			))
+
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 2)
+			for _, m := range messages {
+				assert.EqualValues(t, template.TypeRegistrationCodeValid, m.TemplateType)
+				expectScopedRequest(t, m.TemplateData)
+			}
+		})
+
+		t.Run("flow=login without OAuth2 login request", func(t *testing.T) {
+			r := httptest.NewRequest("GET", "https://www.ory.com/self-service/login/browser", nil)
+			f, err := login.NewFlow(reg, r, flow.TypeBrowser)
+			require.NoError(t, err)
+			require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(ctx, f))
+
+			require.NoError(t, reg.CodeSender().SendCode(ctx, f, i, http.Header{},
+				code.Address{To: "tracked@ory.sh", Via: identity.ChannelTypeEmail},
+			))
+
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 1)
+			assert.False(t, gjson.GetBytes(messages[0].TemplateData, "oauth2_login_request").Exists())
+		})
+
+		t.Run("flow=verification", func(t *testing.T) {
+			reg.SetHydra(hydra.NewFake())
+			f, err := verification.NewFlow(reg, time.Hour, "", u, verification.Strategies{code.NewStrategy(reg)}, flow.TypeBrowser)
+			require.NoError(t, err)
+			f.OAuth2LoginChallenge = sqlxx.NullString(hydra.FakeValidLoginChallenge)
+			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+			require.NoError(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "tracked@ory.sh"))
+
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 1)
+			assert.EqualValues(t, template.TypeVerificationCodeValid, messages[0].TemplateType)
+			templateData := messages[0].TemplateData
+			assert.Equal(t, hydra.FakeValidLoginChallenge, gjson.GetBytes(templateData, "oauth2_login_request.challenge").String())
+			assert.Equal(t, hydra.FakeClientID, gjson.GetBytes(templateData, "oauth2_login_request.client.client_id").String())
+			assert.ElementsMatch(t, []string{"challenge", "client"}, jsonKeys(templateData, "oauth2_login_request"))
+		})
+
+		t.Run("flow=verification without OAuth2 login challenge", func(t *testing.T) {
+			f, err := verification.NewFlow(reg, time.Hour, "", u, verification.Strategies{code.NewStrategy(reg)}, flow.TypeBrowser)
+			require.NoError(t, err)
+			require.NoError(t, reg.VerificationFlowPersister().CreateVerificationFlow(ctx, f))
+
+			require.NoError(t, reg.CodeSender().SendVerificationCode(ctx, f, "email", "tracked@ory.sh"))
+
+			messages, err := reg.CourierPersister().NextMessages(ctx, 12)
+			require.NoError(t, err)
+			require.Len(t, messages, 1)
+			assert.False(t, gjson.GetBytes(messages[0].TemplateData, "oauth2_login_request").Exists())
+		})
+	})
+}
+
+func jsonKeys(data []byte, path string) []string {
+	var keys []string
+	for key := range gjson.GetBytes(data, path).Map() {
+		keys = append(keys, key)
+	}
+	return keys
 }

@@ -19,13 +19,14 @@ type (
 		model *LoginCodeValidModel
 	}
 	LoginCodeValidModel struct {
-		To                 string                 `json:"to"`
-		LoginCode          string                 `json:"login_code"`
-		Identity           map[string]interface{} `json:"identity"`
-		RequestURL         string                 `json:"request_url"`
-		TransientPayload   map[string]interface{} `json:"transient_payload"`
-		ExpiresInMinutes   int                    `json:"expires_in_minutes"`
-		UserRequestHeaders http.Header            `json:"-"`
+		To                 string                       `json:"to"`
+		LoginCode          string                       `json:"login_code"`
+		Identity           map[string]any               `json:"identity"`
+		RequestURL         string                       `json:"request_url"`
+		TransientPayload   map[string]any               `json:"transient_payload"`
+		ExpiresInMinutes   int                          `json:"expires_in_minutes"`
+		OAuth2LoginRequest *template.OAuth2LoginRequest `json:"oauth2_login_request,omitempty"`
+		UserRequestHeaders http.Header                  `json:"-"`
 	}
 )
 
@@ -58,6 +59,7 @@ func (t *LoginCodeValid) MarshalJSON() ([]byte, error) {
 func (t *LoginCodeValid) TemplateType() template.TemplateType {
 	return template.TypeLoginCodeValid
 }
+
 func (t *LoginCodeValid) RequestHeaders() http.Header {
 	return t.model.UserRequestHeaders
 }
