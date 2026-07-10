@@ -1129,6 +1129,16 @@ func (p *IdentityPersister) ListIdentities(ctx context.Context, params identity.
 			return err
 		}
 
+		// This transaction runs up to five statements (credential-type lookup,
+		// page query, expansion queries over the page's identities). At
+		// SERIALIZABLE, a concurrent write to any of those identities between
+		// statements forces a read-refresh over the whole page and retries the
+		// transaction when it fails; READ COMMITTED absorbs those conflicts
+		// per-statement on the server.
+		if err := crdbx.SetTransactionReadCommitted(con); err != nil {
+			return err
+		}
+
 		if err := crdbx.SetTransactionConsistency(con, params.ConsistencyLevel, p.r.Config().DefaultConsistencyLevel(ctx)); err != nil {
 			return err
 		}

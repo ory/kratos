@@ -28,10 +28,6 @@ import (
 	"github.com/ory/x/stringsx"
 )
 
-// dialectPostgreSQL is the pop dialect name for PostgreSQL. dbal does not
-// export it as a constant.
-const dialectPostgreSQL = "postgres"
-
 var _ session.Persister = new(Persister)
 
 const (
@@ -77,7 +73,7 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessions")
 	defer otelx.End(span, &err)
 
-	s := make([]session.Session, 0)
+	var s []session.Session
 	nid := p.NetworkID(ctx)
 
 	paginatorOpts = append(paginatorOpts, keysetpagination.WithDefaultSize(paginationDefaultItemsSize))
@@ -90,7 +86,9 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 		return nil, nil, errors.WithStack(x.PageTokenInvalid)
 	}
 
-	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
+	if err := p.listWithinReadCommittedReadOnlyTx(ctx, func(ctx context.Context, c *pop.Connection) error {
+		s = make([]session.Session, 0)
+
 		q := c.Where("nid = ?", nid)
 		if active != nil {
 			if *active {
@@ -104,7 +102,6 @@ func (p *Persister) ListSessions(ctx context.Context, active *bool, paginatorOpt
 			q = q.EagerPreload(expandables.ToEager()...)
 		}
 
-		// Get the paginated list of matching items
 		if err := q.Scope(keysetpagination.Paginate[session.Session](paginator)).All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
@@ -139,11 +136,13 @@ func (p *Persister) ListSessionsByIdentity(
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.ListSessionsByIdentity")
 	defer otelx.End(span, &err)
 
-	s := make([]session.Session, 0)
+	var s []session.Session
 	t := int64(0)
 	nid := p.NetworkID(ctx)
 
-	if err := p.Transaction(ctx, func(ctx context.Context, c *pop.Connection) error {
+	if err := p.listWithinReadCommittedReadOnlyTx(ctx, func(ctx context.Context, c *pop.Connection) error {
+		s = make([]session.Session, 0)
+
 		q := c.Where("identity_id = ? AND nid = ?", iID, nid)
 		if except != uuid.Nil {
 			q = q.Where("id != ?", except)
@@ -160,7 +159,6 @@ func (p *Persister) ListSessionsByIdentity(
 			q = q.EagerPreload(expandables.ToEager()...)
 		}
 
-		// Get the total count of matching items
 		total, err := q.Count(new(session.Session))
 		if err != nil {
 			return sqlcon.HandleError(err)
@@ -169,7 +167,6 @@ func (p *Persister) ListSessionsByIdentity(
 
 		q.Order("created_at DESC")
 
-		// Get the paginated list of matching items
 		if err := q.Paginate(page, perPage).All(&s); err != nil {
 			return sqlcon.HandleError(err)
 		}
@@ -430,7 +427,7 @@ func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) (rev
 	}
 
 	switch con.Dialect.Name() {
-	case dbal.DriverCockroachDB, dialectPostgreSQL:
+	case dbal.DriverCockroachDB, dbal.DriverPostgreSQL:
 		// CTE: identify the row by (token, nid), conditionally flip active=false
 		// only when currently true, and return the matched row's identifiers in
 		// one round trip. See revokeMatchingSessions for the contention rationale.
@@ -587,7 +584,7 @@ func (p *Persister) revokeMatchingSessions(ctx context.Context, predicate string
 	)
 
 	switch con.Dialect.Name() {
-	case dbal.DriverCockroachDB, dialectPostgreSQL:
+	case dbal.DriverCockroachDB, dbal.DriverPostgreSQL:
 		//#nosec G201 -- predicate is a static persister-internal constant, not user input
 		query := fmt.Sprintf(`WITH found AS (SELECT id FROM sessions WHERE %s),
      upd AS (UPDATE sessions SET active = false FROM found WHERE sessions.id = found.id AND sessions.active = true RETURNING 1)
@@ -626,6 +623,31 @@ func (p *Persister) runInReadCommittedOnCRDB(ctx context.Context, fn func(*pop.C
 		&sql.TxOptions{Isolation: sql.LevelReadCommitted},
 		func(ctx context.Context, tx *pop.Connection) error { return fn(tx) },
 	)
+}
+
+// listWithinReadCommittedReadOnlyTx invokes fn, which must only read, inside a READ
+// COMMITTED read-only transaction on CockroachDB and PostgreSQL, and inside a
+// regular transaction on every other dialect. The paginated session list
+// queries run more than one statement per transaction (count + page, or page
+// + eager preloads); under SERIALIZABLE a concurrent write to the scanned
+// rows — a login upsert, extension, or revocation — between those statements
+// invalidates the transaction's read timestamp and surfaces as a client-side
+// RETRY_SERIALIZABLE retry. READ COMMITTED gives each statement its own read
+// timestamp so CockroachDB absorbs those conflicts server-side. READ
+// COMMITTED is already the PostgreSQL default; there the options make the
+// read-only intent explicit and let the server skip write-path bookkeeping.
+// SQLite and MySQL keep the plain transaction.
+func (p *Persister) listWithinReadCommittedReadOnlyTx(ctx context.Context, fn func(ctx context.Context, c *pop.Connection) error) error {
+	con := p.GetConnection(ctx)
+	switch con.Dialect.Name() {
+	case dbal.DriverCockroachDB, dbal.DriverPostgreSQL:
+		return popx.TransactionWithOptions(ctx, con,
+			&sql.TxOptions{Isolation: sql.LevelReadCommitted, ReadOnly: true},
+			fn,
+		)
+	default:
+		return p.Transaction(ctx, fn)
+	}
 }
 
 // DeleteSessionsByIdentities permanently deletes all sessions belonging to the given identity IDs.
