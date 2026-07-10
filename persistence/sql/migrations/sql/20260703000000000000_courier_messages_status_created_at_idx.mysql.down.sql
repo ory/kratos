@@ -1,0 +1,1 @@
+DROP INDEX courier_messages_status_created_at_idx ON courier_messages;

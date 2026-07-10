@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS courier_messages_status_created_at_idx;

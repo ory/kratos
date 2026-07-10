@@ -7,6 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
@@ -15,6 +16,7 @@ import (
 	"github.com/ory/kratos/courier"
 	"github.com/ory/kratos/persistence/sql/update"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/otelx"
 	keysetpagination "github.com/ory/x/pagination/keysetpagination_v2"
 	"github.com/ory/x/sqlcon"
@@ -69,12 +71,24 @@ func (p *Persister) NextMessages(ctx context.Context, limit uint8) (messages []c
 	defer otelx.End(span, &err)
 
 	if err := p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
+		q := tx.Where("nid = ? AND status = ?",
+			p.NetworkID(ctx),
+			courier.MessageStatusQueued,
+		)
+		if tx.Dialect.Name() == dbal.DriverCockroachDB {
+			// On CockroachDB, exclude messages enqueued within the last second.
+			// Concurrent INSERTs land at created_at ~ now; keeping them out of
+			// the scanned span avoids read-write contention between this poll
+			// and message enqueueing, which surfaces as transaction retries
+			// (ReadWithinUncertaintyIntervalError). Skipped messages are picked
+			// up by a subsequent poll. The other databases serve this query
+			// from an MVCC snapshot that does not conflict with concurrent
+			// inserts, so they keep the exact current behavior.
+			q = q.Where("created_at < ?", time.Now().UTC().Add(-time.Second))
+		}
+
 		var m []courier.Message
-		if err := tx.
-			Where("nid = ? AND status = ?",
-				p.NetworkID(ctx),
-				courier.MessageStatusQueued,
-			).
+		if err := q.
 			Order("created_at ASC").
 			Limit(int(limit)).
 			All(&m); err != nil {

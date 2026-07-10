@@ -36,6 +36,17 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 	return func(t *testing.T) {
 		nid, p := newNetworkUnlessExisting(t, ctx)
 
+		// backdateMessage moves a message's creation time into the past so that
+		// it clears the CockroachDB anti-contention grace period in
+		// NextMessages, which defers messages enqueued within the last second
+		// to a later poll.
+		backdateMessage := func(t *testing.T, id uuid.UUID) {
+			createdAt := time.Now().UTC().Add(-2 * time.Second)
+			require.NoError(t, p.GetConnection(ctx).RawQuery(
+				"UPDATE courier_messages SET created_at = ?, updated_at = ? WHERE id = ? AND nid = ?",
+				createdAt, createdAt, id, nid).Exec())
+		}
+
 		t.Run("case=no messages in queue", func(t *testing.T) {
 			m, err := p.NextMessages(ctx, 10)
 			require.ErrorIs(t, err, courier.ErrQueueEmpty)
@@ -51,11 +62,15 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			for k := range messages {
 				require.NoError(t, faker.FakeData(&messages[k]))
 				require.NoError(t, p.AddMessage(ctx, &messages[k]))
+				// The timestamps are in the past (preserving the insertion
+				// order) so that the messages clear the CockroachDB
+				// anti-contention grace period in NextMessages.
+				createdAt := now.Add(time.Duration(k)*time.Hour - 25*time.Hour).Round(time.Second)
 				require.NoError(t, p.GetConnection(ctx).
 					RawQuery(
 						"UPDATE courier_messages SET created_at = ?, updated_at = ? WHERE id = ? AND nid = ?",
-						now.Add(time.Duration(k)*time.Hour).Round(time.Second),
-						now.Add(time.Duration(k)*time.Hour).Round(time.Second),
+						createdAt,
+						createdAt,
 						messages[k].ID, nid).
 					Exec())
 			}
@@ -260,6 +275,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			t.Run("generates id on creation", func(t *testing.T) {
 				expected := courier.Message{ID: uuid.Nil}
 				require.NoError(t, p.AddMessage(ctx, &expected))
+				backdateMessage(t, expected.ID)
 
 				assert.NotEqual(t, uuid.Nil, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)
@@ -283,6 +299,7 @@ func TestPersister(ctx context.Context, newNetworkUnlessExisting NetworkWrapper,
 			t.Run("persists id on creation", func(t *testing.T) {
 				expected := courier.Message{ID: id}
 				require.NoError(t, p.AddMessage(ctx, &expected))
+				backdateMessage(t, expected.ID)
 
 				assert.EqualValues(t, id, expected.ID)
 				assert.EqualValues(t, nid, expected.NID)
