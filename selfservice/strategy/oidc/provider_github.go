@@ -18,7 +18,7 @@ import (
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/stringsx"
 
-	ghapi "github.com/google/go-github/v38/github"
+	ghapi "github.com/google/go-github/v89/github"
 
 	"github.com/ory/herodot"
 )
@@ -71,7 +71,10 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, que
 	}
 
 	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), g.oauth2(ctx), exchange)
-	gh := ghapi.NewClient(client.HTTPClient)
+	gh, err := ghapi.NewClient(ghapi.WithHTTPClient(client.HTTPClient))
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReasonf("%s", err))
+	}
 
 	user, _, err := gh.Users.Get(ctx, "")
 	if err != nil {

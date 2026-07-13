@@ -39,7 +39,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/golang/gddo v0.0.0-20190904175337-72a348e765d2
 	github.com/golang/mock v1.6.0
-	github.com/google/go-github/v38 v38.1.0
 	github.com/google/go-jsonnet v0.21.0
 	github.com/gorilla/sessions v1.3.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
@@ -94,6 +93,7 @@ require (
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cockroachdb/cockroach-go/v2 v2.4.3
+	github.com/google/go-github/v89 v89.0.0
 	github.com/gorilla/pat v1.0.2
 	github.com/ian-kent/go-log v0.0.0-20160113211217-5731446c36ab
 	github.com/mailhog/MailHog-Server v1.0.1
@@ -234,7 +234,7 @@ require (
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/gofrs/flock v0.12.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/go-tpm v0.9.1 // indirect
 	github.com/google/pprof v0.0.0-20250630185457-6e76a2b096b5 // indirect
 	github.com/google/uuid v1.6.0 // indirect

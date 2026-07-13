@@ -15,7 +15,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 
-	ghapi "github.com/google/go-github/v38/github"
+	ghapi "github.com/google/go-github/v89/github"
 
 	"github.com/ory/herodot"
 )
@@ -59,7 +59,10 @@ func (g *ProviderGitHubApp) AuthCodeURLOptions(r ider) []oauth2.AuthCodeOption {
 
 func (g *ProviderGitHubApp) Claims(ctx context.Context, exchange *oauth2.Token, query url.Values) (*Claims, error) {
 	ctx, client := httpx.SetOAuth2(ctx, g.reg.HTTPClient(ctx), g.oauth2(ctx), exchange)
-	gh := ghapi.NewClient(client.HTTPClient)
+	gh, err := ghapi.NewClient(ghapi.WithHTTPClient(client.HTTPClient))
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrInternalServerError().WithWrap(err).WithReasonf("%s", err))
+	}
 
 	user, _, err := gh.Users.Get(ctx, "")
 	if err != nil {
