@@ -278,11 +278,13 @@ const (
 
 var _ ContinueWith = new(ContinueWithDeviceAuthnPINEntryUI)
 
-// Instructs the client to show its PIN entry UI after a PIN-protected DeviceAuthn
-// enrollment or secret rotation. It carries the one-time HPKE-sealed pin_secret,
-// which the device opens with the transport private key it generated for this
-// enrollment to bind the user's PIN. The plaintext secret never leaves the
-// device; the server only ever stores its at-rest ciphertext.
+// Instructs the client to show its PIN entry UI
+//
+// Returned after a PIN-protected DeviceAuthn enrollment or secret rotation.
+// It carries the one-time HPKE-sealed pin_secret, which the device opens with
+// the transport private key it generated for this enrollment and binds to the
+// user's PIN. The plaintext secret never leaves the device; the server only
+// ever stores its at-rest ciphertext.
 //
 // The enrolled key's client_key_id is not included: it is the SHA-256 fingerprint
 // of the device's own public key, which the device derives locally. Non-PIN keys
@@ -301,18 +303,24 @@ type ContinueWithDeviceAuthnPINEntryUI struct {
 	Data ContinueWithDeviceAuthnPINEntryUIData `json:"data"`
 }
 
-// Carries the one-time HPKE-sealed pin_secret material — the encapsulated key and
-// the sealed ciphertext — that the device opens with the transport private key it
-// generated for this enrollment.
+// The one-time HPKE-sealed pin_secret material
+//
+// Contains the encapsulated key and the sealed ciphertext that the device
+// opens with the X25519 transport private key it generated for this
+// enrollment or rotation. Open it with HPKE (RFC 9180) using the suite
+// DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-128-GCM, the ASCII info
+// string "ory/deviceauthn/pin-secret/v1", and the key's client_key_id (its
+// ASCII hex form) as the AAD.
 //
 // swagger:model continueWithDeviceAuthnPinEntryUiData
 type ContinueWithDeviceAuthnPINEntryUIData struct {
-	// Enc is the base64-encoded HPKE encapsulated key.
+	// The base64-encoded HPKE encapsulated key (the `enc` output of the seal
+	// operation).
 	//
 	// required: true
 	Enc string `json:"enc"`
 
-	// Ciphertext is the base64-encoded HPKE-sealed pin_secret.
+	// The base64-encoded HPKE ciphertext of the sealed pin_secret.
 	//
 	// required: true
 	Ciphertext string `json:"ciphertext"`

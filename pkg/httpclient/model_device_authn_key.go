@@ -19,24 +19,24 @@ import (
 // checks if the DeviceAuthnKey type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &DeviceAuthnKey{}
 
-// DeviceAuthnKey struct for DeviceAuthnKey
+// DeviceAuthnKey Represents a hardware-backed signing key enrolled from a mobile device. The private key resides inside the device and never exists on the server.  To list the identity's enrolled keys, fetch a settings flow: each key's remove button (a `ui.nodes` entry named `deviceauthn_remove` in group `deviceauthn`) carries the key, with its PIN state redacted, in the node label's `context`.
 type DeviceAuthnKey struct {
 	Attestation *DeviceAuthnAttestation `json:"attestation,omitempty"`
-	// ClientKeyID is the key's stable, unique-per-identity id, computed as hex(SHA-256(PublicKey)) — the lowercase-hex SHA-256 digest of the public key's PKIX, ASN.1 DER (SubjectPublicKeyInfo) encoding, exactly the bytes stored in PublicKey. It is a deterministic fingerprint of the enrolled signing key, so the device recomputes the identical value locally instead of receiving it from the server. Keys enrolled before the server derived the id keep their original client-chosen value.
+	// The key's stable id, unique per identity. Submit it as the `client_key_id` when logging in with the key, deleting it, or rotating its pin_secret.  The device can also compute the id without reading it back from the server: it is the lowercase-hex SHA-256 of `public_key` (the key's PKIX, ASN.1 DER encoding). Keys enrolled before the server derived the id keep their original client-chosen value, so prefer reading this field over recomputing it for older keys.
 	ClientKeyId *string `json:"client_key_id,omitempty"`
-	// CreatedAt is the timestamp of when the key was created. Only used for troubleshooting/UI.
+	// When the key was enrolled. Only used for troubleshooting and UI.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
-	// DeviceName is a human readable name for the device, helping the user to distinguish it from others.
-	DeviceName *string    `json:"device_name,omitempty"`
-	DeviceType *string    `json:"device_type,omitempty"`
-	Pin        *PINConfig `json:"pin,omitempty"`
-	// PublicKey is the device's public key (EC P-256 in v1), used to verify signatures. It is stored in PKIX, ASN.1 DER form (the SubjectPublicKeyInfo encoding produced by x509.MarshalPKIXPublicKey). The private key resides inside the device and does not exist on the server.
-	PublicKey []int32 `json:"public_key,omitempty"`
-	// RelaxedAttestationExpiresAt is set only when the key's attestation chain validated because relaxed attestation was allowed (software roots, expired certs, software security level) rather than under strict rules. Such keys are second-class: they are refused at login after this time, or immediately if relaxed attestation is turned off. It is nil for hardware-attested keys that pass strict validation.
+	// A human-readable name for the device, helping the user tell this key apart from others.
+	DeviceName *string     `json:"device_name,omitempty"`
+	DeviceType *DeviceType `json:"device_type,omitempty"`
+	Pin        *PINConfig  `json:"pin,omitempty"`
+	// The device's public key (an elliptic-curve key on P-224, P-256, P-384, or P-521 in version 1) in PKIX, ASN.1 DER (SubjectPublicKeyInfo) form, base64-encoded. Signatures are verified against this key.
+	PublicKey *string `json:"public_key,omitempty"`
+	// Set only when the key's attestation chain was accepted under relaxed rules (software roots, expired certificates, software security level) rather than strict hardware attestation. Such keys are refused at login after this time, or immediately once relaxed attestation is turned off. Absent for hardware-attested keys that pass strict validation.
 	RelaxedAttestationExpiresAt *time.Time        `json:"relaxed_attestation_expires_at,omitempty"`
-	State                       *string           `json:"state,omitempty"`
+	State                       *KeyState         `json:"state,omitempty"`
 	UserVerification            *UserVerification `json:"user_verification,omitempty"`
-	// v1 uses SHA256 + EC256. v2 (in the future) may use ML-DSA which is post-quantum resistant. This requires Android/iOS support so we have to wait. We intentionally avoid storing the cryptographic algorithm here a la JWT/TLS to avoid security issues and algorithm negotiation.
+	// The cryptography version of the key. Version 1 uses ECDSA with SHA-256 on an elliptic curve (P-224, P-256, P-384, or P-521); further versions are reserved for future signature suites.
 	Version              *int64 `json:"version,omitempty"`
 	AdditionalProperties map[string]interface{}
 }
@@ -189,9 +189,9 @@ func (o *DeviceAuthnKey) SetDeviceName(v string) {
 }
 
 // GetDeviceType returns the DeviceType field value if set, zero value otherwise.
-func (o *DeviceAuthnKey) GetDeviceType() string {
+func (o *DeviceAuthnKey) GetDeviceType() DeviceType {
 	if o == nil || IsNil(o.DeviceType) {
-		var ret string
+		var ret DeviceType
 		return ret
 	}
 	return *o.DeviceType
@@ -199,7 +199,7 @@ func (o *DeviceAuthnKey) GetDeviceType() string {
 
 // GetDeviceTypeOk returns a tuple with the DeviceType field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DeviceAuthnKey) GetDeviceTypeOk() (*string, bool) {
+func (o *DeviceAuthnKey) GetDeviceTypeOk() (*DeviceType, bool) {
 	if o == nil || IsNil(o.DeviceType) {
 		return nil, false
 	}
@@ -215,8 +215,8 @@ func (o *DeviceAuthnKey) HasDeviceType() bool {
 	return false
 }
 
-// SetDeviceType gets a reference to the given string and assigns it to the DeviceType field.
-func (o *DeviceAuthnKey) SetDeviceType(v string) {
+// SetDeviceType gets a reference to the given DeviceType and assigns it to the DeviceType field.
+func (o *DeviceAuthnKey) SetDeviceType(v DeviceType) {
 	o.DeviceType = &v
 }
 
@@ -253,17 +253,17 @@ func (o *DeviceAuthnKey) SetPin(v PINConfig) {
 }
 
 // GetPublicKey returns the PublicKey field value if set, zero value otherwise.
-func (o *DeviceAuthnKey) GetPublicKey() []int32 {
+func (o *DeviceAuthnKey) GetPublicKey() string {
 	if o == nil || IsNil(o.PublicKey) {
-		var ret []int32
+		var ret string
 		return ret
 	}
-	return o.PublicKey
+	return *o.PublicKey
 }
 
 // GetPublicKeyOk returns a tuple with the PublicKey field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DeviceAuthnKey) GetPublicKeyOk() ([]int32, bool) {
+func (o *DeviceAuthnKey) GetPublicKeyOk() (*string, bool) {
 	if o == nil || IsNil(o.PublicKey) {
 		return nil, false
 	}
@@ -279,9 +279,9 @@ func (o *DeviceAuthnKey) HasPublicKey() bool {
 	return false
 }
 
-// SetPublicKey gets a reference to the given []int32 and assigns it to the PublicKey field.
-func (o *DeviceAuthnKey) SetPublicKey(v []int32) {
-	o.PublicKey = v
+// SetPublicKey gets a reference to the given string and assigns it to the PublicKey field.
+func (o *DeviceAuthnKey) SetPublicKey(v string) {
+	o.PublicKey = &v
 }
 
 // GetRelaxedAttestationExpiresAt returns the RelaxedAttestationExpiresAt field value if set, zero value otherwise.
@@ -317,9 +317,9 @@ func (o *DeviceAuthnKey) SetRelaxedAttestationExpiresAt(v time.Time) {
 }
 
 // GetState returns the State field value if set, zero value otherwise.
-func (o *DeviceAuthnKey) GetState() string {
+func (o *DeviceAuthnKey) GetState() KeyState {
 	if o == nil || IsNil(o.State) {
-		var ret string
+		var ret KeyState
 		return ret
 	}
 	return *o.State
@@ -327,7 +327,7 @@ func (o *DeviceAuthnKey) GetState() string {
 
 // GetStateOk returns a tuple with the State field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DeviceAuthnKey) GetStateOk() (*string, bool) {
+func (o *DeviceAuthnKey) GetStateOk() (*KeyState, bool) {
 	if o == nil || IsNil(o.State) {
 		return nil, false
 	}
@@ -343,8 +343,8 @@ func (o *DeviceAuthnKey) HasState() bool {
 	return false
 }
 
-// SetState gets a reference to the given string and assigns it to the State field.
-func (o *DeviceAuthnKey) SetState(v string) {
+// SetState gets a reference to the given KeyState and assigns it to the State field.
+func (o *DeviceAuthnKey) SetState(v KeyState) {
 	o.State = &v
 }
 

@@ -19,15 +19,15 @@ import (
 // checks if the PINConfig type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &PINConfig{}
 
-// PINConfig PINConfig is the per-key PIN state. The pin_secret field holds the at-rest ciphertext; the plaintext exists only transiently in memory during verification and is cleared once the key locks.
+// PINConfig The pin_secret field holds only the at-rest ciphertext; the plaintext exists transiently in server memory during verification and is invalidated once the key locks.
 type PINConfig struct {
-	// CreatedAt is when the pin_secret was first issued.
+	// When the pin_secret was first issued.
 	CreatedAt *time.Time `json:"created_at,omitempty"`
-	// FailedAttempts counts consecutive wrong-PIN attempts; the key locks when it reaches the configured maximum.
+	// The number of consecutive wrong-PIN attempts so far; the key locks when it reaches the configured maximum (pin_max_attempts, default 5).
 	FailedAttempts *int32 `json:"failed_attempts,omitempty"`
-	// PINSecret is the at-rest pin_secret ciphertext. Server-internal: never logged or transmitted. Empty once the key locks.
+	// The at-rest ciphertext of the pin_secret. It never leaves the server and is cleared once the key locks.
 	PinSecret *string `json:"pin_secret,omitempty"`
-	// RotatedAt is when the pin_secret was last rotated; the zero value means never rotated. omitzero (not omitempty) drops the zero timestamp from the JSON, since omitempty never treats a time.Time value as empty.
+	// When the pin_secret was last rotated. Omitted if the secret was never rotated.
 	RotatedAt            *time.Time `json:"rotated_at,omitempty"`
 	AdditionalProperties map[string]interface{}
 }

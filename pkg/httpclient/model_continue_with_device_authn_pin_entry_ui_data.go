@@ -19,11 +19,11 @@ import (
 // checks if the ContinueWithDeviceAuthnPinEntryUiData type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &ContinueWithDeviceAuthnPinEntryUiData{}
 
-// ContinueWithDeviceAuthnPinEntryUiData Carries the one-time HPKE-sealed pin_secret material — the encapsulated key and the sealed ciphertext — that the device opens with the transport private key it generated for this enrollment.
+// ContinueWithDeviceAuthnPinEntryUiData Contains the encapsulated key and the sealed ciphertext that the device opens with the X25519 transport private key it generated for this enrollment or rotation. Open it with HPKE (RFC 9180) using the suite DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-128-GCM, the ASCII info string \"ory/deviceauthn/pin-secret/v1\", and the key's client_key_id (its ASCII hex form) as the AAD.
 type ContinueWithDeviceAuthnPinEntryUiData struct {
-	// Ciphertext is the base64-encoded HPKE-sealed pin_secret.
+	// The base64-encoded HPKE ciphertext of the sealed pin_secret.
 	Ciphertext string `json:"ciphertext"`
-	// Enc is the base64-encoded HPKE encapsulated key.
+	// The base64-encoded HPKE encapsulated key (the `enc` output of the seal operation).
 	Enc                  string `json:"enc"`
 	AdditionalProperties map[string]interface{}
 }

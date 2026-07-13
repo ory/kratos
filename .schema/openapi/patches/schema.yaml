@@ -97,6 +97,29 @@
     - platform
     - none
 
+# DeviceAuthn: constrain KeyState and DeviceType to their known values, for the
+# same reason as UserVerification above.
+- op: add
+  path: /components/schemas/KeyState/enum
+  value:
+    - initial
+    - confirmed
+    - locked
+
+- op: add
+  path: /components/schemas/DeviceType/enum
+  value:
+    - Android
+    - iOS
+
+# Without explicit variable names, generators derive the "iOS" identifier as
+# I_OS / IOs. The names apply verbatim in every generated language.
+- op: add
+  path: /components/schemas/DeviceType/x-enum-varnames
+  value:
+    - ANDROID
+    - IOS
+
 # DeviceAuthn: the at-rest pin_secret ciphertext is server-internal and must
 # never be returned to clients. Mark it write-only so the SDK and docs flag it
 # as not-readable (Swagger 2.0 cannot express writeOnly, so this lands in the

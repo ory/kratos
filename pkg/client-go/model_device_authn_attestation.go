@@ -18,7 +18,7 @@ import (
 // checks if the DeviceAuthnAttestation type satisfies the MappedNullable interface at compile time
 var _ MappedNullable = &DeviceAuthnAttestation{}
 
-// DeviceAuthnAttestation Exactly one of Android / IOS is set, matching the key's DeviceType.
+// DeviceAuthnAttestation Exactly one of `android` or `ios` is set, matching the key's device_type.
 type DeviceAuthnAttestation struct {
 	Android              *DeviceAuthnAndroidKeyDescription `json:"android,omitempty"`
 	Ios                  *DeviceAuthnIOSAttestation        `json:"ios,omitempty"`

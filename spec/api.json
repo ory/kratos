@@ -116,21 +116,22 @@
         "title": "DefaultError is not safe to shallow copy because it contains\nfields which are not value types, e.g. maps.\nA shallow copy would inadvertently share these underlying fields,\nleading to incorrect behavior and data races in a concurrent context.\nConsequently, all methods take the type by pointer and not by value."
       },
       "DeviceAuthnKey": {
+        "description": "Represents a hardware-backed signing key enrolled from a mobile device.\nThe private key resides inside the device and never exists on the server.\n\nTo list the identity's enrolled keys, fetch a settings flow: each key's\nremove button (a `ui.nodes` entry named `deviceauthn_remove` in group\n`deviceauthn`) carries the key, with its PIN state redacted, in the node\nlabel's `context`.",
         "properties": {
           "attestation": {
             "$ref": "#/components/schemas/deviceAuthnAttestation"
           },
           "client_key_id": {
-            "description": "ClientKeyID is the key's stable, unique-per-identity id, computed as\nhex(SHA-256(PublicKey)) — the lowercase-hex SHA-256 digest of the public\nkey's PKIX, ASN.1 DER (SubjectPublicKeyInfo) encoding, exactly the bytes\nstored in PublicKey. It is a deterministic fingerprint of the enrolled\nsigning key, so the device recomputes the identical value locally instead\nof receiving it from the server. Keys enrolled before the server derived\nthe id keep their original client-chosen value.",
+            "description": "The key's stable id, unique per identity. Submit it as the\n`client_key_id` when logging in with the key, deleting it, or rotating\nits pin_secret.\n\nThe device can also compute the id without reading it back from the\nserver: it is the lowercase-hex SHA-256 of `public_key` (the key's\nPKIX, ASN.1 DER encoding). Keys enrolled before the server derived the\nid keep their original client-chosen value, so prefer reading this\nfield over recomputing it for older keys.",
             "type": "string"
           },
           "created_at": {
-            "description": "CreatedAt is the timestamp of when the key was created.\nOnly used for troubleshooting/UI.",
+            "description": "When the key was enrolled. Only used for troubleshooting and UI.",
             "format": "date-time",
             "type": "string"
           },
           "device_name": {
-            "description": "DeviceName is a human readable name for the device, helping the user to distinguish it from others.",
+            "description": "A human-readable name for the device, helping the user tell this key\napart from others.",
             "type": "string"
           },
           "device_type": {
@@ -140,15 +141,12 @@
             "$ref": "#/components/schemas/PINConfig"
           },
           "public_key": {
-            "description": "PublicKey is the device's public key (EC P-256 in v1), used to verify\nsignatures. It is stored in PKIX, ASN.1 DER form (the SubjectPublicKeyInfo\nencoding produced by x509.MarshalPKIXPublicKey). The private key resides\ninside the device and does not exist on the server.",
-            "items": {
-              "format": "uint8",
-              "type": "integer"
-            },
-            "type": "array"
+            "description": "The device's public key (an elliptic-curve key on P-224, P-256, P-384,\nor P-521 in version 1) in PKIX, ASN.1 DER (SubjectPublicKeyInfo) form,\nbase64-encoded. Signatures are verified against this key.",
+            "format": "byte",
+            "type": "string"
           },
           "relaxed_attestation_expires_at": {
-            "description": "RelaxedAttestationExpiresAt is set only when the key's attestation\nchain validated because relaxed attestation was allowed (software\nroots, expired certs, software security level) rather than under\nstrict rules. Such keys are second-class: they are refused at login\nafter this time, or immediately if relaxed attestation is turned off.\nIt is nil for hardware-attested keys that pass strict validation.",
+            "description": "Set only when the key's attestation chain was accepted under relaxed\nrules (software roots, expired certificates, software security level)\nrather than strict hardware attestation. Such keys are refused at login\nafter this time, or immediately once relaxed attestation is turned off.\nAbsent for hardware-attested keys that pass strict validation.",
             "format": "date-time",
             "type": "string"
           },
@@ -159,16 +157,26 @@
             "$ref": "#/components/schemas/UserVerification"
           },
           "version": {
-            "description": "v1 uses SHA256 + EC256.\nv2 (in the future) may use ML-DSA which is post-quantum resistant.\nThis requires Android/iOS support so we have to wait.\nWe intentionally avoid storing the cryptographic algorithm here a la JWT/TLS\nto avoid security issues and algorithm negotiation.",
+            "description": "The cryptography version of the key. Version 1 uses ECDSA with SHA-256\non an elliptic curve (P-224, P-256, P-384, or P-521); further versions\nare reserved for future signature suites.",
             "format": "int64",
             "type": "integer"
           }
         },
-        "title": "Key represents an enrolled hardware security key used for device authentication (DeviceAuthn).",
+        "title": "An enrolled device authentication (DeviceAuthn) key.",
         "type": "object"
       },
       "DeviceType": {
-        "type": "string"
+        "description": "\"Android\" and \"iOS\" use different attestation and signature encodings.",
+        "enum": [
+          "Android",
+          "iOS"
+        ],
+        "title": "DeviceType is the platform the key was enrolled on.",
+        "type": "string",
+        "x-enum-varnames": [
+          "ANDROID",
+          "IOS"
+        ]
       },
       "Duration": {
         "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
@@ -189,6 +197,13 @@
         "type": "object"
       },
       "KeyState": {
+        "description": "Only a \"confirmed\" key can be used to authenticate. A \"locked\" key was\ndisabled after too many wrong-PIN attempts; rotating its pin_secret unlocks\nit.",
+        "enum": [
+          "initial",
+          "confirmed",
+          "locked"
+        ],
+        "title": "KeyState is the lifecycle state of an enrolled key.",
         "type": "string"
       },
       "NullBool": {
@@ -507,29 +522,30 @@
         "type": "object"
       },
       "PINConfig": {
-        "description": "PINConfig is the per-key PIN state. The pin_secret field holds the at-rest\nciphertext; the plaintext exists only transiently in memory during\nverification and is cleared once the key locks.",
+        "description": "The pin_secret field holds only the at-rest ciphertext; the plaintext\nexists transiently in server memory during verification and is invalidated\nonce the key locks.",
         "properties": {
           "created_at": {
-            "description": "CreatedAt is when the pin_secret was first issued.",
+            "description": "When the pin_secret was first issued.",
             "format": "date-time",
             "type": "string"
           },
           "failed_attempts": {
-            "description": "FailedAttempts counts consecutive wrong-PIN attempts; the key locks when it\nreaches the configured maximum.",
+            "description": "The number of consecutive wrong-PIN attempts so far; the key locks when\nit reaches the configured maximum (pin_max_attempts, default 5).",
             "format": "uint64",
             "type": "integer"
           },
           "pin_secret": {
-            "description": "PINSecret is the at-rest pin_secret ciphertext. Server-internal: never\nlogged or transmitted. Empty once the key locks.",
+            "description": "The at-rest ciphertext of the pin_secret. It never leaves the server and\nis cleared once the key locks.",
             "type": "string",
             "writeOnly": true
           },
           "rotated_at": {
-            "description": "RotatedAt is when the pin_secret was last rotated; the zero value means\nnever rotated. omitzero (not omitempty) drops the zero timestamp from the\nJSON, since omitempty never treats a time.Time value as empty.",
+            "description": "When the pin_secret was last rotated. Omitted if the secret was never\nrotated.",
             "format": "date-time",
             "type": "string"
           }
         },
+        "title": "PINConfig is the per-key PIN state.",
         "type": "object"
       },
       "Provider": {
@@ -605,7 +621,7 @@
         "type": "object"
       },
       "UserVerification": {
-        "description": "The empty value marks a legacy key from before user verification existed;\nsuch keys are rejected at login and must be re-enrolled.",
+        "description": "\"pin\" means the holder proves knowledge of a PIN via pin_proof at login;\n\"platform\" means the device gates key use behind platform biometrics or an\nequivalent lock screen; \"none\" marks a possession-only key, usable as a\nsecond factor but never as the sole first factor. The empty value marks a\nlegacy key from before user verification existed; such keys are rejected at\nlogin and must be re-enrolled.",
         "enum": [
           "pin",
           "platform",
@@ -689,7 +705,7 @@
         "type": "object"
       },
       "continueWithDeviceAuthnPinEntryUi": {
-        "description": "The enrolled key's client_key_id is not included: it is the SHA-256 fingerprint\nof the device's own public key, which the device derives locally. Non-PIN keys\nneed no client action at all and therefore produce no continue_with.",
+        "description": "Returned after a PIN-protected DeviceAuthn enrollment or secret rotation.\nIt carries the one-time HPKE-sealed pin_secret, which the device opens with\nthe transport private key it generated for this enrollment and binds to the\nuser's PIN. The plaintext secret never leaves the device; the server only\never stores its at-rest ciphertext.\n\nThe enrolled key's client_key_id is not included: it is the SHA-256 fingerprint\nof the device's own public key, which the device derives locally. Non-PIN keys\nneed no client action at all and therefore produce no continue_with.",
         "properties": {
           "action": {
             "description": "Action will always be `show_pin_entry_ui`\nshow_pin_entry_ui ContinueWithActionShowPINEntryUIString",
@@ -712,18 +728,18 @@
           "action",
           "data"
         ],
-        "title": "Instructs the client to show its PIN entry UI after a PIN-protected DeviceAuthn\nenrollment or secret rotation. It carries the one-time HPKE-sealed pin_secret,\nwhich the device opens with the transport private key it generated for this\nenrollment to bind the user's PIN. The plaintext secret never leaves the\ndevice; the server only ever stores its at-rest ciphertext.",
+        "title": "Instructs the client to show its PIN entry UI",
         "type": "object"
       },
       "continueWithDeviceAuthnPinEntryUiData": {
-        "description": "Carries the one-time HPKE-sealed pin_secret material — the encapsulated key and\nthe sealed ciphertext — that the device opens with the transport private key it\ngenerated for this enrollment.",
+        "description": "Contains the encapsulated key and the sealed ciphertext that the device\nopens with the X25519 transport private key it generated for this\nenrollment or rotation. Open it with HPKE (RFC 9180) using the suite\nDHKEM(X25519, HKDF-SHA256), HKDF-SHA256, AES-128-GCM, the ASCII info\nstring \"ory/deviceauthn/pin-secret/v1\", and the key's client_key_id (its\nASCII hex form) as the AAD.",
         "properties": {
           "ciphertext": {
-            "description": "Ciphertext is the base64-encoded HPKE-sealed pin_secret.",
+            "description": "The base64-encoded HPKE ciphertext of the sealed pin_secret.",
             "type": "string"
           },
           "enc": {
-            "description": "Enc is the base64-encoded HPKE encapsulated key.",
+            "description": "The base64-encoded HPKE encapsulated key (the `enc` output of the seal\noperation).",
             "type": "string"
           }
         },
@@ -731,6 +747,7 @@
           "enc",
           "ciphertext"
         ],
+        "title": "The one-time HPKE-sealed pin_secret material",
         "type": "object"
       },
       "continueWithRecoveryUi": {
@@ -1272,7 +1289,7 @@
         "type": "object"
       },
       "deviceAuthnAttestation": {
-        "description": "Exactly one of Android / IOS is set, matching the key's DeviceType.",
+        "description": "Exactly one of `android` or `ios` is set, matching the key's device_type.",
         "properties": {
           "android": {
             "$ref": "#/components/schemas/deviceAuthnAndroidKeyDescription"

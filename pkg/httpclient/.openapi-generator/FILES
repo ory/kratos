@@ -41,6 +41,7 @@ docs/DeviceAuthnAttestation.md
 docs/DeviceAuthnIOSAttStmt.md
 docs/DeviceAuthnIOSAttestation.md
 docs/DeviceAuthnKey.md
+docs/DeviceType.md
 docs/ErrorAuthenticatorAssuranceLevelNotSatisfied.md
 docs/ErrorBrowserLocationChangeRequired.md
 docs/ErrorFlowReplaced.md
@@ -85,6 +86,7 @@ docs/IdentityWithCredentialsWebAuthnConfig.md
 docs/IsAlive200Response.md
 docs/IsReady503Response.md
 docs/JsonPatch.md
+docs/KeyState.md
 docs/LoginFlow.md
 docs/LoginFlowState.md
 docs/LoginFlowTestContext.md
@@ -209,6 +211,7 @@ model_device_authn_attestation.go
 model_device_authn_ios_att_stmt.go
 model_device_authn_ios_attestation.go
 model_device_authn_key.go
+model_device_type.go
 model_error_authenticator_assurance_level_not_satisfied.go
 model_error_browser_location_change_required.go
 model_error_flow_replaced.go
@@ -251,6 +254,7 @@ model_identity_with_credentials_web_authn_config.go
 model_is_alive_200_response.go
 model_is_ready_503_response.go
 model_json_patch.go
+model_key_state.go
 model_login_flow.go
 model_login_flow_state.go
 model_login_flow_test_context.go
