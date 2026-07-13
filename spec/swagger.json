@@ -828,7 +828,7 @@
           },
           {
             "type": "string",
-            "description": "Identifier is the identifier of the OIDC/SAML credential to delete.\nFind the identifier by calling the `GET /admin/identities/{id}?include_credential={oidc,saml}` endpoint.",
+            "description": "Identifier is the identifier of the credential to delete. It is required\nfor the `oidc`, `saml`, and `deviceauthn` credential types: for `oidc`\nand `saml` it selects the provider link to remove, for `deviceauthn` it\nis the `client_key_id` of the device key to revoke. Find the identifier\nby calling the `GET /admin/identities/{id}?include_credential={type}`\nendpoint.",
             "name": "identifier",
             "in": "query"
           }
@@ -836,6 +836,12 @@
         "responses": {
           "204": {
             "$ref": "#/responses/emptyResponse"
+          },
+          "400": {
+            "description": "errorGeneric",
+            "schema": {
+              "$ref": "#/definitions/errorGeneric"
+            }
           },
           "404": {
             "description": "errorGeneric",

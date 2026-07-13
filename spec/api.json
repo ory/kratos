@@ -5866,7 +5866,7 @@
             "x-go-enum-desc": "password CredentialsTypePassword\noidc CredentialsTypeOIDC\ntotp CredentialsTypeTOTP\nlookup_secret CredentialsTypeLookup\nwebauthn CredentialsTypeWebAuthn\ncode CredentialsTypeCodeAuth\npasskey CredentialsTypePasskey\nprofile CredentialsTypeProfile\nsaml CredentialsTypeSAML\ndeviceauthn CredentialsTypeDeviceAuthn\nidentifier_first CredentialsTypeIdentifierFirst\nlink_recovery CredentialsTypeRecoveryLink  CredentialsTypeRecoveryLink is a special credential type linked to the link strategy (recovery flow).  It is not used within the credentials object itself.\ncode_recovery CredentialsTypeRecoveryCode"
           },
           {
-            "description": "Identifier is the identifier of the OIDC/SAML credential to delete.\nFind the identifier by calling the `GET /admin/identities/{id}?include_credential={oidc,saml}` endpoint.",
+            "description": "Identifier is the identifier of the credential to delete. It is required\nfor the `oidc`, `saml`, and `deviceauthn` credential types: for `oidc`\nand `saml` it selects the provider link to remove, for `deviceauthn` it\nis the `client_key_id` of the device key to revoke. Find the identifier\nby calling the `GET /admin/identities/{id}?include_credential={type}`\nendpoint.",
             "in": "query",
             "name": "identifier",
             "schema": {
@@ -5877,6 +5877,16 @@
         "responses": {
           "204": {
             "$ref": "#/components/responses/emptyResponse"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errorGeneric"
+                }
+              }
+            },
+            "description": "errorGeneric"
           },
           "404": {
             "content": {

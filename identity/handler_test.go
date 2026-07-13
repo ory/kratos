@@ -34,6 +34,7 @@ import (
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/selfservice/strategy/deviceauthn"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/ioutilx"
@@ -2912,6 +2913,95 @@ func TestHandler(t *testing.T) {
 				assert.EqualValues(t, oidConfig.Get("providers.0.subject").String(), entraSubject1, "%s", res.Raw)
 				assert.EqualValues(t, oidConfig.Get("providers.1.provider").String(), "okta", "%s", res.Raw)
 				assert.EqualValues(t, oidConfig.Get("providers.1.subject").String(), oktaSubject, "%s", res.Raw)
+			})
+			t.Run("type=remove deviceauthn by identifier/"+name, func(t *testing.T) {
+				newDeviceAuthnFixture := func(t *testing.T) (i *identity.Identity, iPhone1, iPhone2, pixel string) {
+					t.Helper()
+					iPhone1 = x.NewUUID().String()
+					iPhone2 = x.NewUUID().String()
+					pixel = x.NewUUID().String()
+					keys := []deviceauthn.Key{
+						{ClientKeyID: iPhone1, DeviceName: "iPhone", Version: 1},
+						{ClientKeyID: iPhone2, DeviceName: "iPhone", Version: 1},
+						{ClientKeyID: pixel, DeviceName: "Pixel", Version: 1},
+					}
+					raw, err := json.Marshal(deviceauthn.CredentialsDeviceAuthnConfig{Credentials: keys})
+					require.NoError(t, err)
+					i = createIdentity(M{
+						identity.CredentialsTypeDeviceAuthn: {
+							Identifiers: []string{iPhone1, iPhone2, pixel},
+							Config:      raw,
+						},
+					})(t)
+					return i, iPhone1, iPhone2, pixel
+				}
+
+				t.Run("removes only the key matching the identifier", func(t *testing.T) {
+					i, iPhone1, iPhone2, pixel := newDeviceAuthnFixture(t)
+					remove(t, ts, "/identities/"+i.ID.String()+"/credentials/deviceauthn?identifier="+iPhone1, http.StatusNoContent)
+
+					after, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
+					require.NoError(t, err)
+					cred, ok := after.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+					require.True(t, ok)
+					// The identifier rows are synced as a set, so order is not
+					// significant; the config preserves the surviving keys' order.
+					assert.ElementsMatch(t, []string{iPhone2, pixel}, []string(cred.Identifiers))
+					var cfg deviceauthn.CredentialsDeviceAuthnConfig
+					require.NoError(t, json.Unmarshal(cred.Config, &cfg))
+					require.Len(t, cfg.Credentials, 2)
+					assert.Equal(t, iPhone2, cfg.Credentials[0].ClientKeyID)
+					assert.Equal(t, pixel, cfg.Credentials[1].ClientKeyID)
+				})
+
+				t.Run("leaves the credential empty when no key remains", func(t *testing.T) {
+					i, iPhone1, iPhone2, pixel := newDeviceAuthnFixture(t)
+					remove(t, ts, "/identities/"+i.ID.String()+"/credentials/deviceauthn?identifier="+iPhone1, http.StatusNoContent)
+					remove(t, ts, "/identities/"+i.ID.String()+"/credentials/deviceauthn?identifier="+iPhone2, http.StatusNoContent)
+					remove(t, ts, "/identities/"+i.ID.String()+"/credentials/deviceauthn?identifier="+pixel, http.StatusNoContent)
+
+					// The row lock rewrites the config in place, so removing the
+					// last key leaves an empty credential rather than deleting it.
+					after, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
+					require.NoError(t, err)
+					cred, ok := after.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+					require.True(t, ok)
+					assert.Empty(t, cred.Identifiers)
+					var cfg deviceauthn.CredentialsDeviceAuthnConfig
+					require.NoError(t, json.Unmarshal(cred.Config, &cfg))
+					assert.Empty(t, cfg.Credentials)
+				})
+
+				t.Run("unknown identifier returns 404 and removes nothing", func(t *testing.T) {
+					i, _, _, _ := newDeviceAuthnFixture(t)
+					remove(t, ts, "/identities/"+i.ID.String()+"/credentials/deviceauthn?identifier="+x.NewUUID().String(), http.StatusNotFound)
+
+					after, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
+					require.NoError(t, err)
+					cred, ok := after.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+					require.True(t, ok)
+					assert.Len(t, cred.Identifiers, 3, "an unknown identifier must leave every key intact")
+				})
+
+				t.Run("returns 404 when the identity has no deviceauthn credential", func(t *testing.T) {
+					i := createIdentity(M{
+						identity.CredentialsTypePassword: {
+							Config:      []byte(`{"hashed_password":"some_valid_hash"}`),
+							Identifiers: []string{x.NewUUID().String()},
+						},
+					})(t)
+					remove(t, ts, "/identities/"+i.ID.String()+"/credentials/deviceauthn?identifier="+x.NewUUID().String(), http.StatusNotFound)
+				})
+
+				t.Run("missing identifier returns 400", func(t *testing.T) {
+					i, _, _, _ := newDeviceAuthnFixture(t)
+					remove(t, ts, "/identities/"+i.ID.String()+"/credentials/deviceauthn", http.StatusBadRequest)
+
+					after, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
+					require.NoError(t, err)
+					_, ok := after.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+					assert.True(t, ok, "credential must be unchanged when the request is rejected")
+				})
 			})
 			t.Run("type=remove webauthn passwordless type/"+name, func(t *testing.T) {
 				expected := `{"credentials":[{"id":"THTndqZP5Mjvae1BFvJMaMfEMm7O7HE1ju+7PBaYA7Y=","added_at":"2022-12-16T14:11:55Z","public_key":"pQECAyYgASFYIMJLQhJxQRzhnKPTcPCUODOmxYDYo2obrm9bhp5lvSZ3IlggXjhZvJaPUqF9PXqZqTdWYPR7R+b2n/Wi+IxKKXsS4rU=","display_name":"test","authenticator":{"aaguid":"rc4AAjW8xgpkiwsl8fBVAw==","sign_count":0,"clone_warning":false},"is_passwordless":true,"attestation_type":"none"}],"user_handle":"Ef5JiMpMRwuzauWs/9J0gQ=="}`

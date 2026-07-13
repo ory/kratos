@@ -149,3 +149,9 @@ type Key struct {
 	// It is nil for hardware-attested keys that pass strict validation.
 	RelaxedAttestationExpiresAt *time.Time `json:"relaxed_attestation_expires_at,omitempty"`
 }
+
+// CredentialsDeviceAuthnConfig is the JSON shape stored in
+// `identity_credentials.config` for the `deviceauthn` credential type.
+type CredentialsDeviceAuthnConfig struct {
+	Credentials []Key `json:"credentials"`
+}

@@ -1325,7 +1325,7 @@ type IdentityAPIDeleteIdentityCredentialsRequest struct {
 	identifier *string
 }
 
-// Identifier is the identifier of the OIDC/SAML credential to delete. Find the identifier by calling the &#x60;GET /admin/identities/{id}?include_credential&#x3D;{oidc,saml}&#x60; endpoint.
+// Identifier is the identifier of the credential to delete. It is required for the &#x60;oidc&#x60;, &#x60;saml&#x60;, and &#x60;deviceauthn&#x60; credential types: for &#x60;oidc&#x60; and &#x60;saml&#x60; it selects the provider link to remove, for &#x60;deviceauthn&#x60; it is the &#x60;client_key_id&#x60; of the device key to revoke. Find the identifier by calling the &#x60;GET /admin/identities/{id}?include_credential&#x3D;{type}&#x60; endpoint.
 func (r IdentityAPIDeleteIdentityCredentialsRequest) Identifier(identifier string) IdentityAPIDeleteIdentityCredentialsRequest {
 	r.identifier = &identifier
 	return r
@@ -1431,6 +1431,17 @@ func (a *IdentityAPIService) DeleteIdentityCredentialsExecute(r IdentityAPIDelet
 		newErr := &GenericOpenAPIError{
 			body:  localVarBody,
 			error: localVarHTTPResponse.Status,
+		}
+		if localVarHTTPResponse.StatusCode == 400 {
+			var v ErrorGeneric
+			err = a.client.decode(&v, localVarBody, localVarHTTPResponse.Header.Get("Content-Type"))
+			if err != nil {
+				newErr.error = err.Error()
+				return localVarHTTPResponse, newErr
+			}
+			newErr.error = formatErrorMessage(localVarHTTPResponse.Status, &v)
+			newErr.model = v
+			return localVarHTTPResponse, newErr
 		}
 		if localVarHTTPResponse.StatusCode == 404 {
 			var v ErrorGeneric
