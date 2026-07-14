@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/httprouterx"
@@ -136,7 +137,7 @@ type createBrowserLogoutFlow struct {
 //	Extensions:
 //	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) createBrowserLogoutFlow(w http.ResponseWriter, r *http.Request) {
-	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandNothing, identity.ExpandNothing)
 	if err != nil {
 		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, err)
 		return
@@ -320,7 +321,7 @@ func (h *Handler) updateLogoutFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandNothing, identity.ExpandNothing)
 	if err != nil {
 		// We could handle `session.ErrNoActiveSessionFound` gracefully with `h.completeLogout()` here but that would
 		// actually be an issue as it incorrectly indicates to clients that the session has been removed even if

@@ -5,6 +5,7 @@ package session
 
 import (
 	"context"
+	stderrors "errors"
 	"net/http"
 	"net/url"
 	"time"
@@ -251,27 +252,25 @@ func (s *ManagerHTTP) FetchFromRequestContext(ctx context.Context, r *http.Reque
 		return sess, nil
 	}
 
-	return s.FetchFromRequest(ctx, r)
+	// Don't reduce the expansion here unless you want bad performance down the line (because we
+	// constantly are unsure if we have the full data fetched or not).
+	return s.FetchFromRequest(ctx, r, ExpandEverything, identity.ExpandEverything)
 }
 
-func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ *Session, err error) {
-	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequest")
-	defer func() {
-		if e := new(ErrNoActiveSessionFound); errors.As(err, &e) {
-			span.End()
-		} else {
-			otelx.End(span, &err)
-		}
-	}()
+func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request, sessionExpand Expandables, identityExpand identity.Expandables) (_ *Session, err error) {
+	ctx, span := s.r.Tracer(ctx).Tracer().Start(ctx, "sessions.ManagerHTTP.FetchFromRequest",
+		trace.WithAttributes(
+			attribute.StringSlice("session.expand", sessionExpand.ToEager()),
+			attribute.StringSlice("identity.expand", identityExpand.ToEager()),
+		))
+	defer endSpanIgnoreNoActiveSession(span, &err)
 
 	token := s.extractToken(r.WithContext(ctx))
 	if token == "" {
 		return nil, errors.WithStack(NewErrNoCredentialsForSession())
 	}
 
-	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token,
-		// Don't change this unless you want bad performance down the line (because we constantly are unsure if we have the full data fetched or not).
-		ExpandEverything, identity.ExpandEverything)
+	se, err := s.r.SessionPersister().GetSessionByToken(ctx, token, sessionExpand, identityExpand)
 	if err != nil {
 		if errors.Is(err, herodot.ErrNotFound()) || errors.Is(err, sqlcon.ErrNoRows()) {
 			return nil, errors.WithStack(NewErrNoActiveSessionFound())
@@ -286,6 +285,26 @@ func (s *ManagerHTTP) FetchFromRequest(ctx context.Context, r *http.Request) (_ 
 	}
 
 	return se, nil
+}
+
+// endSpanIgnoreNoActiveSession ends the span without recording ErrNoActiveSessionFound as a span
+// error, because a request without an active session is an expected condition on these paths.
+func endSpanIgnoreNoActiveSession(span trace.Span, err *error) {
+	if _, ok := stderrors.AsType[*ErrNoActiveSessionFound](*err); ok {
+		span.End()
+	} else {
+		otelx.End(span, err)
+	}
+}
+
+// SessionActiveForRequest reports whether the request carries a token for an
+// active session, without loading the identity. It returns nil when an active
+// session exists and the same errors as FetchFromRequest otherwise, so callers
+// that only branch on the error keep identical behavior while skipping the
+// cross-region identity load.
+func (s *ManagerHTTP) SessionActiveForRequest(ctx context.Context, r *http.Request) error {
+	_, err := s.FetchFromRequest(ctx, r, ExpandNothing, identity.ExpandNothing)
+	return err
 }
 
 func (s *ManagerHTTP) PurgeFromRequest(ctx context.Context, w http.ResponseWriter, r *http.Request) (err error) {

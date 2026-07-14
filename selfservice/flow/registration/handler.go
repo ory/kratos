@@ -402,7 +402,9 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	if sess, err := h.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
+	// Only session columns (identity ID, session ID, AMR) are read below, so skip loading the
+	// devices and the identity.
+	if sess, err := h.d.SessionManager().FetchFromRequest(ctx, r, session.ExpandNothing, identity.ExpandNothing); err == nil {
 		if hydraLoginRequest != nil {
 			if hydraLoginRequest.GetSkip() {
 				rt, err := h.d.Hydra().AcceptLoginRequest(r.Context(),
@@ -689,7 +691,7 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	if _, err := h.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+	if err := h.d.SessionManager().SessionActiveForRequest(r.Context(), r); err == nil {
 		if f.Type == flow.TypeBrowser {
 			http.Redirect(w, r, h.d.Config().SelfServiceBrowserDefaultReturnTo(r.Context()).String(), http.StatusSeeOther)
 			return

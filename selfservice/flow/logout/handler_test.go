@@ -15,6 +15,7 @@ import (
 
 	"github.com/ory/kratos/x/nosurfx"
 
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/session"
 
 	"github.com/stretchr/testify/assert"
@@ -41,7 +42,7 @@ func TestLogout(t *testing.T) {
 		testhelpers.MockSetSession(t, reg, conf)(writer, request)
 	})
 	publicRouter.GET("/session/browser/get", func(w http.ResponseWriter, r *http.Request) {
-		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandEverything, identity.ExpandEverything)
 		if err != nil {
 			reg.Writer().WriteError(w, r, err)
 			return

@@ -356,7 +356,7 @@ func TestManagerHTTP(t *testing.T) {
 		})
 
 		rp.GET("/session/get", func(w http.ResponseWriter, r *http.Request) {
-			sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+			sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandEverything, identity.ExpandEverything)
 			if err != nil {
 				t.Logf("Got error on lookup: %s %T", err, errors.Unwrap(err))
 				reg.Writer().WriteError(w, r, err)
@@ -1116,4 +1116,178 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFetchFromRequestMinimalExpansion(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	_, reg := pkg.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/fake-session.schema.json")),
+	)
+	req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+
+	i := identity.Identity{Traits: []byte("{}")}
+	require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, &i))
+	s, err := testhelpers.NewActiveSession(req, reg, &i, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+	require.NoError(t, err)
+	require.NoError(t, reg.SessionPersister().UpsertSession(ctx, s))
+
+	withToken := func(token string) *http.Request {
+		r := httptest.NewRequest("GET", "https://example.com/", nil)
+		if token != "" {
+			r.Header.Set("X-Session-Token", token)
+		}
+		return r
+	}
+
+	t.Run("ExpandNothing returns the session without the identity and devices", func(t *testing.T) {
+		got, err := reg.SessionManager().FetchFromRequest(ctx, withToken(s.Token), session.ExpandNothing, identity.ExpandNothing)
+		require.NoError(t, err)
+		assert.Equal(t, s.ID, got.ID)
+		assert.Equal(t, i.ID, got.IdentityID)
+		assert.Nil(t, got.Identity, "identity must not be loaded")
+		assert.Empty(t, got.Devices, "devices must not be loaded")
+	})
+
+	t.Run("expands only the requested session associations", func(t *testing.T) {
+		got, err := reg.SessionManager().FetchFromRequest(ctx, withToken(s.Token), session.Expandables{session.ExpandSessionDevices}, identity.ExpandNothing)
+		require.NoError(t, err)
+		assert.Equal(t, s.ID, got.ID)
+		assert.Nil(t, got.Identity, "identity must not be loaded")
+		assert.NotEmpty(t, got.Devices, "devices must be loaded")
+	})
+
+	t.Run("errors without a token", func(t *testing.T) {
+		_, err := reg.SessionManager().FetchFromRequest(ctx, withToken(""), session.ExpandNothing, identity.ExpandNothing)
+		require.Error(t, err)
+	})
+
+	t.Run("errors for an unknown token", func(t *testing.T) {
+		_, err := reg.SessionManager().FetchFromRequest(ctx, withToken("unknown-token"), session.ExpandNothing, identity.ExpandNothing)
+		e := new(session.ErrNoActiveSessionFound)
+		assert.ErrorAs(t, err, &e)
+	})
+
+	t.Run("SessionActiveForRequest is nil for an active session", func(t *testing.T) {
+		assert.NoError(t, reg.SessionManager().SessionActiveForRequest(ctx, withToken(s.Token)))
+	})
+
+	t.Run("SessionActiveForRequest errors for missing or unknown tokens", func(t *testing.T) {
+		require.Error(t, reg.SessionManager().SessionActiveForRequest(ctx, withToken("")))
+		require.Error(t, reg.SessionManager().SessionActiveForRequest(ctx, withToken("unknown-token")))
+	})
+}
+
+func TestFetchFromRequestExpandEverythingButCredentials(t *testing.T) {
+	t.Parallel()
+
+	_, reg := pkg.NewFastRegistryWithMocks(t,
+		configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/fake-session.schema.json")),
+	)
+
+	newFetchRequest := func(t *testing.T, token string) *http.Request {
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		req.Header.Set("X-Session-Token", token)
+		return req
+	}
+
+	t.Run("case=does not expand identity credentials but expands everything else", func(t *testing.T) {
+		t.Parallel()
+		ctx := t.Context()
+
+		i := newAAL2Identity()
+		email := testhelpers.RandomEmail()
+		i.VerifiableAddresses = []identity.VerifiableAddress{{Value: email, Via: identity.AddressTypeEmail}}
+		i.RecoveryAddresses = []identity.RecoveryAddress{{Value: email, Via: identity.AddressTypeEmail}}
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		sess, err := testhelpers.NewActiveSession(req, reg, i, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+
+		fetched, err := reg.SessionManager().FetchFromRequest(ctx, newFetchRequest(t, sess.Token), session.ExpandEverything, identity.ExpandEverythingButCredentials)
+		require.NoError(t, err)
+		require.NotNil(t, fetched.Identity)
+		assert.Empty(t, fetched.Identity.Credentials, "credentials must not be expanded")
+		assert.NotEmpty(t, fetched.Identity.VerifiableAddresses, "verifiable addresses must still be expanded")
+		assert.NotEmpty(t, fetched.Identity.RecoveryAddresses, "recovery addresses must still be expanded")
+
+		// Control: the regular fetch expands the credentials.
+		full, err := reg.SessionManager().FetchFromRequest(ctx, newFetchRequest(t, sess.Token), session.ExpandEverything, identity.ExpandEverything)
+		require.NoError(t, err)
+		require.NotNil(t, full.Identity)
+		assert.NotEmpty(t, full.Identity.Credentials)
+	})
+
+	t.Run("case=aal highest_available is still enforced without expanded credentials", func(t *testing.T) {
+		t.Parallel()
+		ctx := t.Context()
+
+		// The identity has a second factor configured, but its available AAL is not yet
+		// persisted in the database.
+		i := newAAL2Identity()
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		sess, err := testhelpers.NewActiveSession(req, reg, i, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+
+		// The available AAL is unknown, so DoesSessionSatisfy must lazily hydrate the
+		// credentials to determine it.
+		fetched, err := reg.SessionManager().FetchFromRequest(ctx, newFetchRequest(t, sess.Token), session.ExpandEverything, identity.ExpandEverythingButCredentials)
+		require.NoError(t, err)
+		require.NotNil(t, fetched.Identity)
+		require.Empty(t, fetched.Identity.Credentials)
+
+		err = reg.SessionManager().DoesSessionSatisfy(ctx, fetched, config.HighestAvailableAAL, session.UpsertAAL)
+		aalErr, ok := errors.AsType[*session.ErrAALNotSatisfied](err)
+		require.Truef(t, ok, "expected *session.ErrAALNotSatisfied but got %v", err)
+		assert.NotEmpty(t, aalErr.RedirectTo)
+
+		// The lazily computed available AAL was persisted through the UpsertAAL option.
+		result, err := reg.IdentityPool().GetIdentity(ctx, i.ID, identity.ExpandNothing)
+		require.NoError(t, err)
+		assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, result.InternalAvailableAAL.String)
+
+		// A fresh fetch now uses the precomputed available AAL and never hydrates the
+		// credentials.
+		fetched, err = reg.SessionManager().FetchFromRequest(ctx, newFetchRequest(t, sess.Token), session.ExpandEverything, identity.ExpandEverythingButCredentials)
+		require.NoError(t, err)
+		require.Empty(t, fetched.Identity.Credentials)
+
+		err = reg.SessionManager().DoesSessionSatisfy(ctx, fetched, config.HighestAvailableAAL, session.UpsertAAL)
+		_, ok = errors.AsType[*session.ErrAALNotSatisfied](err)
+		require.Truef(t, ok, "expected *session.ErrAALNotSatisfied but got %v", err)
+		assert.Empty(t, fetched.Identity.Credentials, "the precomputed available AAL path must not hydrate the credentials")
+	})
+
+	t.Run("case=missing token returns ErrNoActiveSessionFound with missing credentials", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := reg.SessionManager().FetchFromRequest(t.Context(), testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil), session.ExpandEverything, identity.ExpandEverythingButCredentials)
+		noSess, ok := errors.AsType[*session.ErrNoActiveSessionFound](err)
+		require.Truef(t, ok, "expected *session.ErrNoActiveSessionFound but got %v", err)
+		assert.True(t, noSess.CredentialsMissing)
+	})
+
+	t.Run("case=inactive session returns ErrNoActiveSessionFound", func(t *testing.T) {
+		t.Parallel()
+		ctx := t.Context()
+
+		i := newAAL1Identity()
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(ctx, i))
+
+		req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+		sess, err := testhelpers.NewActiveSession(req, reg, i, time.Now(), identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+		require.NoError(t, err)
+		sess.Active = false
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+
+		_, err = reg.SessionManager().FetchFromRequest(ctx, newFetchRequest(t, sess.Token), session.ExpandEverything, identity.ExpandEverythingButCredentials)
+		_, ok := errors.AsType[*session.ErrNoActiveSessionFound](err)
+		require.Truef(t, ok, "expected *session.ErrNoActiveSessionFound but got %v", err)
+	})
 }

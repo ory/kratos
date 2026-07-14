@@ -21,7 +21,7 @@ func GuessForcedLoginIdentifier(r *http.Request, d interface {
 	// This block adds the identifier to the method when the request is forced - as a hint for the user.
 	if !f.IsRefresh() {
 		// do nothing
-	} else if sess, err := d.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
+	} else if sess, err := d.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandNothing, identity.ExpandNothing); err != nil {
 		// do nothing
 	} else if id, err = d.PrivilegedIdentityPool().GetIdentityConfidential(r.Context(), sess.IdentityID); err != nil {
 		// do nothing

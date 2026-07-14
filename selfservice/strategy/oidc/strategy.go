@@ -326,7 +326,9 @@ func (s *Strategy) validateFlow(ctx context.Context, r *http.Request, rid uuid.U
 		if err != nil {
 			return nil, err
 		}
-		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
+		// The flow validation only reads the session's identity ID, so skip loading the
+		// devices and the identity's associations.
+		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r, session.ExpandDefault, identity.ExpandNothing)
 		if err != nil {
 			return sf, err
 		}
@@ -441,7 +443,8 @@ func registrationOrLoginFlowID(flow any) (uuid.UUID, bool) {
 }
 
 func (s *Strategy) alreadyAuthenticated(ctx context.Context, w http.ResponseWriter, r *http.Request, f interface{}) (bool, error) {
-	if sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r); sess != nil {
+	// Only the session ID is read below, so skip loading the devices and the identity.
+	if sess, _ := s.d.SessionManager().FetchFromRequest(ctx, r, session.ExpandNothing, identity.ExpandNothing); sess != nil {
 		if _, ok := f.(*settings.Flow); ok {
 			// ignore this if it's a settings flow
 		} else if !isForced(f) {
@@ -594,7 +597,8 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	case *settings.Flow:
 		a.Active = sqlxx.NullString(s.ID())
 		a.TransientPayload = cntnr.TransientPayload
-		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r)
+		// The full expansion is required: the settings flow update reads the session's identity.
+		sess, err := s.d.SessionManager().FetchFromRequest(ctx, r, session.ExpandEverything, identity.ExpandEverything)
 		if err != nil {
 			s.forwardError(ctx, w, r, a, s.HandleError(ctx, w, r, a, state.ProviderId, nil, err))
 			return
@@ -685,7 +689,7 @@ func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *h
 	case *settings.Flow:
 		var i *identity.Identity
 		var sess *session.Session
-		if currentSession, err := s.d.SessionManager().FetchFromRequest(ctx, r); err == nil {
+		if currentSession, err := s.d.SessionManager().FetchFromRequest(ctx, r, session.ExpandEverything, identity.ExpandEverything); err == nil {
 			i = currentSession.Identity
 			sess = currentSession
 		}

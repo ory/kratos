@@ -33,6 +33,7 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
 )
 
@@ -238,7 +239,10 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 	ctx, span := h.r.Tracer(r.Context()).Tracer().Start(r.Context(), "sessions.Handler.whoami")
 	defer span.End()
 
-	s, err := h.r.SessionManager().FetchFromRequest(ctx, r)
+	// Whoami strips the credentials from the response below (CopyWithoutCredentials), so there is
+	// no point in loading them from the database: it is by far the most expensive part of fetching
+	// a session.
+	s, err := h.r.SessionManager().FetchFromRequest(ctx, r, ExpandEverything, identity.ExpandEverythingButCredentials)
 	c := h.r.Config()
 	if err != nil {
 		// We cache errors (and set cache header only when configured) where no session was found.
@@ -720,7 +724,8 @@ type disableMyOtherSessions struct {
 //	Extensions:
 //	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) deleteMySessions(w http.ResponseWriter, r *http.Request) {
-	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+	// Only session columns are read below, so skip loading the devices and the identity.
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r, ExpandNothing, identity.ExpandNothing)
 	if err != nil {
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized().WithWrap(err).WithReasonf("No valid session cookie found."))
@@ -789,7 +794,8 @@ func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+	// Only session columns are read below, so skip loading the devices and the identity.
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r, ExpandNothing, identity.ExpandNothing)
 	if err != nil {
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, herodot.ErrUnauthorized().WithWrap(err).WithReasonf("No valid session cookie found."))
@@ -806,7 +812,7 @@ func (h *Handler) deleteMySession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.r.SessionPersister().RevokeSession(r.Context(), s.Identity.ID, sessionID); err != nil {
+	if err := h.r.SessionPersister().RevokeSession(r.Context(), s.IdentityID, sessionID); err != nil {
 		h.r.Writer().WriteError(w, r, err)
 		return
 	}
@@ -869,7 +875,9 @@ type listMySessionsResponse struct {
 //	Extensions:
 //	  x-ory-ratelimit-bucket: kratos-public-medium
 func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request) {
-	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r)
+	// Only session columns are read below; DoesSessionSatisfy loads the identity lazily when the
+	// AAL check needs it.
+	s, err := h.r.SessionManager().FetchFromRequest(r.Context(), r, ExpandNothing, identity.ExpandNothing)
 	if err != nil {
 		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session cookie found.")
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrUnauthorized().WithWrap(err).WithReasonf("No valid session cookie found.")))
@@ -909,7 +917,9 @@ const (
 func (h *Handler) IsAuthenticated(wrap http.HandlerFunc, onUnauthenticated http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		sess, err := h.r.SessionManager().FetchFromRequest(ctx, r)
+		// The session is stored in the request context for downstream handlers, which may read
+		// any of its associations - keep the full expansion.
+		sess, err := h.r.SessionManager().FetchFromRequest(ctx, r, ExpandEverything, identity.ExpandEverything)
 		if err != nil {
 			if onUnauthenticated != nil {
 				onUnauthenticated(w, r)
@@ -998,7 +1008,7 @@ func (h *Handler) adminSessionExtend(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) IsNotAuthenticated(wrap http.HandlerFunc, onAuthenticated http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := h.r.SessionManager().FetchFromRequest(r.Context(), r); err != nil {
+		if err := h.r.SessionManager().SessionActiveForRequest(r.Context(), r); err != nil {
 			if e := new(ErrNoActiveSessionFound); errors.As(err, &e) {
 				wrap(w, r)
 				return

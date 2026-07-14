@@ -131,10 +131,24 @@ type Manager interface {
 	RefreshCookie(context.Context, http.ResponseWriter, *http.Request, *Session) error
 
 	// FetchFromRequest creates an HTTP session using cookies.
-	FetchFromRequest(context.Context, *http.Request) (*Session, error)
+	//
+	// sessionExpand controls which session associations (devices, identity) are loaded, and
+	// identityExpand controls which identity relations are loaded when sessionExpand includes
+	// ExpandSessionIdentity. Pass ExpandEverything/identity.ExpandEverything unless you are
+	// certain the caller never reads an association: expanding the identity's credentials in
+	// particular is by far the most expensive part of fetching a session, so hot paths that
+	// never read Identity.Credentials (such as /sessions/whoami) can pass
+	// identity.ExpandEverythingButCredentials, and callers that only need session columns
+	// (ID, IdentityID, AAL, ...) can pass ExpandNothing/identity.ExpandNothing. AAL
+	// enforcement stays intact: DoesSessionSatisfy loads the identity and hydrates the
+	// credentials lazily when it has to.
+	FetchFromRequest(ctx context.Context, r *http.Request, sessionExpand Expandables, identityExpand identity.Expandables) (*Session, error)
 
 	// FetchFromRequestContext returns the session from the context or if that is unset, falls back to FetchFromRequest.
 	FetchFromRequestContext(context.Context, *http.Request) (*Session, error)
+
+	// SessionActiveForRequest reports whether the request carries an active session, without loading the identity.
+	SessionActiveForRequest(context.Context, *http.Request) error
 
 	// PurgeFromRequest removes an HTTP session.
 	PurgeFromRequest(context.Context, http.ResponseWriter, *http.Request) error

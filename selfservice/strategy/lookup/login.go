@@ -32,8 +32,10 @@ func (s *Strategy) PopulateLoginMethod(r *http.Request, requestedAAL identity.Au
 		return nil
 	}
 
-	// We have done proper validation before so this should never error
-	sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
+	// We have done proper validation before so this should never error.
+	// Only the identity ID is read below; the identity is re-fetched with its confidential
+	// fields anyway, so skip expanding anything here.
+	sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandNothing, identity.ExpandNothing)
 	if err != nil {
 		return err
 	}

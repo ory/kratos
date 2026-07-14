@@ -18,6 +18,7 @@ import (
 	"github.com/ory/herodot"
 
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
@@ -62,7 +63,7 @@ func NewRedirSessionEchoTS(t *testing.T, reg interface {
 ) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// verify that the client has a session, and echo it back
-		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandEverything, identity.ExpandEverything)
 		require.NoError(t, err, "Headers: %+v", r.Header)
 		reg.Writer().Write(w, r, sess)
 	}))
@@ -79,7 +80,7 @@ func NewRedirNoSessionTS(t *testing.T, reg interface {
 ) *httptest.Server {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// verify that the client DOES NOT have a session
-		_, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+		_, err := reg.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandEverything, identity.ExpandEverything)
 		require.Error(t, err, "Headers: %+v", r.Header)
 		reg.Writer().Write(w, r, nil)
 	}))

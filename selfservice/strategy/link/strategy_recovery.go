@@ -270,7 +270,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		return s.recoveryUseToken(ctx, w, r, f.ID, body)
 	}
 
-	if _, err := s.d.SessionManager().FetchFromRequest(r.Context(), r); err == nil {
+	if err := s.d.SessionManager().SessionActiveForRequest(r.Context(), r); err == nil {
 		if x.IsJSONRequest(r) {
 			session.RespondWithJSONErrorOnAuthenticated(s.d.Writer(), recovery.ErrAlreadyLoggedIn())(w, r)
 		} else {

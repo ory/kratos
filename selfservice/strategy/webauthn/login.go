@@ -382,8 +382,9 @@ func (s *Strategy) PopulateLoginMethodSecondFactor(r *http.Request, sr *login.Fl
 		return nil
 	}
 
-	// We have done proper validation before so this should never error
-	sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r)
+	// We have done proper validation before so this should never error.
+	// The full expansion is required: the form hydrator reads the identity's credentials.
+	sess, err := s.d.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandEverything, identity.ExpandEverything)
 	if err != nil {
 		return err
 	}

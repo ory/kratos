@@ -81,7 +81,7 @@ func TestStrategy(t *testing.T) {
 
 	returnTSRouter.HandleFunc("/app_code", func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte("ok")) })
 	returnTSRouter.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r)
+		sess, err := reg.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandEverything, identity.ExpandEverything)
 		if err != nil {
 			reg.Writer().WriteError(w, r, err)
 			return

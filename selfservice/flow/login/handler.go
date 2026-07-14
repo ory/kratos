@@ -176,8 +176,10 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		return nil, nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
 	}
 
-	// We assume an error means the user has no session
-	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r)
+	// We assume an error means the user has no session.
+	// The full expansion is required: the strategies' form hydrators and the organization
+	// filter read the session's identity.
+	sess, err := h.d.SessionManager().FetchFromRequest(r.Context(), r, session.ExpandEverything, identity.ExpandEverything)
 	if e := new(session.ErrNoActiveSessionFound); errors.As(err, &e) {
 		// No session exists yet
 		returnSessionTokenExchangeCode, _ := strconv.ParseBool(r.URL.Query().Get("return_session_token_exchange_code"))
@@ -911,7 +913,8 @@ func (h *Handler) updateLoginFlow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sess, err := h.d.SessionManager().FetchFromRequest(ctx, r)
+	// The full expansion is required: the session is handed to every login strategy below.
+	sess, err := h.d.SessionManager().FetchFromRequest(ctx, r, session.ExpandEverything, identity.ExpandEverything)
 	if err == nil {
 		if f.Refresh {
 			// If we want to refresh, continue the login
