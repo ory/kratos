@@ -584,14 +584,21 @@ func (m *RegistryDefault) SelfServiceErrorHandler() *errorx.Handler {
 	return m.errorHandler
 }
 
-func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact {
-	var keys [][]byte
-	for _, k := range m.Config().SecretsSession(ctx) {
+// cookieStoreKeyPairs derives the (hashKey, blockKey) pairs securecookie
+// expects: each secret signs, and its SHA-256 digest encrypts. This way a
+// single configured secret yields both signing and encryption, and rotation
+// rotates both.
+func cookieStoreKeyPairs(secrets [][]byte) [][]byte {
+	keys := make([][]byte, 0, 2*len(secrets))
+	for _, k := range secrets {
 		encrypt := sha256.Sum256(k)
 		keys = append(keys, k, encrypt[:])
 	}
+	return keys
+}
 
-	cs := sessions.NewCookieStore(keys...)
+func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact {
+	cs := sessions.NewCookieStore(cookieStoreKeyPairs(m.Config().SecretsSession(ctx))...)
 	cs.Options.Secure = m.Config().SessionCookieSecure(ctx)
 	cs.Options.HttpOnly = true
 
@@ -617,7 +624,13 @@ func (m *RegistryDefault) CookieManager(ctx context.Context) sessions.StoreExact
 
 func (m *RegistryDefault) ContinuityCookieManager(ctx context.Context) sessions.StoreExact {
 	// To support hot reloading, this can not be instantiated only once.
-	cs := sessions.NewCookieStore(m.Config().SecretsSession(ctx)...)
+	secrets := m.Config().SecretsSession(ctx)
+	// Cookies issued before the derived-block-key fix used the raw secrets as
+	// (hashKey, blockKey) pairs. Appending the raw secrets after the derived
+	// pairs keeps those cookies readable as a decode fallback (encoding always
+	// uses the first pair). Remove once cookies issued by pre-fix versions
+	// have expired.
+	cs := sessions.NewCookieStore(append(cookieStoreKeyPairs(secrets), secrets...)...)
 	cs.Options.Secure = m.Config().CookieSecure(ctx)
 	cs.Options.HttpOnly = true
 	cs.Options.SameSite = http.SameSiteLaxMode

@@ -5,16 +5,23 @@ package driver_test
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/x/configx"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/randx"
 
+	"github.com/ory/kratos/continuity"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/hash"
@@ -992,4 +999,103 @@ func TestDriverDefault_ExtraHashers(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, hash.IsPbkdf2Sha256Hash(generated), "%s", generated)
 	require.NoError(t, hash.Compare(ctx, []byte("password"), generated))
+}
+
+func TestContinuityCookieManager(t *testing.T) {
+	t.Parallel()
+
+	const sensitiveValue = "continuity-container-reference"
+
+	writeCookie := func(t *testing.T, store sessions.Store) *http.Cookie {
+		t.Helper()
+		r := httptest.NewRequest(http.MethodGet, "https://www.ory.sh/", nil)
+		w := httptest.NewRecorder()
+		sess, err := store.New(r, continuity.CookieName)
+		require.NoError(t, err)
+		sess.Values["value"] = sensitiveValue
+		require.NoError(t, store.Save(r, w, sess))
+		cookies := w.Result().Cookies()
+		require.Len(t, cookies, 1)
+		return cookies[0]
+	}
+
+	t.Run("case=encrypts the continuity cookie", func(t *testing.T) {
+		t.Parallel()
+		_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
+		secret := randx.MustString(32, randx.AlphaNum)
+		ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecretsCookie, []string{secret})
+
+		cookie := writeCookie(t, reg.ContinuityCookieManager(ctx))
+
+		// A codec that only knows the signing key must not be able to decode the
+		// cookie. If it can, the cookie is signed but not encrypted.
+		values := map[any]any{}
+		signatureOnly := securecookie.New([]byte(secret), nil)
+		require.Errorf(t, signatureOnly.Decode(continuity.CookieName, cookie.Value, &values),
+			"the continuity cookie must be encrypted, but decoding it without the encryption key succeeded: %+v", values)
+
+		// The cookie must decode with the same key pairing CookieManager uses:
+		// hash key = secret, block key = SHA-256(secret).
+		blockKey := sha256.Sum256([]byte(secret))
+		withEncryption := securecookie.New([]byte(secret), blockKey[:])
+		require.NoError(t, withEncryption.Decode(continuity.CookieName, cookie.Value, &values))
+		assert.Equal(t, sensitiveValue, values["value"])
+	})
+
+	t.Run("case=decodes cookies issued before secret rotation", func(t *testing.T) {
+		t.Parallel()
+		_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
+		oldSecret := randx.MustString(32, randx.AlphaNum)
+		newSecret := randx.MustString(32, randx.AlphaNum)
+
+		oldCtx := contextx.WithConfigValue(t.Context(), config.ViperKeySecretsCookie, []string{oldSecret})
+		cookie := writeCookie(t, reg.ContinuityCookieManager(oldCtx))
+
+		rotatedCtx := contextx.WithConfigValue(t.Context(), config.ViperKeySecretsCookie, []string{newSecret, oldSecret})
+		r := httptest.NewRequest(http.MethodGet, "https://www.ory.sh/", nil)
+		r.AddCookie(cookie)
+		sess, err := reg.ContinuityCookieManager(rotatedCtx).New(r, continuity.CookieName)
+		require.NoError(t, err)
+		assert.Equal(t, sensitiveValue, sess.Values["value"])
+	})
+
+	// Cookies issued before the key pairing fix used the raw secrets as
+	// (hashKey, blockKey) pairs. They must remain readable during rollout.
+	t.Run("case=decodes legacy cookie signed with a single secret", func(t *testing.T) {
+		t.Parallel()
+		_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
+		secret := randx.MustString(32, randx.AlphaNum)
+		ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecretsCookie, []string{secret})
+
+		// The legacy store had a single signed-but-unencrypted codec.
+		legacy := securecookie.New([]byte(secret), nil)
+		encoded, err := legacy.Encode(continuity.CookieName, map[any]any{"value": sensitiveValue})
+		require.NoError(t, err)
+
+		r := httptest.NewRequest(http.MethodGet, "https://www.ory.sh/", nil)
+		r.AddCookie(&http.Cookie{Name: continuity.CookieName, Value: encoded})
+		sess, err := reg.ContinuityCookieManager(ctx).New(r, continuity.CookieName)
+		require.NoError(t, err)
+		assert.Equal(t, sensitiveValue, sess.Values["value"])
+	})
+
+	t.Run("case=decodes legacy cookie encrypted with the second secret", func(t *testing.T) {
+		t.Parallel()
+		_, reg := pkg.NewVeryFastRegistryWithoutDB(t)
+		firstSecret := randx.MustString(32, randx.AlphaNum)
+		secondSecret := randx.MustString(32, randx.AlphaNum)
+		ctx := contextx.WithConfigValue(t.Context(), config.ViperKeySecretsCookie, []string{firstSecret, secondSecret})
+
+		// The legacy store treated the second secret as the AES block key of
+		// the first codec.
+		legacy := securecookie.New([]byte(firstSecret), []byte(secondSecret))
+		encoded, err := legacy.Encode(continuity.CookieName, map[any]any{"value": sensitiveValue})
+		require.NoError(t, err)
+
+		r := httptest.NewRequest(http.MethodGet, "https://www.ory.sh/", nil)
+		r.AddCookie(&http.Cookie{Name: continuity.CookieName, Value: encoded})
+		sess, err := reg.ContinuityCookieManager(ctx).New(r, continuity.CookieName)
+		require.NoError(t, err)
+		assert.Equal(t, sensitiveValue, sess.Values["value"])
+	})
 }
