@@ -1618,9 +1618,22 @@ func (p *IdentityPersister) UpdateIdentity(ctx context.Context, i *identity.Iden
 
 	i.NID = p.NetworkID(ctx)
 	i.UpdatedAt = time.Now().UTC().Truncate(time.Microsecond)
+	// external_id backs a unique index, so including it in the UPDATE ... SET
+	// list makes the database plan a uniqueness check for that index even when
+	// the value is unchanged. external_id almost never changes on an update, so
+	// when we have the previous row to compare against and it is unchanged, we
+	// leave it out of the SET list and the database skips the check. When we
+	// have no snapshot to compare against, or external_id did change, we write
+	// it and accept the check.
+	externalIDUnchanged := o.FromDatabase() != nil && o.FromDatabase().ExternalID == i.ExternalID
 	if err := sqlcon.HandleError(p.Transaction(ctx, func(ctx context.Context, tx *pop.Connection) error {
 		// This returns "ErrNoRows" if the identity does not exist
-		if err := update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i); err != nil {
+		if externalIDUnchanged {
+			err = update.GenericExcept(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i, "external_id")
+		} else {
+			err = update.Generic(WithTransaction(ctx, tx), tx, p.r.Tracer(ctx).Tracer(), i)
+		}
+		if err != nil {
 			return err
 		}
 

@@ -55,3 +55,22 @@ func Generic(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v any,
 
 	return nil
 }
+
+// GenericExcept updates v like Generic, but omits excludeColumns from the
+// UPDATE ... SET list (every other writeable column is still written).
+//
+// Leaving a column that backs a unique index out of the SET list — when its
+// value has not changed — lets the database skip the uniqueness check it would
+// otherwise plan for that index, which can be expensive.
+func GenericExcept(ctx context.Context, c *pop.Connection, tracer trace.Tracer, v any, excludeColumns ...string) error {
+	model := pop.NewModel(v, ctx)
+	cols := columns.ForStructWithAlias(v, model.TableName(), model.As, model.IDField())
+	cols.Remove(excludeColumns...)
+
+	writeable := cols.Writeable().Cols
+	names := make([]string, 0, len(writeable))
+	for name := range writeable {
+		names = append(names, name)
+	}
+	return Generic(ctx, c, tracer, v, names...)
+}

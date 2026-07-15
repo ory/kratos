@@ -967,6 +967,65 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			assert.Equal(t, identity.StateActive, actual.State, "the state remains unchanged")
 		})
 
+		t.Run("case=update external_id via UpdateIdentity", func(t *testing.T) {
+			externalID := sqlxx.NullString("ext-update-" + randx.MustString(10, randx.AlphaNum))
+
+			initial := oidcIdentity("", x.NewUUID().String())
+			initial.ExternalID = externalID
+			require.NoError(t, p.CreateIdentity(ctx, initial))
+			createdIDs = append(createdIDs, initial.ID)
+
+			t.Run("case=updating other fields keeps external_id unchanged", func(t *testing.T) {
+				// Loaded twice so the from-database snapshot and the update
+				// target are independent objects, matching how the update is
+				// driven in production.
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				updated, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+
+				updated.State = identity.StateInactive
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				assert.Equal(t, identity.StateInactive, actual.State)
+				assert.Equal(t, externalID, actual.ExternalID, "external_id is preserved when it does not change")
+			})
+
+			t.Run("case=changing external_id persists the new value", func(t *testing.T) {
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				updated, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+
+				newExternalID := sqlxx.NullString("ext-update-" + randx.MustString(10, randx.AlphaNum))
+				updated.ExternalID = newExternalID
+				require.NoError(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)))
+
+				actual, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				assert.Equal(t, newExternalID, actual.ExternalID)
+			})
+
+			t.Run("case=changing external_id to an existing one is rejected", func(t *testing.T) {
+				other := oidcIdentity("", x.NewUUID().String())
+				otherExternalID := sqlxx.NullString("ext-update-" + randx.MustString(10, randx.AlphaNum))
+				other.ExternalID = otherExternalID
+				require.NoError(t, p.CreateIdentity(ctx, other))
+				createdIDs = append(createdIDs, other.ID)
+
+				fromDB, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+				updated, err := p.GetIdentityConfidential(ctx, initial.ID)
+				require.NoError(t, err)
+
+				updated.ExternalID = otherExternalID
+				require.Error(t, p.UpdateIdentity(ctx, updated, identity.DiffAgainst(fromDB)),
+					"the external_id unique constraint is still enforced when the value changes")
+			})
+		})
+
 		t.Run("case=should fail to insert identity because credentials from traits exist", func(t *testing.T) {
 			email := randx.MustString(16, randx.AlphaLowerNum) + "@ory.sh"
 			first := passwordIdentity("", email)
