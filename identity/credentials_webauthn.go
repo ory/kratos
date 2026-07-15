@@ -4,6 +4,7 @@
 package identity
 
 import (
+	"bytes"
 	"time"
 
 	"github.com/go-webauthn/webauthn/protocol"
@@ -97,6 +98,71 @@ func (c CredentialsWebAuthn) ToWebAuthnFiltered(aal AuthenticatorAssuranceLevel,
 		}
 	}
 	return result
+}
+
+// UpdateFromLogin persists the mutable authenticator state returned by the
+// go-webauthn library after a successful login assertion onto the matching
+// stored credential. It implements the relying-party side of the W3C WebAuthn
+// storage contract for the fields that change across assertions
+// (https://www.w3.org/TR/webauthn-2/#sctn-sign-counter):
+//
+//   - SignCount: incremented by the library when the assertion reports a higher
+//     counter; left unchanged (and CloneWarning set) when it did not advance, a
+//     possible cloned authenticator.
+//   - CloneWarning: persisted so the flag survives on the credential.
+//   - BackupState: refreshed because it flips when the user starts or stops
+//     syncing the credential (for example a device-bound passkey later added to
+//     iCloud or Google). BackupEligible is immutable by spec and is left alone.
+//
+// It returns whether the stored config changed so the caller can skip a needless
+// write.
+//
+// Synced passkeys (for example Apple iCloud or Google) always report
+// SignCount = 0. For them go-webauthn neither advances the counter nor raises a
+// clone warning, so this method is a no-op for the counter and never blocks the
+// login.
+func (c CredentialsWebAuthn) UpdateFromLogin(updated *webauthn.Credential) (changed bool) {
+	if updated == nil {
+		return false
+	}
+
+	for k := range c {
+		if !bytes.Equal(c[k].ID, updated.ID) {
+			continue
+		}
+
+		if c[k].Authenticator == nil {
+			c[k].Authenticator = &AuthenticatorWebAuthn{}
+		}
+
+		// Only ever advance the counter, never lower it. go-webauthn already
+		// leaves SignCount unchanged when the assertion does not advance it, so
+		// in practice updated >= stored; the strict < guards against a regressing
+		// counter ever weakening clone detection by writing a lower value.
+		if c[k].Authenticator.SignCount < updated.Authenticator.SignCount {
+			c[k].Authenticator.SignCount = updated.Authenticator.SignCount
+			changed = true
+		}
+		if c[k].Authenticator.CloneWarning != updated.Authenticator.CloneWarning {
+			c[k].Authenticator.CloneWarning = updated.Authenticator.CloneWarning
+			changed = true
+		}
+
+		// BackupState is the only credential flag that legitimately changes over
+		// a credential's lifetime; the others are fixed at registration. Sync it
+		// so the stored state stays current for later risk decisions. Legacy
+		// credentials with no Flags are skipped on purpose: BackupEligible is
+		// unknown for them, so we do not synthesize a Flags struct here; the
+		// login filter upgrades those separately before the assertion.
+		if c[k].Flags != nil && c[k].Flags.BackupState != updated.Flags.BackupState {
+			c[k].Flags.BackupState = updated.Flags.BackupState
+			changed = true
+		}
+
+		return changed
+	}
+
+	return false
 }
 
 func (c *CredentialWebAuthn) ToWebAuthn() *webauthn.Credential {

@@ -268,13 +268,19 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 	}
 
 	webAuthCreds := o.Credentials.PasswordlessOnly(&webAuthnResponse.Response.AuthenticatorData.Flags)
-	_, err = web.ValidateDiscoverableLogin(
+	validatedCredential, err := web.ValidateDiscoverableLogin(
 		func(rawID, userHandle []byte) (user webauthn.User, err error) {
 			return webauthnx.NewUser(userHandle, webAuthCreds, web.Config), nil
 		}, webAuthnSess, webAuthnResponse)
 	if err != nil {
 		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")), i.ID))
 	}
+
+	// Persist the updated signature counter and clone warning for W3C WebAuthn
+	// clone detection. This must not block the login: the user already proved
+	// possession of the authenticator. Use credentialType, which may be webauthn
+	// (legacy migration path) rather than passkey.
+	webauthnx.UpdateSignCountAfterLogin(ctx, s.d, i, credentialType, validatedCredential)
 
 	// Remove the WebAuthn URL from the internal context now that it is set!
 	f.InternalContext, err = sjson.DeleteBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))

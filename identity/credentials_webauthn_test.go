@@ -50,6 +50,122 @@ func TestCredentialConversion(t *testing.T) {
 	assert.Equal(t, "Google Password Manager", fromWebAuthn.DisplayName)
 }
 
+func TestUpdateFromLogin(t *testing.T) {
+	t.Parallel()
+
+	// newCreds builds a single stored credential with the given starting sign count.
+	newCreds := func(signCount uint32) CredentialsWebAuthn {
+		return CredentialsWebAuthn{{
+			ID:            []byte("cred-1"),
+			Authenticator: &AuthenticatorWebAuthn{SignCount: signCount},
+		}}
+	}
+
+	// validated mimics the *webauthn.Credential returned by the library: it has
+	// the matching ID and the post-assertion authenticator state.
+	validated := func(id []byte, signCount uint32, cloneWarning bool) *webauthn.Credential {
+		return &webauthn.Credential{
+			ID: id,
+			Authenticator: webauthn.Authenticator{
+				SignCount:    signCount,
+				CloneWarning: cloneWarning,
+			},
+		}
+	}
+
+	t.Run("case=advances the stored sign count", func(t *testing.T) {
+		c := newCreds(3)
+		assert.True(t, c.UpdateFromLogin(validated([]byte("cred-1"), 10, false)))
+		assert.EqualValues(t, 10, c[0].Authenticator.SignCount)
+		assert.False(t, c[0].Authenticator.CloneWarning)
+	})
+
+	t.Run("case=flags a clone when the counter did not advance", func(t *testing.T) {
+		// go-webauthn keeps SignCount unchanged and sets CloneWarning when the
+		// counter regresses or stalls (on a non-zero counter). The clone warning
+		// is newly set, so the config must be persisted.
+		c := newCreds(10)
+		assert.True(t, c.UpdateFromLogin(validated([]byte("cred-1"), 10, true)))
+		assert.True(t, c[0].Authenticator.CloneWarning)
+		assert.EqualValues(t, 10, c[0].Authenticator.SignCount)
+	})
+
+	t.Run("case=does not lower a regressing sign count", func(t *testing.T) {
+		// The library never returns a lower counter (it flags a clone and leaves
+		// the count unchanged), but UpdateFromLogin must never decrement the
+		// stored counter, which would weaken clone detection.
+		c := newCreds(10)
+		assert.False(t, c.UpdateFromLogin(validated([]byte("cred-1"), 5, false)))
+		assert.EqualValues(t, 10, c[0].Authenticator.SignCount)
+	})
+
+	t.Run("case=synced passkey reporting a static zero counter is a no-op", func(t *testing.T) {
+		// Synced passkeys (Apple/Google) always report 0; go-webauthn leaves the
+		// counter at 0 and never raises a clone warning, so nothing changes.
+		c := newCreds(0)
+		assert.False(t, c.UpdateFromLogin(validated([]byte("cred-1"), 0, false)))
+		assert.EqualValues(t, 0, c[0].Authenticator.SignCount)
+	})
+
+	t.Run("case=no matching credential is a no-op", func(t *testing.T) {
+		c := newCreds(3)
+		assert.False(t, c.UpdateFromLogin(validated([]byte("other"), 99, false)))
+		assert.EqualValues(t, 3, c[0].Authenticator.SignCount)
+	})
+
+	t.Run("case=nil validated credential is a no-op", func(t *testing.T) {
+		c := newCreds(3)
+		assert.False(t, c.UpdateFromLogin(nil))
+		assert.EqualValues(t, 3, c[0].Authenticator.SignCount)
+	})
+
+	t.Run("case=initialises a missing authenticator before updating", func(t *testing.T) {
+		c := CredentialsWebAuthn{{ID: []byte("cred-1")}}
+		assert.True(t, c.UpdateFromLogin(validated([]byte("cred-1"), 5, false)))
+		require.NotNil(t, c[0].Authenticator)
+		assert.EqualValues(t, 5, c[0].Authenticator.SignCount)
+	})
+
+	// withBackup builds a stored credential that carries backup flags.
+	withBackup := func(signCount uint32, backupState bool) CredentialsWebAuthn {
+		return CredentialsWebAuthn{{
+			ID:            []byte("cred-1"),
+			Authenticator: &AuthenticatorWebAuthn{SignCount: signCount},
+			Flags:         &CredentialWebAuthnFlags{BackupEligible: true, BackupState: backupState},
+		}}
+	}
+
+	// validatedWithBackup is like validated but also reports the post-assertion
+	// backup flags the library copies from the authenticator data.
+	validatedWithBackup := func(id []byte, signCount uint32, backupState bool) *webauthn.Credential {
+		v := validated(id, signCount, false)
+		v.Flags = webauthn.CredentialFlags{BackupEligible: true, BackupState: backupState}
+		return v
+	}
+
+	t.Run("case=refreshes backup state when the credential gets synced", func(t *testing.T) {
+		// A passkey registered device-bound (BS=false) and later synced to
+		// iCloud/Google reports BS=true on the next login.
+		c := withBackup(3, false)
+		assert.True(t, c.UpdateFromLogin(validatedWithBackup([]byte("cred-1"), 4, true)))
+		assert.True(t, c[0].Flags.BackupState)
+	})
+
+	t.Run("case=a backup state change alone triggers a persist", func(t *testing.T) {
+		// The counter is unchanged, but the credential stopped being synced, so
+		// the flipped backup state must still be written back.
+		c := withBackup(3, true)
+		assert.True(t, c.UpdateFromLogin(validatedWithBackup([]byte("cred-1"), 3, false)))
+		assert.False(t, c[0].Flags.BackupState)
+	})
+
+	t.Run("case=an unchanged backup state is a no-op", func(t *testing.T) {
+		c := withBackup(3, true)
+		assert.False(t, c.UpdateFromLogin(validatedWithBackup([]byte("cred-1"), 3, true)))
+		assert.True(t, c[0].Flags.BackupState)
+	})
+}
+
 func TestPasswordlessOnly(t *testing.T) {
 	a := *CredentialFromWebAuthn(&webauthn.Credential{ID: []byte("a")}, false)
 	b := *CredentialFromWebAuthn(&webauthn.Credential{ID: []byte("b")}, false)
