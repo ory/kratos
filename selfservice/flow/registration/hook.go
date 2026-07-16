@@ -5,6 +5,7 @@ package registration
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -22,6 +23,8 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/container"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/events"
 	"github.com/ory/x/httpx"
@@ -193,6 +196,12 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 				}
 			}
 		}
+
+		// Restore submitted trait values to the flow UI so they are preserved in the error response.
+		for _, n := range container.NewFromJSON("", node.DefaultGroup, json.RawMessage(i.Traits), "traits").Nodes {
+			registrationFlow.UI.Nodes.SetValueAttribute(n.ID(), n.Attributes.GetValue())
+		}
+
 		return err
 	}
 

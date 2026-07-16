@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	nethttptest "net/http/httptest"
 	"net/url"
 	"testing"
 
@@ -26,6 +27,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
 )
 
@@ -278,6 +280,57 @@ func TestRegistrationExecutor(t *testing.T) {
 					require.Len(t, cookies, 1)
 					assert.Equal(t, "ory_kratos_session", cookies[0].Name)
 				})
+			})
+
+			t.Run("case=preserve trait values on duplicate credential error", func(t *testing.T) {
+				t.Parallel()
+				t.Cleanup(testhelpers.SelfServiceHookConfigReset(t, conf))
+
+				tosSchema := testhelpers.UseIdentitySchema(t, conf, "file://./stub/registration-tos.schema.json")
+
+				// Create an existing identity with a known email so the next registration triggers a unique violation.
+				existing := &identity.Identity{
+					SchemaID: tosSchema,
+					Traits:   identity.Traits(`{"email":"duplicate@ory.sh"}`),
+					State:    identity.StateActive,
+				}
+				existing.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{"duplicate@ory.sh"},
+					Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$abc$def"}`),
+				})
+				require.NoError(t, reg.IdentityManager().Create(context.Background(), existing))
+
+				// Build a new identity with the same email and tos=true.
+				duplicate := testhelpers.SelfServiceHookFakeIdentity(t)
+				duplicate.SchemaID = tosSchema
+				duplicate.Traits = identity.Traits(`{"email":"duplicate@ory.sh","tos":true}`)
+				duplicate.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+					Type:        identity.CredentialsTypePassword,
+					Identifiers: []string{"duplicate@ory.sh"},
+					Config:      []byte(`{"hashed_password":"$argon2id$v=19$m=65536,t=1,p=1$abc$def"}`),
+				})
+
+				regFlow, err := registration.NewFlow(reg, nethttptest.NewRequest("GET", returnToServer.URL, nil), flow.TypeBrowser)
+				require.NoError(t, err)
+				regFlow.RequestURL = returnToServer.URL
+
+				// Add a checkbox node for traits.tos (simulating PopulateRegistrationMethod from the profile strategy).
+				regFlow.UI.Nodes.Upsert(node.NewInputField("traits.tos", false, node.DefaultGroup, node.InputAttributeTypeCheckbox))
+
+				err = reg.RegistrationHookExecutor().PostRegistrationHook(
+					nethttptest.NewRecorder(), nethttptest.NewRequest("GET", returnToServer.URL, nil),
+					regFlow, duplicate, session.AuthenticationMethod{
+						Method: identity.CredentialsTypePassword,
+						AAL:    identity.AuthenticatorAssuranceLevel1,
+					},
+				)
+				require.Error(t, err)
+
+				// The TOS checkbox node must retain the submitted value (true) from the identity traits.
+				tosNode := regFlow.UI.Nodes.Find("traits.tos")
+				require.NotNil(t, tosNode, "traits.tos node must exist in the flow UI")
+				assert.Equal(t, true, tosNode.GetValue(), "traits.tos must be true after duplicate credential error")
 			})
 
 			for _, kind := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
