@@ -26,6 +26,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/strategy/totp"
+	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x/nosurfx"
@@ -379,6 +380,46 @@ func TestCompleteSettings(t *testing.T) {
 			f := testhelpers.InitializeSettingsFlowViaBrowser(t, user, false, publicTS)
 
 			run(t, false, false, id, user, f)
+		})
+
+		t.Run("type=refreshes authenticated_at of the enrolling session", func(t *testing.T) {
+			// Pin the privileged window explicitly so this subtest does not
+			// depend on sibling tests' config mutations. The session is
+			// backdated but stays well inside the 5m window, while the
+			// refreshed timestamp is still observable.
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			t.Cleanup(func() {
+				conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+			})
+
+			id := createIdentityWithoutTOTP(t.Context(), t, reg)
+
+			staleAuthenticatedAt := time.Now().Add(-30 * time.Second).UTC()
+			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
+			sess, err := testhelpers.NewActiveSession(req, reg, id, staleAuthenticatedAt,
+				identity.CredentialsTypePassword, identity.AuthenticatorAssuranceLevel1)
+			require.NoError(t, err)
+			browserClient := testhelpers.NewHTTPClientWithSessionCookie(t.Context(), t, reg, sess)
+
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, false, publicTS)
+			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			nodes, err := json.Marshal(f.Ui.Nodes)
+			require.NoError(t, err)
+			key := gjson.GetBytes(nodes, "#(attributes.id==totp_secret_key).attributes.text.context.secret").String()
+			require.NotEmpty(t, key, "%s", nodes)
+			code, err := stdtotp.GenerateCode(key, time.Now())
+			require.NoError(t, err)
+			values.Set("method", "totp")
+			values.Set(node.TOTPCode, code)
+
+			_, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserClient, testhelpers.EncodeFormAsJSON(t, false, values))
+			require.Equal(t, http.StatusOK, res.StatusCode)
+
+			actual, err := reg.SessionPersister().GetSession(t.Context(), sess.ID, session.ExpandNothing)
+			require.NoError(t, err)
+			assert.EqualValues(t, identity.AuthenticatorAssuranceLevel2, actual.AuthenticatorAssuranceLevel)
+			assert.True(t, actual.AuthenticatedAt.After(staleAuthenticatedAt.Add(10*time.Second)),
+				"authenticated_at must be refreshed by TOTP enrollment; got %s, seeded %s", actual.AuthenticatedAt, staleAuthenticatedAt)
 		})
 	})
 }

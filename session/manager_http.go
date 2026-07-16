@@ -446,6 +446,10 @@ func (s *ManagerHTTP) SessionAddAuthenticationMethods(ctx context.Context, sid u
 	for _, m := range ams {
 		sess.CompletedLoginForMethod(m)
 	}
+	// Completing an authentication method is an authentication event, so the
+	// session's authenticated_at is refreshed as well. This matches login
+	// flows, which set authenticated_at when a second factor completes.
+	sess.AuthenticatedAt = time.Now().UTC()
 	sess.SetAuthenticatorAssuranceLevel()
 	return s.r.SessionPersister().UpsertSession(ctx, sess)
 }

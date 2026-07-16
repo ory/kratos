@@ -314,7 +314,9 @@ func TestManagerHTTP(t *testing.T) {
 		i := &identity.Identity{Traits: []byte("{}"), State: identity.StateActive}
 		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
 		sess := session.NewInactiveSession()
-		require.NoError(t, reg.SessionManager().ActivateSession(req, sess, i, time.Now().UTC()))
+		// Activate with a stale timestamp so the refresh below is observable.
+		staleAuthenticatedAt := time.Now().Add(-time.Hour).UTC()
+		require.NoError(t, reg.SessionManager().ActivateSession(req, sess, i, staleAuthenticatedAt))
 		require.NoError(t, reg.SessionPersister().UpsertSession(context.Background(), sess))
 		require.NoError(t, reg.SessionManager().SessionAddAuthenticationMethods(context.Background(), sess.ID,
 			session.AuthenticationMethod{
@@ -334,6 +336,10 @@ func TestManagerHTTP(t *testing.T) {
 			assert.True(t, amr.Method == identity.CredentialsTypeWebAuthn || amr.Method == identity.CredentialsTypeOIDC)
 		}
 		assert.Len(t, actual.AMR, 2)
+
+		// Completing an authentication method counts as an authentication
+		// event, so the timestamp must be refreshed from its stale value.
+		assert.WithinDuration(t, time.Now().UTC(), actual.AuthenticatedAt, 5*time.Second)
 	})
 
 	t.Run("suite=lifecycle", func(t *testing.T) {

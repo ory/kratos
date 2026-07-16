@@ -165,7 +165,9 @@ type Manager interface {
 	// asked to authenticate with it if `highest_available` is set and the session's AAL is `aal1`.
 	DoesSessionSatisfy(ctx context.Context, sess *Session, matcher string, opts ...ManagerOptions) error
 
-	// SessionAddAuthenticationMethods adds one or more authentication method to the session.
+	// SessionAddAuthenticationMethods adds one or more authentication method to the session
+	// and refreshes the session's authenticated_at timestamp, because completing an
+	// authentication method counts as an authentication event.
 	SessionAddAuthenticationMethods(ctx context.Context, sid uuid.UUID, methods ...AuthenticationMethod) error
 
 	// MaybeRedirectAPICodeFlow for API+Code flows redirects the user to the return_to URL and adds the code query parameter.
