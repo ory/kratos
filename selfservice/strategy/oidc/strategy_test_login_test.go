@@ -9,6 +9,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -259,13 +260,118 @@ func TestStrategy_ProcessTestLogin_HappyPath(t *testing.T) {
 	loc := w.Header().Get("Location")
 	assert.Contains(t, loc, "/session/test-oidc")
 	assert.Contains(t, loc, "flow="+f.ID.String())
-	assert.Contains(t, loc, "admin.example.com")
+	// The results page is served from the host the callback arrived on, not
+	// the login UI host (admin.example.com).
+	assert.Contains(t, loc, "//example.com/session/test-oidc")
+	assert.NotContains(t, loc, "admin.example.com")
 
 	// CSRF token rotated on the callback and pinned onto the flow, so the
 	// post-callback cookie value matches f.CSRFToken. Subsequent GET/DELETE
 	// of the captured payload checks the CSRF cookie against this token.
 	assert.Equal(t, nosurfx.FakeCSRFToken, got.CSRFToken,
 		"finishTestLogin must regenerate the CSRF token onto the flow")
+}
+
+// TestStrategy_ProcessTestLogin_ReturnsToRequestHost asserts the test flow's
+// results page is served from the public host the browser used to start the
+// flow (the OIDC callback host), not from the configured login UI host. A
+// project whose login UI lives on a different domain than its public API — for
+// example a self-hosted Account Experience — must still land on the domain it
+// launched the test from, otherwise the results page renders on a host that
+// does not serve the /session/test-oidc route.
+func TestStrategy_ProcessTestLogin_ReturnsToRequestHost(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+
+	// The helper configures the login UI on admin.example.com. The callback
+	// below arrives on a different public host, signin.example.com.
+	_, reg := newTestRegistryForTestLogin(t, map[string]any{
+		"provider":      "generic",
+		"id":            "providerID",
+		"client_id":     "invalid",
+		"client_secret": "invalid",
+		"issuer_url":    "https://foobar/",
+		"mapper_url":    "file://./stub/oidc.hydra.jsonnet",
+	})
+	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeOIDC)
+	require.NoError(t, err)
+	strat := s.(*oidc.Strategy)
+
+	f := newTestLoginFlow(t, ctx, reg, "providerID")
+	claims := &oidc.Claims{Subject: "alice@example.com", Email: "alice@example.com"}
+	provider := &fakeTestFlowProvider{config: &oidc.Configuration{
+		ID:       "providerID",
+		Provider: "generic",
+		Mapper:   "file://./stub/oidc.hydra.jsonnet",
+	}}
+
+	w := httptest.NewRecorder()
+	// The OIDC provider redirects the browser back to the public host it used
+	// to start the flow, which differs from the login UI host.
+	r := httptest.NewRequest(http.MethodGet, "https://signin.example.com/self-service/methods/oidc/callback?code=x&state=y", nil)
+	require.NoError(t, strat.ProcessTestLoginForTest(ctx, w, r, f, claims, provider))
+
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	loc := w.Header().Get("Location")
+	assert.Contains(t, loc, "/session/test-oidc")
+	assert.Contains(t, loc, "flow="+f.ID.String())
+	assert.Contains(t, loc, "signin.example.com",
+		"results page must be served from the host the flow started on")
+	assert.NotContains(t, loc, "admin.example.com",
+		"results page must not jump to the login UI host")
+}
+
+// TestStrategy_ProcessTestLogin_PrefersCapturedBaseURL covers the dominant Ory
+// Network path: a gateway-validated middleware captures the customer-facing
+// base URL onto the request context. That captured value must win over both
+// the raw request host and the login UI host, so the results page is always
+// served from the trusted customer-facing domain rather than anything an
+// untrusted X-Forwarded-Host could inject.
+func TestStrategy_ProcessTestLogin_PrefersCapturedBaseURL(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+
+	_, reg := newTestRegistryForTestLogin(t, map[string]any{
+		"provider":      "generic",
+		"id":            "providerID",
+		"client_id":     "invalid",
+		"client_secret": "invalid",
+		"issuer_url":    "https://foobar/",
+		"mapper_url":    "file://./stub/oidc.hydra.jsonnet",
+	})
+	s, err := reg.AllLoginStrategies().Strategy(identity.CredentialsTypeOIDC)
+	require.NoError(t, err)
+	strat := s.(*oidc.Strategy)
+
+	f := newTestLoginFlow(t, ctx, reg, "providerID")
+	claims := &oidc.Claims{Subject: "alice@example.com", Email: "alice@example.com"}
+	provider := &fakeTestFlowProvider{config: &oidc.Configuration{
+		ID:       "providerID",
+		Provider: "generic",
+		Mapper:   "file://./stub/oidc.hydra.jsonnet",
+	}}
+
+	// The gateway captured the customer-facing base URL onto the context. The
+	// request itself arrives on an unrelated internal host with a spoofed
+	// X-Forwarded-Host that must be ignored in favor of the captured value.
+	captured, perr := url.Parse("https://signin.example.com")
+	require.NoError(t, perr)
+	reqCtx := x.WithBaseURL(ctx, captured)
+	r := httptest.NewRequest(http.MethodGet, "https://internal-host.local/self-service/methods/oidc/callback?code=x&state=y", nil)
+	r = r.WithContext(reqCtx)
+	r.Header.Set("X-Forwarded-Host", "evil.example.com")
+
+	w := httptest.NewRecorder()
+	require.NoError(t, strat.ProcessTestLoginForTest(reqCtx, w, r, f, claims, provider))
+
+	assert.Equal(t, http.StatusSeeOther, w.Code)
+	loc := w.Header().Get("Location")
+	assert.Contains(t, loc, "//signin.example.com/session/test-oidc",
+		"results page must use the gateway-captured base URL")
+	assert.NotContains(t, loc, "evil.example.com",
+		"a spoofed X-Forwarded-Host must not override the captured base URL")
+	assert.NotContains(t, loc, "internal-host.local")
+	assert.NotContains(t, loc, "admin.example.com")
 }
 
 func TestStrategy_ProcessTestLogin_AlreadyCaptured(t *testing.T) {
@@ -512,7 +618,10 @@ func TestStrategy_ForwardError_TestLoginFlow(t *testing.T) {
 	loc := w.Header().Get("Location")
 	assert.Contains(t, loc, "/session/test-oidc")
 	assert.Contains(t, loc, "flow="+f.ID.String())
-	assert.Contains(t, loc, "admin.example.com")
+	// The results page is served from the host the callback arrived on, not
+	// the login UI host (admin.example.com).
+	assert.Contains(t, loc, "//example.com/session/test-oidc")
+	assert.NotContains(t, loc, "admin.example.com")
 
 	got, err := reg.LoginFlowPersister().GetLoginFlow(ctx, f.ID)
 	require.NoError(t, err)

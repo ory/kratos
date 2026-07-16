@@ -24,6 +24,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/oidc/oidcerr"
 	"github.com/ory/kratos/text"
+	"github.com/ory/kratos/x"
 )
 
 // PopulateTestLoginFlow renders a single-provider submit button for an
@@ -169,7 +170,7 @@ func (s *Strategy) finishTestLogin(ctx context.Context, w http.ResponseWriter, r
 		}
 	}
 	if f.TestContext != nil && f.TestContext.DebugPayload != nil {
-		http.Redirect(w, r, testLoginReturnURL(ctx, s, f), http.StatusSeeOther)
+		http.Redirect(w, r, testLoginReturnURL(r, f), http.StatusSeeOther)
 		return nil
 	}
 
@@ -192,15 +193,29 @@ func (s *Strategy) finishTestLogin(ctx context.Context, w http.ResponseWriter, r
 		return errors.WithStack(err)
 	}
 
-	http.Redirect(w, r, testLoginReturnURL(ctx, s, f), http.StatusSeeOther)
+	http.Redirect(w, r, testLoginReturnURL(r, f), http.StatusSeeOther)
 	return nil
 }
 
-// testLoginReturnURL builds the admin test UI URL the browser lands on after
-// a test login flow callback completes. Derived from the login UI host since
-// test flows don't have a dedicated config entry.
-func testLoginReturnURL(ctx context.Context, s *Strategy, f *login.Flow) string {
-	base := s.d.Config().SelfServiceFlowLoginUI(ctx)
+// testLoginReturnURL builds the test results page URL the browser lands on
+// after a test login flow callback completes. The host comes from
+// x.RequestBaseURL, which prefers the customer-facing base URL captured from
+// the gateway-validated request context and falls back to the request host.
+// This serves the results page from the same public domain the flow was
+// started on, rather than the configured login UI host — which may be a
+// different domain (for example a self-hosted Account Experience) that does
+// not serve this route. The OIDC redirect_uri for the same flow is built from
+// the same source (see Strategy.processLogin / GenerateState), so this trusts
+// the request host no more than the existing round-trip already does.
+func testLoginReturnURL(r *http.Request, f *login.Flow) string {
+	base, err := url.Parse(x.RequestBaseURL(r))
+	if err != nil {
+		// RequestBaseURL always returns a well-formed scheme://host string, so
+		// this guard is defensive only. Degrade to a host-relative redirect that
+		// keeps the browser on the current domain rather than failing the
+		// callback.
+		base = new(url.URL)
+	}
 	target := &url.URL{Scheme: base.Scheme, Host: base.Host, Path: "/session/test-oidc"}
 	q := target.Query()
 	q.Set("flow", f.ID.String())
