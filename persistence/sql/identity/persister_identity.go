@@ -768,6 +768,28 @@ func (p *IdentityPersister) CreateIdentity(ctx context.Context, ident *identity.
 	return p.CreateIdentities(ctx, []*identity.Identity{ident})
 }
 
+// identitiesNeedPartialInserts reports whether a batch identity insert must use
+// partial inserts. Partial inserts pre-assign the ids so a conflicting row can
+// be correlated back to its input, which keeps the id client-generated instead
+// of database-generated.
+//
+// The only unique constraint on the identities table is on external_id (and it
+// is partial: it applies only when external_id is set). An identity insert can
+// therefore only conflict when an external_id is present, so partial inserts
+// are only needed when the batch has more than one row and at least one carries
+// an external_id. Otherwise a plain insert is enough; the downstream credential
+// and address inserts still use partial inserts to report their own conflicts.
+//
+// On a transaction retry, the ids generated during the first attempt (by the
+// database or by Go) remain on the in-memory structs, so the retried insert
+// reuses them instead of generating new ones. The identity pool contract test
+// covers this ("transaction retry" cases).
+func identitiesNeedPartialInserts(identities []*identity.Identity) bool {
+	return len(identities) > 1 && slices.ContainsFunc(identities, func(i *identity.Identity) bool {
+		return i.ExternalID != ""
+	})
+}
+
 func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities []*identity.Identity, opts ...identity.CreateIdentitiesModifier) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CreateIdentities",
 		trace.WithAttributes(
@@ -820,7 +842,7 @@ func (p *IdentityPersister) CreateIdentities(ctx context.Context, identities []*
 		if extras := options.ExtraColumns; len(extras) > 0 {
 			batchOpts = append(batchOpts, batch.WithExtraColumns(extras))
 		}
-		if len(identities) > 1 {
+		if identitiesNeedPartialInserts(identities) {
 			batchOpts = append(batchOpts, batch.WithPartialInserts)
 		}
 		if err := batch.Create(ctx, conn, identities, batchOpts...); err != nil {
