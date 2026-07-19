@@ -171,6 +171,22 @@ func (e *HookExecutor) PostRegistrationHook(w http.ResponseWriter, r *http.Reque
 	if err := e.d.IdentityValidator().Validate(ctx, i); err != nil {
 		return err
 	}
+
+	if registrationFlow.IsAccountLinking() && !e.d.Config().SelfServiceFlowRegistrationEnabled(ctx) {
+		// This flow was created internally from a login flow to link a new
+		// credential to an existing identity while registration is disabled.
+		// It must never create a new identity, so require that a conflicting
+		// identity exists before attempting to persist. The create below then
+		// fails with a unique violation, which triggers the account linking
+		// conversion back to a login flow.
+		if _, _, _, err := e.d.IdentityManager().ConflictingIdentity(ctx, i); err != nil {
+			if errors.Is(err, sqlcon.ErrNoRows()) {
+				return errors.WithStack(ErrRegistrationDisabled())
+			}
+			return err
+		}
+	}
+
 	// We're now creating the identity because any of the hooks could trigger a "redirect" or a "session" which
 	// would imply that the identity has to exist already.
 	if err := e.d.IdentityManager().Create(ctx, i); err != nil {

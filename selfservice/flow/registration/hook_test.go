@@ -29,6 +29,8 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/x/sqlcon"
+	"github.com/ory/x/sqlxx"
 )
 
 func TestRegistrationExecutor(t *testing.T) {
@@ -345,4 +347,58 @@ func TestRegistrationExecutor(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPostRegistrationHookAccountLinkingOnly(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
+	reg.SetHydra(hydra.NewFake())
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/registration.schema.json")
+	conf.MustSet(ctx, config.ViperKeySelfServiceBrowserDefaultReturnTo, returnToServer.URL)
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, false)
+
+	newIdentityWithEmail := func(email string) *identity.Identity {
+		i := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		i.Traits = identity.Traits(`{"email":"` + email + `"}`)
+		i.SetCredentials(identity.CredentialsTypePassword, identity.Credentials{
+			Identifiers: []string{email},
+			Config:      sqlxx.JSONRawMessage(`{"hashed_password":"$2a$08$fakefakefakefakefakefa"}`),
+		})
+		return i
+	}
+
+	runPostRegistrationHook := func(t *testing.T, i *identity.Identity) error {
+		r := httptest.NewRequest("GET", "/registration/post", nil)
+		r = r.WithContext(ctx)
+		regFlow, err := registration.NewFlow(reg, r, flow.TypeAPI)
+		require.NoError(t, err)
+		registration.WithFlowAccountLinking()(regFlow)
+
+		return reg.RegistrationHookExecutor().PostRegistrationHook(httptest.NewRecorder(), r, regFlow, i, session.AuthenticationMethod{
+			Method: identity.CredentialsTypePassword,
+			AAL:    identity.AuthenticatorAssuranceLevel1,
+		})
+	}
+
+	t.Run("case=rejects a new identity when registration is disabled", func(t *testing.T) {
+		email := "linking-guard-new@ory.sh"
+		err := runPostRegistrationHook(t, newIdentityWithEmail(email))
+		require.ErrorContains(t, err, registration.ErrRegistrationDisabled().Error())
+
+		_, _, err = reg.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, identity.CredentialsTypePassword, email)
+		require.ErrorIs(t, err, sqlcon.ErrNoRows())
+	})
+
+	t.Run("case=proceeds into the duplicate conflict when an identity exists", func(t *testing.T) {
+		email := "linking-guard-existing@ory.sh"
+		existing := newIdentityWithEmail(email)
+		require.NoError(t, reg.IdentityManager().Create(ctx, existing))
+
+		err := runPostRegistrationHook(t, newIdentityWithEmail(email))
+		// The guard must let the create attempt happen so that the unique
+		// violation triggers the account linking conversion.
+		require.ErrorIs(t, err, sqlcon.ErrUniqueViolation())
+	})
 }

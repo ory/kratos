@@ -102,7 +102,11 @@ type UpdateLoginFlowWithOidcMethod struct {
 }
 
 func (s *Strategy) handleConflictingIdentity(ctx context.Context, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (verdict ConflictingIdentityVerdict, id *identity.Identity, credentials *identity.Credentials, err error) {
-	if s.conflictingIdentityPolicy == nil {
+	if s.conflictingIdentityPolicy == nil && s.d.Config().SelfServiceFlowRegistrationEnabled(ctx) {
+		// Without a conflicting-identity policy there is nothing to merge. The
+		// conflict lookup below is still required when registration is
+		// disabled, because ProcessLogin uses its result to distinguish
+		// account linking from a genuine new sign-up.
 		return ConflictingIdentityVerdictReject, nil, nil, nil
 	}
 
@@ -144,7 +148,18 @@ func (s *Strategy) handleConflictingIdentity(ctx context.Context, loginFlow *log
 
 	existingIdentity, _, _, err := s.d.IdentityManager().ConflictingIdentity(ctx, newIdentity)
 	if err != nil {
-		return ConflictingIdentityVerdictReject, nil, nil, nil
+		if errors.Is(err, sqlcon.ErrNoRows()) {
+			// No existing identity matches the new identity's identifiers.
+			return ConflictingIdentityVerdictReject, nil, nil, nil
+		}
+		// Propagate infrastructure errors instead of misreporting them as
+		// "no conflicting identity", which would surface to the user as a
+		// misleading rejection (e.g. "registration disabled").
+		return ConflictingIdentityVerdictUnknown, nil, nil, err
+	}
+
+	if s.conflictingIdentityPolicy == nil {
+		return ConflictingIdentityVerdictReject, existingIdentity, creds, nil
 	}
 
 	verdict = s.conflictingIdentityPolicy(ctx, existingIdentity, newIdentity, provider, claims)
@@ -345,8 +360,25 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 					WithField("subject", claims.Subject).
 					Debug("Received successful OpenID Connect callback but user is not registered. Re-initializing registration flow now.")
 
-				// If return_to was set before, we need to preserve it.
+				if !s.d.Config().SelfServiceFlowRegistrationEnabled(ctx) && i == nil {
+					// Registration is disabled and no existing identity matches the
+					// provider claims, so this is a genuine new sign-up and not an
+					// account linking attempt. Reject it instead of converting the
+					// flow.
+					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(registration.ErrRegistrationDisabled()))
+				}
+
 				var opts []registration.FlowOption
+				if i != nil {
+					// A conflicting identity exists, so submitting this flow can
+					// only link to that identity, never create a new one. Mark it
+					// as an internal login → registration conversion for account
+					// linking: such flows may exist while registration is disabled.
+					// Genuine sign-ups (no conflicting identity) stay unmarked and
+					// are only reachable while registration is enabled.
+					opts = append(opts, registration.WithFlowAccountLinking())
+				}
+				// If return_to was set before, we need to preserve it.
 				if len(loginFlow.ReturnTo) > 0 {
 					opts = append(opts, registration.WithFlowReturnTo(loginFlow.ReturnTo))
 				}

@@ -13,6 +13,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
 	"github.com/ory/kratos/driver/config"
@@ -226,6 +227,27 @@ func (f *Flow) EnsureInternalContext() {
 	if !gjson.ParseBytes(f.InternalContext).IsObject() {
 		f.InternalContext = []byte("{}")
 	}
+}
+
+const internalContextAccountLinkingPath = "converted_for_account_linking"
+
+// MarkAsAccountLinking records in the flow's internal context that this
+// registration flow was created internally by converting a login flow to
+// perform account linking. Such flows may exist while registration is
+// disabled, but must never create a new identity in that case.
+func (f *Flow) MarkAsAccountLinking() {
+	f.EnsureInternalContext()
+	// The path is a constant and the internal context is guaranteed to be a
+	// JSON object at this point, so this cannot fail.
+	if bytes, err := sjson.SetBytes(f.InternalContext, internalContextAccountLinkingPath, true); err == nil {
+		f.InternalContext = bytes
+	}
+}
+
+// IsAccountLinking returns true if this registration flow was created
+// internally by converting a login flow to perform account linking.
+func (f *Flow) IsAccountLinking() bool {
+	return gjson.GetBytes(f.InternalContext, internalContextAccountLinkingPath).Bool()
 }
 
 func (f Flow) MarshalJSON() ([]byte, error) {

@@ -28,6 +28,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/pkg/testhelpers"
+	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/flow/registration"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
@@ -373,6 +374,106 @@ func TestDisabledFlow(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 			assertx.EqualAsJSON(t, registration.ErrRegistrationDisabled(), json.RawMessage(gjson.GetBytes(body, "error").Raw), "%s", body)
 		})
+	})
+}
+
+func TestAccountLinkingFlowWithRegistrationDisabled(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	conf, reg := pkg.NewFastRegistryWithMocks(t)
+
+	conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, false)
+	testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+	conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypePassword),
+		map[string]interface{}{"enabled": true})
+
+	publicTS, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+	errTS := testhelpers.NewErrorTestServer(t, reg)
+
+	newAccountLinkingFlow := func(t *testing.T) *registration.Flow {
+		req := httptest.NewRequest("GET", publicTS.URL+registration.RouteInitAPIFlow, nil)
+		f, err := reg.RegistrationHandler().NewRegistrationFlow(httptest.NewRecorder(), req, flow.TypeAPI,
+			registration.WithFlowAccountLinking())
+		require.NoError(t, err)
+		return f
+	}
+
+	t.Run("case=creating an account linking flow succeeds", func(t *testing.T) {
+		f := newAccountLinkingFlow(t)
+		assert.True(t, f.IsAccountLinking())
+	})
+
+	t.Run("case=creating a regular flow still fails", func(t *testing.T) {
+		req := httptest.NewRequest("GET", publicTS.URL+registration.RouteInitAPIFlow, nil)
+		_, err := reg.RegistrationHandler().NewRegistrationFlow(httptest.NewRecorder(), req, flow.TypeAPI)
+		require.ErrorContains(t, err, registration.ErrRegistrationDisabled().Error())
+	})
+
+	t.Run("case=fetching an account linking flow succeeds", func(t *testing.T) {
+		f := newAccountLinkingFlow(t)
+
+		res, err := publicTS.Client().Get(publicTS.URL + registration.RouteGetFlow + "?id=" + f.ID.String())
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
+		assert.Equal(t, f.ID.String(), gjson.GetBytes(body, "id").String(), "%s", body)
+	})
+
+	t.Run("case=fetching a regular flow still fails", func(t *testing.T) {
+		// A regular flow can exist while registration is disabled if it was
+		// created before registration was disabled.
+		req := httptest.NewRequest("GET", publicTS.URL+registration.RouteInitAPIFlow, nil)
+		f, err := registration.NewFlow(reg, req, flow.TypeAPI)
+		require.NoError(t, err)
+		require.NoError(t, reg.RegistrationFlowPersister().CreateRegistrationFlow(ctx, f))
+
+		res, err := publicTS.Client().Get(publicTS.URL + registration.RouteGetFlow + "?id=" + f.ID.String())
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
+		assert.EqualValues(t, registration.ErrRegistrationDisabled().ReasonField, gjson.GetBytes(body, "reason").String(), "%s", body)
+	})
+
+	t.Run("case=fetching a flow that does not exist still fails", func(t *testing.T) {
+		// Reporting "registration disabled" instead of "not found" keeps the
+		// existence of a flow from leaking.
+		res, err := publicTS.Client().Get(publicTS.URL + registration.RouteGetFlow + "?id=" + x.NewUUID().String())
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		require.Contains(t, res.Request.URL.String(), errTS.URL, "%s", body)
+		assert.EqualValues(t, registration.ErrRegistrationDisabled().ReasonField, gjson.GetBytes(body, "reason").String(), "%s", body)
+	})
+
+	t.Run("case=fetching a flow does not report a broken database as registration disabled", func(t *testing.T) {
+		// This case needs a registry of its own because it breaks the database.
+		ctx := t.Context()
+		conf, reg := pkg.NewFastRegistryWithMocks(t)
+		conf.MustSet(ctx, config.ViperKeySelfServiceRegistrationEnabled, false)
+		testhelpers.SetDefaultIdentitySchema(conf, "file://./stub/login.schema.json")
+
+		publicTS, _ := testhelpers.NewKratosServerWithCSRF(t, reg)
+		errTS := testhelpers.NewErrorTestServer(t, reg)
+
+		// Drop the table the flow lookup reads so that it fails with an
+		// infrastructure error instead of "not found". The error persister
+		// keeps working, so a forward to the error UI stays observable.
+		require.NoError(t, reg.Persister().GetConnection(ctx).
+			RawQuery("DROP TABLE "+registration.Flow{}.TableName()).Exec())
+
+		res, err := publicTS.Client().Get(publicTS.URL + registration.RouteGetFlow + "?id=" + x.NewUUID().String())
+		require.NoError(t, err)
+		defer func() { _ = res.Body.Close() }()
+		body, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		assert.NotContains(t, res.Request.URL.String(), errTS.URL,
+			"a database failure must not be forwarded to the error UI as a registration error: %s", body)
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode, "%s", body)
 	})
 }
 

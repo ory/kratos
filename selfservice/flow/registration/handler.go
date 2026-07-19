@@ -33,6 +33,7 @@ import (
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx/semconv"
+	"github.com/ory/x/sqlcon"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
 )
@@ -125,17 +126,26 @@ func WithFlowIdentitySchema(schema string) FlowOption {
 	}
 }
 
-func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
-	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
-		return nil, errors.WithStack(ErrRegistrationDisabled())
+func WithFlowAccountLinking() FlowOption {
+	return func(f *Flow) {
+		f.MarkAsAccountLinking()
 	}
+}
 
+func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, error) {
 	f, err := NewFlow(h.d, r, ft)
 	if err != nil {
 		return nil, err
 	}
 	for _, o := range opts {
 		o(f)
+	}
+
+	// Flows that were converted from a login flow for account linking may be
+	// created even when registration is disabled. PostRegistrationHook
+	// guarantees they can only link to an existing identity, never create one.
+	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) && !f.IsAccountLinking() {
+		return nil, errors.WithStack(ErrRegistrationDisabled())
 	}
 
 	if ft == flow.TypeAPI && r.URL.Query().Get("return_session_token_exchange_code") == "true" {
@@ -446,7 +456,8 @@ func (h *Handler) createBrowserRegistrationFlow(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		returnTo, redirErr := redir.SecureRedirectTo(r, h.d.Config().SelfServiceBrowserDefaultReturnTo(ctx),
+		returnTo, redirErr := redir.SecureRedirectTo(
+			r, h.d.Config().SelfServiceBrowserDefaultReturnTo(ctx),
 			redir.SecureRedirectAllowSelfServiceURLs(h.d.Config().SelfPublicURL(ctx)),
 			redir.SecureRedirectAllowURLs(h.d.Config().SelfServiceBrowserAllowedReturnToDomains(ctx)),
 		)
@@ -532,14 +543,25 @@ type getRegistrationFlow struct {
 //	Extensions:
 //	  x-ory-ratelimit-bucket: kratos-public-high
 func (h *Handler) getRegistrationFlow(w http.ResponseWriter, r *http.Request) {
-	if !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
-		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled()))
+	ar, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
+	if err != nil {
+		// A flow that does not exist reports a disabled registration to not
+		// leak flow existence. Any other error is returned as-is, so that an
+		// infrastructure failure is not misreported as a disabled
+		// registration.
+		if errors.Is(err, sqlcon.ErrNoRows()) && !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
+			h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled()))
+			return
+		}
+
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
-	ar, err := h.d.RegistrationFlowPersister().GetRegistrationFlow(r.Context(), x.ParseUUID(r.URL.Query().Get("id")))
-	if err != nil {
-		h.d.Writer().WriteError(w, r, err)
+	// When registration is disabled, only flows that were converted from a
+	// login flow for account linking may be fetched.
+	if !ar.IsAccountLinking() && !h.d.Config().SelfServiceFlowRegistrationEnabled(r.Context()) {
+		h.d.SelfServiceErrorManager().Forward(r.Context(), w, r, errors.WithStack(ErrRegistrationDisabled()))
 		return
 	}
 
@@ -673,7 +695,8 @@ type updateRegistrationFlowBody struct{}
 //	  x-ory-ratelimit-bucket: kratos-public-low
 func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	ctx = semconv.ContextWithAttributes(ctx,
+	ctx = semconv.ContextWithAttributes(
+		ctx,
 		attribute.String(events.AttributeKeySelfServiceStrategyUsed.String(), "registration"),
 		attribute.String(events.AttributeKeySelfServiceFlowName.String(), "registration"),
 	)

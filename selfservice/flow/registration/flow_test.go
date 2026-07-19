@@ -153,3 +153,19 @@ func TestFlowDontOverrideReturnTo(t *testing.T) {
 	f.SetReturnTo()
 	assert.Equal(t, "/bar", f.ReturnTo)
 }
+
+func TestFlowAccountLinkingMarker(t *testing.T) {
+	t.Parallel()
+
+	f := &registration.Flow{}
+	assert.False(t, f.IsAccountLinking())
+
+	registration.WithFlowAccountLinking()(f)
+	assert.True(t, f.IsAccountLinking())
+
+	// The marker must survive an internal-context round trip, because the
+	// flow is persisted between requests.
+	var copied registration.Flow
+	copied.SetInternalContext(f.GetInternalContext())
+	assert.True(t, copied.IsAccountLinking())
+}
