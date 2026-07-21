@@ -83,14 +83,35 @@ func (r *SchemaExtensionCredentials) Run(ctx jsonschema.ValidationContext, s sch
 
 		var conf CredentialsCode
 		conf.Addresses = r.addresses
-		value, err := x.NormalizeIdentifier(fmt.Sprintf("%s", value), string(via))
-		if err != nil {
-			return &jsonschema.ValidationError{Message: err.Error()}
+
+		// For the email channel with a non-strict format (e.g. `no-validate`),
+		// the schema `pattern` alone gates the value and graceful normalization
+		// keeps the stored address in sync with the login-code lookup. SMS
+		// always needs E.164 normalization.
+		var formatString string
+		if raw, ok := s.RawSchema["format"]; ok {
+			str, ok := raw.(string)
+			if !ok {
+				// Defensive: the draft-07 meta-schema already rejects a
+				// non-string "format" at compile time.
+				return &jsonschema.ValidationError{Message: `the "format" field must be a string`}
+			}
+			formatString = str
+		}
+		var normalized string
+		if via == CodeChannelEmail && formatString != "" && formatString != "email" {
+			normalized = x.GracefulNormalization(fmt.Sprintf("%s", value))
+		} else {
+			n, err := x.NormalizeIdentifier(fmt.Sprintf("%s", value), string(via))
+			if err != nil {
+				return &jsonschema.ValidationError{Message: err.Error()}
+			}
+			normalized = n
 		}
 
 		conf.Addresses = append(conf.Addresses, CredentialsCodeAddress{
 			Channel: via,
-			Address: value,
+			Address: normalized,
 		})
 
 		conf.Addresses = lo.UniqBy(conf.Addresses, func(item CredentialsCodeAddress) string {

@@ -5,6 +5,7 @@ package identity_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"testing"
@@ -16,6 +17,7 @@ import (
 	_ "github.com/ory/jsonschema/v3/fileloader"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/schema"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/snapshotx"
 	"github.com/ory/x/sqlxx"
 )
@@ -265,6 +267,20 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			expectedIdentifiers: []string{"admin@ory.sh", "аdmin@ory.sh", "confusable-emails"},
 			ct:                  identity.CredentialsTypePassword,
 		},
+		{
+			doc:                 `{"email":"foo.@docomo.ne.jp"}`,
+			schema:              "file://./stub/extension/credentials/code-no-validate.schema.json",
+			expectedIdentifiers: []string{"foo.@docomo.ne.jp"},
+			ct:                  identity.CredentialsTypeCodeAuth,
+		},
+		// Uppercase input under no-validate must normalize to match the
+		// login-code lookup, which compares x.GracefulNormalization(identifier).
+		{
+			doc:                 `{"email":"FOO.@docomo.ne.jp"}`,
+			schema:              "file://./stub/extension/credentials/code-no-validate.schema.json",
+			expectedIdentifiers: []string{"foo.@docomo.ne.jp"},
+			ct:                  identity.CredentialsTypeCodeAuth,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c := jsonschema.NewCompiler()
@@ -292,4 +308,29 @@ func TestSchemaExtensionCredentials(t *testing.T) {
 			snapshotx.SnapshotT(t, credentials, snapshotx.ExceptPaths("identifiers"))
 		})
 	}
+}
+
+func TestSchemaExtensionCredentialsCodeNoValidateAddress(t *testing.T) {
+	c := jsonschema.NewCompiler()
+	runner, err := schema.NewExtensionRunner(t.Context())
+	require.NoError(t, err)
+
+	i := new(identity.Identity)
+	e := identity.NewSchemaExtensionCredentials(i)
+	runner.AddRunner(e).Register(c)
+
+	require.NoError(t, c.MustCompile(t.Context(), "file://./stub/extension/credentials/code-no-validate.schema.json").
+		Validate(bytes.NewBufferString(`{"email":"FOO.@docomo.ne.jp"}`)))
+	require.NoError(t, e.Finish())
+
+	cred, ok := i.GetCredentials(identity.CredentialsTypeCodeAuth)
+	require.True(t, ok)
+
+	var conf identity.CredentialsCode
+	require.NoError(t, json.Unmarshal(cred.Config, &conf))
+	require.Len(t, conf.Addresses, 1)
+	// The stored address must equal what login-code normalization produces,
+	// or loginSendCode can never match it (strategy_login.go:521).
+	assert.Equal(t, x.GracefulNormalization("FOO.@docomo.ne.jp"), conf.Addresses[0].Address)
+	assert.Equal(t, identity.CodeChannelEmail, conf.Addresses[0].Channel)
 }

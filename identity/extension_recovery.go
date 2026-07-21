@@ -33,15 +33,28 @@ func (r *SchemaExtensionRecovery) Run(ctx jsonschema.ValidationContext, s schema
 	var address *RecoveryAddress
 	switch s.Recovery.Via {
 	case "email":
-		formatString := "email"
-		formatter, ok := jsonschema.Formats[formatString]
-		if !ok {
-			supportedKeys := slices.Collect(maps.Keys(jsonschema.Formats))
-			return ctx.Error("format", "format %q is not supported. Supported formats are [%s]", formatString, strings.Join(supportedKeys, ", "))
+		// An absent or `email` format keeps the strict RFC check; any other
+		// format (e.g. `no-validate`) lets the schema `pattern` gate the value.
+		var formatString string
+		if raw, ok := s.RawSchema["format"]; ok {
+			str, ok := raw.(string)
+			if !ok {
+				// Defensive: the draft-07 meta-schema already rejects a
+				// non-string "format" at compile time.
+				return ctx.Error("format", `the "format" field must be a string`)
+			}
+			formatString = str
 		}
+		if formatString == "" || formatString == "email" {
+			formatter, ok := jsonschema.Formats["email"]
+			if !ok {
+				supportedKeys := slices.Collect(maps.Keys(jsonschema.Formats))
+				return ctx.Error("format", "format %q is not supported. Supported formats are [%s]", "email", strings.Join(supportedKeys, ", "))
+			}
 
-		if !formatter(value) {
-			return ctx.Error("format", "%q is not valid %q", value, formatString)
+			if !formatter(value) {
+				return ctx.Error("format", "%q is not valid %q", value, "email")
+			}
 		}
 
 		address = NewRecoveryEmailAddress(x.NormalizeEmailIdentifier(fmt.Sprintf("%s", value)), r.i.ID)

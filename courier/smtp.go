@@ -7,7 +7,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"net/mail"
+	stdmail "net/mail"
 	"net/url"
 	"strconv"
 	"time"
@@ -16,6 +16,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
 	"github.com/ory/x/ipx"
 
@@ -109,8 +110,10 @@ func (c *courier) QueueEmail(ctx context.Context, t EmailTemplate) (uuid.UUID, e
 	if err != nil {
 		return uuid.Nil, errors.WithStack(err)
 	}
-	if _, err := mail.ParseAddress(recipient); err != nil {
-		return uuid.Nil, errors.WithStack(err)
+	// The RFC 5322 fallback keeps previously-valid addresses working; the
+	// address is not included in the error because it is identity PII.
+	if _, err := stdmail.ParseAddress(recipient); err != nil && !x.IsEmailAddress(recipient) {
+		return uuid.Nil, errors.New("courier: email recipient is not a valid email address")
 	}
 
 	subject, err := t.EmailSubject(ctx)

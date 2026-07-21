@@ -303,7 +303,7 @@ func translateValidationError(err *jsonschema.ValidationError) *text.Message {
 		format := m[2]
 
 		switch format {
-		case "email":
+		case "email", "email_loose":
 			return text.NewErrorValidationEmail(value)
 		case "tel":
 			return text.NewErrorValidationPhone(value)

@@ -271,6 +271,32 @@ func TestSchemaExtensionRecovery(t *testing.T) {
 				},
 			},
 		},
+		{
+			description: "docomo email under no-validate is accepted",
+			doc:         `{"email":"foo.@docomo.ne.jp"}`,
+			schema:      "file://./stub/extension/recovery/no-validate.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "foo.@docomo.ne.jp",
+					Via:        AddressTypeEmail,
+					IdentityID: iid,
+				},
+			},
+		},
+		{
+			// Uppercase input on the lenient path must still lowercase so it
+			// matches the recovery-address lookup normalization.
+			description: "docomo email under no-validate is normalized",
+			doc:         `{"email":"FOO.@docomo.ne.jp"}`,
+			schema:      "file://./stub/extension/recovery/no-validate.schema.json",
+			expect: []RecoveryAddress{
+				{
+					Value:      "foo.@docomo.ne.jp",
+					Via:        AddressTypeEmail,
+					IdentityID: iid,
+				},
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d description=%s", k, tc.description), func(t *testing.T) {
 			id := &Identity{ID: iid, RecoveryAddresses: tc.existing}

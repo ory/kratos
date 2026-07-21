@@ -6,8 +6,10 @@ package courier
 import (
 	"context"
 	"net"
+	stdmail "net/mail"
 	"net/textproto"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -17,6 +19,7 @@ import (
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/courier/template"
 	"github.com/ory/kratos/driver/config"
+	"github.com/ory/kratos/x"
 	"github.com/ory/mail/v3"
 	"github.com/ory/x/otelx"
 )
@@ -75,6 +78,19 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 
 	if cfg == nil {
 		return errors.WithStack(herodot.ErrInternalServerError().WithErrorf("Courier tried to deliver an email but SMTP channel is misconfigured."))
+	}
+
+	// Re-validate the recipient read from the database: a value that is neither
+	// RFC 5322-valid nor injection-safe per x.IsEmailAddress is abandoned
+	// rather than placed in an SMTP command or header.
+	_, rfcErr := stdmail.ParseAddress(msg.Recipient)
+	if rfcErr != nil && !x.IsEmailAddress(msg.Recipient) {
+		if err := c.d.CourierPersister().SetMessageStatus(ctx, msg.ID, MessageStatusAbandoned); err != nil {
+			c.d.Logger().WithError(err).Error(`Unable to set the message status to "abandoned".`)
+			return errors.WithStack(err)
+		}
+		return errors.WithStack(herodot.ErrInternalServerError().
+			WithReasonf("courier: email recipient for message %s is not a valid email address", msg.ID))
 	}
 
 	gm := mail.NewMessage()
@@ -136,7 +152,20 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	defer func() { _ = snd.Close() }()
 
 	sendCtx, sendSpan := c.d.Tracer(ctx).Tracer().Start(ctx, "courier.SMTPChannel.Dispatch.Send")
-	err = mail.Send(sendCtx, snd, gm)
+	if rfcErr == nil {
+		// mail.Send derives the envelope from the To/Cc/Bcc headers, so Cc/Bcc
+		// configured via courier.smtp.headers are delivered.
+		err = mail.Send(sendCtx, snd, gm)
+	} else {
+		// A non-RFC recipient bypasses mail.Send's strict header re-parse with
+		// an explicit envelope; Cc/Bcc headers are not delivered on this path.
+		for k := range headers {
+			if strings.EqualFold(k, "Cc") || strings.EqualFold(k, "Bcc") {
+				logger.Warnf("Configured %q recipients are not delivered for a non-RFC email address.", k)
+			}
+		}
+		err = snd.Send(sendCtx, cfg.FromAddress, []string{msg.Recipient}, gm)
+	}
 	otelx.End(sendSpan, &err)
 
 	if err != nil {

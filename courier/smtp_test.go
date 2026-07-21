@@ -178,6 +178,15 @@ func TestQueueEmail(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, id)
 
+	// A schema-approved non-RFC carrier address must queue and be delivered.
+	id, err = c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
+		To:      "foo.@docomo.ne.jp",
+		Subject: "test-subject-docomo",
+		Body:    "test-body-docomo",
+	}))
+	require.NoError(t, err)
+	require.NotZero(t, id)
+
 	require.EventuallyWithT(t, func(t *assert.CollectT) {
 		require.NoError(t, c.DispatchQueue(context.Background()))
 	}, time.Second, 10*time.Millisecond)
@@ -189,7 +198,7 @@ func TestQueueEmail(t *testing.T) {
 	body, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 	require.Equalf(t, http.StatusOK, res.StatusCode, "%s", body)
-	require.EqualValues(t, 3, gjson.GetBytes(body, "total").Int())
+	require.EqualValues(t, 4, gjson.GetBytes(body, "total").Int())
 
 	for k := 1; k <= 3; k++ {
 		assert.Contains(t, string(body), fmt.Sprintf("test-subject-%d", k))
@@ -197,6 +206,10 @@ func TestQueueEmail(t *testing.T) {
 		assert.Contains(t, string(body), fmt.Sprintf("test-recipient-%d@example.org", k))
 		assert.Contains(t, string(body), "test-stub@ory.sh")
 	}
+
+	assert.Contains(t, string(body), "test-subject-docomo")
+	assert.Contains(t, string(body), "test-body-docomo")
+	assert.Contains(t, string(body), "foo.@docomo.ne.jp")
 
 	assert.Contains(t, string(body), "Bob")
 	assert.Contains(t, string(body), `"test-stub-header1":["foo"]`)

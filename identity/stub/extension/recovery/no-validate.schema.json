@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "no-validate",
+      "pattern": "^[a-zA-Z0-9!#$%&'*+\\=?^_`{|}~.\\-]+@docomo\\.ne\\.jp$",
+      "ory.sh/kratos": {
+        "recovery": {
+          "via": "email"
+        }
+      }
+    }
+  }
+}
