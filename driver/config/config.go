@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"crypto/fips140"
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
@@ -428,6 +429,20 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, ctxer co
 	if !p.SkipValidation() {
 		if err := c.validateIdentitySchemas(ctx); err != nil {
 			return nil, err
+		}
+		if fips140.Enabled() {
+			if len(p.Strings(ViperKeySecretsPagination)) == 0 {
+				return nil, errors.New("you must provide `secrets.pagination` for FIPS compliance")
+			}
+			if len(p.Strings(ViperKeySecretsCipher)) == 0 {
+				return nil, errors.New("you must provide `secrets.cipher` for FIPS compliance")
+			}
+			if len(p.Strings(ViperKeySecretsCookie)) == 0 {
+				return nil, errors.New("you must provide `secrets.cookie` for FIPS compliance")
+			}
+			if len(p.Strings(ViperKeySecretsDefault)) == 0 {
+				return nil, errors.New("you must provide `secrets.default` for FIPS compliance")
+			}
 		}
 	}
 
