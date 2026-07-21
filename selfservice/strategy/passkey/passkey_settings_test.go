@@ -6,6 +6,7 @@ package passkey_test
 import (
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -95,6 +96,36 @@ func TestCompleteSettings(t *testing.T) {
 			"1.attributes.src",   // script
 			"4.attributes.value", // passkey_create_data
 		})
+	})
+
+	t.Run("case=registration options exclude already registered passkeys", func(t *testing.T) {
+		id := fix.createIdentity(t)
+
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, fix.reg, id)
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, fix.publicTS)
+
+		nodes, err := json.Marshal(f.Ui.Nodes)
+		require.NoError(t, err)
+		options := gjson.GetBytes(nodes, `#(attributes.name=="passkey_create_data").attributes.value`).String()
+		exclude := gjson.Get(options, "publicKey.excludeCredentials").Array()
+		require.Len(t, exclude, 2, options)
+		assert.Equal(t, "public-key", exclude[0].Get("type").String())
+		assert.Equal(t, "Zm9vZm9v", exclude[0].Get("id").String())
+		assert.Equal(t, "YmFyYmFy", exclude[1].Get("id").String())
+	})
+
+	t.Run("case=registration options have no exclusions without passkeys", func(t *testing.T) {
+		id := fix.createIdentityWithoutPasskey(t)
+		require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), id))
+
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, fix.reg, id)
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, fix.publicTS)
+
+		nodes, err := json.Marshal(f.Ui.Nodes)
+		require.NoError(t, err)
+		options := gjson.GetBytes(nodes, `#(attributes.name=="passkey_create_data").attributes.value`).String()
+		require.NotEmpty(t, options)
+		assert.False(t, gjson.Get(options, "publicKey.excludeCredentials").Exists(), options)
 	})
 
 	t.Run("case=passkey nodes exist for API but without browser script", func(t *testing.T) {
@@ -351,6 +382,57 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=api", func(t *testing.T) {
 			run(t, "api")
 		})
+	})
+
+	t.Run("case=fails to add a passkey that is already registered", func(t *testing.T) {
+		// We load our identity which we will use to replay the webauth session
+		var id identity.Identity
+		require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
+		id.NID = x.NewUUID()
+		_ = fix.reg.PrivilegedIdentityPool().DeleteIdentity(t.Context(), id.ID)
+		client := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, fix.reg, &id)
+
+		// Seed the identity with the same credential ID the replayed response will try to register.
+		credID, err := base64.RawURLEncoding.DecodeString(gjson.GetBytes(settingsFixtureSuccessResponse, "rawId").String())
+		require.NoError(t, err)
+		conf, err := json.Marshal(identity.CredentialsWebAuthnConfig{
+			Credentials: identity.CredentialsWebAuthn{{ID: credID, DisplayName: "existing passkey"}},
+		})
+		require.NoError(t, err)
+		confidential, err := fix.reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), id.ID)
+		require.NoError(t, err)
+		confidential.SetCredentials(identity.CredentialsTypePasskey, identity.Credentials{
+			Type:   identity.CredentialsTypePasskey,
+			Config: conf,
+		})
+		require.NoError(t, fix.reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), confidential))
+
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, client, true, fix.publicTS)
+
+		// We inject the session to replay
+		interim, err := fix.reg.SettingsFlowPersister().GetSettingsFlow(t.Context(), uuid.FromStringOrNil(f.Id))
+		require.NoError(t, err)
+		interim.InternalContext = settingsFixtureSuccessInternalContext
+		require.NoError(t, fix.reg.SettingsFlowPersister().UpdateSettingsFlow(t.Context(), interim))
+
+		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		// The existing passkey's remove button is disabled (it is the identity's only first-factor
+		// credential), so a real browser would not submit its value. Unlike a browser, the test
+		// helper copies every node's value regardless of the disabled attribute, so drop it here to
+		// avoid accidentally triggering the remove path instead of the add path under test.
+		values.Del(node.PasskeyRemove)
+		values.Set("method", "passkey")
+		values.Set(node.PasskeySettingsRegister, string(settingsFixtureSuccessResponse))
+		body, res := testhelpers.SettingsMakeRequest(t, false, true, f, client, testhelpers.EncodeFormAsJSON(t, true, values))
+
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode, body)
+		assert.Contains(t, body, "already registered", body)
+
+		actual, err := fix.reg.Persister().GetIdentityConfidential(t.Context(), id.ID)
+		require.NoError(t, err)
+		cred, ok := actual.GetCredentials(identity.CredentialsTypePasskey)
+		require.True(t, ok)
+		assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1, "the duplicate credential must not be persisted")
 	})
 
 	t.Run("case=fails to remove passkey if it is the last credential available", func(t *testing.T) {

@@ -6,6 +6,7 @@ package webauthn_test
 import (
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -171,6 +172,35 @@ func TestCompleteSettings(t *testing.T) {
 			"4.attributes.nonce",
 		})
 		ensureReplacement(t, "3", f.Ui, "Ory Corp")
+	})
+
+	t.Run("case=registration options exclude already registered credentials", func(t *testing.T) {
+		id := createIdentity(t.Context(), t, reg)
+
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
+
+		nodes, err := json.Marshal(f.Ui.Nodes)
+		require.NoError(t, err)
+		options := gjson.GetBytes(nodes, `#(attributes.name=="webauthn_register_trigger").attributes.value`).String()
+		exclude := gjson.Get(options, "publicKey.excludeCredentials").Array()
+		require.Len(t, exclude, 2, options)
+		assert.Equal(t, "public-key", exclude[0].Get("type").String())
+		assert.Equal(t, "Zm9vZm9v", exclude[0].Get("id").String())
+		assert.Equal(t, "YmFyYmFy", exclude[1].Get("id").String())
+	})
+
+	t.Run("case=registration options have no exclusions without credentials", func(t *testing.T) {
+		id := createIdentityWithoutWebAuthn(t, reg)
+
+		apiClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, apiClient, true, publicTS)
+
+		nodes, err := json.Marshal(f.Ui.Nodes)
+		require.NoError(t, err)
+		options := gjson.GetBytes(nodes, `#(attributes.name=="webauthn_register_trigger").attributes.value`).String()
+		require.NotEmpty(t, options)
+		assert.False(t, gjson.Get(options, "publicKey.excludeCredentials").Exists(), options)
 	})
 
 	t.Run("case=webauthn only works for browsers", func(t *testing.T) {
@@ -366,6 +396,52 @@ func TestCompleteSettings(t *testing.T) {
 		t.Run("type=spa", func(t *testing.T) {
 			run(t, true)
 		})
+	})
+
+	t.Run("case=fails to add a security key that is already registered", func(t *testing.T) {
+		// We load our identity which we will use to replay the webauth session
+		var id identity.Identity
+		require.NoError(t, json.Unmarshal(settingsFixtureSuccessIdentity, &id))
+		id.NID = uuid.Must(uuid.NewV4())
+		_ = reg.PrivilegedIdentityPool().DeleteIdentity(t.Context(), id.ID)
+		browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, &id)
+
+		// Seed the identity with the same credential ID the replayed response will try to register.
+		credID, err := base64.RawURLEncoding.DecodeString(gjson.GetBytes(settingsFixtureSuccessResponse, "rawId").String())
+		require.NoError(t, err)
+		conf, err := json.Marshal(identity.CredentialsWebAuthnConfig{
+			Credentials: identity.CredentialsWebAuthn{{ID: credID, DisplayName: "existing key"}},
+		})
+		require.NoError(t, err)
+		confidential, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), id.ID)
+		require.NoError(t, err)
+		confidential.SetCredentials(identity.CredentialsTypeWebAuthn, identity.Credentials{
+			Type:   identity.CredentialsTypeWebAuthn,
+			Config: conf,
+		})
+		require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentity(t.Context(), confidential))
+
+		f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, true, publicTS)
+
+		// We inject the session to replay
+		interim, err := reg.SettingsFlowPersister().GetSettingsFlow(t.Context(), uuid.FromStringOrNil(f.Id))
+		require.NoError(t, err)
+		interim.InternalContext = settingsFixtureSuccessInternalContext
+		require.NoError(t, reg.SettingsFlowPersister().UpdateSettingsFlow(t.Context(), interim))
+
+		values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+		values.Set(node.WebAuthnRegister, string(settingsFixtureSuccessResponse))
+		values.Set(node.WebAuthnRegisterDisplayName, "foobar")
+		body, res := testhelpers.SettingsMakeRequest(t, false, true, f, browserClient, testhelpers.EncodeFormAsJSON(t, true, values))
+
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode, body)
+		assert.Contains(t, body, "already registered", body)
+
+		actual, err := reg.Persister().GetIdentityConfidential(t.Context(), id.ID)
+		require.NoError(t, err)
+		cred, ok := actual.GetCredentials(identity.CredentialsTypeWebAuthn)
+		require.True(t, ok)
+		assert.Len(t, gjson.GetBytes(cred.Config, "credentials").Array(), 1, "the duplicate credential must not be persisted")
 	})
 
 	t.Run("case=fails to remove security key if it is passwordless and the last credential available", func(t *testing.T) {

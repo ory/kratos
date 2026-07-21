@@ -135,7 +135,71 @@ context("2FA WebAuthn", () => {
       it("should be able to link multiple authenticators", () => {
         cy.visit(settings)
 
-        // Set up virtual authenticator
+        cy.task("sendCRI", {
+          query: "WebAuthn.enable",
+          opts: {},
+        }).then(() => {
+          // Register the first credential with the first virtual authenticator.
+          cy.task("sendCRI", {
+            query: "WebAuthn.addVirtualAuthenticator",
+            opts: {
+              options: {
+                protocol: "ctap2",
+                transport: "usb",
+                hasResidentKey: true,
+                hasUserVerification: true,
+                isUserVerified: true,
+              },
+            },
+          }).then((firstAuthenticator) => {
+            cy.get('*[name="webauthn_register_displayname"]').type("key1")
+            cy.clickWebAuthButton("register")
+            cy.get('*[name="webauthn_remove"]').should("have.length", 1)
+
+            // Swap in a second authenticator for the next credential. The
+            // settings flow lists the first credential in excludeCredentials;
+            // with both authenticators attached, create() would race the
+            // excluded authenticator's InvalidStateError against the new one, so
+            // remove the first before registering on the second. The identity
+            // keeps both credentials server-side either way.
+            cy.task("sendCRI", {
+              query: "WebAuthn.removeVirtualAuthenticator",
+              opts: firstAuthenticator,
+            })
+            cy.task("sendCRI", {
+              query: "WebAuthn.addVirtualAuthenticator",
+              opts: {
+                options: {
+                  protocol: "ctap2",
+                  transport: "usb",
+                  hasResidentKey: true,
+                  hasUserVerification: true,
+                  isUserVerified: true,
+                },
+              },
+            }).then(() => {
+              cy.get('*[name="webauthn_register_displayname"]').type("key2")
+              cy.clickWebAuthButton("register")
+
+              cy.get('*[name="webauthn_remove"]').should("have.length", 2)
+
+              cy.visit(login + "?aal=aal2&refresh=true")
+              cy.location().should((loc) => {
+                expect(loc.href).to.include("/login")
+              })
+              cy.get('*[name="webauthn_login_trigger"]').should(
+                "have.length",
+                1,
+              )
+              cy.clickWebAuthButton("login")
+            })
+          })
+        })
+      })
+
+      it("should not register the same authenticator twice", () => {
+        cy.visit(settings)
+
         cy.task("sendCRI", {
           query: "WebAuthn.enable",
           opts: {},
@@ -151,21 +215,19 @@ context("2FA WebAuthn", () => {
                 isUserVerified: true,
               },
             },
-          }).then((addResult) => {
+          }).then(() => {
             cy.get('*[name="webauthn_register_displayname"]').type("key1")
             cy.clickWebAuthButton("register")
+            cy.get('*[name="webauthn_remove"]').should("have.length", 1)
 
+            // Registering again with the same authenticator must be rejected:
+            // the settings flow lists the existing credential in
+            // excludeCredentials, so the browser refuses to create a duplicate
+            // and the credential count stays at one.
             cy.get('*[name="webauthn_register_displayname"]').type("key2")
             cy.clickWebAuthButton("register")
 
-            cy.get('*[name="webauthn_remove"]').should("have.length", 2)
-
-            cy.visit(login + "?aal=aal2&refresh=true")
-            cy.location().should((loc) => {
-              expect(loc.href).to.include("/login")
-            })
-            cy.get('*[name="webauthn_login_trigger"]').should("have.length", 1)
-            cy.clickWebAuthButton("login")
+            cy.get('*[name="webauthn_remove"]').should("have.length", 1)
           })
         })
       })

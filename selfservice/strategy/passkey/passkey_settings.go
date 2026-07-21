@@ -4,6 +4,7 @@
 package passkey
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -57,11 +58,14 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 		return err
 	}
 
-	if webAuthns, err := s.identityListWebAuthn(id); errors.Is(err, sqlcon.ErrNoRows()) {
-		// Do nothing
-	} else if err != nil {
+	webAuthns, err := s.identityListWebAuthn(id)
+	if err != nil && !errors.Is(err, sqlcon.ErrNoRows()) {
 		return err
-	} else {
+	}
+
+	var registrationOptions []webauthn.RegistrationOption
+	if webAuthns != nil {
+		exclude := make([]protocol.CredentialDescriptor, 0, len(webAuthns.Credentials))
 		for k := range webAuthns.Credentials {
 			// We only show the option to remove a credential, if it is not the last one when passwordless,
 			// or, if it is for MFA we show it always.
@@ -71,7 +75,11 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 				// Do not remove this node if it is the last credential the identity can sign in with.
 				a.Disabled = count < 2
 			}))
+			exclude = append(exclude, cred.ToWebAuthn().Descriptor())
 		}
+		// Exclude every registered passkey: platform authenticators overwrite their stored entry on
+		// re-enrollment while Kratos keeps both server-side (WebAuthn Level 2, section 5.4.3).
+		registrationOptions = append(registrationOptions, webauthn.WithExclusions(exclude))
 	}
 
 	web, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
@@ -90,7 +98,7 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 		ID:     []byte(randx.MustString(64, randx.AlphaNum)),
 		Config: s.d.Config().PasskeyConfig(ctx),
 	}
-	option, sessionData, err := web.BeginRegistration(user)
+	option, sessionData, err := web.BeginRegistration(user, registrationOptions...)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -360,6 +368,12 @@ func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *setti
 	var cc identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(cred.Config, &cc); err != nil {
 		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
+	}
+
+	for k := range cc.Credentials {
+		if bytes.Equal(cc.Credentials[k].ID, credential.ID) {
+			return errors.WithStack(webauthnx.ErrCredentialAlreadyRegistered("#/" + node.PasskeySettingsRegister))
+		}
 	}
 
 	credentialWebAuthn := identity.CredentialFromWebAuthn(credential, true)

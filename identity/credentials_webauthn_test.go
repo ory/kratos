@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
@@ -18,6 +19,7 @@ func TestCredentialConversion(t *testing.T) {
 		ID:              []byte("abcdef"),
 		PublicKey:       []byte("foobar"),
 		AttestationType: "test",
+		Transport:       []protocol.AuthenticatorTransport{protocol.Internal, protocol.Hybrid},
 		Authenticator: webauthn.Authenticator{
 			AAGUID:       []byte("baz"),
 			SignCount:    1,

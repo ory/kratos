@@ -4,6 +4,7 @@
 package webauthn
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -280,6 +281,12 @@ func (s *Strategy) continueSettingsFlowAdd(ctx context.Context, ctxUpdate *setti
 		return errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to decode identity credentials.").WithDebug(err.Error()))
 	}
 
+	for k := range cc.Credentials {
+		if bytes.Equal(cc.Credentials[k].ID, credential.ID) {
+			return errors.WithStack(webauthnx.ErrCredentialAlreadyRegistered("#/" + node.WebAuthnRegister))
+		}
+	}
+
 	wc := identity.CredentialFromWebAuthn(credential, s.d.Config().WebAuthnForPasswordless(ctx))
 	wc.AddedAt = time.Now().UTC().Round(time.Second)
 	wc.DisplayName = p.RegisterDisplayName
@@ -352,11 +359,14 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 		return err
 	}
 
-	if webAuthns, err := s.identityListWebAuthn(id); errors.Is(err, sqlcon.ErrNoRows()) {
-		// Do nothing
-	} else if err != nil {
+	webAuthns, err := s.identityListWebAuthn(id)
+	if err != nil && !errors.Is(err, sqlcon.ErrNoRows()) {
 		return err
-	} else {
+	}
+
+	var registrationOptions []webauthn.RegistrationOption
+	if webAuthns != nil {
+		exclude := make([]protocol.CredentialDescriptor, 0, len(webAuthns.Credentials))
 		for k := range webAuthns.Credentials {
 			// We only show the option to remove a credential, if it is not the last one when passwordless,
 			// or, if it is for MFA we show it always.
@@ -365,7 +375,12 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 				// Do not remove this node because it is the last credential the identity can sign in with.
 				a.Disabled = cred.IsPasswordless && count < 2
 			}))
+			exclude = append(exclude, cred.ToWebAuthn().Descriptor())
 		}
+		// Exclude every registered credential, passwordless or not: platform authenticators keep one
+		// credential per relying party and user handle, so re-enrolling would overwrite the entry on
+		// the device while Kratos keeps both server-side (WebAuthn Level 2, section 5.4.3).
+		registrationOptions = append(registrationOptions, webauthn.WithExclusions(exclude))
 	}
 
 	web, err := webauthn.New(s.d.Config().WebAuthnConfig(ctx))
@@ -373,7 +388,7 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 		return errors.WithStack(err)
 	}
 
-	option, sessionData, err := web.BeginRegistration(webauthnx.NewUser(id.ID.Bytes(), nil, web.Config))
+	option, sessionData, err := web.BeginRegistration(webauthnx.NewUser(id.ID.Bytes(), nil, web.Config), registrationOptions...)
 	if err != nil {
 		return errors.WithStack(err)
 	}

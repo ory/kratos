@@ -30,6 +30,7 @@ func CredentialFromWebAuthn(credential *webauthn.Credential, isPasswordless bool
 		PublicKey:       credential.PublicKey,
 		IsPasswordless:  isPasswordless,
 		AttestationType: credential.AttestationType,
+		Transport:       credential.Transport,
 		AddedAt:         time.Now().UTC().Round(time.Second),
 		Authenticator: &AuthenticatorWebAuthn{
 			AAGUID:       credential.Authenticator.AAGUID,

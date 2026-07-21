@@ -306,6 +306,12 @@ context("Passwordless registration", () => {
 
       it("should not be able to use for MFA even when passwordless is false", () => {
         const email = gen.email()
+        // Ensure passwordless is enabled for the initial sign-up, even if a
+        // previous (retried) attempt left it disabled below.
+        cy.updateConfigFile((config) => {
+          config.selfservice.methods.webauthn.config.passwordless = true
+          return config
+        })
         signup(registration, app, email)
         cy.updateConfigFile((config) => {
           config.selfservice.methods.webauthn.config.passwordless = false
@@ -317,15 +323,35 @@ context("Passwordless registration", () => {
 
         cy.visit(settings)
         cy.get('[name="webauthn_remove"]').should("be.disabled")
-        cy.get('[name="webauthn_register_displayname"]').type("key2")
-        cy.clickWebAuthButton("register")
-        cy.expectSettingsSaved()
 
-        cy.visit(login + "?aal=aal2&refresh=true")
-        cy.clickWebAuthButton("login")
-        cy.getSession({
-          expectAal: "aal2",
-          expectMethods: ["webauthn", "webauthn", "webauthn"],
+        // The settings flow excludes every already-registered credential
+        // (including the passwordless one), so the new MFA credential must be
+        // created on a different authenticator. Swap the passwordless
+        // authenticator out entirely so only the new one is attached: with both
+        // present, create() races the excluded authenticator's
+        // InvalidStateError against the new authenticator, and the second-factor
+        // login (whose allowCredentials omits the passwordless credential) can
+        // resolve against the wrong device.
+        cy.task("sendCRI", {
+          query: "WebAuthn.removeVirtualAuthenticator",
+          opts: authenticator,
+        })
+        cy.addVirtualAuthenticator().then((secondAuthenticator) => {
+          // Keep the handle valid for the after() cleanup hook.
+          cy.then(() => {
+            authenticator = secondAuthenticator
+          })
+
+          cy.get('[name="webauthn_register_displayname"]').type("key2")
+          cy.clickWebAuthButton("register")
+          cy.expectSettingsSaved()
+
+          cy.visit(login + "?aal=aal2&refresh=true")
+          cy.clickWebAuthButton("login")
+          cy.getSession({
+            expectAal: "aal2",
+            expectMethods: ["webauthn", "webauthn", "webauthn"],
+          })
         })
       })
     })
