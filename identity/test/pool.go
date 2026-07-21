@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -3574,6 +3575,81 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 			// not its content. Content updates must not consume it, or future
 			// schema migrations keyed on version become impossible.
 			assert.Equal(t, versionBefore, c.Version, "content updates must not bump the config-schema version column")
+		})
+
+		t.Run("case=UpdateCredentialsConfig survives concurrent plain writes", func(t *testing.T) {
+			t.Parallel()
+
+			_, p := testhelpers.NewNetwork(t, ctx, p)
+
+			id := identity.NewIdentity("default")
+			id.SetCredentials(identity.CredentialsTypeDeviceAuthn, identity.Credentials{
+				Type:        identity.CredentialsTypeDeviceAuthn,
+				Identifiers: []string{"plain-writes-key-1"},
+				Config:      sqlxx.JSONRawMessage(`{"failed_attempts":0}`),
+			})
+			require.NoError(t, p.CreateIdentity(ctx, id))
+
+			// Plain single-statement writes commit freely while the locked
+			// mutation's transaction is open: pop's SQLite transaction mutex
+			// does not cover them, and on the cluster databases they contend
+			// only on row locks. They model the flow and session writes that
+			// surround a login burst.
+			stop := make(chan struct{})
+			var noise sync.WaitGroup
+			var noiseWrites atomic.Int64
+			for w := range 3 {
+				noise.Go(func() {
+					// Bind a value that changes on every write: SQLite skips the
+					// page write (and thus the WAL commit) when an UPDATE leaves
+					// the row byte-identical, and a commit that appends nothing
+					// stales nobody's snapshot.
+					ts := time.Now().Add(time.Duration(w) * time.Hour)
+					for {
+						select {
+						case <-stop:
+							return
+						default:
+						}
+						ts = ts.Add(time.Second)
+						if err := p.GetConnection(ctx).RawQuery(
+							"UPDATE identities SET updated_at = ? WHERE id = ?", ts, id.ID).Exec(); err != nil {
+							return
+						}
+						noiseWrites.Add(1)
+					}
+				})
+			}
+			t.Cleanup(func() {
+				close(stop)
+				noise.Wait()
+				require.NotZero(t, noiseWrites.Load(), "the concurrent writer must actually have written")
+			})
+
+			const n = 10
+			for i := range n {
+				require.NoError(t, p.UpdateCredentialsConfig(ctx, id.ID, identity.CredentialsTypeDeviceAuthn,
+					func(cfg []byte) ([]byte, error) {
+						var parsed map[string]int
+						if err := json.Unmarshal(cfg, &parsed); err != nil {
+							return nil, err
+						}
+						parsed["failed_attempts"]++
+						// Give the concurrent writers room to commit between this
+						// transaction's read and its write, so the race is a
+						// certainty instead of a scheduling accident.
+						time.Sleep(10 * time.Millisecond)
+						return json.Marshal(parsed)
+					}), "mutation %d must not leak a concurrent-update error", i)
+			}
+
+			reloaded, err := p.GetIdentityConfidential(ctx, id.ID)
+			require.NoError(t, err)
+			c, ok := reloaded.GetCredentials(identity.CredentialsTypeDeviceAuthn)
+			require.True(t, ok)
+			var counts map[string]int
+			require.NoError(t, json.Unmarshal(c.Config, &counts))
+			assert.Equal(t, n, counts["failed_attempts"], "every increment must be applied exactly once")
 		})
 
 		t.Run("case=UpdateCredentialsConfig no-op mutation succeeds", func(t *testing.T) {

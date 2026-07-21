@@ -1440,16 +1440,20 @@ func (p *IdentityPersister) UpdateCredentialsConfig(ctx context.Context, identit
 	// CockroachDB (see the method doc). popx applies the isolation for
 	// Postgres/MySQL/CockroachDB and ignores it for SQLite.
 	txOpts := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	// Resolve the type id before the transaction (cached after the first
+	// load) so the locking SELECT touches only identity_credentials: a join
+	// under FOR UPDATE would lock the shared type row and serialize all
+	// updates of that type globally. Outside the transaction, because on
+	// SQLite a cache miss would take pop's statement mutex inside it (see
+	// the lock-order note below).
+	typeID, err := FindIdentityCredentialsTypeByName(p.c.WithContext(ctx), ct)
+	if err != nil {
+		return err
+	}
+
 	var wrote bool
 	if err := popx.TransactionWithOptions(ctx, p.c.WithContext(ctx), txOpts, func(ctx context.Context, tx *pop.Connection) error {
 		wrote = false
-		// Resolve the type id up front (cached) so the locking SELECT touches
-		// only identity_credentials: a join under FOR UPDATE would lock the
-		// shared type row and serialize all updates of that type globally.
-		typeID, err := FindIdentityCredentialsTypeByName(tx, ct)
-		if err != nil {
-			return err
-		}
 
 		// No index hint: the locking SELECT matches
 		// identity_credentials_identity_id_idx. Forcing @primary would make
@@ -1462,22 +1466,46 @@ func (p *IdentityPersister) UpdateCredentialsConfig(ctx context.Context, identit
 		  AND ic.identity_credential_type_id = ?` + extraSQL + `
 		FOR UPDATE`
 		selectArgs := append([]any{identityID, nid, typeID}, extraArgs...)
-		if tx.Dialect.Name() == "sqlite3" {
-			// SQLite has no FOR UPDATE; pop serializes whole SQLite
-			// transactions on an in-process mutex instead.
-			selectQuery = `
-			SELECT ic.id, ic.config
-			FROM identity_credentials ic
-			WHERE ic.identity_id = ?
-			  AND ic.nid = ?
-			  AND ic.identity_credential_type_id = ?` + extraSQL
-		}
 
 		var row struct {
 			ID     uuid.UUID            `db:"id"`
 			Config sqlxx.JSONRawMessage `db:"config"`
 		}
-		if err := tx.RawQuery(selectQuery, selectArgs...).First(&row); err != nil {
+		if tx.Dialect.Name() == "sqlite3" {
+			// SQLite has no FOR UPDATE; pop serializes whole SQLite
+			// transactions on an in-process mutex instead. That mutex does
+			// not cover plain single-statement writes (e.g. flow updates
+			// during a login burst), which commit freely while this
+			// transaction is open, and this read-then-write transaction is
+			// unsound against them in WAL mode: a deferred transaction takes
+			// its read snapshot at the first SELECT and upgrades to writer at
+			// the UPDATE, and if anything committed in between the upgrade
+			// fails immediately with SQLITE_BUSY_SNAPSHOT — busy_timeout
+			// cannot help a stale snapshot, and enough write traffic exhausts
+			// the retry budget in TransactionWithOptions. A no-op write as
+			// the transaction's first statement acquires the write lock up
+			// front (the in-transaction equivalent of BEGIN IMMEDIATE), so
+			// the snapshot is taken with the lock already held and concurrent
+			// writers wait on busy_timeout instead.
+			if err := tx.RawQuery("UPDATE identity_credentials SET id = id WHERE 1 = 0").Exec(); err != nil {
+				return sqlcon.HandleError(err)
+			}
+
+			// Read via the underlying sqlx transaction, not pop's finders:
+			// pop wraps SQLite reads in a process-wide statement mutex, which
+			// a concurrent model write may hold while it busy-waits on the
+			// very write lock the barrier above just took. Taking that mutex
+			// here, with the write lock held, would invert the lock order and
+			// park both sides until the busy timeout expires.
+			if err := tx.TX.GetContext(ctx, &row, `
+			SELECT ic.id, ic.config
+			FROM identity_credentials ic
+			WHERE ic.identity_id = ?
+			  AND ic.nid = ?
+			  AND ic.identity_credential_type_id = ?`+extraSQL, selectArgs...); err != nil {
+				return sqlcon.HandleError(err)
+			}
+		} else if err := tx.RawQuery(selectQuery, selectArgs...).First(&row); err != nil {
 			return sqlcon.HandleError(err)
 		}
 
@@ -1583,9 +1611,20 @@ func syncDerivedIdentifiers(ctx context.Context, conn *batch.TracerConnection, c
 	var rows []struct {
 		Identifier string `db:"identifier"`
 	}
-	if err := tx.RawQuery(
-		`SELECT identifier FROM identity_credential_identifiers WHERE identity_credential_id = ? AND nid = ?`+extraSQL,
-		append([]any{proto.IdentityCredentialsID, proto.NID}, extraArgs...)...).All(&rows); err != nil {
+	readQuery := `SELECT identifier FROM identity_credential_identifiers WHERE identity_credential_id = ? AND nid = ?` + extraSQL
+	readArgs := append([]any{proto.IdentityCredentialsID, proto.NID}, extraArgs...)
+	if tx.Dialect.Name() == "sqlite3" {
+		// Read via the underlying sqlx transaction, not pop's finders: this
+		// transaction already holds SQLite's write lock (the caller wrote the
+		// config, or took it up front via the write barrier), and pop's
+		// SQLite finders serialize on a process-wide statement mutex that a
+		// concurrent model write may hold while busy-waiting on that write
+		// lock — a lock-order inversion that parks both sides until the busy
+		// timeout expires.
+		if err := tx.TX.SelectContext(ctx, &rows, readQuery, readArgs...); err != nil {
+			return false, sqlcon.HandleError(err)
+		}
+	} else if err := tx.RawQuery(readQuery, readArgs...).All(&rows); err != nil {
 		return false, sqlcon.HandleError(err)
 	}
 	current := make([]string, len(rows))
