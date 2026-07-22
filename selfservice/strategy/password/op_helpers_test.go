@@ -123,39 +123,46 @@ func makeAuthCodeURL(t *testing.T, c *oauth2.Config, requestedClaims string, isF
 }
 
 func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string, hydraPublic string) {
-	publicPort, err := freeport.GetFreePort()
-	require.NoError(t, err)
-	adminPort, err := freeport.GetFreePort()
-	require.NoError(t, err)
-
 	pool := dockertest.NewPoolT(t, "")
 
-	hydraResource := pool.RunT(t, "oryd/hydra",
-		// Keep tag in sync with the version in ci.yaml
-		dockertest.WithTag("v2.2.0"),
-		dockertest.WithoutReuse(),
-		dockertest.WithEnv([]string{
-			"DSN=memory",
-			fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
-			"URLS_LOGIN=" + loginUI,
-			"URLS_CONSENT=" + consentUI,
-			"LOG_LEAK_SENSITIVE_VALUES=true",
-			"SECRETS_SYSTEM=someverylongsecretthatis32byteslong",
-		}),
-		dockertest.WithCmd([]string{"serve", "all", "--dev"}),
-		dockertest.WithContainerConfig(func(cc *container.Config) {
-			cc.ExposedPorts = network.PortSet{
-				network.MustParsePort("4444/tcp"): struct{}{},
-				network.MustParsePort("4445/tcp"): struct{}{},
-			}
-		}),
-		dockertest.WithHostConfig(func(hc *container.HostConfig) {
-			hc.PortBindings = network.PortMap{
-				network.MustParsePort("4444/tcp"): {{HostPort: strconv.Itoa(publicPort)}},
-				network.MustParsePort("4445/tcp"): {{HostPort: strconv.Itoa(adminPort)}},
-			}
-		}),
-	)
+	// The public host port must be known before the container starts because it
+	// is part of URLS_SELF_ISSUER. freeport releases the port before Docker binds
+	// it, so another process can grab it in between — retry on that race.
+	var hydraResource dockertest.ClosableResource
+	ctx := t.Context()
+	require.EventuallyWithT(t, func(t *assert.CollectT) {
+		publicPort, err := freeport.GetFreePort()
+		require.NoError(t, err)
+
+		hydraResource, err = pool.Run(ctx, "oryd/hydra",
+			// Keep tag in sync with the version in ci.yaml
+			dockertest.WithTag("v2.2.0"),
+			dockertest.WithoutReuse(),
+			dockertest.WithEnv([]string{
+				"DSN=memory",
+				fmt.Sprintf("URLS_SELF_ISSUER=http://127.0.0.1:%d/", publicPort),
+				"URLS_LOGIN=" + loginUI,
+				"URLS_CONSENT=" + consentUI,
+				"LOG_LEAK_SENSITIVE_VALUES=true",
+				"SECRETS_SYSTEM=someverylongsecretthatis32byteslong",
+			}),
+			dockertest.WithCmd([]string{"serve", "all", "--dev"}),
+			dockertest.WithContainerConfig(func(cc *container.Config) {
+				cc.ExposedPorts = network.PortSet{
+					network.MustParsePort("4444/tcp"): struct{}{},
+					network.MustParsePort("4445/tcp"): struct{}{},
+				}
+			}),
+			dockertest.WithHostConfig(func(hc *container.HostConfig) {
+				hc.PortBindings = network.PortMap{
+					network.MustParsePort("4444/tcp"): {{HostPort: strconv.Itoa(publicPort)}},
+					network.MustParsePort("4445/tcp"): {{HostPort: ""}},
+				}
+			}),
+		)
+		require.NoError(t, err)
+	}, 2*time.Minute, 100*time.Millisecond)
+	hydraResource.Cleanup(t)
 	require.NotEmpty(t, hydraResource.GetPort("4444/tcp"), "%+v", hydraResource.Container().NetworkSettings.Ports)
 	require.NotEmpty(t, hydraResource.GetPort("4445/tcp"), "%+v", hydraResource.Container)
 
