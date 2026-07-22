@@ -7,8 +7,9 @@ import (
 	_ "embed"
 	"net/http"
 
-	"github.com/ory/x/corsx"
 	"github.com/rs/cors"
+
+	"github.com/ory/x/corsx"
 )
 
 const CORSConfigSchemaID = "ory://cors-config"
