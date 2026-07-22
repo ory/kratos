@@ -100,7 +100,7 @@ func TestManager(t *testing.T) {
 	}
 
 	newClient := func() *http.Client {
-		return &http.Client{Jar: testhelpers.EasyCookieJar(t, nil)}
+		return &http.Client{Jar: testhelpers.EasyCookieJar(t, nil), Transport: testhelpers.NewTestTransport(t)}
 	}
 
 	p := reg.ContinuityManager()
@@ -122,7 +122,7 @@ func TestManager(t *testing.T) {
 			c.Value = strings.Replace(c.Value, "a", "b", 1)
 			req.AddCookie(c)
 		}
-		res, err = http.DefaultClient.Do(req)
+		res, err = testhelpers.NewTestClient(t).Do(req)
 		require.NoError(t, err)
 		t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 
@@ -139,7 +139,7 @@ func TestManager(t *testing.T) {
 		ts := newServer(t, p, tc)
 		href := ts.URL + "/" + x.NewUUID().String()
 
-		res, err := http.DefaultClient.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
+		res, err := testhelpers.NewTestClient(t).Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -153,7 +153,7 @@ func TestManager(t *testing.T) {
 		}
 
 		tc.ro = []continuity.ManagerOption{continuity.WithPayload(&persisterTestPayload{"bar"})}
-		res, err = http.DefaultClient.Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
+		res, err = testhelpers.NewTestClient(t).Do(testhelpers.NewTestHTTPRequest(t, "PUT", href, nil))
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -163,7 +163,7 @@ func TestManager(t *testing.T) {
 			req.AddCookie(c)
 		}
 
-		res, err = http.DefaultClient.Do(req)
+		res, err = testhelpers.NewTestClient(t).Do(req)
 		require.NoError(t, err)
 		t.Cleanup(func() { require.NoError(t, res.Body.Close()) })
 

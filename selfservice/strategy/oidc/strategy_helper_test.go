@@ -30,6 +30,7 @@ import (
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/httpx"
@@ -73,6 +74,7 @@ func (token idTokenClaims) MarshalJSON() ([]byte, error) {
 }
 
 func createClient(t *testing.T, remote string, redir []string) (id, secret string) {
+	client := testhelpers.NewTestClient(t)
 	require.EventuallyWithT(t, func(t *assert.CollectT) {
 		var b bytes.Buffer
 		require.NoError(t, json.NewEncoder(&b).Encode(&struct {
@@ -111,7 +113,7 @@ func createClient(t *testing.T, remote string, redir []string) (id, secret strin
 			TokenEndpointAuthMethod: "client_secret_post",
 		}))
 
-		res, err := http.Post(remote+"/admin/clients", "application/json", &b)
+		res, err := client.Post(remote+"/admin/clients", "application/json", &b)
 		require.NoError(t, err)
 		defer func() { _ = res.Body.Close() }()
 
@@ -139,12 +141,13 @@ type hydraFlowParams struct {
 }
 
 func wrapClientForHydraLoginConsent(t *testing.T, wrapped *http.Client, hydraAdmin string, params hydraFlowParams) *http.Client {
+	adminClient := testhelpers.NewTestClient(t)
 	doPut := func(href, payload string) string {
 		req, err := http.NewRequest("PUT", hydraAdmin+href, strings.NewReader(payload))
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", "application/json")
 
-		res, err := http.DefaultClient.Do(req)
+		res, err := adminClient.Do(req)
 		require.NoError(t, err)
 		defer func() { _ = res.Body.Close() }()
 
@@ -280,16 +283,17 @@ func newHydra(t *testing.T) (remoteAdmin, remotePublic string) {
 		remotePublic = "http://127.0.0.1:" + hydra.GetPort("4444/tcp")
 		remoteAdmin = "http://127.0.0.1:" + hydra.GetPort("4445/tcp")
 
+		client := testhelpers.NewTestClient(t)
 		require.EventuallyWithT(t, func(t *assert.CollectT) {
-			res, err := http.Get(remotePublic + "/health/ready") //nolint:gosec
+			res, err := client.Get(remotePublic + "/health/ready")
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, res.StatusCode)
 
-			res, err = http.Get(remotePublic + "/.well-known/openid-configuration") //nolint:gosec
+			res, err = client.Get(remotePublic + "/.well-known/openid-configuration")
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, res.StatusCode)
 
-			res, err = http.Get(remoteAdmin + "/health/ready") //nolint:gosec
+			res, err = client.Get(remoteAdmin + "/health/ready")
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, res.StatusCode)
 		}, 30*time.Second, 100*time.Millisecond)

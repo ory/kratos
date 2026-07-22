@@ -24,6 +24,7 @@ import (
 
 	dockertest "github.com/ory/dockertest/v4"
 	hydraclientgo "github.com/ory/hydra-client-go/v2"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/x/urlx"
 )
 
@@ -172,12 +173,13 @@ func newHydra(t *testing.T, loginUI string, consentUI string) (hydraAdmin string
 			}
 		}
 	}()
+	client := testhelpers.NewTestClient(t)
 	require.EventuallyWithT(t, func(t *assert.CollectT) {
-		res, err := http.DefaultClient.Get(hydraPublic + "/health/ready")
+		res, err := client.Get(hydraPublic + "/health/ready")
 		require.NoError(t, err)
 		assert.Equal(t, 200, res.StatusCode)
 
-		res, err = http.DefaultClient.Get(hydraAdmin + "/health/ready")
+		res, err = client.Get(hydraAdmin + "/health/ready")
 		require.NoError(t, err)
 		assert.Equal(t, 200, res.StatusCode)
 	}, 30*time.Second, time.Second)

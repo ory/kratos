@@ -180,7 +180,7 @@ func SubmitRegistrationFormCtx(
 	opts ...InitFlowWithOption,
 ) string {
 	if hc == nil {
-		hc = new(http.Client)
+		hc = NewTestClient(t)
 	}
 
 	hc.Transport = NewTransportWithLogger(hc.Transport, t)

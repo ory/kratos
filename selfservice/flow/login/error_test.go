@@ -271,7 +271,7 @@ func TestHandleError(t *testing.T) {
 
 	t.Run("flow=browser", func(t *testing.T) {
 		expectLoginUI := func(t *testing.T) (*login.Flow, *http.Response) {
-			res, err := http.DefaultClient.Get(ts.URL + "/error")
+			res, err := testhelpers.NewTestClient(t).Get(ts.URL + "/error")
 			require.NoError(t, err)
 			defer func() { _ = res.Body.Close() }()
 			assert.Contains(t, res.Request.URL.String(), conf.SelfServiceFlowLoginUI(ctx).String()+"?flow=")

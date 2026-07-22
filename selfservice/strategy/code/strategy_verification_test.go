@@ -93,7 +93,7 @@ func TestVerification(t *testing.T) {
 			hc = testhelpers.NewDebugClient(t)
 			if !isAPI {
 				hc = testhelpers.NewClientWithCookies(t)
-				hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+				hc.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 			}
 		}
 
@@ -582,7 +582,7 @@ func TestVerification(t *testing.T) {
 	t.Run("case=contains link to return_to", func(t *testing.T) {
 		returnToURL := public.URL + "/after-verification"
 		conf.MustSet(ctx, config.ViperKeyURLsAllowedReturnToDomains, []string{returnToURL})
-		client := &http.Client{}
+		client := testhelpers.NewTestClient(t)
 
 		f, _, rawCode := newValidBrowserFlow(t, public.URL+verification.RouteInitBrowserFlow+"?"+url.Values{"return_to": {returnToURL}}.Encode())
 

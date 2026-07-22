@@ -222,7 +222,7 @@ func TestAdminStrategy(t *testing.T) {
 		c1, _, err := createCode(createCodeParams{IdentityId: i.ID.String(), ExpiresIn: new("1h")})
 		require.NoError(t, err)
 
-		res, err := http.Get(c1.RecoveryLink)
+		res, err := testhelpers.NewTestClient(t).Get(c1.RecoveryLink)
 		require.NoError(t, err)
 		body := ioutilx.MustReadAll(res.Body)
 

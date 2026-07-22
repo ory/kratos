@@ -76,7 +76,7 @@ func TestVerification(t *testing.T) {
 			hc = testhelpers.NewDebugClient(t)
 			if !isAPI {
 				hc = testhelpers.NewClientWithCookies(t)
-				hc.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+				hc.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 			}
 		}
 

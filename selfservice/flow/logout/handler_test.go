@@ -120,7 +120,7 @@ func TestLogout(t *testing.T) {
 			cj, err := cookiejar.New(nil)
 			require.NoError(t, err)
 			cj.SetCookies(urlx.ParseOrPanic(public.URL), originalCookies)
-			res, err := (&http.Client{Jar: cj}).PostForm(public.URL+"/csrf/check", url.Values{})
+			res, err := (&http.Client{Jar: cj, Transport: testhelpers.NewTestTransport(t)}).PostForm(public.URL+"/csrf/check", url.Values{})
 			require.NoError(t, err)
 			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusForbidden, res.StatusCode)
@@ -182,7 +182,7 @@ func TestLogout(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			_, logoutUrl := getLogoutUrl(t, nil)
 
-			body, res := makeBrowserLogout(t, http.DefaultClient, logoutUrl)
+			body, res := makeBrowserLogout(t, testhelpers.NewTestClient(t), logoutUrl)
 			assert.Contains(t, res.Request.URL.String(), errTS.URL)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", body)
 			assert.EqualValues(t, "No active session was found in this request.", gjson.GetBytes(body, "reason").String(), "%s", body)
@@ -191,7 +191,7 @@ func TestLogout(t *testing.T) {
 		t.Run("type=ajax", func(t *testing.T) {
 			_, logoutUrl := getLogoutUrl(t, nil)
 
-			body, res := testhelpers.HTTPRequestJSON(t, http.DefaultClient, "GET", logoutUrl, nil)
+			body, res := testhelpers.HTTPRequestJSON(t, testhelpers.NewTestClient(t), "GET", logoutUrl, nil)
 			assert.EqualValues(t, logoutUrl, res.Request.URL.String())
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%s", body)
 			assert.EqualValues(t, "No active session was found in this request.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
@@ -241,7 +241,7 @@ func TestLogout(t *testing.T) {
 	})
 
 	t.Run("case=calling browser init without session", func(t *testing.T) {
-		body, res := testhelpers.HTTPRequestJSON(t, http.DefaultClient, "GET", public.URL+"/self-service/logout/browser", nil)
+		body, res := testhelpers.HTTPRequestJSON(t, testhelpers.NewTestClient(t), "GET", public.URL+"/self-service/logout/browser", nil)
 		assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)
 		assert.EqualValues(t, "No active session was found in this request.", gjson.GetBytes(body, "error.reason").String(), "%s", body)
 	})

@@ -229,6 +229,7 @@ func SelfServiceMakeHookRequest(t *testing.T, ts *httptest.Server, suffix string
 
 func GetSelfServiceRedirectLocation(t *testing.T, url string) string {
 	c := &http.Client{
+		Transport: NewTestTransport(t),
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},

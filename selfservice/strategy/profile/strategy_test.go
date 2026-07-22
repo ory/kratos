@@ -119,7 +119,7 @@ func TestStrategyTraits(t *testing.T) {
 		setUnprivileged(t)
 
 		t.Run("type=browser", func(t *testing.T) {
-			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
+			res, err := testhelpers.NewTestClient(t).Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(url.Values{"foo": {"bar"}}.Encode()), "application/x-www-form-urlencoded"))
 			require.NoError(t, err)
 			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode, "%+v", res.Request)
@@ -127,7 +127,7 @@ func TestStrategyTraits(t *testing.T) {
 		})
 
 		t.Run("type=api/spa", func(t *testing.T) {
-			res, err := http.DefaultClient.Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(`{"foo":"bar"}`), "application/json"))
+			res, err := testhelpers.NewTestClient(t).Do(httpx.MustNewRequest("POST", publicTS.URL+settings.RouteSubmitFlow, strings.NewReader(`{"foo":"bar"}`), "application/json"))
 			require.NoError(t, err)
 			defer func() { _ = res.Body.Close() }()
 			assert.EqualValues(t, http.StatusUnauthorized, res.StatusCode)

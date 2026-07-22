@@ -205,7 +205,7 @@ func TestStrategy(t *testing.T) {
 	}
 
 	makeAPICodeFlowRequest := func(t *testing.T, client *http.Client, action, provider string, params hydraFlowParams) (returnToURL *url.URL) {
-		res, err := http.Post( // #nosec G107 -- test code
+		res, err := testhelpers.NewTestClient(t).Post(
 			action,
 			"application/json",
 			strings.NewReader(fmt.Sprintf(`
@@ -719,7 +719,8 @@ func TestStrategy(t *testing.T) {
 
 				var lastVia []*http.Request
 				hc := &http.Client{
-					Jar: j,
+					Jar:       j,
+					Transport: testhelpers.NewTestTransport(t),
 					CheckRedirect: func(req *http.Request, via []*http.Request) error {
 						lastVia = via
 						return nil
@@ -767,7 +768,7 @@ func TestStrategy(t *testing.T) {
 			//	} else if authenticated {
 			//		return <-- we end up here on the second call
 			//	}
-			res, err = (&http.Client{Jar: j}).Get(result[0])
+			res, err = (&http.Client{Jar: j, Transport: testhelpers.NewTestTransport(t)}).Get(result[0])
 			require.NoError(t, err)
 			body, err = io.ReadAll(res.Body)
 			require.NoError(t, err)
@@ -793,7 +794,7 @@ func TestStrategy(t *testing.T) {
 
 			// Doing the request but this time without the Ory Session Cookie. This may be the case in scenarios where we run into race conditions
 			// where the server sent a response but the client did not process it.
-			res, err = (&http.Client{Jar: secondJar}).Get(result[0])
+			res, err = (&http.Client{Jar: secondJar, Transport: testhelpers.NewTestTransport(t)}).Get(result[0])
 			require.NoError(t, err)
 			body, err = io.ReadAll(res.Body)
 			require.NoError(t, err)
@@ -969,7 +970,7 @@ func TestStrategy(t *testing.T) {
 			f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
 			action := assertFormValues(t, f.ID, "valid")
 
-			res, err := http.Post(action, "application/json", // #nosec G107 -- test code
+			res, err := testhelpers.NewTestClient(t).Post(action, "application/json",
 				strings.NewReader(fmt.Sprintf(`{"method":"oidc","provider":"valid","transient_payload":%s}`, transientPayload)))
 			require.NoError(t, err)
 			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
@@ -1005,7 +1006,7 @@ func TestStrategy(t *testing.T) {
 			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
 			action := assertFormValues(t, f.ID, "valid")
 
-			res, err := http.Post(action, "application/json", // #nosec G107 -- test code
+			res, err := testhelpers.NewTestClient(t).Post(action, "application/json",
 				strings.NewReader(fmt.Sprintf(`{"method":"oidc","provider":"valid","transient_payload":%s}`, transientPayload)))
 			require.NoError(t, err)
 			require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
@@ -1044,7 +1045,7 @@ func TestStrategy(t *testing.T) {
 				f := newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code&identity_schema", time.Minute)
 				action := assertFormValues(t, f.ID, "valid")
 
-				res, err := http.Post(action, "application/json", // #nosec G107 -- test code
+				res, err := testhelpers.NewTestClient(t).Post(action, "application/json",
 					strings.NewReader(`{"method":"oidc","provider":"valid","traits.name":"i"}`))
 				require.NoError(t, err)
 				require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
@@ -1062,7 +1063,7 @@ func TestStrategy(t *testing.T) {
 				f = newAPIRegistrationFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
 				action = assertFormValues(t, f.ID, "valid")
 
-				res, err = http.Post(action, "application/json", // #nosec G107 -- test code
+				res, err = testhelpers.NewTestClient(t).Post(action, "application/json",
 					strings.NewReader(`{"method":"oidc","provider":"valid","traits.name":"valid-name"}`))
 				require.NoError(t, err)
 				require.Equal(t, http.StatusUnprocessableEntity, res.StatusCode)
@@ -1183,7 +1184,7 @@ func TestStrategy(t *testing.T) {
 			})
 		oidc.RegisterTestProvider(t, "test-provider")
 
-		cl := http.Client{}
+		cl := http.Client{Transport: testhelpers.NewTestTransport(t)}
 
 		type testCase struct {
 			name     string
@@ -1673,6 +1674,7 @@ func TestStrategy(t *testing.T) {
 
 		// We need to disable redirects because the upstream parameters are only passed on to the provider
 		c := &http.Client{
+			Transport:     testhelpers.NewTestTransport(t),
 			CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse },
 		}
 
@@ -2560,6 +2562,7 @@ func TestPostEndpointRedirect(t *testing.T) {
 		t.Run("case=should redirect to GET and preserve parameters/id="+providerID, func(t *testing.T) {
 			// create a client that does not follow redirects
 			c := &http.Client{
+				Transport: testhelpers.NewTestTransport(t),
 				CheckRedirect: func(req *http.Request, via []*http.Request) error {
 					return http.ErrUseLastResponse
 				},

@@ -191,7 +191,7 @@ func TestQueueEmail(t *testing.T) {
 		require.NoError(t, c.DispatchQueue(context.Background()))
 	}, time.Second, 10*time.Millisecond)
 
-	res, err := http.Get(api + "/api/v2/messages")
+	res, err := testhelpers.NewTestClient(t).Get(api + "/api/v2/messages")
 	require.NoError(t, err)
 	defer func() { _ = res.Body.Close() }()
 

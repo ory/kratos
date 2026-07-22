@@ -64,7 +64,7 @@ func doAdminPost(t *testing.T, adminURL string, body any) (*http.Response, []byt
 	t.Helper()
 	b, err := json.Marshal(body)
 	require.NoError(t, err)
-	res, err := http.Post(adminURL+"/admin"+login.RouteAdminCreateTestFlow, "application/json", bytes.NewReader(b))
+	res, err := testhelpers.NewTestClient(t).Post(adminURL+"/admin"+login.RouteAdminCreateTestFlow, "application/json", bytes.NewReader(b))
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = res.Body.Close() })
 	respBody, err := io.ReadAll(res.Body)

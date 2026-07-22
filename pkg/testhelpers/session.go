@@ -253,7 +253,7 @@ func NewTransportWithHeader(t *testing.T, h http.Header) *TransportWithHeader {
 		panic("This function is for testing use only.")
 	}
 	return &TransportWithHeader{
-		RoundTripper: http.DefaultTransport,
+		RoundTripper: NewTestTransport(t),
 		h:            h,
 	}
 }

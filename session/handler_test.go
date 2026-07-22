@@ -282,7 +282,7 @@ func TestSessionWhoAmI(t *testing.T) {
 				require.NoError(t, err)
 				req.Header.Set("Authorization", "Bearer "+s.Token)
 
-				c := http.DefaultClient
+				c := testhelpers.NewTestClient(t)
 				res, err := c.Do(req)
 				require.NoError(t, err)
 				assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -315,7 +315,7 @@ func TestSessionWhoAmI(t *testing.T) {
 					require.NoError(t, err)
 					req.Header.Set("Authorization", "Bearer "+s.Token)
 
-					c := http.DefaultClient
+					c := testhelpers.NewTestClient(t)
 					res, err := c.Do(req)
 					require.NoError(t, err)
 					assert.EqualValues(t, expectedCode, res.StatusCode)
@@ -411,7 +411,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 			code: http.StatusBadRequest,
 		},
 		{
-			c:    http.DefaultClient,
+			c:    testhelpers.NewTestClient(t),
 			call: "/public/with-callback",
 			code: http.StatusOK,
 		},
@@ -422,7 +422,7 @@ func TestIsNotAuthenticated(t *testing.T) {
 			code: http.StatusForbidden,
 		},
 		{
-			c:    http.DefaultClient,
+			c:    testhelpers.NewTestClient(t),
 			call: "/public/without-callback",
 			code: http.StatusOK,
 		},
@@ -466,7 +466,7 @@ func TestIsAuthenticated(t *testing.T) {
 			code: http.StatusOK,
 		},
 		{
-			c:    http.DefaultClient,
+			c:    testhelpers.NewTestClient(t),
 			call: "/privileged/with-callback",
 			code: http.StatusBadRequest,
 		},
@@ -477,7 +477,7 @@ func TestIsAuthenticated(t *testing.T) {
 			code: http.StatusOK,
 		},
 		{
-			c:    http.DefaultClient,
+			c:    testhelpers.NewTestClient(t),
 			call: "/privileged/without-callback",
 			code: http.StatusUnauthorized,
 		},
@@ -1270,7 +1270,7 @@ func TestHandlerSelfServiceSessionManagement(t *testing.T) {
 		require.NoError(t, err)
 		req.Header.Set("Authorization", "Bearer "+session.Token)
 
-		resp, err := http.DefaultClient.Do(req)
+		resp, err := testhelpers.NewTestClient(t).Do(req)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 

@@ -23,7 +23,13 @@ func TestSession(t *testing.T) {
 	s.Options.MaxAge = 78652871
 	cj, err := cookiejar.New(&cookiejar.Options{})
 	require.NoError(t, err)
-	c := http.Client{Jar: cj}
+	// A dedicated transport so that a parallel test closing its httptest server
+	// (which calls http.DefaultTransport.CloseIdleConnections) cannot break our
+	// in-flight requests.
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	t.Cleanup(transport.CloseIdleConnections)
+	c := http.Client{Jar: cj, Transport: transport}
+	plainClient := &http.Client{Transport: transport}
 
 	isExpiryCorrect := func(t *testing.T, r *http.Request) {
 		cookie, _ := s.Get(r, sid)
@@ -104,7 +110,7 @@ func TestSession(t *testing.T) {
 			w.WriteHeader(http.StatusNoContent)
 		})
 
-		res, err := http.DefaultClient.Get(ts.URL + "/set/" + id)
+		res, err := plainClient.Get(ts.URL + "/set/" + id)
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusNoContent, res.StatusCode)
 		require.NoError(t, res.Body.Close())
@@ -114,7 +120,7 @@ func TestSession(t *testing.T) {
 			req.AddCookie(c)
 		}
 
-		res, err = http.DefaultClient.Do(req)
+		res, err = plainClient.Do(req)
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusNoContent, res.StatusCode)
 		require.NoError(t, res.Body.Close())
@@ -143,13 +149,13 @@ func TestSession(t *testing.T) {
 			f(cks, req)
 		}
 
-		res, err := http.DefaultClient.Do(req)
+		res, err := plainClient.Do(req)
 		require.NoError(t, err)
 		return res
 	}
 
 	mrUnset := func(t *testing.T, ts *httptest.Server, id string, f func(c []*http.Cookie, req *http.Request)) *http.Response {
-		res, err := http.Get(ts.URL + "/set")
+		res, err := plainClient.Get(ts.URL + "/set")
 		require.NoError(t, err)
 
 		res = mrCookie(t, ts.URL+"/"+id+"/unset", res.Cookies(), f)
@@ -172,7 +178,7 @@ func TestSession(t *testing.T) {
 	}
 
 	t.Run("case=SessionSet", func(t *testing.T) {
-		res, err := http.Get(ts.URL + "/set")
+		res, err := plainClient.Get(ts.URL + "/set")
 		require.NoError(t, err)
 
 		res = mrCookie(t, ts.URL+"/set", res.Cookies(), signatureScrambler)

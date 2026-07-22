@@ -17,7 +17,7 @@ import (
 )
 
 func NewDebugClient(t *testing.T) *http.Client {
-	return &http.Client{Transport: NewTransportWithLogger(http.DefaultTransport, t)}
+	return &http.Client{Transport: NewTransportWithLogger(NewTestTransport(t), t)}
 }
 
 func NewClientWithCookieJar(t *testing.T, jar *cookiejar.Jar, checkRedirect CheckRedirectFunc) *http.Client {
@@ -31,6 +31,7 @@ func NewClientWithCookieJar(t *testing.T, jar *cookiejar.Jar, checkRedirect Chec
 	}
 	return &http.Client{
 		Jar:           jar,
+		Transport:     NewTestTransport(t),
 		CheckRedirect: checkRedirect,
 	}
 }

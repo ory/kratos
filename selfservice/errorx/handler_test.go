@@ -19,6 +19,7 @@ import (
 
 	"github.com/ory/herodot"
 	"github.com/ory/kratos/pkg"
+	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/errorx"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
@@ -62,7 +63,7 @@ func TestHandler(t *testing.T) {
 		expectedError := x.MustEncodeJSON(t, herodot.ErrNotFound().WithReason("foobar"))
 
 		t.Run("call with valid csrf cookie", func(t *testing.T) {
-			hc := &http.Client{}
+			hc := testhelpers.NewTestClient(t)
 			id := getBody(t, hc, "/set-error", http.StatusOK)
 			actual := getBody(t, hc, errorx.RouteGet+"?id="+string(id), http.StatusOK)
 			assert.JSONEq(t, expectedError, gjson.GetBytes(actual, "error").Raw, "%s", actual)

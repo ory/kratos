@@ -136,7 +136,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 			client = testhelpers.NewClientWithCookies(t)
 		}
 
-		client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+		client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 
 		var clientInit *oryClient.LoginFlow
 		if apiType == ApiTypeNative {
@@ -523,7 +523,7 @@ func TestLoginCodeStrategy(t *testing.T) {
 				conf.MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".password.enabled", true)
 
 				client := testhelpers.NewClientWithCookies(t)
-				client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 
 				registrationFlow := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, public, tc.apiType == ApiTypeNative, false, false)
 

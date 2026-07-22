@@ -23,7 +23,7 @@ func TestWellKnownChangePassword(t *testing.T) {
 
 	public, _ := testhelpers.NewKratosServer(t, reg)
 
-	hc := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	hc := &http.Client{Transport: testhelpers.NewTestTransport(t), CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	res, err := hc.Get(public.URL + "/.well-known/change-password")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = res.Body.Close() })

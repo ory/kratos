@@ -41,8 +41,12 @@ func TestMetricsRouterPaths(t *testing.T) {
 	eg.Go(startAdmin)
 	eg.Go(startPublic)
 
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	t.Cleanup(transport.CloseIdleConnections)
+	client := &http.Client{Transport: transport}
+
 	require.EventuallyWithT(t, func(t *assert.CollectT) {
-		resp, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/health/ready", publicPort))
+		resp, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d/health/ready", publicPort))
 		require.NoError(t, err)
 		body, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
@@ -51,15 +55,15 @@ func TestMetricsRouterPaths(t *testing.T) {
 
 	// Make some requests that should be recorded in the metrics
 	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("http://127.0.0.1:%d/sessions/session-id", publicPort), nil)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
-	resp, err = http.Get(fmt.Sprintf("http://127.0.0.1:%d/admin/identities/8e5f29ec-db29-4e56-8517-75f7d4e2f1bc/sessions", adminPort))
+	resp, err = client.Get(fmt.Sprintf("http://127.0.0.1:%d/admin/identities/8e5f29ec-db29-4e56-8517-75f7d4e2f1bc/sessions", adminPort))
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 
 	assert.EventuallyWithT(t, func(t *assert.CollectT) {
-		res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/admin/metrics/prometheus", adminPort))
+		res, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d/admin/metrics/prometheus", adminPort))
 		require.NoError(t, err)
 		require.EqualValues(t, http.StatusOK, res.StatusCode)
 		respBody, err := io.ReadAll(res.Body)

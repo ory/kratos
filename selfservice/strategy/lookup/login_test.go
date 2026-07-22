@@ -345,7 +345,7 @@ func TestCompleteLogin(t *testing.T) {
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("Content-Type", "application/json")
 
-		res, err := http.DefaultClient.Do(req)
+		res, err := testhelpers.NewTestClient(t).Do(req)
 		require.NoError(t, err)
 		body := x.MustReadAll(res.Body)
 		require.NoError(t, res.Body.Close())

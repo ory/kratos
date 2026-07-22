@@ -177,7 +177,7 @@ func TestFlowLifecycle(t *testing.T) {
 				}
 				require.NoError(t, reg.LoginFlowPersister().CreateLoginFlow(context.Background(), &f))
 
-				res, err := http.PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), values)
+				res, err := testhelpers.NewTestClient(t).PostForm(ts.URL+login.RouteSubmitFlow+"?flow="+f.ID.String(), values)
 				require.NoError(t, err)
 				body := x.MustReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
@@ -400,7 +400,7 @@ func TestFlowLifecycle(t *testing.T) {
 					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 				}
 
-				res, err := http.DefaultClient.Do(req)
+				res, err := testhelpers.NewTestClient(t).Do(req)
 				require.NoError(t, err)
 				body := x.MustReadAll(res.Body)
 				require.NoError(t, res.Body.Close())
@@ -928,7 +928,7 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
-		client := http.DefaultClient
+		client := testhelpers.NewTestClient(t)
 		setupLoginUI(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+login.RouteInitBrowserFlow)
 

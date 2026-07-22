@@ -142,7 +142,7 @@ func TestRegistrationCodeStrategy(t *testing.T) {
 			client = testhelpers.NewClientWithCookies(t)
 		}
 
-		client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+		client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 
 		var clientInit *oryClient.RegistrationFlow
 		if apiType == ApiTypeNative {

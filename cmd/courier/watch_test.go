@@ -30,8 +30,11 @@ func TestStartCourier(t *testing.T) {
 		_, r := pkg.NewFastRegistryWithMocks(t, configx.WithValue("expose-metrics-port", port))
 		go func() { _ = StartCourier(t.Context(), r) }()
 		time.Sleep(time.Second)
-		res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/metrics/prometheus", port))
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		t.Cleanup(transport.CloseIdleConnections)
+		res, err := (&http.Client{Transport: transport}).Get(fmt.Sprintf("http://127.0.0.1:%d/metrics/prometheus", port))
 		require.NoError(t, err)
+		t.Cleanup(func() { _ = res.Body.Close() })
 		require.Equal(t, 200, res.StatusCode)
 	})
 }

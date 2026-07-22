@@ -91,7 +91,7 @@ func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, con
 	return body, res
 }
 
-// newTestTransport returns a transport dedicated to a single test client.
+// NewTestTransport returns a transport dedicated to a single test client.
 //
 // Test helpers spin up short-lived httptest.Server instances and close them
 // when the helper returns. httptest.Server.Close unconditionally calls
@@ -102,16 +102,21 @@ func MockMakeAuthenticatedRequestWithClientAndID(t *testing.T, reg mockDeps, con
 // using, surfacing as "http: CloseIdleConnections called". Giving every test
 // client its own transport means that courtesy close only ever affects the
 // unused global transport, never a live test client.
-func newTestTransport(t *testing.T) *http.Transport {
+func NewTestTransport(t testing.TB) *http.Transport {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	t.Cleanup(transport.CloseIdleConnections)
 	return transport
 }
 
+// NewTestClient returns a jar-less client with a dedicated transport, see NewTestTransport.
+func NewTestClient(t testing.TB) *http.Client {
+	return &http.Client{Transport: NewTestTransport(t)}
+}
+
 func NewClientWithCookies(t *testing.T) *http.Client {
 	cj, err := cookiejar.New(&cookiejar.Options{})
 	require.NoError(t, err)
-	return &http.Client{Jar: cj, Transport: newTestTransport(t)}
+	return &http.Client{Jar: cj, Transport: NewTestTransport(t)}
 }
 
 func NewNoRedirectClientWithCookies(t *testing.T) *http.Client {
@@ -119,7 +124,7 @@ func NewNoRedirectClientWithCookies(t *testing.T) *http.Client {
 	require.NoError(t, err)
 	return &http.Client{
 		Jar:       cj,
-		Transport: newTestTransport(t),
+		Transport: NewTestTransport(t),
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},

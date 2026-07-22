@@ -68,8 +68,8 @@ func (c ClientType) String() string {
 	return string(c)
 }
 
-func apiHttpClient(*testing.T) *http.Client {
-	return &http.Client{}
+func apiHttpClient(t *testing.T) *http.Client {
+	return testhelpers.NewTestClient(t)
 }
 
 func spaHttpClient(t *testing.T) *http.Client {
@@ -97,8 +97,8 @@ var flowTypeCases = []struct {
 	{
 		FlowType:   flow.TypeAPI,
 		ClientType: RecoveryClientTypeAPI,
-		GetClient: func(_ *testing.T) *http.Client {
-			return &http.Client{}
+		GetClient: func(t *testing.T) *http.Client {
+			return testhelpers.NewTestClient(t)
 		},
 		FormContentType: "application/json",
 	},
@@ -168,7 +168,7 @@ func TestRecovery(t *testing.T) {
 			client = testhelpers.NewDebugClient(t)
 			if !isAPI {
 				client = testhelpers.NewClientWithCookies(t)
-				client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 			}
 		}
 
@@ -300,7 +300,7 @@ func TestRecovery(t *testing.T) {
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			client := &http.Client{}
+			client := testhelpers.NewTestClient(t)
 			email := "recoverme4@ory.sh"
 			createIdentityToRecover(t, reg, email)
 			recoverySubmissionResponse := submitRecovery(t, client, RecoveryClientTypeAPI, func(v url.Values) {
@@ -420,7 +420,7 @@ func TestRecovery(t *testing.T) {
 					email := testhelpers.RandomEmail()
 					i := createIdentityToRecover(t, reg, email)
 
-					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+					client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 					f := tc.f(t, client, i)
 
 					formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
@@ -525,7 +525,7 @@ func TestRecovery(t *testing.T) {
 				client := testhelpers.NewDebugClient(t)
 				if !isAPI {
 					client = testhelpers.NewClientWithCookies(t)
-					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+					client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 				}
 
 				var f *kratos.RecoveryFlow
@@ -1028,7 +1028,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 			client = testhelpers.NewDebugClient(t)
 			if !isAPI {
 				client = testhelpers.NewClientWithCookies(t)
-				client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 			}
 		}
 
@@ -1171,7 +1171,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			client := &http.Client{}
+			client := testhelpers.NewTestClient(t)
 			email := testhelpers.RandomEmail()
 			createIdentityToRecover(t, reg, email)
 			recoverySubmissionResponse := submitRecoveryForm(t, client, RecoveryClientTypeAPI, func(v url.Values) {
@@ -1251,7 +1251,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 					email := testhelpers.RandomEmail()
 					i := createIdentityToRecover(t, reg, email)
 
-					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+					client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 					f := tc.f(t, client, i)
 
 					formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
@@ -1631,7 +1631,7 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 
 	t.Run("description=does not issue csrf cookie when submitting API flow", func(t *testing.T) {
 		t.Run("type="+RecoveryClientTypeAPI.String(), func(t *testing.T) {
-			c := new(http.Client)
+			c := testhelpers.NewTestClient(t)
 			recoveryEmail := testhelpers.RandomEmail()
 			_ = createIdentityToRecover(t, reg, recoveryEmail)
 
@@ -1992,7 +1992,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 			client = testhelpers.NewDebugClient(t)
 			if !isAPI {
 				client = testhelpers.NewClientWithCookies(t)
-				client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 			}
 		}
 
@@ -2109,7 +2109,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			client := &http.Client{}
+			client := testhelpers.NewTestClient(t)
 			email := testhelpers.RandomEmail()
 			createIdentityToRecover(t, reg, email)
 
@@ -2188,7 +2188,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Email(t *testing.T) {
 					email := testhelpers.RandomEmail()
 					i := createIdentityToRecover(t, reg, email)
 
-					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+					client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 					f := tc.f(t, client, i)
 
 					formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
@@ -2770,7 +2770,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 			client = testhelpers.NewDebugClient(t)
 			if !isAPI {
 				client = testhelpers.NewClientWithCookies(t)
-				client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 			}
 		}
 
@@ -2870,7 +2870,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 		})
 
 		t.Run("type=api", func(t *testing.T) {
-			client := &http.Client{}
+			client := testhelpers.NewTestClient(t)
 			address := testhelpers.RandomPhone()
 			createIdentityToRecoverPhone(t, reg, address)
 
@@ -2949,7 +2949,7 @@ func TestRecovery_V2_WithContinueWith_OneAddress_Phone(t *testing.T) {
 					address := testhelpers.RandomPhone()
 					i := createIdentityToRecoverPhone(t, reg, address)
 
-					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+					client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 					f := tc.f(t, client, i)
 
 					formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
@@ -3521,7 +3521,7 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 			client = testhelpers.NewDebugClient(t)
 			if !isAPI {
 				client = testhelpers.NewClientWithCookies(t)
-				client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+				client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 			}
 		}
 
@@ -3678,7 +3678,7 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 			})
 
 			t.Run("type=api", func(t *testing.T) {
-				client := &http.Client{}
+				client := testhelpers.NewTestClient(t)
 				address1 := testhelpers.RandomEmail()
 				address2 := testhelpers.RandomPhone()
 				createIdentityToRecoverEmailAndPhone(t, reg, address1, address2)
@@ -3765,7 +3765,7 @@ func TestRecovery_V2_WithContinueWith_SeveralAddresses(t *testing.T) {
 					address2 := testhelpers.RandomPhone()
 					i := createIdentityToRecoverEmailAndPhone(t, reg, address1, address2)
 
-					client.Transport = testhelpers.NewTransportWithLogger(http.DefaultTransport, t).RoundTripper
+					client.Transport = testhelpers.NewTransportWithLogger(testhelpers.NewTestTransport(t), t).RoundTripper
 					f := tc.f(t, client, i)
 
 					formPayload := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)

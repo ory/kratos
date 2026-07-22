@@ -520,7 +520,7 @@ func TestGetFlow(t *testing.T) {
 	})
 
 	t.Run("case=csrf cookie missing", func(t *testing.T) {
-		client := http.DefaultClient
+		client := testhelpers.NewTestClient(t)
 		_ = setupRegistrationUI(t, client)
 		body := testhelpers.EasyGetBody(t, client, public.URL+registration.RouteInitBrowserFlow)
 

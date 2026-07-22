@@ -249,7 +249,7 @@ func SubmitSettingsForm(
 	expectedURL string,
 ) string {
 	if hc == nil {
-		hc = new(http.Client)
+		hc = NewTestClient(t)
 		if !isAPI {
 			hc = NewClientWithCookies(t)
 		}

@@ -470,7 +470,7 @@ func TestManagerHTTP(t *testing.T) {
 			require.NoError(t, err)
 			req.Header.Set("Authorization", "Bearer "+s.Token)
 
-			c := http.DefaultClient
+			c := testhelpers.NewTestClient(t)
 			res, err := c.Do(req)
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
@@ -491,7 +491,7 @@ func TestManagerHTTP(t *testing.T) {
 			req.Header.Set("Authorization", "Bearer invalid")
 			req.Header.Set("X-Session-Token", s.Token)
 
-			c := http.DefaultClient
+			c := testhelpers.NewTestClient(t)
 			res, err := c.Do(req)
 			require.NoError(t, err)
 			assert.EqualValues(t, http.StatusOK, res.StatusCode)
