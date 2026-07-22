@@ -10,7 +10,8 @@ import (
 )
 
 func sortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
-	return n.SortBySchema(ctx,
+	return n.SortBySchema(
+		ctx,
 		node.SortBySchema(schemaRef),
 		node.SortByGroups([]node.UiNodeGroup{
 			node.DefaultGroup,
@@ -22,6 +23,7 @@ func sortNodes(ctx context.Context, n node.Nodes, schemaRef string) error {
 			node.PasskeyGroup,
 			node.TOTPGroup,
 		}),
+		node.SortStableGroups(node.DeviceAuthnGroup),
 		node.SortUseOrderAppend([]string{
 			// Lookup
 			node.LookupReveal,

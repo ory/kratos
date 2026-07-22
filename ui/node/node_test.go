@@ -8,6 +8,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -136,6 +137,61 @@ func TestNodesSort(t *testing.T) {
 			assertx.EqualAsJSON(t, json.RawMessage(fe), nodes)
 		})
 	}
+}
+
+func TestNodesSortStableGroups(t *testing.T) {
+	t.Parallel()
+
+	// Build count nodes in the same group, sharing an input name (as a list of
+	// remove buttons does). Insertion order is 0..count-1, recorded in each
+	// node's label; the value is the reverse, so a value tiebreak would flip the
+	// order. count exceeds Go's insertion-sort threshold (12) so the sort takes
+	// the quicksort path, where an unstable sort could otherwise reshuffle
+	// same-group nodes.
+	const count = 20
+	build := func() node.Nodes {
+		var n node.Nodes
+		for i := range count {
+			value := fmt.Sprintf("%02d", count-1-i)
+			n = append(n, node.NewInputField(node.DeviceAuthnRemove, value, node.DeviceAuthnGroup, node.InputAttributeTypeSubmit).
+				WithMetaLabel(&text.Message{Text: fmt.Sprintf("%02d", i)}))
+		}
+		return n
+	}
+
+	labels := func(n node.Nodes) []string {
+		got := make([]string, 0, len(n))
+		for _, nn := range n {
+			got = append(got, nn.Meta.Label.Text)
+		}
+		return got
+	}
+
+	insertionOrder := make([]string, count)
+	valueOrder := make([]string, count)
+	for i := range count {
+		insertionOrder[i] = fmt.Sprintf("%02d", i)
+		valueOrder[i] = fmt.Sprintf("%02d", count-1-i)
+	}
+
+	t.Run("case=stable group preserves insertion order", func(t *testing.T) {
+		t.Parallel()
+		n := build()
+		require.NoError(t, n.SortBySchema(ctx,
+			node.SortByGroups([]node.UiNodeGroup{node.DefaultGroup, node.PasswordGroup}),
+			node.SortStableGroups(node.DeviceAuthnGroup),
+		))
+		assert.Equal(t, insertionOrder, labels(n))
+	})
+
+	t.Run("case=without the option the value tiebreak reorders", func(t *testing.T) {
+		t.Parallel()
+		n := build()
+		require.NoError(t, n.SortBySchema(ctx,
+			node.SortByGroups([]node.UiNodeGroup{node.DefaultGroup, node.PasswordGroup}),
+		))
+		assert.Equal(t, valueOrder, labels(n))
+	})
 }
 
 func TestNodesUpsert(t *testing.T) {

@@ -51,9 +51,9 @@ const (
 	WebAuthnGroup        UiNodeGroup = "webauthn"
 	PasskeyGroup         UiNodeGroup = "passkey"
 	IdentifierFirstGroup UiNodeGroup = "identifier_first"
-	CaptchaGroup         UiNodeGroup = "captcha" // Available in OEL
-	SAMLGroup            UiNodeGroup = "saml"    // Available in OEL
-	DeviceAuthnGroup     UiNodeGroup = "deviceauthn"
+	CaptchaGroup         UiNodeGroup = "captcha"     // Available in OEL
+	SAMLGroup            UiNodeGroup = "saml"        // Available in OEL
+	DeviceAuthnGroup     UiNodeGroup = "deviceauthn" // Available in OEL
 )
 
 func (g UiNodeGroup) String() string {
@@ -210,6 +210,7 @@ type sortOptions struct {
 	keysInOrder       []string
 	keysInOrderAppend []string
 	keysInOrderPost   func([]string) []string
+	stableGroups      []string
 }
 
 type SortOption func(*sortOptions)
@@ -244,6 +245,19 @@ func SortUseOrderAppend(keysInOrder []string) func(*sortOptions) {
 func SortUpdateOrder(f func([]string) []string) func(*sortOptions) {
 	return func(options *sortOptions) {
 		options.keysInOrderPost = f
+	}
+}
+
+// SortStableGroups marks groups that arrive in a deterministic order and must
+// keep it: within such a group the sort preserves insertion order instead of
+// tiebreaking by value. Use it when the repeated nodes' only distinguishing
+// value is opaque and non-display, so value ordering would be meaningless and unstable.
+func SortStableGroups(groups ...UiNodeGroup) func(*sortOptions) {
+	return func(options *sortOptions) {
+		options.stableGroups = make([]string, len(groups))
+		for k := range groups {
+			options.stableGroups[k] = string(groups[k])
+		}
 	}
 }
 
@@ -287,7 +301,10 @@ func (n Nodes) SortBySchema(ctx context.Context, opts ...SortOption) error {
 
 	if len(o.orderByGroups) > 0 {
 		// Sort by groups so that default is in front, then oidc, password, ...
-		sort.Slice(n, func(i, j int) bool {
+		// A stable sort keeps same-group nodes in their incoming order, so a
+		// group listed in stableGroups is not reshuffled before the tiebreak
+		// below has a chance to preserve it.
+		sort.SliceStable(n, func(i, j int) bool {
 			a := string(n[i].Group)
 			b := string(n[j].Group)
 			return getStringSliceIndexOf(o.orderByGroups, a) < getStringSliceIndexOf(o.orderByGroups, b)
@@ -304,6 +321,13 @@ func (n Nodes) SortBySchema(ctx context.Context, opts ...SortOption) error {
 			if pa < pb {
 				return true
 			} else if pa > pb {
+				return false
+			}
+
+			// A stable group provides its own deterministic order; keep it
+			// rather than tiebreaking by the (meaningless, possibly unstable)
+			// value.
+			if a.Group == b.Group && slices.Contains(o.stableGroups, string(a.Group)) {
 				return false
 			}
 
