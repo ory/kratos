@@ -19,6 +19,11 @@ import (
 	"github.com/ory/x/jsonschemax"
 )
 
+// errNoDisplayNameTrait is returned by PasskeyDisplayNameFromSchema when the
+// identity schema flags no trait as a passkey display name or WebAuthn
+// identifier and has no untitled trait to fall back to.
+var errNoDisplayNameTrait = errors.New("no identifier found")
+
 type SchemaExtension struct {
 	WebauthnIdentifier string
 	PasskeyDisplayName string
@@ -106,5 +111,5 @@ func (s *Strategy) PasskeyDisplayNameFromSchema(ctx context.Context, schemaURL s
 			return []string{p.Name}, nil
 		}
 	}
-	return nil, errors.New("no identifier found")
+	return nil, errors.WithStack(errNoDisplayNameTrait)
 }

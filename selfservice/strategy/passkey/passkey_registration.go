@@ -207,13 +207,26 @@ type passkeyCreateData struct {
 	DisplayNameFieldNames []string                     `json:"displayNameFieldNames"`
 }
 
+// skipMethodOnMissingDisplayName downgrades errNoDisplayNameTrait to a
+// warning so that a passkey method without a usable display-name trait drops
+// its UI nodes instead of failing the whole registration flow: all other
+// enabled methods must keep working even when the passkey method is
+// misconfigured. Any other error is returned unchanged.
+func (s *Strategy) skipMethodOnMissingDisplayName(r *http.Request, err error) error {
+	if !errors.Is(err, errNoDisplayNameTrait) {
+		return err
+	}
+	s.d.Logger().WithRequest(r).Warn("The passkey method is enabled, but the identity schema does not mark any trait as a passkey display name (passkey.display_name) or WebAuthn identifier (webauthn.identifier). The passkey method will not be offered on registration flows. Update the identity schema or disable the passkey method.")
+	return nil
+}
+
 func (s *Strategy) PopulateRegistrationMethod(r *http.Request, f *registration.Flow) error {
 	ctx := r.Context()
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	opts, err := s.hydratePassKeyRegistrationOptions(ctx, f)
 	if err != nil {
-		return err
+		return s.skipMethodOnMissingDisplayName(r, err)
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
@@ -256,7 +269,7 @@ func (s *Strategy) PopulateRegistrationMethodCredentials(r *http.Request, f *reg
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
 	opts, err := s.hydratePassKeyRegistrationOptions(ctx, f)
 	if err != nil {
-		return err
+		return s.skipMethodOnMissingDisplayName(r, err)
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))
@@ -285,7 +298,10 @@ func (s *Strategy) PopulateRegistrationMethodProfile(r *http.Request, f *registr
 
 	opts, err := s.hydratePassKeyRegistrationOptions(ctx, f)
 	if err != nil {
-		return err
+		// Without hydrated options no passkey nodes were added by
+		// PopulateRegistrationMethodCredentials either, so there is nothing
+		// to remove here.
+		return s.skipMethodOnMissingDisplayName(r, err)
 	}
 
 	f.UI.SetCSRF(s.d.GenerateCSRFToken(r))

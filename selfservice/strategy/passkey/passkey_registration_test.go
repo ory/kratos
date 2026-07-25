@@ -24,6 +24,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
+	kratos "github.com/ory/kratos/pkg/httpclient"
 	"github.com/ory/kratos/pkg/registrationhelpers"
 	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
@@ -862,5 +863,103 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 			assertx.EqualAsJSON(t, snapshots[0], snapshots[2])
 			assertx.EqualAsJSONExcept(t, snapshots[1], snapshots[3], []string{"3.attributes.nonce"})
 		})
+	})
+}
+
+// TestPopulateRegistrationMethodWithoutDisplayNameTrait is a regression test:
+// when the passkey method is enabled but the identity schema flags no trait as
+// a passkey display name or WebAuthn identifier and offers no untitled
+// fallback trait, the passkey form hydrators must skip their UI nodes instead
+// of failing the whole registration flow.
+func TestPopulateRegistrationMethodWithoutDisplayNameTrait(t *testing.T) {
+	ctx := context.Background()
+	_, reg := pkg.NewFastRegistryWithMocks(t)
+
+	ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://stub/registration-no-passkey-titled.schema.json")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyPasskeyRPDisplayName, "localhost")
+	ctx = contextx.WithConfigValue(ctx, config.ViperKeyPasskeyRPID, "localhost")
+
+	s, err := reg.AllRegistrationStrategies().Strategy(identity.CredentialsTypePasskey)
+	require.NoError(t, err)
+
+	fh, ok := s.(registration.FormHydrator)
+	require.True(t, ok)
+
+	newFlow := func(t *testing.T, flowType flow.Type) (*http.Request, *registration.Flow) {
+		t.Helper()
+		r := httptest.NewRequest("GET", "/self-service/registration/browser", nil)
+		r = r.WithContext(ctx)
+		f, err := registration.NewFlow(reg, r, flowType)
+		require.NoError(t, err)
+		f.UI.Nodes = make(node.Nodes, 0)
+		return r, f
+	}
+
+	assertNoPasskeyNodes := func(t *testing.T, nodes node.Nodes) {
+		t.Helper()
+		for _, n := range nodes {
+			assert.NotEqual(t, node.PasskeyGroup, n.Group, "unexpected passkey node: %+v", n)
+			assert.NotEqual(t, node.WebAuthnScript, n.ID(), "unexpected WebAuthn script node: %+v", n)
+		}
+	}
+
+	t.Run("method=PopulateRegistrationMethod", func(t *testing.T) {
+		for _, ft := range []flow.Type{flow.TypeBrowser, flow.TypeAPI} {
+			t.Run("type="+string(ft), func(t *testing.T) {
+				r, f := newFlow(t, ft)
+				require.NoError(t, fh.PopulateRegistrationMethod(r, f))
+				assertNoPasskeyNodes(t, f.UI.Nodes)
+			})
+		}
+	})
+
+	t.Run("method=PopulateRegistrationMethodCredentials", func(t *testing.T) {
+		r, f := newFlow(t, flow.TypeBrowser)
+		require.NoError(t, fh.PopulateRegistrationMethodCredentials(r, f))
+		assertNoPasskeyNodes(t, f.UI.Nodes)
+	})
+
+	t.Run("method=PopulateRegistrationMethodProfile", func(t *testing.T) {
+		r, f := newFlow(t, flow.TypeBrowser)
+		require.NoError(t, fh.PopulateRegistrationMethodProfile(r, f))
+		assertNoPasskeyNodes(t, f.UI.Nodes)
+	})
+}
+
+// TestRegistrationWithoutDisplayNameTrait initializes registration flows
+// end-to-end with the passkey method enabled and an identity schema that has
+// no display-name candidate trait. Flow creation must succeed and offer the
+// remaining methods; only the passkey UI nodes are dropped.
+func TestRegistrationWithoutDisplayNameTrait(t *testing.T) {
+	t.Parallel()
+
+	fix := newRegistrationFixture(t, configx.WithValues(
+		testhelpers.DefaultIdentitySchemaConfig("file://./stub/registration-no-passkey-titled.schema.json")))
+
+	assertFlow := func(t *testing.T, f *kratos.RegistrationFlow) {
+		t.Helper()
+		var groups []string
+		for _, n := range f.Ui.Nodes {
+			groups = append(groups, n.Group)
+			assert.NotEqual(t, "passkey", n.Group, "unexpected passkey node: %+v", n)
+		}
+		assert.Contains(t, groups, "password")
+	}
+
+	t.Run("type=browser", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, fix.publicTS, false, false, false)
+		assertFlow(t, f)
+	})
+
+	t.Run("type=spa", func(t *testing.T) {
+		client := testhelpers.NewClientWithCookies(t)
+		f := testhelpers.InitializeRegistrationFlowViaBrowser(t, client, fix.publicTS, true, false, false)
+		assertFlow(t, f)
+	})
+
+	t.Run("type=api", func(t *testing.T) {
+		f := testhelpers.InitializeRegistrationFlowViaAPI(t, testhelpers.NewDebugClient(t), fix.publicTS)
+		assertFlow(t, f)
 	})
 }
