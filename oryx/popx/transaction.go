@@ -17,6 +17,10 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/x/prometheusx"
 
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/sqlcon"
@@ -57,12 +61,18 @@ func TransactionWithOptions(ctx context.Context, connection *pop.Connection, opt
 				return errors.WithStack(err)
 			}
 			attempt := 0
+			// A transaction's retries are recorded in a single increment so
+			// that the trace exemplar's value equals the transaction's retry
+			// count, which Grafana renders as the exemplar marker's position.
+			// Deferred so that retries are recorded even when the callback
+			// panics.
+			defer func() {
+				if retries := attempt - 1; retries > 0 {
+					recordRetries(ctx, retries)
+				}
+			}()
 			return errors.WithStack(crdb.ExecuteInTx(ctx, sqlxTxAdapter{tx.TX.Tx}, func() error {
 				attempt++
-				if attempt > 1 {
-					c := caller()
-					transactionRetries.WithLabelValues(c).Inc()
-				}
 				return errors.WithStack(callback(WithTransaction(ctx, tx), tx))
 			}))
 		})
@@ -160,7 +170,7 @@ type sqlxTxAdapter struct {
 
 var _ crdb.Tx = sqlxTxAdapter{}
 
-func (s sqlxTxAdapter) Exec(ctx context.Context, query string, args ...interface{}) error {
+func (s sqlxTxAdapter) Exec(ctx context.Context, query string, args ...any) error {
 	_, err := s.Tx.ExecContext(ctx, query, args...)
 	return errors.WithStack(err)
 }
@@ -187,26 +197,59 @@ var (
 	unknownCaller                           = "unknown"
 )
 
-// caller returns the external caller of TransactionWithOptions.
-// It skips 8 frames to land just outside the crdb/popx call stack, then
-// returns the first frame that is not in this package. The extra scan
-// handles the case where Transaction func is the next frame.
+// recordRetries counts a transaction's automatic CockroachDB restarts. When
+// the surrounding request is traced, it also attaches the trace to the span
+// (as an event) and to the counter (as an exemplar whose value is the retry
+// count) so that retry spikes can be linked to concrete requests.
+func recordRetries(ctx context.Context, retries int) {
+	c := caller()
+	counter := transactionRetries.WithLabelValues(c)
+	span := trace.SpanFromContext(ctx)
+	span.AddEvent("db.transaction.retry", trace.WithAttributes(
+		attribute.String("caller", c),
+		attribute.Int("retries", retries),
+	))
+	prometheusx.AddWithExemplar(ctx, counter, float64(retries))
+}
+
+// caller returns the function that opened the transaction: the innermost
+// frame that is neither transaction plumbing (this package, pop, and
+// crdb.ExecuteInTx) nor one of the thin wrapper methods that services layer
+// over popx, so that a retry is attributed to the business operation rather
+// than to a generic Transaction wrapper.
 func caller() string {
-	pc := make([]uintptr, 3)
-	n := runtime.Callers(8, pc)
-	if n == 0 {
-		return unknownCaller
-	}
-	pc = pc[:n]
-	frames := runtime.CallersFrames(pc)
+	pc := make([]uintptr, 32)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
 	for {
 		frame, more := frames.Next()
-		if frame.Function != "" && !strings.HasPrefix(frame.Function, "github.com/ory/x/popx.") {
+		if frame.Function != "" && !skipCallerFrame(frame.Function) {
 			return frame.Function
 		}
 		if !more {
-			break
+			return unknownCaller
 		}
 	}
-	return unknownCaller
+}
+
+// skipCallerFrame reports whether a stack frame identifies transaction
+// plumbing rather than the transaction's origin: this package and the
+// libraries under it, and the thin wrapper methods services layer over popx,
+// e.g. hydra's BasePersister.Transaction and RegistrySQL.Transaction
+// (fosite's Transactional interface), keto's WithLatestSnapshot, and
+// backoffice's WithFollowerReads.
+func skipCallerFrame(fn string) bool {
+	return strings.HasPrefix(fn, "github.com/ory/x/popx.") ||
+		strings.HasPrefix(fn, "github.com/ory/pop/") ||
+		strings.HasPrefix(fn, "github.com/cockroachdb/cockroach-go/v2/crdb.ExecuteInTx") ||
+		// Deferred recording runs with runtime frames (e.g. runtime.gopanic)
+		// on the stack when the transaction callback panicked.
+		strings.HasPrefix(fn, "runtime.") ||
+		// Wrapper matching is deliberately coarse: a frame that merely
+		// mentions one of these names is skipped and the retry is attributed
+		// one frame further up, which is still a useful label. "Transaction"
+		// also covers TransactionWithOptions and method-value "-fm" symbols.
+		strings.Contains(fn, "Transaction") ||
+		strings.Contains(fn, "WithLatestSnapshot") ||
+		strings.Contains(fn, "WithFollowerReads")
 }

@@ -120,10 +120,15 @@ func (h *HTTPMetrics) ServeHTTP(rw http.ResponseWriter, r *http.Request, next ht
 	method := sanitizeMethod(r.Method)
 	endpoint := getLabelForPattern(pattern)
 
+	// Latency histograms and request counters carry trace exemplars so that
+	// dashboards can link latency outliers and error spikes to traces. The
+	// request's span is still open here: the tracing middleware wraps this
+	// one.
+	ctx := r.Context()
 	h.responseSize.WithLabelValues(code, method).Observe(float64(rr.Size()))
-	h.totalRequests.WithLabelValues(code, method, endpoint).Inc()
-	h.duration.WithLabelValues(code, method, endpoint).Observe(latency.Seconds())
-	h.responseTime.WithLabelValues(endpoint).Observe(latency.Seconds())
+	AddWithExemplar(ctx, h.totalRequests.WithLabelValues(code, method, endpoint), 1)
+	ObserveWithExemplar(ctx, h.duration.WithLabelValues(code, method, endpoint), latency.Seconds())
+	ObserveWithExemplar(ctx, h.responseTime.WithLabelValues(endpoint), latency.Seconds())
 	h.requestSize.WithLabelValues(code, method).Observe(float64(computeApproximateRequestSize(r)))
 
 	statusBucket := "unknown"
@@ -138,7 +143,7 @@ func (h *HTTPMetrics) ServeHTTP(rw http.ResponseWriter, r *http.Request, next ht
 		statusBucket = "5xx"
 	}
 
-	h.handlerStatuses.WithLabelValues(r.Method, statusBucket).Inc()
+	AddWithExemplar(ctx, h.handlerStatuses.WithLabelValues(r.Method, statusBucket), 1)
 }
 
 var (

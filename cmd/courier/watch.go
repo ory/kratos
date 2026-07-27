@@ -7,7 +7,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 	"golang.org/x/sync/errgroup"
@@ -65,7 +64,7 @@ func ServeMetrics(ctx context.Context, r driver.Registry, port int) error {
 	)
 
 	router := http.NewServeMux()
-	router.Handle(prometheusx.MetricsPrometheusPath, promhttp.Handler())
+	router.Handle(prometheusx.MetricsPrometheusPath, prometheusx.Handler())
 	n.UseHandler(router)
 
 	var handler http.Handler = n

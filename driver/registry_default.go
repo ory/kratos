@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/urfave/negroni"
 
 	"github.com/ory/herodot"
@@ -227,7 +226,7 @@ func (m *RegistryDefault) RegisterAdminRoutes(ctx context.Context, router *httpr
 
 	m.HealthHandler(ctx).SetHealthRoutes(router, true)
 	m.HealthHandler(ctx).SetVersionRoutes(router)
-	router.GET(prometheusx.MetricsPrometheusPath, promhttp.Handler().ServeHTTP)
+	router.GET(prometheusx.MetricsPrometheusPath, prometheusx.Handler().ServeHTTP)
 	config.RegisterConfigHashRoute(m, router)
 
 	for _, s := range m.selfServiceStrategies() {
