@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -342,6 +343,33 @@ func TestChangeIdentifierSimilarityCheckEnabled(t *testing.T) {
 	t.Run("case=should fail if password is similar to identifier", func(t *testing.T) {
 		ctx := contextx.WithConfigValue(t.Context(), config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, true)
 		require.Error(t, s.Validate(ctx, "bosqwfaxee", "bosqwfaxee"))
+	})
+}
+
+// TestIdentifierSimilarityCheckMaxLength guards against an algorithmic-complexity
+// DoS (H1 #3866310): the O(n·m) identifier-similarity check must skip oversized
+// operands, which a short identifier can never be similar to anyway.
+func TestIdentifierSimilarityCheckMaxLength(t *testing.T) {
+	t.Parallel()
+
+	// Disable HaveIBeenPwned so validation is deterministic and offline.
+	_, reg := pkg.NewFastRegistryWithMocks(t, configx.WithValue(config.ViperKeyPasswordHaveIBeenPwnedEnabled, false))
+	s, err := password.NewDefaultPasswordValidatorStrategy(reg)
+	require.NoError(t, err)
+
+	ctx := contextx.WithConfigValue(t.Context(), config.ViperKeyPasswordIdentifierSimilarityCheckEnabled, true)
+
+	t.Run("case=skips the similarity check for oversized operands", func(t *testing.T) {
+		// Two identical strings one char past the 256-char cap would trip the
+		// too-similar check if it ran, so a nil result proves the length guard
+		// skipped it. Staying just over the cap keeps the test cheap even if the
+		// guard regresses (the check allocates an O(n·m) matrix).
+		large := strings.Repeat("a", 257)
+		require.NoError(t, s.Validate(ctx, large, large))
+	})
+
+	t.Run("case=still detects similarity for short operands", func(t *testing.T) {
+		require.ErrorIs(t, s.Validate(ctx, "bosqwfaxee", "bosqwfaxee"), text.NewErrorValidationPasswordIdentifierTooSimilar())
 	})
 }
 
