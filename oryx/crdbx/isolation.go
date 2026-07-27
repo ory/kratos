@@ -18,7 +18,10 @@ import (
 // called before the transaction runs its first query. Postgres already runs
 // statements at READ COMMITTED by default, and MySQL's SET TRANSACTION
 // applies to the next transaction rather than the current one, so every
-// other dialect is a no-op.
+// other dialect is a no-op. YugabyteDB maps READ COMMITTED to snapshot
+// isolation unless yb_enable_read_committed_isolation is enabled, so it stays
+// on the normal transaction retry path instead of using this CockroachDB-only
+// override.
 func SetTransactionReadCommitted(c *pop.Connection) error {
 	if c.Dialect.Name() != dbal.DriverCockroachDB {
 		// Only CockroachDB supports and needs this.

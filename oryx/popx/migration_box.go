@@ -20,6 +20,7 @@ import (
 
 	"github.com/ory/pop/v6"
 
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/logrusx"
 )
 
@@ -222,6 +223,50 @@ func NewMigrationBox(dir fs.FS, c *pop.Connection, l *logrusx.Logger, opts ...Mi
 	return mb, nil
 }
 
+// migrationFallbacks returns the ordered dialects migration selection falls
+// back to before the generic ("all") file (.yugabyte. → .postgres. → generic
+// for YugabyteDB, no fallbacks otherwise).
+func (mb *MigrationBox) migrationFallbacks() []string {
+	if mb.c.Dialect.Name() == dbal.DriverYugabyteDB {
+		return []string{dbal.DriverPostgreSQL}
+	}
+	return nil
+}
+
+// SelectedMigrations returns a copy of the migrations selected for the
+// connection's dialect and direction. It uses the same exact-match and fallback
+// ranking as Up, Down, and Status so callers can audit the effective migration
+// set without duplicating filename-selection logic.
+func (mb *MigrationBox) SelectedMigrations(direction string) (Migrations, error) {
+	dialect := mb.c.Dialect.Name()
+	fallbacks := mb.migrationFallbacks()
+	switch direction {
+	case "up":
+		return slices.Clone(mb.migrationsUp.sortAndFilter(dialect, fallbacks...)), nil
+	case "down":
+		return slices.Clone(mb.migrationsDown.sortAndFilter(dialect, fallbacks...)), nil
+	default:
+		return nil, errors.Errorf("unknown migration direction %q", direction)
+	}
+}
+
+// noTxDDL reports whether the dialect cannot run DDL inside a transaction, so
+// both migrations and the migration-status table setup must run in autocommit
+// mode. CockroachDB and MySQL auto-commit each DDL statement; YugabyteDB
+// restricts DDL inside transactions. Because there is no surrounding
+// transaction to roll back a partial failure, new YugabyteDB migrations must
+// contain one idempotent statement per file. YugabyteDB also inherits older
+// PostgreSQL migration files that predate this rule; service-level guard tests
+// track that replay risk, and a dedicated .yugabyte. override is required when
+// a new unsafe inherited migration appears.
+func (mb *MigrationBox) noTxDDL() bool {
+	switch mb.c.Dialect.Name() {
+	case dbal.DriverCockroachDB, dbal.DriverMySQL, dbal.DriverYugabyteDB:
+		return true
+	}
+	return false
+}
+
 func (mb *MigrationBox) findMigrations(
 	dir fs.FS,
 	runner func([]byte) func(m Migration, c *pop.Connection) error,
@@ -243,8 +288,8 @@ func (mb *MigrationBox) findMigrations(
 
 		details, err := parseMigrationFilename(info.Name())
 		if err != nil {
-			if strings.HasPrefix(err.Error(), "unsupported dialect") {
-				mb.l.Tracef("This is usually ok - ignoring migration file %s because dialect is not supported: %s", info.Name(), err.Error())
+			if errors.Is(err, errUnsupportedMigrationDialect) {
+				mb.l.Debugf("Ignoring migration file %s because its dialect is not supported: %s", info.Name(), err.Error())
 				return nil
 			}
 			return errors.WithStack(err)

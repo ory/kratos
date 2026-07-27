@@ -63,31 +63,43 @@ func compareMigration(a, b Migration) int {
 	return strings.Compare(a.DBType, b.DBType)
 }
 
-// specificity returns an integer representing how specific the migration is.
-// Higher numbers indicate a more specific migration.
-func specificity(m *Migration) int {
-	specificity := 0
-	if m.DBType != "all" {
-		specificity += 1
+// migrationRank ranks a migration's DBType for the given dialect and its ordered
+// fallbacks. Higher numbers indicate a better match:
+//
+//	-1      not applicable
+//	 0      "all" (generic, dialect-independent)
+//	 1..n   a fallback dialect (earlier fallbacks rank higher)
+//	 n+1    the exact dialect
+//
+// This lets a migration box prefer a dialect-specific override, then a fallback
+// dialect (e.g. postgres for a postgres-wire-compatible database), then the
+// generic file.
+func migrationRank(dbType, dialect string, fallbacks []string) int {
+	switch dbType {
+	case dialect:
+		return len(fallbacks) + 1
+	case "all":
+		return 0
 	}
-
-	return specificity
+	for i, fb := range fallbacks {
+		if dbType == fb {
+			return len(fallbacks) - i
+		}
+	}
+	return -1
 }
 
-// isApplicable checks whether the migration is applicable for the given dialect.
-func isApplicable(m Migration, dialect string) bool {
-	return m.DBType == dialect || m.DBType == "all"
-}
-
-func (mfs Migrations) sortAndFilter(dialect string) Migrations {
+func (mfs Migrations) sortAndFilter(dialect string, fallbacks ...string) Migrations {
 	byVersion := make(map[string]Migration, len(mfs))
 	for _, migration := range mfs {
-		if !isApplicable(migration, dialect) {
+		rank := migrationRank(migration.DBType, dialect, fallbacks)
+		if rank < 0 {
+			// Not applicable to this dialect.
 			continue
 		}
 		if previousMigration, ok := byVersion[migration.Version]; ok {
-			if specificity(&migration) < specificity(&previousMigration) {
-				// Previous migration is more specific, skip this one.
+			if rank < migrationRank(previousMigration.DBType, dialect, fallbacks) {
+				// Previous migration is a better match, skip this one.
 				continue
 			}
 		}
@@ -102,17 +114,16 @@ func (mfs Migrations) sortAndFilter(dialect string) Migrations {
 	return filtered
 }
 
-func (mfs Migrations) find(version, dbType string) *Migration {
+func (mfs Migrations) find(version, dialect string, fallbacks ...string) *Migration {
 	var candidate *Migration
-	for _, m := range mfs {
-		if m.Version == version {
-			switch m.DBType {
-			case "all":
-				// there might still be a more specific migration for the dbType
-				candidate = &m
-			case dbType:
-				return &m
-			}
+	bestRank := -1
+	for i := range mfs {
+		if mfs[i].Version != version {
+			continue
+		}
+		if rank := migrationRank(mfs[i].DBType, dialect, fallbacks); rank > bestRank {
+			bestRank = rank
+			candidate = &mfs[i]
 		}
 	}
 	return candidate

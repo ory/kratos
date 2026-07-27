@@ -5,11 +5,16 @@ package popx
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 
 	"github.com/ory/pop/v6"
+
+	"github.com/ory/x/dbal"
 )
+
+var errUnsupportedMigrationDialect = errors.New("unsupported dialect")
 
 var MigrationFileRegexp = regexp.MustCompile(
 	`^(\d+)_([^.]+)(\.[a-z0-9]+)?(\.autocommit)?\.(up|down)\.(sql)$`,
@@ -55,9 +60,19 @@ func parseMigrationFilename(filename string) (*match, error) {
 	} else if m[dbTypeIdx] == "" {
 		dbType = "all"
 	} else {
-		dbType = pop.CanonicalDialect(m[dbTypeIdx][1:])
-		if !pop.DialectSupported(dbType) {
-			return nil, errors.Errorf("unsupported dialect %s", dbType)
+		dbType = strings.TrimPrefix(m[dbTypeIdx], ".")
+		// The commercial package registers this dialect from init(), but
+		// migration boxes can be constructed before that package enters the
+		// import graph. Canonicalize both accepted spellings independently of
+		// registration so migration selection is deterministic in every build.
+		switch dbType {
+		case dbal.DriverYugabyteDB, "yugabytedb":
+			dbType = dbal.DriverYugabyteDB
+		default:
+			dbType = pop.CanonicalDialect(dbType)
+		}
+		if dbType != dbal.DriverYugabyteDB && !pop.DialectSupported(dbType) {
+			return nil, errors.Wrapf(errUnsupportedMigrationDialect, "%s", dbType)
 		}
 	}
 

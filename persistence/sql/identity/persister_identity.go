@@ -608,6 +608,8 @@ func (p *IdentityPersister) updateCredentialsAssociation(ctx context.Context, ex
 		// Delete the credential and its identifiers.
 		conn := p.GetConnection(ctx)
 		q := "DELETE FROM identity_credentials WHERE nid = ? AND id IN (?)"
+		// This @index hint is CockroachDB-only; PostgreSQL and YugabyteDB use
+		// the unadorned table name.
 		if conn.Dialect.Name() == "cockroach" {
 			q = "DELETE FROM identity_credentials@primary WHERE nid = ? AND id IN (?)"
 		}
@@ -1080,7 +1082,8 @@ func identifiersTableNameWithIndexHint(con *pop.Connection) string {
 	case "mysql":
 		ici += " USE INDEX(identity_credential_identifiers_ici_nid_i_idx)"
 	default:
-		// good luck 🤷‍♂️
+		// PostgreSQL and YugabyteDB do not accept these dialect-specific index
+		// hint syntaxes.
 	}
 	return ici
 }
@@ -1801,6 +1804,8 @@ func (p *IdentityPersister) DeleteIdentity(ctx context.Context, id uuid.UUID) (e
 	defer otelx.End(span, &err)
 
 	tableName := new(identity.Identity).TableName(ctx)
+	// This @index hint is CockroachDB-only; PostgreSQL and YugabyteDB use the
+	// unadorned table name.
 	if p.c.Dialect.Name() == "cockroach" {
 		tableName += "@primary"
 	}
@@ -1846,6 +1851,8 @@ func (p *IdentityPersister) DeleteIdentities(ctx context.Context, ids []uuid.UUI
 	args = append(args, p.NetworkID(ctx))
 
 	tableName := new(identity.Identity).TableName(ctx)
+	// This @index hint is CockroachDB-only; PostgreSQL and YugabyteDB use the
+	// unadorned table name.
 	if p.c.Dialect.Name() == "cockroach" {
 		tableName += "@primary"
 	}

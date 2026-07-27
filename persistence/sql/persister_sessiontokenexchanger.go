@@ -13,6 +13,7 @@ import (
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/pop/v6"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/randx"
 	"github.com/ory/x/sqlcon"
@@ -23,7 +24,7 @@ var _ sessiontokenexchange.Persister = new(Persister)
 func updateLimitClause(conn *pop.Connection) string {
 	// Not all databases support limiting in update clauses.
 	switch conn.Dialect.Name() {
-	case "sqlite3", "postgres":
+	case "sqlite3", dbal.DriverPostgreSQL, dbal.DriverYugabyteDB:
 		return ""
 	default:
 		return "LIMIT 1"

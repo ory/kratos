@@ -28,6 +28,7 @@ import (
 
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/cmdx"
+	"github.com/ory/x/dbal"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/sqlcon"
@@ -40,7 +41,7 @@ const (
 )
 
 func (mb *MigrationBox) shouldNotUseTransaction(m Migration) bool {
-	return m.Autocommit || mb.c.Dialect.Name() == "cockroach" || mb.c.Dialect.Name() == "mysql"
+	return m.Autocommit || mb.noTxDDL()
 }
 
 // Up runs pending "up" migrations and applies them to the database.
@@ -53,7 +54,7 @@ func (mb *MigrationBox) Up(ctx context.Context) error {
 // migration set. The path is deterministic and content-addressed, so a changed
 // migration set cannot reuse an older template.
 func (mb *MigrationBox) sqliteTemplatePath() string {
-	mfs := mb.migrationsUp.sortAndFilter(mb.c.Dialect.Name())
+	mfs := mb.migrationsUp.sortAndFilter(mb.c.Dialect.Name(), mb.migrationFallbacks()...)
 	h := sha256.New()
 	for _, mi := range mfs {
 		for _, part := range []string{
@@ -172,7 +173,7 @@ func (mb *MigrationBox) UpTo(ctx context.Context, step int) (applied int, err er
 					// Restore failed; log and fall through to the normal migration path.
 					mb.l.Errorf("Failed to restore SQLite template, applying migrations: src=%s dst=%s err=%v", templatePath, newDbFileName, restoreErr)
 				} else {
-					mfs := mb.migrationsUp.sortAndFilter(mb.c.Dialect.Name())
+					mfs := mb.migrationsUp.sortAndFilter(mb.c.Dialect.Name(), mb.migrationFallbacks()...)
 					mb.l.Infof("Skipped applying %d migrations using SQLite template: path=%s", len(mfs), templatePath)
 					return len(mfs), nil
 				}
@@ -182,9 +183,12 @@ func (mb *MigrationBox) UpTo(ctx context.Context, step int) (applied int, err er
 		}
 	}
 
+	// Keep applied across whole-run retry attempts. Every migration counted here
+	// has already committed its schema_migration row, so it remains part of this
+	// UpTo call's step budget even when a later migration retries.
 	err = mb.exec(ctx, func() error {
 		mtn := sanitizedMigrationTableName(c)
-		mfs := mb.migrationsUp.sortAndFilter(c.Dialect.Name())
+		mfs := mb.migrationsUp.sortAndFilter(mb.c.Dialect.Name(), mb.migrationFallbacks()...)
 		for _, mi := range mfs {
 			l := mb.l.WithField("version", mi.Version).WithField("migration_name", mi.Name).WithField("migration_file", mi.Path)
 
@@ -312,7 +316,7 @@ func (mb *MigrationBox) UpTo(ctx context.Context, step int) (applied int, err er
 				_ = os.Remove(tmpPath)
 				mb.l.Errorf("Failed to install SQLite template: src=%s dst=%s err=%v", tmpPath, templatePath, err)
 			} else {
-				mfs := mb.migrationsUp.sortAndFilter(mb.c.Dialect.Name())
+				mfs := mb.migrationsUp.sortAndFilter(mb.c.Dialect.Name(), mb.migrationFallbacks()...)
 				mb.l.Infof("SQLite template saved, subsequent test runs will skip %d migrations: path=%s", len(mfs), templatePath)
 			}
 		}
@@ -331,6 +335,7 @@ func (mb *MigrationBox) Down(ctx context.Context, steps int) (err error) {
 	if steps <= 0 {
 		steps = math.MaxInt
 	}
+	remainingSteps := steps
 
 	c := mb.c.WithContext(ctx)
 	return errors.WithStack(mb.exec(ctx, func() (err error) {
@@ -339,9 +344,9 @@ func (mb *MigrationBox) Down(ctx context.Context, steps int) (err error) {
 		if err != nil {
 			return errors.Wrap(err, "migration down: unable count existing migration")
 		}
-		steps = min(steps, count)
+		attemptSteps := min(remainingSteps, count)
 
-		mfs := mb.migrationsDown.sortAndFilter(c.Dialect.Name())
+		mfs := mb.migrationsDown.sortAndFilter(mb.c.Dialect.Name(), mb.migrationFallbacks()...)
 		slices.Reverse(mfs)
 		if len(mfs) > count {
 			// skip all migrations that were not yet applied
@@ -350,14 +355,14 @@ func (mb *MigrationBox) Down(ctx context.Context, steps int) (err error) {
 
 		reverted := 0
 		defer func() {
-			migrationsToRevertCount := min(steps, len(mfs))
+			migrationsToRevertCount := min(attemptSteps, len(mfs))
 			mb.l.Debugf("Successfully reverted %d/%d migrations.", reverted, migrationsToRevertCount)
 			if err != nil {
 				mb.l.WithError(err).Error("Problem reverting migrations.")
 			}
 		}()
 		for i, mi := range mfs {
-			if i >= steps {
+			if i >= attemptSteps {
 				break
 			}
 			l := mb.l.WithField("version", mi.Version).WithField("migration_name", mi.Name).WithField("migration_file", mi.Path)
@@ -415,6 +420,7 @@ func (mb *MigrationBox) Down(ctx context.Context, steps int) (err error) {
 
 			l.Infof("%s applied successfully", mi.Name)
 			reverted++
+			remainingSteps--
 		}
 		return nil
 	}))
@@ -488,8 +494,9 @@ func (mb *MigrationBox) isolatedTransaction(ctx context.Context, direction strin
 func (mb *MigrationBox) createMigrationStatusTableTransaction(ctx context.Context, transactions ...[]string) error {
 	for _, statements := range transactions {
 		// CockroachDB does not support transactional schema changes, so we have to run
-		// the statements outside of a transaction.
-		if mb.c.Dialect.Name() == "cockroach" || mb.c.Dialect.Name() == "mysql" {
+		// the statements outside of a transaction. The same applies to any dialect
+		// that opts into autocommit DDL (see noTxDDL).
+		if mb.noTxDDL() {
 			for _, statement := range statements {
 				if err := mb.c.WithContext(ctx).RawQuery(statement).Exec(); err != nil {
 					return errors.Wrapf(err, "unable to execute statement: %s", statement)
@@ -606,10 +613,12 @@ func (mb *MigrationBox) Status(ctx context.Context) (MigrationStatuses, error) {
 
 	con := mb.c.WithContext(ctx)
 
-	migrationsUp := mb.migrationsUp.sortAndFilter(con.Dialect.Name())
+	dialect := mb.c.Dialect.Name()
+	fallbacks := mb.migrationFallbacks()
+	migrationsUp := mb.migrationsUp.sortAndFilter(dialect, fallbacks...)
 
 	if len(migrationsUp) == 0 {
-		return nil, errors.Errorf("unable to find any migrations for dialect: %s", con.Dialect.Name())
+		return nil, errors.Errorf("unable to find any migrations for dialect: %s", dialect)
 	}
 
 	alreadyApplied := make([]string, 0, len(migrationsUp))
@@ -628,7 +637,7 @@ func (mb *MigrationBox) Status(ctx context.Context) (MigrationStatuses, error) {
 	statuses := make(MigrationStatuses, len(migrationsUp))
 	for k, mf := range migrationsUp {
 		downContent := "-- error: no down migration defined for this migration"
-		if mDown := mb.migrationsDown.find(mf.Version, con.Dialect.Name()); mDown != nil {
+		if mDown := mb.migrationsDown.find(mf.Version, dialect, fallbacks...); mDown != nil {
 			downContent = mDown.Content
 		}
 		statuses[k] = MigrationStatus{
@@ -681,9 +690,13 @@ func (mb *MigrationBox) exec(ctx context.Context, fn func() error) error {
 		}
 	}
 
-	if mb.c.Dialect.Name() == "cockroach" {
+	switch mb.c.Dialect.Name() {
+	case dbal.DriverCockroachDB, dbal.DriverYugabyteDB:
 		outer := fn
 		fn = func() error {
+			// CreateSchemaMigrations runs before this wrapper. YugabyteDB uses
+			// autocommit DDL, but its pgwire errors expose the same retryable
+			// SQLSTATEs that crdb.Execute classifies for whole-run retries.
 			return errors.WithStack(crdb.Execute(outer))
 		}
 	}

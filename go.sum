@@ -593,8 +593,8 @@ github.com/ory/mail/v3 v3.0.1-0.20260413103059-df54acc74133 h1:8VGf5rxmZDXFyWN//
 github.com/ory/mail/v3 v3.0.1-0.20260413103059-df54acc74133/go.mod h1:ET3OgvMlMWp9Arq4/M7ToQu+NiRgLB/or0hYjFwu6Tw=
 github.com/ory/nosurf v1.2.7 h1:YrHrbSensQyU6r6HT/V5+HPdVEgrOTMJiLoJABSBOp4=
 github.com/ory/nosurf v1.2.7/go.mod h1:d4L3ZBa7Amv55bqxCBtCs63wSlyaiCkWVl4vKf3OUxA=
-github.com/ory/pop/v6 v6.4.2-0.20260507161217-89126558d369 h1:ThuxYV66E8HKj36IFVZIDxBNya/ETeXeO7KCwl5hwgo=
-github.com/ory/pop/v6 v6.4.2-0.20260507161217-89126558d369/go.mod h1:vd8H2inBRK+ZF+r5jDdx/fYPwqWrbVoAD4t7vAfXeA4=
+github.com/ory/pop/v6 v6.4.2-0.20260714091811-7f2223c43ab6 h1:LNreY5V2pXsUgiY/rVaU5uhIsOUHzZ+PP/NUgfqubr0=
+github.com/ory/pop/v6 v6.4.2-0.20260714091811-7f2223c43ab6/go.mod h1:vd8H2inBRK+ZF+r5jDdx/fYPwqWrbVoAD4t7vAfXeA4=
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2 h1:zm6sDvHy/U9XrGpixwHiuAwpp0Ock6khSVHkrv6lQQU=
 github.com/ory/sessions v1.2.2-0.20220110165800-b09c17334dc2/go.mod h1:dk2InVEVJ0sfLlnXv9EAgkf6ecYs/i80K/zI+bUmuGM=
 github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=

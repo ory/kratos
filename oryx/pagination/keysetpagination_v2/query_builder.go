@@ -76,9 +76,10 @@ func BuildWhereAndOrder(columns []Column, quote func(string) string, dialect str
 		// Postgres orders NULLs differently depending on sort direction;
 		// (ASC → NULLS LAST, DESC → NULLS FIRST), which does not match the
 		// assumptions of our keyset pagination logic and other supported DBs.
-		// We therefore make NULL ordering explicit on Postgres to keep pagination
-		// stable and consistent with sqlite/mysql/cockroachdb.
-		if dialect == "postgres" && part.Nullable {
+		// We therefore make NULL ordering explicit on Postgres (and YugabyteDB,
+		// which shares Postgres NULL ordering) to keep pagination stable and
+		// consistent with sqlite/mysql/cockroachdb.
+		if (dialect == "postgres" || dialect == "yugabyte") && part.Nullable {
 			if part.Order == OrderAscending {
 				orderByBuilder.WriteString(" NULLS FIRST")
 			} else {

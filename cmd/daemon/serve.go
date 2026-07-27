@@ -265,7 +265,7 @@ func sqa(ctx context.Context, cmd *cobra.Command, d driver.Registry) *metricsx.S
 		&metricsx.Options{
 			Service:       "kratos",
 			DeploymentId:  metricsx.Hash(d.Persister().NetworkID(ctx).String()),
-			DBDialect:     d.Persister().GetConnection(ctx).Dialect.Details().Dialect,
+			DBDialect:     d.Persister().GetConnection(ctx).Dialect.Name(),
 			IsDevelopment: d.Config().IsInsecureDevMode(ctx),
 			WriteKey:      "qQlI6q8Q4WvkzTjKQSor4sHYOikHIvvi",
 			WhitelistedPaths: []string{

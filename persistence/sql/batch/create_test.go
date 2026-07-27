@@ -55,7 +55,8 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 		opts := &createOpts{
 			dialect: "other",
 			quoter:  testQuoter{},
-			mapper:  reflectx.NewMapper("db")}
+			mapper:  reflectx.NewMapper("db"),
+		}
 		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 
@@ -78,7 +79,8 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 		opts := &createOpts{
 			dialect: "other",
 			quoter:  testQuoter{},
-			mapper:  reflectx.NewMapper("db")}
+			mapper:  reflectx.NewMapper("db"),
+		}
 		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 	})
@@ -88,7 +90,8 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 		opts := &createOpts{
 			dialect: "other",
 			quoter:  testQuoter{},
-			mapper:  reflectx.NewMapper("db")}
+			mapper:  reflectx.NewMapper("db"),
+		}
 		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 	})
@@ -98,7 +101,8 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 		opts := &createOpts{
 			dialect: "other",
 			quoter:  testQuoter{},
-			mapper:  reflectx.NewMapper("db")}
+			mapper:  reflectx.NewMapper("db"),
+		}
 		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 	})
@@ -113,10 +117,24 @@ func Test_buildInsertQueryArgs(t *testing.T) {
 		opts := &createOpts{
 			dialect: dbal.DriverCockroachDB,
 			quoter:  testQuoter{},
-			mapper:  reflectx.NewMapper("db")}
+			mapper:  reflectx.NewMapper("db"),
+		}
 		args := buildInsertQueryArgs(ctx, models, opts)
 		snapshotx.SnapshotT(t, args)
 	})
+
+	for _, dialect := range []string{dbal.DriverPostgreSQL, dbal.DriverCockroachDB, dbal.DriverYugabyteDB} {
+		t.Run("case=database generated UUID/"+dialect, func(t *testing.T) {
+			models := makeModels[testModel]()
+			opts := &createOpts{
+				dialect: dialect,
+				quoter:  testQuoter{},
+				mapper:  reflectx.NewMapper("db"),
+			}
+			args := buildInsertQueryArgs(ctx, models, opts)
+			assert.Contains(t, args.Placeholders, "gen_random_uuid()")
+		})
+	}
 }
 
 func Test_buildInsertQueryArgs_ExtraColumns(t *testing.T) {
@@ -217,7 +235,6 @@ func Test_buildInsertQueryValues(t *testing.T) {
 			assert.Equal(t, model.Int, values[4])
 
 			assert.Nil(t, model.NullTimePtr)
-
 		})
 	})
 }

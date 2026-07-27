@@ -66,7 +66,11 @@ func TransactionWithOptions(ctx context.Context, connection *pop.Connection, opt
 				return errors.WithStack(callback(WithTransaction(ctx, tx), tx))
 			}))
 		})
-	case "postgres", "mysql":
+	case "postgres", "mysql", "yugabyte":
+		// YugabyteDB speaks the Postgres wire protocol and, like Postgres, may
+		// surface serialization failures (SQLSTATE 40001) that the retry loop
+		// below handles through sqlcon.ErrConcurrentUpdate.
+		//
 		// Mirrors pop's Connection#Transaction with opts passed to NewTransactionContextOptions.
 		// https://github.com/ory/pop/blob/89126558d36911217a1cc70172ba94ee32692cad/connection.go#L148
 		return conn.Dialect.Lock(func() error {

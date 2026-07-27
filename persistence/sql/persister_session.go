@@ -426,8 +426,7 @@ func (p *Persister) RevokeSessionByToken(ctx context.Context, token string) (rev
 		IdentityID uuid.UUID `db:"identity_id"`
 	}
 
-	switch con.Dialect.Name() {
-	case dbal.DriverCockroachDB, dbal.DriverPostgreSQL:
+	if dbal.IsPostgresCompatible(con.Dialect.Name()) {
 		// CTE: identify the row by (token, nid), conditionally flip active=false
 		// only when currently true, and return the matched row's identifiers in
 		// one round trip. See revokeMatchingSessions for the contention rationale.
@@ -438,7 +437,7 @@ SELECT id, identity_id FROM found`
 		err = p.runInReadCommittedOnCRDB(ctx, func(c *pop.Connection) error {
 			return c.RawQuery(query, token, nid).First(&dst)
 		})
-	default:
+	} else {
 		// SQLite and MySQL: data-modifying CTEs are not portable here, so issue
 		// a separate SELECT followed by the legacy UPDATE. Same two-statement
 		// shape as today's caller (GetSessionByToken + RevokeSessionByToken),
@@ -583,8 +582,7 @@ func (p *Persister) revokeMatchingSessions(ctx context.Context, predicate string
 		err   error
 	)
 
-	switch con.Dialect.Name() {
-	case dbal.DriverCockroachDB, dbal.DriverPostgreSQL:
+	if dbal.IsPostgresCompatible(con.Dialect.Name()) {
 		//#nosec G201 -- predicate is a static persister-internal constant, not user input
 		query := fmt.Sprintf(`WITH found AS (SELECT id FROM sessions WHERE %s),
      upd AS (UPDATE sessions SET active = false FROM found WHERE sessions.id = found.id AND sessions.active = true RETURNING 1)
@@ -593,7 +591,7 @@ SELECT count(*) FROM found`, predicate)
 		err = p.runInReadCommittedOnCRDB(ctx, func(c *pop.Connection) error {
 			return c.RawQuery(query, args...).First(&count)
 		})
-	default:
+	} else {
 		//#nosec G201 -- predicate is a static persister-internal constant, not user input
 		count, err = con.RawQuery(
 			fmt.Sprintf("UPDATE sessions SET active = false WHERE %s", predicate),
@@ -613,7 +611,9 @@ SELECT count(*) FROM found`, predicate)
 // timestamp on WriteTooOldError instead of surfacing the serializable
 // retry. Postgres already runs single statements at READ COMMITTED by
 // default; SQLite and MySQL are not subject to the GLOBAL-table
-// closed-timestamp contention.
+// closed-timestamp contention. YugabyteDB does not get CockroachDB's isolation
+// override and relies on TransactionWithOptions retrying serialization
+// failures instead.
 func (p *Persister) runInReadCommittedOnCRDB(ctx context.Context, fn func(*pop.Connection) error) error {
 	con := p.GetConnection(ctx)
 	if con.Dialect.Name() != dbal.DriverCockroachDB {
@@ -639,15 +639,13 @@ func (p *Persister) runInReadCommittedOnCRDB(ctx context.Context, fn func(*pop.C
 // SQLite and MySQL keep the plain transaction.
 func (p *Persister) listWithinReadCommittedReadOnlyTx(ctx context.Context, fn func(ctx context.Context, c *pop.Connection) error) error {
 	con := p.GetConnection(ctx)
-	switch con.Dialect.Name() {
-	case dbal.DriverCockroachDB, dbal.DriverPostgreSQL:
+	if dbal.IsPostgresCompatible(con.Dialect.Name()) {
 		return popx.TransactionWithOptions(ctx, con,
 			&sql.TxOptions{Isolation: sql.LevelReadCommitted, ReadOnly: true},
 			fn,
 		)
-	default:
-		return p.Transaction(ctx, fn)
 	}
+	return p.Transaction(ctx, fn)
 }
 
 // DeleteSessionsByIdentities permanently deletes all sessions belonging to the given identity IDs.

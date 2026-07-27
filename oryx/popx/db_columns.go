@@ -20,6 +20,7 @@ func IndexHint(conn *pop.Connection, table string, index string) string {
 	if conn.Dialect.Name() == "cockroach" {
 		return table + "@" + index
 	}
+	// PostgreSQL and YugabyteDB do not accept CockroachDB's @index syntax.
 	return table
 }
 
