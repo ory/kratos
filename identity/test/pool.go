@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -33,7 +34,6 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/pop/v6"
 	"github.com/ory/x/assertx"
-	"github.com/ory/x/contextx"
 	"github.com/ory/x/crdbx"
 	"github.com/ory/x/pagination/keysetpagination"
 	"github.com/ory/x/popx"
@@ -54,61 +54,83 @@ func assertContainsValues(t *testing.T, actual []string, shouldContain, shouldNo
 	}
 }
 
+// poolSchemaSet is the identity-schema set the TestPool contract exercises.
+//
+// Only ID and RawURL are set on each schema.Schema: the config carries RawURL
+// (see PoolConfigValues), and SchemaURL() derives the public URL from ID, so
+// schema.Schema.URL is never read here.
+type poolSchemaSet struct {
+	expand, def, alt, phoneEmail schema.Schema
+	publicBaseURL                *url.URL
+}
+
+func newPoolSchemaSet() poolSchemaSet {
+	return poolSchemaSet{
+		publicBaseURL: urlx.ParseOrPanic("http://example.com"),
+		expand: schema.Schema{
+			ID:     "expandSchema",
+			RawURL: "file://./stub/expand.schema.json",
+		},
+		def: schema.Schema{
+			ID:     config.DefaultIdentityTraitsSchemaID,
+			RawURL: "file://./stub/identity.schema.json",
+		},
+		alt: schema.Schema{
+			ID:     "altSchema",
+			RawURL: "file://./stub/identity-2.schema.json",
+		},
+		phoneEmail: schema.Schema{
+			ID:     "phoneIdentifier",
+			RawURL: "file://./stub/phone.schema.json",
+		},
+	}
+}
+
+// PoolConfigValues returns the configuration the TestPool contract requires.
+//
+// Prefer passing these to the registry as base config (configx.WithValues) over
+// attaching them to the context with contextx.WithConfigValues. A context
+// overlay makes TestConfigProvider.Config rebuild the whole koanf tree — schema
+// validation and a full re-flatten — on every config read underneath it, and
+// TestPool reads config from 187 subtests.
+func PoolConfigValues() map[string]any {
+	s := newPoolSchemaSet()
+	return map[string]any{
+		config.ViperKeyPublicBaseURL: s.publicBaseURL.String(),
+		// Set explicitly so callers do not also need the suite-wide
+		// testhelpers.WithDefaultIdentitySchema overlay — that overlay replaces
+		// the schema list below with a single "default" entry.
+		config.ViperKeyDefaultIdentitySchemaID: s.def.ID,
+		config.ViperKeyIdentitySchemas: []config.Schema{
+			{ID: s.alt.ID, URL: s.alt.RawURL},
+			{ID: s.def.ID, URL: s.def.RawURL},
+			{ID: s.expand.ID, URL: s.expand.RawURL},
+			// The multiple_emails schema is only registered so config accepts the
+			// ID; the contract never reads its traits, so it reuses altSchema's file.
+			{ID: "multiple_emails", URL: s.alt.RawURL},
+			{ID: s.phoneEmail.ID, URL: s.phoneEmail.RawURL},
+		},
+	}
+}
+
+// TestPool runs the identity persister contract. The caller must have the values
+// from PoolConfigValues in scope, ideally baked into the registry's base config.
 func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager, dbname string) func(t *testing.T) {
 	return func(t *testing.T) {
 		nid, p := testhelpers.NewNetworkUnlessExisting(t, ctx, p)
 
-		exampleServerURL := urlx.ParseOrPanic("http://example.com")
-		expandSchema := schema.Schema{
-			ID:     "expandSchema",
-			URL:    urlx.ParseOrPanic("file://./stub/expand.schema.json"),
-			RawURL: "file://./stub/expand.schema.json",
-		}
-		defaultSchema := schema.Schema{
-			ID:     config.DefaultIdentityTraitsSchemaID,
-			URL:    urlx.ParseOrPanic("file://./stub/identity.schema.json"),
-			RawURL: "file://./stub/identity.schema.json",
-		}
-		altSchema := schema.Schema{
-			ID:     "altSchema",
-			URL:    urlx.ParseOrPanic("file://./stub/identity-2.schema.json"),
-			RawURL: "file://./stub/identity-2.schema.json",
-		}
-		multipleEmailsSchema := schema.Schema{
-			ID:     "multiple_emails",
-			URL:    urlx.ParseOrPanic("file://./stub/handler/multiple_emails.schema.json"),
-			RawURL: "file://./stub/identity-2.schema.json",
-		}
-		phoneEmailSchema := schema.Schema{
-			ID:     "phoneIdentifier",
-			URL:    urlx.ParseOrPanic("file://./stub/phone.schema.json"),
-			RawURL: "file://./stub/phone.schema.json",
-		}
-		ctx := contextx.WithConfigValues(ctx, map[string]any{
-			config.ViperKeyPublicBaseURL: exampleServerURL.String(),
-			config.ViperKeyIdentitySchemas: []config.Schema{
-				{
-					ID:  altSchema.ID,
-					URL: altSchema.RawURL,
-				},
-				{
-					ID:  defaultSchema.ID,
-					URL: defaultSchema.RawURL,
-				},
-				{
-					ID:  expandSchema.ID,
-					URL: expandSchema.RawURL,
-				},
-				{
-					ID:  multipleEmailsSchema.ID,
-					URL: multipleEmailsSchema.RawURL,
-				},
-				{
-					ID:  phoneEmailSchema.ID,
-					URL: phoneEmailSchema.RawURL,
-				},
-			},
-		})
+		s := newPoolSchemaSet()
+		exampleServerURL := s.publicBaseURL
+		expandSchema, defaultSchema, altSchema := s.expand, s.def, s.alt
+		phoneEmailSchema := s.phoneEmail
+
+		// Fail fast (rather than deep inside case=expand) when the caller did not
+		// put PoolConfigValues into scope: without the schemas registered,
+		// ValidateIdentity returns an opaque schema-lookup error.
+		probe := identity.NewIdentity(expandSchema.ID)
+		probe.Traits = identity.Traits(`{"email":"probe@ory.sh","name":"probe"}`)
+		require.NoError(t, m.ValidateIdentity(ctx, probe, new(identity.ManagerOptions)),
+			"TestPool requires the schemas from identity.PoolConfigValues in scope")
 
 		t.Run("case=expand", func(t *testing.T) {
 			require.NoError(t, p.GetConnection(ctx).RawQuery("DELETE FROM identities WHERE nid = ?", nid).Exec())
@@ -1301,20 +1323,24 @@ func TestPool(ctx context.Context, p persistence.Persister, m *identity.Manager,
 					})
 					return is
 				}
+				// Assert the full count and the specific identity on the same
+				// snapshot inside the poll. A follower read can return a stale
+				// snapshot whose count matches len(createdIDs) but that does not
+				// yet contain the just-created identity, so checking the count and
+				// the identity against separate reads is racy.
 				require.EventuallyWithT(t, func(t *assert.CollectT) {
-					assert.Len(t, listEventually(), len(createdIDs))
-				}, 15*time.Second, 200*time.Millisecond)
-
-				results := listEventually()
-				require.Len(t, results, len(createdIDs), "Could not find all identities")
-
-				var found bool
-				for _, i := range results {
-					if i.ID == another.ID {
-						found = true
+					results := listEventually()
+					if !assert.Len(t, results, len(createdIDs), "Could not find all identities") {
+						return
 					}
-				}
-				require.True(t, found, id, "Unable to find created identity in eventually consistent results.")
+					var found bool
+					for _, i := range results {
+						if i.ID == another.ID {
+							found = true
+						}
+					}
+					assert.True(t, found, "Unable to find created identity %s in eventually consistent results.", another.ID)
+				}, 15*time.Second, 200*time.Millisecond)
 			})
 		})
 

@@ -45,6 +45,7 @@ import (
 	"github.com/ory/kratos/x"
 	"github.com/ory/pop/v6"
 	"github.com/ory/pop/v6/logging"
+	"github.com/ory/x/configx"
 	"github.com/ory/x/dbal"
 	"github.com/ory/x/popx"
 	"github.com/ory/x/sqlcon"
@@ -141,7 +142,13 @@ func setupDatabase(t testing.TB, name string) string {
 func TestPersister(t *testing.T) {
 	t.Parallel()
 
-	ctx := testhelpers.WithDefaultIdentitySchema(t.Context(), "file://./stub/identity.schema.json")
+	ctx := t.Context()
+	// Bake the default identity schema into each registry's base config below
+	// instead of layering it onto ctx. A context overlay makes
+	// TestConfigProvider.Config rebuild the whole koanf tree on every config read
+	// (the same reason identity.TestPool bakes PoolConfigValues), which the
+	// contracts here would otherwise pay on every read.
+	defaultSchema := configx.WithValues(testhelpers.DefaultIdentitySchemaConfig("file://./stub/identity.schema.json"))
 
 	for _, name := range dbNames {
 		t.Run(fmt.Sprintf("database=%s", name), func(t *testing.T) {
@@ -172,7 +179,7 @@ func TestPersister(t *testing.T) {
 					go func() {
 						defer wg.Done()
 
-						_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+						_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 						_, ps := testhelpers.NewNetwork(t, ctx, reg.Persister())
 						id := ri.NewIdentity("")
 						id.SetCredentials(ri.CredentialsTypePassword, ri.Credentials{
@@ -197,7 +204,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				for _, ct := range []ri.CredentialsType{ri.CredentialsTypeOIDC, ri.CredentialsTypePassword} {
 					require.NoError(t, p.(*sql.Persister).Connection(t.Context()).Where("name = ?", ct).First(&ri.CredentialsTypeTable{}))
@@ -212,7 +219,11 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				// Unlike the sibling contracts (which bake only the single default
+				// identity schema via defaultSchema), this contract needs the full
+				// PoolConfigValues schema set baked into the registry's base config.
+				ctx := t.Context()
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, configx.WithValues(identity.PoolConfigValues()))
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				identity.TestPool(ctx, p, reg.IdentityManager(), name)(t)
 			})
@@ -224,7 +235,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				registration.TestFlowPersister(ctx, p)(t)
 			})
@@ -236,7 +247,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				errorx.TestPersister(ctx, p)(t)
 			})
@@ -248,7 +259,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				login.TestFlowPersister(ctx, p)(t)
 			})
@@ -260,7 +271,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				settings.TestFlowPersister(ctx, p)(t)
 			})
@@ -272,7 +283,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				session.TestPersister(ctx, reg.Config(), p)(t)
 			})
@@ -284,7 +295,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				sessiontokenexchange.TestPersister(ctx, p)(t)
 			})
@@ -296,7 +307,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				upsert, insert := sqltesthelpers.DefaultNetworkWrapper(p)
 				courier.TestPersister(ctx, upsert, insert)(t)
@@ -309,7 +320,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				verification.TestFlowPersister(ctx, p)(t)
 			})
@@ -321,7 +332,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				recovery.TestFlowPersister(ctx, p)(t)
 			})
@@ -333,7 +344,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				link.TestPersister(ctx, p)(t)
 			})
@@ -345,7 +356,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				code.TestPersister(ctx, p)(t)
 			})
@@ -357,7 +368,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				continuity.TestPersister(ctx, p)(t)
 			})
@@ -369,7 +380,7 @@ func TestPersister(t *testing.T) {
 					dsn = dbal.NewSQLiteTestDatabase(t)
 				}
 
-				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn)
+				_, reg := pkg.NewRegistryDefaultWithDSN(t, dsn, defaultSchema)
 				_, p := testhelpers.NewNetwork(t, ctx, reg.Persister())
 				batch.TestPersister(ctx, reg.Tracer(ctx), p)(t)
 			})
