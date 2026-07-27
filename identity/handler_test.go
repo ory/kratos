@@ -2151,6 +2151,82 @@ func TestHandler(t *testing.T) {
 		}
 	})
 
+	t.Run("case=PATCH should fail if oidc credential node is replaced", func(t *testing.T) {
+		email := x.NewUUID().String() + "@ory.sh"
+		i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+		i.SetCredentials(identity.CredentialsTypeOIDC, identity.Credentials{
+			Type:        identity.CredentialsTypeOIDC,
+			Identifiers: []string{"some-provider:" + email},
+			Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "some-provider", "subject": "` + email + `"}]}`),
+		})
+		require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+		for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+			t.Run("endpoint="+name, func(t *testing.T) {
+				patch := []patch{
+					{"op": "replace", "path": "/credentials/oidc", "value": map[string]any{
+						"type":        "oidc",
+						"identifiers": []string{"evil-provider:attacker"},
+						"config":      map[string]any{"providers": []any{map[string]any{"provider": "evil-provider", "subject": "attacker"}}},
+					}},
+				}
+
+				res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
+				assert.EqualValues(t, "patch includes denied path: /credentials/oidc", res.Get("error.message").String(), "%s", res.Raw)
+
+				// The rejected patch must not mutate the stored credential.
+				after, err := reg.PrivilegedIdentityPool().GetIdentityConfidential(t.Context(), i.ID)
+				require.NoError(t, err)
+				assert.Equal(t, "some-provider",
+					gjson.GetBytes(after.Credentials[identity.CredentialsTypeOIDC].Config, "providers.0.provider").String())
+			})
+		}
+	})
+
+	t.Run("case=PATCH should fail if saml credential is patched", func(t *testing.T) {
+		for _, tc := range []struct {
+			name  string
+			path  string
+			value any
+		}{
+			{
+				name: "node replace",
+				path: "/credentials/saml",
+				value: map[string]any{
+					"type":        "saml",
+					"identifiers": []string{"saml-provider:attacker"},
+					"config":      map[string]any{"providers": []any{map[string]any{"provider": "saml-provider", "subject": "attacker"}}},
+				},
+			},
+			{
+				name:  "sub-path replace",
+				path:  "/credentials/saml/config/providers/0/subject",
+				value: "attacker",
+			},
+		} {
+			t.Run("case="+tc.name, func(t *testing.T) {
+				email := uuid.NewV5(uuid.Nil, t.Name()).String() + "@ory.sh"
+				i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}
+				i.SetCredentials(identity.CredentialsTypeSAML, identity.Credentials{
+					Type:        identity.CredentialsTypeSAML,
+					Identifiers: []string{"saml-provider:" + email},
+					Config:      sqlxx.JSONRawMessage(`{"providers": [{"provider": "saml-provider", "subject": "` + email + `"}]}`),
+				})
+				require.NoError(t, reg.PrivilegedIdentityPool().CreateIdentity(context.Background(), i))
+
+				for name, ts := range map[string]*httptest.Server{"public": publicTS, "admin": adminTS} {
+					t.Run("endpoint="+name, func(t *testing.T) {
+						patch := []patch{
+							{"op": "replace", "path": tc.path, "value": tc.value},
+						}
+						res := send(t, ts, "PATCH", "/identities/"+i.ID.String(), http.StatusBadRequest, &patch)
+						assert.EqualValues(t, "patch includes denied path: "+tc.path, res.Get("error.message").String(), "%s", res.Raw)
+					})
+				}
+			})
+		}
+	})
+
 	t.Run("case=PATCH should allow to update credential password", func(t *testing.T) {
 		email := uuid.NewV5(uuid.Nil, t.Name()).String() + "@ory.sh"
 		i := &identity.Identity{Traits: identity.Traits(`{"email":"` + email + `"}`)}

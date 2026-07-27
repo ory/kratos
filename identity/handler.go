@@ -1291,7 +1291,7 @@ func (h *Handler) patch(w http.ResponseWriter, r *http.Request) {
 
 	oldState := ident.State
 
-	patchedIdentity, err := jsonx.ApplyJSONPatch(filteredPatch, WithCredentialsAndAdminMetadataInJSON(*ident), "/id", "/stateChangedAt", "/credentials", "/credentials/oidc/**")
+	patchedIdentity, err := jsonx.ApplyJSONPatch(filteredPatch, WithCredentialsAndAdminMetadataInJSON(*ident), "/id", "/stateChangedAt", "/credentials", "/credentials/oidc", "/credentials/oidc/**", "/credentials/saml", "/credentials/saml/**")
 	if err != nil {
 		h.r.Writer().WriteError(w, r, errors.WithStack(
 			herodot.ErrBadRequest().
