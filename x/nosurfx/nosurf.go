@@ -33,7 +33,7 @@ func ErrInvalidCSRFToken() *herodot.DefaultError {
 	return herodot.ErrForbidden().
 		WithID(text.ErrIDCSRF).
 		WithError("the request was rejected to protect you from Cross-Site-Request-Forgery").
-		WithDetail("docs", "https://www.ory.sh/kratos/docs/debug/csrf").
+		WithDetail("docs", "https://www.ory.com/docs/troubleshooting/csrf").
 		WithReason("Please retry the flow and optionally clear your cookies. The request was rejected to protect you from Cross-Site-Request-Forgery (CSRF) which could cause account takeover, leaking personal information, and other serious security issues.")
 }
 
