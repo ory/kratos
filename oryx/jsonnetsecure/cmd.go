@@ -96,7 +96,7 @@ func eval(input []byte) (json string, err error) {
 		return "", err
 	}
 
-	vm := MakeSecureVM()
+	vm := MakeInProcessVM()
 
 	for _, it := range params.ExtCodes {
 		vm.ExtCode(it.Key, it.Value)

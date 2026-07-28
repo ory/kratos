@@ -50,6 +50,8 @@ type (
 	}
 	Pool interface {
 		Close()
+		// Stat returns a snapshot of the worker pool's statistics.
+		Stat() *puddle.Stat
 		private()
 	}
 	pool struct {
@@ -107,6 +109,10 @@ func (*pool) private() {}
 
 func (p *pool) Close() {
 	p.puddle.Close()
+}
+
+func (p *pool) Stat() *puddle.Stat {
+	return p.puddle.Stat()
 }
 
 func newWorker(ctx context.Context) (_ worker, err error) {
