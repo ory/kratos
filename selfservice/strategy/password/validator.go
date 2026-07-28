@@ -164,8 +164,12 @@ func (s *DefaultPasswordValidator) fetch(ctx context.Context, hpw []byte, apiDNS
 		}
 	}
 
+	// A read that fails after the response headers arrived (connection reset,
+	// client timeout, truncated body) is as much a network failure as a failed
+	// request, so it has to be classified as one to stay subject to
+	// ignore_network_errors.
 	if err := sc.Err(); err != nil {
-		return 0, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to initialize string scanner: %s", err))
+		return 0, errors.Wrapf(ErrNetworkFailure, "unable to read the response body: %s", err)
 	}
 
 	s.hashes.SetWithTTL(b20(hpw), thisCount, 1, hashCacheItemTTL)

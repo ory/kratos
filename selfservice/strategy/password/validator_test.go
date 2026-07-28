@@ -154,6 +154,18 @@ func TestDefaultPasswordValidationStrategy(t *testing.T) {
 			fakeClient.RespondWith(http.StatusInternalServerError, "")
 			require.NoError(t, s.Validate(ctx, "", "jenuzuhjoj"))
 		})
+
+		t.Run("case=should fail with a network error if reading the response body fails and ignoreNetworkErrors is not set", func(t *testing.T) {
+			ctx := contextx.WithConfigValue(t.Context(), config.ViperKeyIgnoreNetworkErrors, false)
+			fakeClient.RespondWithBodyError("003D68EB55068C33ACE09247EE4C639306B:3\n", errBodyRead)
+			require.ErrorIs(t, s.Validate(ctx, "", "vebjihwoct"), password.ErrNetworkFailure)
+		})
+
+		t.Run("case=should not fail if reading the response body fails and ignoreNetworkErrors is set", func(t *testing.T) {
+			ctx := contextx.WithConfigValue(t.Context(), config.ViperKeyIgnoreNetworkErrors, true)
+			fakeClient.RespondWithBodyError("003D68EB55068C33ACE09247EE4C639306B:3\n", errBodyRead)
+			require.NoError(t, s.Validate(ctx, "", "hufzeqmalt"))
+		})
 	})
 
 	t.Run("max breaches", func(t *testing.T) {
@@ -411,6 +423,19 @@ func (c *fakeHttpClient) RespondWithError(err string) {
 	}
 }
 
+// RespondWithBodyError responds with a status 200 whose body yields prefix and
+// then fails, mimicking a connection reset or a client timeout that only hits
+// once the response is already being read.
+func (c *fakeHttpClient) RespondWithBodyError(prefix string, err error) {
+	c.responder = func(request *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(io.MultiReader(strings.NewReader(prefix), errorReader{err})),
+			Request:    request,
+		}, nil
+	}
+}
+
 func (c *fakeHttpClient) Reset() {
 	c.requestedURLs = nil
 }
@@ -434,3 +459,11 @@ type fakeRoundTripper struct {
 func (rt *fakeRoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
 	return rt.client.handle(request)
 }
+
+// errBodyRead is the error net/http returns from a response body read when the
+// client's timeout fires after the response headers have been received.
+var errBodyRead = errors.New("net/http: request canceled (Client.Timeout or context cancellation while reading body)")
+
+type errorReader struct{ err error }
+
+func (r errorReader) Read([]byte) (int, error) { return 0, r.err }
