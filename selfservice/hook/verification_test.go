@@ -30,6 +30,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/sqlxx"
 	"github.com/ory/x/urlx"
@@ -113,6 +114,8 @@ func TestVerifier(t *testing.T) {
 						require.NotEmpty(t, expectedVerificationFlow.SessionID.UUID)
 						require.NotEmpty(t, expectedVerificationFlow.IdentityID.UUID)
 						require.NotNil(t, expectedVerificationFlow.UI.Nodes.Find("email"))
+						require.Len(t, expectedVerificationFlow.UI.Messages, 1)
+						require.Equal(t, text.InfoSelfServiceVerificationEmailWithCodeSent, expectedVerificationFlow.UI.Messages[0].ID)
 
 						messages, err := reg.CourierPersister().NextMessages(context.Background(), 12)
 						require.NoError(t, err)

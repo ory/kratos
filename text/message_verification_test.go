@@ -24,3 +24,22 @@ func TestNewErrorValidationVerificationFlowExpired(t *testing.T) {
 	assert.Equal(t, ErrorValidationVerificationFlowExpired, msg.ID)
 	assert.Equal(t, "The verification flow expired 2.00 minutes ago, please try again.", msg.Text)
 }
+
+func TestVerificationCodeSentMessage(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		via    string
+		wantID ID
+	}{
+		{via: "sms", wantID: InfoSelfServiceVerificationPhoneWithCodeSent},
+		{via: "email", wantID: InfoSelfServiceVerificationEmailWithCodeSent},
+		// Any unknown channel falls back to the email message.
+		{via: "", wantID: InfoSelfServiceVerificationEmailWithCodeSent},
+	} {
+		t.Run("via="+tc.via, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.wantID, VerificationCodeSentMessage(tc.via).ID)
+		})
+	}
+}

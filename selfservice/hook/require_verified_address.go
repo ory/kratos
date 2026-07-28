@@ -116,6 +116,14 @@ func (e *AddressVerifier) ExecuteLoginPostHook(w http.ResponseWriter, r *http.Re
 			}
 		}
 
+		// The code strategy's PopulateVerificationMethod sets the email "code sent"
+		// message unconditionally; override it with the message that matches the
+		// channel the code was sent over. The legacy link strategy sends a link,
+		// not a code, and sets no message — leave it untouched.
+		if primaryStrategy.NodeGroup() == node.CodeGroup {
+			verificationFlow.UI.Messages.Set(text.VerificationCodeSentMessage(address.Via))
+		}
+
 		verificationFlow.SessionID = uuid.NullUUID{UUID: s.ID, Valid: true}
 		verificationFlow.IdentityID = uuid.NullUUID{UUID: s.Identity.ID, Valid: true}
 

@@ -24,6 +24,7 @@ import (
 	"github.com/ory/kratos/selfservice/flow/settings"
 	"github.com/ory/kratos/selfservice/hook"
 	"github.com/ory/kratos/session"
+	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/contextx"
@@ -488,5 +489,118 @@ func TestVerifyNewAddress(t *testing.T) {
 
 		// The flow should contain the too-many-address-changes error message.
 		require.NotEmpty(t, f.UI.Messages)
+	})
+
+	t.Run("case=SMS verification flow shows the phone code-sent message, not the email one", func(t *testing.T) {
+		t.Parallel()
+		ctx, h, reg := setup(t)
+		ctx = testhelpers.WithDefaultIdentitySchema(ctx, "file://./stub/verify_email_and_phone.schema.json")
+		// Configure an SMS courier channel so the verification code can be queued for a phone number.
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeyCourierChannels, []map[string]any{
+			{"id": "sms", "type": "http", "request_config": map[string]any{
+				"url":    "http://localhost:1234/sms",
+				"method": "POST",
+				"body":   "base64://ZnVuY3Rpb24oY3R4KSBjdHg=",
+			}},
+		})
+
+		original := identity.NewIdentity(config.DefaultIdentityTraitsSchemaID)
+		original.Traits = identity.Traits(`{"email":"sms-msg@example.com","phone":"+10000000000","name":"Test"}`)
+		require.NoError(t, reg.IdentityManager().Create(ctx, original))
+		original = verifyAllAddresses(t, ctx, reg, original)
+
+		f := newSettingsFlow(t, *original)
+		require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(ctx, f))
+
+		// Proposed: email unchanged, phone changed to a new, unowned number.
+		const newPhone = "+19876543210"
+		proposed := &identity.Identity{
+			ID:     original.ID,
+			Traits: identity.Traits(`{"email":"sms-msg@example.com","phone":"` + newPhone + `","name":"Test"}`),
+			VerifiableAddresses: []identity.VerifiableAddress{
+				{Value: "sms-msg@example.com", Via: identity.AddressTypeEmail, IdentityID: original.ID},
+				{Value: newPhone, Via: identity.AddressTypeSMS, IdentityID: original.ID},
+			},
+		}
+
+		sess := &session.Session{
+			ID:              x.NewUUID(),
+			Identity:        original,
+			Token:           randx.MustString(12, randx.AlphaLowerNum),
+			LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+			AuthenticatedAt: time.Now(),
+		}
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+		r := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+		r = r.WithContext(ctx)
+		w := httptest.NewRecorder()
+
+		err := h.ExecuteSettingsPrePersistHook(w, r, settings.PostHookPrePersistExecutorParams{
+			Flow:     f,
+			Identity: proposed,
+			Session:  sess,
+		})
+		require.True(t, errors.Is(err, settings.ErrHookAbortFlow), "expected ErrHookAbortFlow, got: %v", err)
+
+		require.NotEmpty(t, f.ContinueWith(), "settings flow should redirect to verification")
+		vfID := f.ContinueWith()[0].(*flow.ContinueWithVerificationUI).Flow.ID
+		vf, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, vfID)
+		require.NoError(t, err)
+
+		// An SMS verification must show only the phone "code has been sent" message,
+		// never the email wording.
+		require.Len(t, vf.UI.Messages, 1, "expected exactly one code-sent message")
+		assert.Equal(t, text.InfoSelfServiceVerificationPhoneWithCodeSent, vf.UI.Messages[0].ID)
+	})
+
+	t.Run("case=link strategy verification flow does not claim a code was sent", func(t *testing.T) {
+		t.Parallel()
+		ctx, h, reg := setup(t)
+		// Use the legacy link strategy as the primary verification method. It
+		// delivers a link, not a code, and sets no "code sent" message.
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+".link.enabled", true)
+		ctx = contextx.WithConfigValue(ctx, config.ViperKeySelfServiceVerificationUse, "link")
+
+		original := createIdentity(t, ctx, reg, "link-msg@example.com", true)
+
+		f := newSettingsFlow(t, *original)
+		require.NoError(t, reg.SettingsFlowPersister().CreateSettingsFlow(ctx, f))
+
+		const newEmail = "link-msg-new@example.com"
+		proposed := &identity.Identity{
+			ID:     original.ID,
+			Traits: identity.Traits(`{"email":"` + newEmail + `","name":"Test"}`),
+			VerifiableAddresses: []identity.VerifiableAddress{
+				{Value: newEmail, Via: identity.AddressTypeEmail, IdentityID: original.ID},
+			},
+		}
+
+		sess := &session.Session{
+			ID:              x.NewUUID(),
+			Identity:        original,
+			Token:           randx.MustString(12, randx.AlphaLowerNum),
+			LogoutToken:     randx.MustString(12, randx.AlphaLowerNum),
+			AuthenticatedAt: time.Now(),
+		}
+		require.NoError(t, reg.SessionPersister().UpsertSession(ctx, sess))
+		r := &http.Request{URL: urlx.ParseOrPanic("https://www.ory.sh/")}
+		r = r.WithContext(ctx)
+		w := httptest.NewRecorder()
+
+		err := h.ExecuteSettingsPrePersistHook(w, r, settings.PostHookPrePersistExecutorParams{
+			Flow:     f,
+			Identity: proposed,
+			Session:  sess,
+		})
+		require.True(t, errors.Is(err, settings.ErrHookAbortFlow), "expected ErrHookAbortFlow, got: %v", err)
+
+		require.NotEmpty(t, f.ContinueWith(), "settings flow should redirect to verification")
+		vfID := f.ContinueWith()[0].(*flow.ContinueWithVerificationUI).Flow.ID
+		vf, err := reg.VerificationFlowPersister().GetVerificationFlow(ctx, vfID)
+		require.NoError(t, err)
+
+		// A link was sent, not a code — the flow must not carry a "code has
+		// been sent" message.
+		require.Empty(t, vf.UI.Messages, "link strategy flows must not claim a code was sent")
 	})
 }

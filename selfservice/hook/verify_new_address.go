@@ -155,6 +155,14 @@ func (e *VerifyNewAddress) execute(
 		return err
 	}
 
+	// The code strategy's PopulateVerificationMethod sets the email "code sent"
+	// message unconditionally; override it with the message that matches the
+	// channel the code was sent over. The legacy link strategy sends a link,
+	// not a code, and sets no message — leave it untouched.
+	if primaryStrategy.NodeGroup() == node.CodeGroup {
+		verificationFlow.UI.Messages.Set(text.VerificationCodeSentMessage(addr.Via))
+	}
+
 	verificationFlow.UI.Nodes.Append(
 		node.NewInputField(addr.Via, addr.Value, node.CodeGroup, node.InputAttributeTypeSubmit).
 			WithMetaLabel(text.NewInfoNodeResendOTP()),

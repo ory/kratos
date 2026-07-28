@@ -261,10 +261,9 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 		return s.handleVerificationError(r, f, body, err)
 	}
 
-	if via == identity.AddressTypeSMS {
-		f.UI.Messages.Clear()
-		f.UI.Messages.Add(text.NewVerificationPhoneWithCodeSent())
-	}
+	// PopulateVerificationMethod sets the email "code sent" message unconditionally.
+	// Override it with the message that matches the channel the code was sent over.
+	f.UI.Messages.Set(text.VerificationCodeSentMessage(via))
 
 	if body.Email != "" {
 		f.UI.Nodes.Append(
