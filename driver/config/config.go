@@ -131,6 +131,7 @@ const (
 	ViperKeySelfServiceLoginFlowStyle                        = "selfservice.flows.login.style"
 	ViperKeySecurityAccountEnumerationMitigate               = "security.account_enumeration.mitigate"
 	ViperKeySecurityDisallowRefInIdentitySchemas             = "security.disallow_ref_in_identity_schemas"
+	ViperKeySecurityAllowSecretURIsInOIDCConfig              = "security.allow_secret_uris_in_oidc_config"
 	ViperKeySelfServiceLoginRequestLifespan                  = "selfservice.flows.login.lifespan"
 	ViperKeySelfServiceLoginAfter                            = "selfservice.flows.login.after"
 	ViperKeySelfServiceLoginBeforeHooks                      = "selfservice.flows.login.before.hooks"
@@ -1729,4 +1730,8 @@ func (p *Config) SecurityAccountEnumerationMitigate(ctx context.Context) bool {
 
 func (p *Config) SecurityDisallowRefInIdentitySchemas(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeySecurityDisallowRefInIdentitySchemas)
+}
+
+func (p *Config) SecurityAllowSecretURIsInOIDCConfig(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeySecurityAllowSecretURIsInOIDCConfig)
 }

@@ -506,7 +506,14 @@
           "type": "string"
         },
         "client_secret": {
-          "type": "string"
+          "title": "Client Secret",
+          "description": "The client secret. If `security.allow_secret_uris_in_oidc_config` is enabled, the value may also be given as a `file://` or `base64://` URI, which is resolved to the referenced value when the provider is used. A value resolved this way must not be empty.",
+          "type": "string",
+          "examples": [
+            "client-secret",
+            "file:///etc/secrets/oidc/acme",
+            "base64://Y2xpZW50LXNlY3JldA=="
+          ]
         },
         "issuer_url": {
           "type": "string",
@@ -575,10 +582,11 @@
         },
         "apple_private_key": {
           "title": "Apple Private Key",
-          "description": "Sign In with Apple Private Key needed for generating a JWT token for client secret",
+          "description": "Sign In with Apple Private Key needed for generating a JWT token for client secret. If `security.allow_secret_uris_in_oidc_config` is enabled, the value may also be given as a `file://` or `base64://` URI, which is resolved to the referenced value when the provider is used.",
           "type": "string",
           "examples": [
-            "-----BEGIN PRIVATE KEY-----\n........\n-----END PRIVATE KEY-----"
+            "-----BEGIN PRIVATE KEY-----\n........\n-----END PRIVATE KEY-----",
+            "file:///etc/secrets/oidc/apple_private_key.pem"
           ]
         },
         "requested_claims": {
@@ -3074,6 +3082,12 @@
         "disallow_ref_in_identity_schemas": {
           "title": "Disallow external `$ref` resolution in identity schemas",
           "description": "If true, `$ref` URLs inside identity schemas may not resolve to `file://`, `http://`, or `https://` sources. This blocks server-side file reads (`file://`) and server-side request forgery (`http(s)://`) via malicious identity schemas. Internal JSON-pointer refs (`#/definitions/...`) and self-contained `base64://` refs remain allowed. Leave at the default (false) to preserve existing behavior for operators who intentionally reference external schemas. Ory Network forces this to true.",
+          "type": "boolean",
+          "default": false
+        },
+        "allow_secret_uris_in_oidc_config": {
+          "title": "Allow `file://` and `base64://` values in OIDC provider secrets",
+          "description": "If true, the `client_secret` and `apple_private_key` of an OpenID Connect provider may be given as a `file://` or `base64://` URI, which is resolved to the referenced value when the provider is used. Enable this to keep provider secrets out of the rendered configuration, for example when the configuration is stored in a Kubernetes ConfigMap. Leave at the default (false) if the provider configuration is written by parties who must not be able to read files from the host's filesystem; with the default, such values are passed through verbatim.",
           "type": "boolean",
           "default": false
         }

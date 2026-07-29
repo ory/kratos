@@ -4,6 +4,7 @@
 package oidc
 
 import (
+	"context"
 	"encoding/json"
 	"maps"
 	"net/url"
@@ -232,6 +233,80 @@ type ConfigurationCollection struct {
 	Providers       []Configuration `json:"providers"`
 }
 
+// configSecretSchemes are the fetcher schemes a secret-valued provider field
+// may use to reference its value indirectly, guarded by the
+// security.allow_secret_uris_in_oidc_config setting. Remote schemes are not
+// supported because resolution runs whenever the provider is used.
+var configSecretSchemes = []string{"file", "base64"}
+
+func configSecretScheme(value string) (string, bool) {
+	for _, scheme := range configSecretSchemes {
+		if strings.HasPrefix(value, scheme+"://") {
+			return scheme, true
+		}
+	}
+
+	return "", false
+}
+
+// resolveConfigSecrets replaces every secret-valued field expressed as one of
+// configSecretSchemes with the value it points to, mirroring the indirection
+// mapper_url already supports. Values without a supported scheme are left
+// untouched. Resolved values are not cached, so rotating the source takes
+// effect without a restart.
+func (s *Strategy) resolveConfigSecrets(ctx context.Context, p *Configuration) error {
+	for _, field := range []struct {
+		name  string
+		value *string
+	}{
+		{"client_secret", &p.ClientSecret},
+		{"apple_private_key", &p.PrivateKey},
+	} {
+		if err := s.resolveConfigSecret(ctx, p.ID, field.name, field.value); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Strategy) resolveConfigSecret(ctx context.Context, providerID, field string, value *string) error {
+	scheme, ok := configSecretScheme(*value)
+	if !ok {
+		return nil
+	}
+
+	read, err := s.configSecretFetcher.FetchContext(ctx, *value)
+	if err != nil {
+		// The fetcher's error contains the source (a file path, or a redacted
+		// base64 payload). It is logged for the operator but kept out of the
+		// herodot error entirely: both the reason and the debug field are
+		// serialized into the response returned to the client that triggered
+		// the flow.
+		s.d.Logger().WithError(err).
+			WithField("provider", providerID).WithField("field", field).
+			Error("Unable to resolve a secret reference in the OpenID Connect provider configuration.")
+		return errors.WithStack(herodot.ErrMisconfiguration().
+			WithReasonf("Unable to resolve the %s configured for OpenID Connect Provider %q.", field, providerID).
+			WithWrap(err))
+	}
+
+	resolved := read.String()
+	if scheme == "file" {
+		// Files created with echo or kubectl typically end in one newline that
+		// is not part of the secret; base64:// decodes to exact bytes.
+		resolved = strings.TrimSuffix(resolved, "\n")
+		resolved = strings.TrimSuffix(resolved, "\r")
+	}
+	if resolved == "" {
+		return errors.WithStack(herodot.ErrMisconfiguration().WithReasonf(
+			"The %s resolved for OpenID Connect Provider %q is empty.", field, providerID))
+	}
+
+	*value = resolved
+	return nil
+}
+
 // !!! WARNING !!!
 //
 // If you add a provider here, please also add a test to
@@ -266,15 +341,35 @@ var supportedProviders = map[string]func(config *Configuration, reg Dependencies
 	"uaepass":     NewProviderUAEPass,
 }
 
-func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {
+// ProviderConfig returns a copy of the configuration for the provider with the
+// given id, so that callers may modify it without affecting the collection.
+// Secret-valued fields are returned as configured and may still contain
+// unresolved file:// or base64:// references.
+func (c ConfigurationCollection) ProviderConfig(id string) (*Configuration, error) {
 	for _, p := range c.Providers {
 		if p.ID == id {
-			if f, ok := supportedProviders[p.Provider]; ok {
-				return f(&p, reg), nil
-			}
-
-			return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, maps.Keys(supportedProviders))
+			return &p, nil
 		}
 	}
 	return nil, errors.WithStack(herodot.ErrNotFound().WithReasonf(`OpenID Connect Provider "%s" is unknown or has not been configured`, id))
+}
+
+// Provider constructs the provider with the given id for enumeration purposes
+// (listing providers, rendering forms, looking up labels). Secret-valued fields
+// are not resolved: a provider that will perform an OAuth2 exchange must be
+// obtained via (*Strategy).Provider instead.
+func (c ConfigurationCollection) Provider(id string, reg Dependencies) (Provider, error) {
+	p, err := c.ProviderConfig(id)
+	if err != nil {
+		return nil, err
+	}
+	return newProviderFromConfig(p, reg)
+}
+
+func newProviderFromConfig(p *Configuration, reg Dependencies) (Provider, error) {
+	if f, ok := supportedProviders[p.Provider]; ok {
+		return f(p, reg), nil
+	}
+
+	return nil, errors.Errorf("provider type %s is not supported, supported are: %v", p.Provider, maps.Keys(supportedProviders))
 }
