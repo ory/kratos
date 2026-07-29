@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/configx"
 )
@@ -36,7 +35,7 @@ You can read in the database URL using the -e flag, for example:
 Before running this command on an existing database, create a back up!
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := cliclient.NewNormalizePhoneHandler().NormalizePhoneNumbers(cmd, args, opts...)
+			err := NewNormalizePhoneHandler().NormalizePhoneNumbers(cmd, args, opts...)
 			if err != nil {
 				_, _ = fmt.Fprintln(cmd.ErrOrStderr(), err)
 				return err

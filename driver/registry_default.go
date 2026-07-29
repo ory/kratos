@@ -54,6 +54,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
+	"github.com/ory/kratos/x/transaction"
 	"github.com/ory/kratos/x/webauthnx"
 	"github.com/ory/nosurf"
 	"github.com/ory/pop/v6"
@@ -857,7 +858,7 @@ func (m *RegistryDefault) PendingTraitsChangePersister() identity.PendingTraitsC
 	return m.Persister()
 }
 
-func (m *RegistryDefault) TransactionalPersisterProvider() x.TransactionalPersister {
+func (m *RegistryDefault) TransactionalPersisterProvider() transaction.Persister {
 	return m.persister
 }
 

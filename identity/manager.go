@@ -29,6 +29,7 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/kratos/schema"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/transaction"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
 	"github.com/ory/x/popx"
@@ -50,7 +51,7 @@ type (
 		ValidationProvider
 		ActiveCredentialsCounterStrategyProvider
 		logrusx.Provider
-		x.TransactionPersistenceProvider
+		transaction.PersistenceProvider
 		PendingTraitsChangePersistenceProvider
 		template.Dependencies
 	}

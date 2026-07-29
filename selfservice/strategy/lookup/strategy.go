@@ -23,6 +23,7 @@ import (
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/transaction"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/otelx"
@@ -40,7 +41,7 @@ type dependencies interface {
 	httpx.WriterProvider
 	nosurfx.CSRFTokenGeneratorProvider
 	nosurfx.CSRFProvider
-	x.TransactionPersistenceProvider
+	transaction.PersistenceProvider
 	otelx.Provider
 
 	config.Provider

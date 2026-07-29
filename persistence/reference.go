@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/transaction"
 
 	"github.com/ory/kratos/selfservice/sessiontokenexchange"
 	"github.com/ory/x/networkx"
@@ -66,7 +66,7 @@ type Persister interface {
 	MigrationBox() *popx.MigrationBox
 	GetConnection(context.Context) *pop.Connection
 	Connection(ctx context.Context) *pop.Connection
-	x.TransactionalPersister
+	transaction.Persister
 	Networker
 }
 

@@ -10,7 +10,7 @@ import (
 
 	"github.com/ory/x/flagx"
 
-	"github.com/ory/x/pagination/keysetpagination"
+	"github.com/ory/x/pagination/keysetclient"
 
 	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/x/cmdx"
@@ -65,7 +65,7 @@ Eventual consistency means that the list operation will return faster and might 
 				return cmdx.PrintOpenAPIError(cmd, err)
 			}
 
-			pages := keysetpagination.ParseHeader(res)
+			pages := keysetclient.ParseHeader(res)
 			cmdx.PrintTable(cmd, &outputIdentityCollection{
 				Identities:       identities,
 				NextPageToken:    pages.NextToken,

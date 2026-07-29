@@ -13,7 +13,6 @@ import (
 
 	"github.com/ory/kratos/driver/config"
 
-	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/x/configx"
 )
 
@@ -32,7 +31,7 @@ You can read in the database URL using the -e flag, for example:
 Before running this command on an existing database, create a back up!
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			err := cliclient.NewCleanupHandler().CleanupSQL(cmd, args)
+			err := NewCleanupHandler().CleanupSQL(cmd, args)
 			if err != nil {
 				_, _ = fmt.Fprintln(cmd.OutOrStdout(), err)
 				return cmdx.FailSilently(cmd)

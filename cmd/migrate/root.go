@@ -6,7 +6,6 @@ package migrate
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/ory/kratos/cmd/cliclient"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/x/configx"
 	"github.com/ory/x/popx"
@@ -31,18 +30,18 @@ func RegisterCommandRecursive(parent *cobra.Command) {
 
 func NewMigrateSQLDownCmd(opts ...driver.RegistryOption) *cobra.Command {
 	return popx.NewMigrateSQLDownCmd(func(cmd *cobra.Command, args []string) error {
-		return cliclient.NewMigrateHandler().MigrateSQLDown(cmd, args, opts...)
+		return NewMigrateHandler().MigrateSQLDown(cmd, args, opts...)
 	})
 }
 
 func NewMigrateSQLUpCmd(opts ...driver.RegistryOption) *cobra.Command {
 	return popx.NewMigrateSQLUpCmd(func(cmd *cobra.Command, args []string) error {
-		return cliclient.NewMigrateHandler().MigrateSQLUp(cmd, args, opts...)
+		return NewMigrateHandler().MigrateSQLUp(cmd, args, opts...)
 	})
 }
 
 func NewMigrateSQLStatusCmd(opts ...driver.RegistryOption) *cobra.Command {
 	return popx.NewMigrateSQLStatusCmd(func(cmd *cobra.Command, args []string) error {
-		return cliclient.NewMigrateHandler().MigrateSQLStatus(cmd, args, opts...)
+		return NewMigrateHandler().MigrateSQLStatus(cmd, args, opts...)
 	})
 }

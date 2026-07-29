@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	kratos "github.com/ory/kratos/pkg/httpclient"
-	"github.com/ory/kratos/x"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/stringsx"
 
@@ -87,7 +86,7 @@ To get an identity by its external ID, run:
 						Execute()
 				}
 
-				if x.SDKError(err) != nil {
+				if clihelpers.SDKError(err) != nil {
 					failed[id] = cmdx.PrintOpenAPIError(cmd, err)
 					continue
 				}

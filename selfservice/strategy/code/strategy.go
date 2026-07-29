@@ -38,6 +38,7 @@ import (
 	"github.com/ory/kratos/ui/container"
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/transaction"
 	"github.com/ory/x/clock"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/logrusx"
@@ -69,7 +70,7 @@ type (
 		httpx.WriterProvider
 		logrusx.Provider
 		otelx.Provider
-		x.TransactionPersistenceProvider
+		transaction.PersistenceProvider
 
 		config.Provider
 

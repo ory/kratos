@@ -43,6 +43,7 @@ import (
 
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/transaction"
 )
 
 func ErrNoAALAvailable() *herodot.DefaultError {
@@ -59,7 +60,7 @@ type (
 		logrusx.Provider
 		nosurfx.CSRFProvider
 		otelx.Provider
-		x.TransactionPersistenceProvider
+		transaction.PersistenceProvider
 		PersistenceProvider
 		sessiontokenexchange.PersistenceProvider
 	}

@@ -41,6 +41,7 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/x"
+	"github.com/ory/kratos/x/transaction"
 )
 
 type (
@@ -98,7 +99,7 @@ type (
 		logrusx.Provider
 		httpx.WriterProvider
 		otelx.Provider
-		x.TransactionPersistenceProvider
+		transaction.PersistenceProvider
 	}
 	HookExecutor struct {
 		d executorDependencies
