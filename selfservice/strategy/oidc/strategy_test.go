@@ -13,6 +13,8 @@ import (
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -333,6 +335,56 @@ func TestStrategy(t *testing.T) {
 				assertSystemErrorWithReason(t, res, body, http.StatusNotFound, "is unknown or has not been configured")
 			})
 		}
+	})
+
+	t.Run("case=client_secret is resolved from a file and reaches the token exchange", func(t *testing.T) {
+		// The Hydra client is created with a real secret, which is then only
+		// available through a file:// reference. If resolution did not wire
+		// through to the OAuth2 code exchange, Hydra would reject the client.
+		provider := newOIDCProvider(t, ts, hydraPublic, hydraAdmin, "file-secret")
+		secretPath := filepath.Join(t.TempDir(), "client_secret")
+		require.NoError(t, os.WriteFile(secretPath, []byte(provider.ClientSecret+"\n"), 0o600))
+		provider.ClientSecret = "file://" + secretPath
+		setProviderConfig(t, conf, provider)
+
+		conf.MustSet(t.Context(), config.ViperKeySecurityAllowSecretURIsInOIDCConfig, true)
+		t.Cleanup(func() {
+			conf.MustSet(t.Context(), config.ViperKeySecurityAllowSecretURIsInOIDCConfig, false)
+		})
+
+		subject := testhelpers.RandomEmail()
+		params := hydraFlowParams{subject: subject, scope: []string{"openid"}}
+
+		t.Run("step=browser registration", func(t *testing.T) {
+			r := newBrowserRegistrationFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "file-secret")
+			res, body := makeRequest(t, action, "file-secret", params, nil)
+			assertIdentity(t, res, body, subject, idTokenClaims{})
+		})
+
+		t.Run("step=API login", func(t *testing.T) {
+			f := newAPILoginFlow(t, returnTS.URL+"?return_session_token_exchange_code=true&return_to=/app_code", time.Minute)
+			action := assertFormValues(t, f.ID, "file-secret")
+			returnToURL := makeAPICodeFlowRequest(t, nil, action, "file-secret", params)
+
+			codeResponse, err := exchangeCodeForToken(t, sessiontokenexchange.Codes{
+				InitCode:     f.SessionTokenExchangeCode,
+				ReturnToCode: returnToURL.Query().Get("code"),
+			})
+			require.NoError(t, err)
+			assert.NotEmpty(t, codeResponse.Token)
+			assert.Equal(t, subject, gjson.GetBytes(codeResponse.Session.Identity.Traits, "subject").String())
+		})
+
+		t.Run("step=login fails when the secret file is removed", func(t *testing.T) {
+			require.NoError(t, os.Remove(secretPath))
+
+			r := newBrowserLoginFlow(t, returnTS.URL, time.Minute)
+			action := assertFormValues(t, r.ID, "file-secret")
+			res, body := makeRequest(t, action, "file-secret", params, nil)
+			assertSystemErrorWithReason(t, res, body, http.StatusInternalServerError, "Unable to resolve the client_secret")
+			assert.NotContains(t, string(body), secretPath, "the file path must not leak into the error response")
+		})
 	})
 
 	t.Run("case=should fail because the issuer is mismatching", func(t *testing.T) {

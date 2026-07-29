@@ -47,6 +47,7 @@ import (
 	"github.com/ory/kratos/x/nosurfx"
 	"github.com/ory/kratos/x/redir"
 	"github.com/ory/x/clock"
+	"github.com/ory/x/fetcher"
 	"github.com/ory/x/httprouterx"
 	"github.com/ory/x/httpx"
 	"github.com/ory/x/jsonnetsecure"
@@ -153,6 +154,7 @@ type Strategy struct {
 	credType                    identity.CredentialsType
 	handleUnknownProviderError  func(err error) error
 	handleMethodNotAllowedError func(err error) error
+	configSecretFetcher         *fetcher.Fetcher
 
 	conflictingIdentityPolicy ConflictingIdentityPolicy
 }
@@ -287,6 +289,7 @@ func NewStrategy(d Dependencies, opts ...NewStrategyOpt) *Strategy {
 		credType:                    identity.CredentialsTypeOIDC,
 		handleUnknownProviderError:  func(err error) error { return err },
 		handleMethodNotAllowedError: func(err error) error { return err },
+		configSecretFetcher:         fetcher.NewFetcher(fetcher.WithAllowedSchemes(configSecretSchemes...)),
 	}
 
 	for _, opt := range opts {
@@ -660,14 +663,38 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	return &c, nil
 }
 
+// Provider returns the provider with the given id, ready for use in an OAuth2
+// exchange: it is the only constructor that resolves file:// and base64://
+// references in secret-valued configuration fields (when
+// security.allow_secret_uris_in_oidc_config is enabled). Enumeration-only
+// callers should use ConfigurationCollection.Provider or ProviderConfig, which
+// perform no resolution and no file I/O.
 func (s *Strategy) Provider(ctx context.Context, id string) (Provider, error) {
-	if c, err := s.Config(ctx); err != nil {
+	c, err := s.Config(ctx)
+	if err != nil {
 		return nil, err
-	} else if provider, err := c.Provider(id, s.d); err != nil {
-		return nil, s.handleUnknownProviderError(err)
-	} else {
-		return provider, nil
 	}
+
+	p, err := c.ProviderConfig(id)
+	if err != nil {
+		return nil, s.handleUnknownProviderError(err)
+	}
+
+	// Secrets are resolved on the copy of the configuration held by this
+	// provider instance only, so that a broken reference fails flows using this
+	// provider without affecting other providers or provider enumeration.
+	if s.d.Config().SecurityAllowSecretURIsInOIDCConfig(ctx) {
+		if err := s.resolveConfigSecrets(ctx, p); err != nil {
+			return nil, err
+		}
+	}
+
+	provider, err := newProviderFromConfig(p, s.d)
+	if err != nil {
+		return nil, s.handleUnknownProviderError(err)
+	}
+
+	return provider, nil
 }
 
 func (s *Strategy) forwardError(ctx context.Context, w http.ResponseWriter, r *http.Request, f flow.Flow, err error) {
@@ -787,11 +814,16 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 func (s *Strategy) populateAccountLinkingUI(ctx context.Context, lf *login.Flow, usedProviderID string, duplicateIdentifier string, availableCredentials []string, availableProviders []string) {
 	newLoginURL := s.d.Config().SelfServiceFlowLoginUI(ctx).String()
 	usedProviderLabel := usedProviderID
-	provider, _ := s.Provider(ctx, usedProviderID)
-	if provider != nil && provider.Config() != nil {
-		usedProviderLabel = provider.Config().Label
+	if conf, err := s.Config(ctx); err != nil {
+		s.d.Logger().WithError(err).WithField("provider", usedProviderID).
+			Warn("Unable to load the OpenID Connect provider configuration while populating the account linking UI.")
+	} else if providerConfig, err := conf.ProviderConfig(usedProviderID); err != nil {
+		s.d.Logger().WithError(err).WithField("provider", usedProviderID).
+			Warn("Unable to find the OpenID Connect provider while populating the account linking UI.")
+	} else {
+		usedProviderLabel = providerConfig.Label
 		if usedProviderLabel == "" {
-			usedProviderLabel = provider.Config().Provider
+			usedProviderLabel = providerConfig.Provider
 		}
 	}
 	loginHintsEnabled := s.d.Config().SelfServiceFlowRegistrationLoginHints(ctx)
