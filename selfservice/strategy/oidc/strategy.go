@@ -653,7 +653,9 @@ func (s *Strategy) Config(ctx context.Context) (*ConfigurationCollection, error)
 	if err := json.
 		NewDecoder(bytes.NewBuffer(conf)).
 		Decode(&c); err != nil {
-		s.d.Logger().WithError(err).WithField("config", conf)
+		// The configuration itself is not logged: it holds every provider's
+		// client_secret.
+		s.d.Logger().WithError(err).Error("Unable to decode OpenID Connect Provider configuration.")
 		return nil, errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Unable to decode OpenID Connect Provider configuration: %s", err))
 	}
 
