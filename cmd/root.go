@@ -34,6 +34,7 @@ func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 	courier.RegisterCommandRecursive(cmd, driverOpts)
 	cmd.AddCommand(identities.NewGetCmd())
 	cmd.AddCommand(identities.NewDeleteCmd())
+	cmd.AddCommand(identities.NewPatchCmd())
 	cmd.AddCommand(jsonnet.NewFormatCmd())
 	hashers.RegisterCommandRecursive(cmd)
 	cmd.AddCommand(identities.NewImportCmd())
