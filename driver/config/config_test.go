@@ -1303,6 +1303,7 @@ func TestOAuth2Provider(t *testing.T) {
 		assert.Equal(t, "https://oauth2_provider/", conf.OAuth2ProviderURL(ctx).String())
 		assert.Equal(t, http.Header{"Authorization": {"Basic"}}, conf.OAuth2ProviderHeader(ctx))
 		assert.True(t, conf.OAuth2ProviderOverrideReturnTo(ctx))
+		assert.Equal(t, "external_id", conf.OAuth2ProviderSubjectSource(ctx))
 	})
 
 	t.Run("case=defaults", func(t *testing.T) {
@@ -1310,6 +1311,7 @@ func TestOAuth2Provider(t *testing.T) {
 		assert.Empty(t, conf.OAuth2ProviderURL(ctx))
 		assert.Empty(t, conf.OAuth2ProviderHeader(ctx))
 		assert.False(t, conf.OAuth2ProviderOverrideReturnTo(ctx))
+		assert.Equal(t, "id", conf.OAuth2ProviderSubjectSource(ctx))
 	})
 }
 

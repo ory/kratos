@@ -319,6 +319,7 @@ func (e *HookExecutor) PostLoginHook(
 				hydra.AcceptLoginRequestParams{
 					LoginChallenge:        string(f.OAuth2LoginChallenge),
 					IdentityID:            i.ID.String(),
+					ExternalID:            string(i.ExternalID),
 					SessionID:             s.ID.String(),
 					AuthenticationMethods: s.AMR,
 				})
@@ -373,6 +374,7 @@ func (e *HookExecutor) PostLoginHook(
 			hydra.AcceptLoginRequestParams{
 				LoginChallenge:        string(f.OAuth2LoginChallenge),
 				IdentityID:            i.ID.String(),
+				ExternalID:            string(i.ExternalID),
 				SessionID:             s.ID.String(),
 				AuthenticationMethods: s.AMR,
 			})
