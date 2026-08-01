@@ -181,7 +181,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 			WithRequest(r).
 			Debugf("A recovery flow with `DangerousSkipCSRFCheck` set has been submitted, skipping anti-CSRF measures.")
 	} else if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
-		// If a CSRF violation occurs the flow is most likely FUBAR, as the user either lost the CSRF token, or an attack occured.
+		// If a CSRF violation occurs the flow is most likely FUBAR, as the user either lost the CSRF token, or an attack occurred.
 		// In this case, we just issue a new flow and "abandon" the old flow.
 		return s.retryRecoveryFlow(w, r, flow.TypeBrowser, RetryWithError(err))
 	}
