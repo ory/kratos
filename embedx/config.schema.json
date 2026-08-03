@@ -1892,7 +1892,7 @@
                           "type": "string",
                           "title": "Relying Party Identifier",
                           "description": "The id must be a subset of the domain currently in the browser.",
-                          "examples": ["ory.sh"]
+                          "examples": ["ory.com"]
                         },
                         "origin": {
                           "type": "string",
@@ -1911,7 +1911,7 @@
                             "format": "uri",
                             "examples": [
                               "https://www.ory.com",
-                              "https://auth.ory.sh"
+                              "https://auth.ory.com"
                             ]
                           }
                         },
@@ -2006,7 +2006,7 @@
                           "type": "string",
                           "title": "Relying Party Identifier",
                           "description": "The id must be a subset of the domain currently in the browser.",
-                          "examples": ["ory.sh"]
+                          "examples": ["ory.com"]
                         },
                         "origins": {
                           "type": "array",
@@ -2016,7 +2016,7 @@
                             "type": "string",
                             "examples": [
                               "https://www.ory.com",
-                              "https://auth.ory.sh"
+                              "https://auth.ory.com"
                             ]
                           }
                         }
