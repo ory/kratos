@@ -3,7 +3,7 @@ module github.com/ory/kratos
 go 1.26
 
 replace (
-	github.com/coreos/go-oidc/v3 => github.com/ory/go-oidc/v3 v3.0.0-20250124100243-69986dfaf891
+	github.com/coreos/go-oidc/v3 => github.com/sergioperezcheco/go-oidc/v3 v3.0.0-20260701155222-10b406941ed7
 
 	github.com/go-swagger/go-swagger => github.com/aeneasr/go-swagger v0.19.1-0.20241013070044-bccef3a12e26 // See https://github.com/go-swagger/go-swagger/issues/3131
 	// github.com/go-swagger/go-swagger => ../../go-swagger/go-swagger
@@ -47,7 +47,6 @@ require (
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/knadh/koanf/parsers/json v0.1.0
-	github.com/laher/mergefs v0.1.2-0.20230223191438-d16611b2f4e7 // indirect
 	github.com/lestrrat-go/jwx/v2 v2.1.1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/montanaflynn/stats v0.7.1
