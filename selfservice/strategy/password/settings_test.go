@@ -631,6 +631,20 @@ func TestSettings(t *testing.T) {
 				v.Set("transient_payload", `{"stuff":"42"}`)
 			}))
 		})
+
+		t.Run("type=browser/continuity-resume", func(t *testing.T) {
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			t.Cleanup(func() {
+				conf.MustSet(context.Background(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			})
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser), conf)
+
+			check(t, expectSuccess(t, false, false, browserUser, func(v url.Values) {
+				v.Set("method", "password")
+				v.Set("password", randx.MustString(16, randx.AlphaNum))
+				v.Set("transient_payload", `{"stuff":"42"}`)
+			}))
+		})
 	})
 
 	t.Run("description=should update the password and perform the correct redirection", func(t *testing.T) {
