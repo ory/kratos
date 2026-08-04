@@ -147,6 +147,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 }
 
 func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithLookupMethod) error {
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
 	if p.ConfirmLookup || p.RevealLookup || p.RegenerateLookup || p.DisableLookup {
 		if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 			return err

@@ -162,6 +162,7 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithWebAuthnMethod,
 ) error {
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
 	if len(p.Register+p.Remove) > 0 {
 		if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 			return err

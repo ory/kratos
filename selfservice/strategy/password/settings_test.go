@@ -6,17 +6,22 @@ package password_test
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 
 	"github.com/ory/x/configx"
 
@@ -553,6 +558,92 @@ func TestSettings(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			actual := expectSuccess(t, false, false, browserUser, payload)
 			check(t, actual, bi)
+		})
+	})
+
+	t.Run("description=should pass transient_payload to after-settings hooks", func(t *testing.T) {
+		bi := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		si := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		ai := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+		browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, bi)
+		spaUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, si)
+		apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, ai)
+
+		received := make(chan []byte, 8)
+		webhookServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			body, _ := io.ReadAll(r.Body)
+			received <- body
+			w.WriteHeader(http.StatusOK)
+		}))
+		t.Cleanup(webhookServer.Close)
+
+		conf.MustSet(t.Context(), config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, "password"), []map[string]any{{
+			"hook": "web_hook",
+			"config": map[string]any{
+				"url":    webhookServer.URL,
+				"method": "POST",
+				"body":   "base64://" + base64.StdEncoding.EncodeToString([]byte(`function(ctx) ctx`)),
+			},
+		}})
+		t.Cleanup(func() {
+			conf.MustSet(t.Context(), config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, "password"), nil)
+		})
+
+		check := func(t *testing.T, actual string) {
+			assert.Equal(t, "success", gjson.Get(actual, "state").String(), "%s", actual)
+			select {
+			case body := <-received:
+				assert.Equal(t, "42", gjson.GetBytes(body, "flow.transient_payload.stuff").String(), "%s", body)
+			case <-time.After(5 * time.Second):
+				t.Fatal("web hook was not invoked")
+			}
+		}
+
+		submitJSON := func(t *testing.T, isAPI bool, hc *http.Client) string {
+			var f *kratos.SettingsFlow
+			if isAPI {
+				f = testhelpers.InitializeSettingsFlowViaAPI(t, hc, publicTS)
+			} else {
+				f = testhelpers.InitializeSettingsFlowViaBrowser(t, hc, true, publicTS)
+			}
+			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			values.Set("method", "password")
+			values.Set("password", randx.MustString(16, randx.AlphaNum))
+			payload, err := sjson.SetRaw(testhelpers.EncodeFormAsJSON(t, true, values), "transient_payload", `{"stuff":"42"}`)
+			require.NoError(t, err)
+			actual, res := testhelpers.SettingsMakeRequest(t, isAPI, !isAPI, f, hc, payload)
+			assert.EqualValues(t, http.StatusOK, res.StatusCode, "%s", actual)
+			return actual
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			check(t, submitJSON(t, true, apiUser))
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			check(t, submitJSON(t, false, spaUser))
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			check(t, expectSuccess(t, false, false, browserUser, func(v url.Values) {
+				v.Set("method", "password")
+				v.Set("password", randx.MustString(16, randx.AlphaNum))
+				v.Set("transient_payload", `{"stuff":"42"}`)
+			}))
+		})
+
+		t.Run("type=browser/continuity-resume", func(t *testing.T) {
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			t.Cleanup(func() {
+				conf.MustSet(context.Background(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+			})
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser), conf)
+
+			check(t, expectSuccess(t, false, false, browserUser, func(v url.Values) {
+				v.Set("method", "password")
+				v.Set("password", randx.MustString(16, randx.AlphaNum))
+				v.Set("transient_payload", `{"stuff":"42"}`)
+			}))
 		})
 	})
 
