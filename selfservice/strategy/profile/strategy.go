@@ -160,6 +160,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 }
 
 func (s *Strategy) continueFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithProfileMethod) error {
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
 	if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}

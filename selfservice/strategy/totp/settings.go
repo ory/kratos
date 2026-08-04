@@ -132,6 +132,7 @@ func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {
 }
 
 func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithTotpMethod) error {
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
 	if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}

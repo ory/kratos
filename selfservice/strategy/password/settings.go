@@ -150,6 +150,7 @@ func isNewPasswordSameAsOld(ctx context.Context, oldHashedPassword string, newPa
 }
 
 func (s *Strategy) continueSettingsFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasswordMethod) error {
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
 	if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), p.Method, s.d); err != nil {
 		return err
 	}
