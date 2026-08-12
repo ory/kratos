@@ -151,4 +151,35 @@ func TestFormHydration(t *testing.T) {
 		require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
 		toSnapshot(t, f)
 	})
+
+	t.Run("config=suppress_generic_provider_nodes", func(t *testing.T) {
+		ctx := contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config.suppress_generic_provider_nodes", true)
+
+		t.Run("method=PopulateLoginMethodFirstFactor", func(t *testing.T) {
+			r, f := newFlow(ctx, t)
+			require.NoError(t, fh.PopulateLoginMethodFirstFactor(r, f))
+			require.Nil(t, f.UI.Nodes.Find("provider"))
+			require.NotNil(t, f.UI.Nodes.Find("csrf_token"))
+		})
+
+		t.Run("method=PopulateLoginMethodIdentifierFirstIdentification", func(t *testing.T) {
+			r, f := newFlow(ctx, t)
+			require.NoError(t, fh.PopulateLoginMethodIdentifierFirstIdentification(r, f))
+			require.Nil(t, f.UI.Nodes.Find("provider"))
+			require.NotNil(t, f.UI.Nodes.Find("csrf_token"))
+		})
+
+		t.Run("method=PopulateLoginMethodFirstFactorRefresh keeps targeted provider nodes", func(t *testing.T) {
+			r, f := newFlow(ctx, t)
+
+			id := createIdentity(t, ctx, reg, x.NewUUID(), providerID)
+			r.Header = testhelpers.NewHTTPClientWithIdentitySessionToken(ctx, t, reg, id).Transport.(*testhelpers.TransportWithHeader).GetHeader()
+			f.Refresh = true
+
+			require.NoError(t, fh.PopulateLoginMethodFirstFactorRefresh(r, f, nil))
+			provider := f.UI.Nodes.Find("provider")
+			require.NotNil(t, provider)
+			require.Equal(t, providerID, provider.GetValue())
+		})
+	})
 }

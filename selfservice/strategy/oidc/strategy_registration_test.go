@@ -20,6 +20,7 @@ import (
 	"github.com/ory/kratos/ui/node"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/configx"
+	"github.com/ory/x/contextx"
 	"github.com/ory/x/snapshotx"
 )
 
@@ -115,5 +116,29 @@ func TestPopulateRegistrationMethod(t *testing.T) {
 			assertx.EqualAsJSON(t, snapshots[0], snapshots[2])
 			assertx.EqualAsJSON(t, snapshots[1], snapshots[3])
 		})
+	})
+
+	t.Run("config=suppress_generic_provider_nodes", func(t *testing.T) {
+		ctx := contextx.WithConfigValue(ctx, config.ViperKeySelfServiceStrategyConfig+"."+string(identity.CredentialsTypeOIDC)+".config.suppress_generic_provider_nodes", true)
+
+		for _, tc := range []struct {
+			name     string
+			populate func(r *http.Request, f *registration.Flow) error
+		}{
+			{name: "method=PopulateRegistrationMethod", populate: fh.PopulateRegistrationMethod},
+			{name: "method=PopulateRegistrationMethodProfile", populate: func(r *http.Request, f *registration.Flow) error {
+				return fh.PopulateRegistrationMethodProfile(r, f)
+			}},
+			{name: "method=PopulateRegistrationMethodCredentials", populate: func(r *http.Request, f *registration.Flow) error {
+				return fh.PopulateRegistrationMethodCredentials(r, f)
+			}},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				r, f := newFlow(ctx, t)
+				require.NoError(t, tc.populate(r, f))
+				require.Nil(t, f.UI.Nodes.Find("provider"))
+				require.NotNil(t, f.UI.Nodes.Find("csrf_token"))
+			})
+		}
 	})
 }
