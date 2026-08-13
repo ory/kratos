@@ -1464,6 +1464,22 @@ func (h *Handler) deleteIdentityCredentials(w http.ResponseWriter, r *http.Reque
 				return
 			}
 		}
+	case CredentialsTypeCodeAuth:
+		// The code credential acts as a first factor only when passwordless login
+		// with code is enabled. As a pure second factor (MFA) it is freely
+		// removable, like TOTP or lookup secrets.
+		if h.r.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
+			firstFactor, err := h.r.IdentityManager().CountActiveFirstFactorCredentials(ctx, identity)
+			if err != nil {
+				h.r.Writer().WriteError(w, r, err)
+				return
+			}
+			if firstFactor < 2 {
+				h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReason("You cannot remove the last first factor credential.")))
+				return
+			}
+		}
+		identity.DeleteCredentialsType(cred.Type)
 	default:
 		// A bunch of credential type deletions are not yet implemented, e.g. passkeys, etc.
 		h.r.Writer().WriteError(w, r, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Credentials type %s cannot be deleted.", cred.Type)))
