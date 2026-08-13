@@ -2856,6 +2856,46 @@ func TestHandler(t *testing.T) {
 				assert.Equal(t, "{}", string(creds.Config))
 				assert.Equal(t, i.ID, actual.ID)
 			})
+			t.Run("type=delete a code credential/"+name, func(t *testing.T) {
+				i := createIdentity(M{
+					identity.CredentialsTypePassword: {
+						Config:      []byte(`{"hashed_password":"some_valid_hash"}`),
+						Identifiers: []string{x.NewUUID().String()},
+					},
+					identity.CredentialsTypeCodeAuth: {
+						Config:      []byte(`{"addresses":[{"channel":"email","address":"delete-code@ory.sh"}]}`),
+						Identifiers: []string{"delete-code@ory.sh"},
+					},
+				})(t)
+				remove(t, ts, "/identities/"+i.ID.String()+"/credentials/code", http.StatusNoContent)
+				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				assert.False(t, res.Get("credentials.code").Exists(), "code credential should be removed: %s", res.Raw)
+				assert.True(t, res.Get("credentials.password").Exists(), "password credential should remain: %s", res.Raw)
+			})
+			t.Run("type=deny to remove code as last first factor when passwordless enabled/"+name, func(t *testing.T) {
+				ctx := context.Background()
+				reg.Config().MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", true)
+				t.Cleanup(func() {
+					reg.Config().MustSet(ctx, config.ViperKeySelfServiceStrategyConfig+".code.passwordless_enabled", false)
+				})
+				codeAddress := x.NewUUID().String() + "@ory.sh"
+				i := createIdentity(M{
+					identity.CredentialsTypeCodeAuth: {
+						Config:      []byte(fmt.Sprintf(`{"addresses":[{"channel":"email","address":%q}]}`, codeAddress)),
+						Identifiers: []string{codeAddress},
+					},
+				})(t)
+				req, err := http.NewRequest("DELETE", ts.URL+"/identities/"+i.ID.String()+"/credentials/code", nil)
+				require.NoError(t, err)
+				httpRes, err := ts.Client().Do(req)
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(httpRes.Body)
+				require.NoError(t, httpRes.Body.Close())
+				require.EqualValuesf(t, http.StatusBadRequest, httpRes.StatusCode, "%s", body)
+				assert.Contains(t, gjson.GetBytes(body, "error.reason").String(), "You cannot remove the last first factor credential.")
+				res := get(t, ts, "/identities/"+i.ID.String(), http.StatusOK)
+				assert.True(t, res.Get("credentials.code").Exists(), "code credential should remain after blocked delete: %s", res.Raw)
+			})
 			t.Run("type=remove oidc type/"+name, func(t *testing.T) {
 				// force ordering among github identifiers
 				githubSubject := "0" + randx.MustString(7, randx.Numeric)
