@@ -1384,6 +1384,46 @@ func TestStrategy(t *testing.T) {
 			})
 
 		}
+
+		t.Run("case=runs method-specific post-registration and post-login hooks", func(t *testing.T) {
+			postRegistrationWebhook := hooktest.NewServer()
+			t.Cleanup(postRegistrationWebhook.Close)
+			postRegistrationWebhook.SetConfig(t, conf.GetProvider(t.Context()),
+				config.HookStrategyKey(config.ViperKeySelfServiceRegistrationAfter, identity.CredentialsTypeOIDC.String()))
+			postLoginWebhook := hooktest.NewServer()
+			t.Cleanup(postLoginWebhook.Close)
+			postLoginWebhook.SetConfig(t, conf.GetProvider(t.Context()),
+				config.HookStrategyKey(config.ViperKeySelfServiceLoginAfter, identity.CredentialsTypeOIDC.String()))
+
+			nonce := randx.MustString(16, randx.Alpha)
+			token := strings.NewReplacer("{{sub}}", testhelpers.RandomEmail(), "{{nonce}}", nonce).Replace(`{
+				"iss": "https://appleid.apple.com",
+				"sub": "{{sub}}",
+				"nonce": "{{nonce}}"
+			}`)
+
+			submit := func(t *testing.T, action, transientPayload string) {
+				res, err := cl.PostForm(action, url.Values{
+					"id_token":          {token},
+					"id_token_nonce":    {nonce},
+					"provider":          {"test-provider"},
+					"transient_payload": {transientPayload},
+				})
+				require.NoError(t, err)
+				body := ioutilx.MustReadAll(res.Body)
+				require.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
+			}
+
+			registrationPayload := `{"data": "id-token-registration"}`
+			rf := newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+			submit(t, assertFormValues(t, rf.ID, "test-provider"), registrationPayload)
+			postRegistrationWebhook.AssertTransientPayload(t, registrationPayload)
+
+			loginPayload := `{"data": "id-token-login"}`
+			lf := newAPILoginFlow(t, returnTS.URL, time.Minute)
+			submit(t, assertFormValues(t, lf.ID, "test-provider"), loginPayload)
+			postLoginWebhook.AssertTransientPayload(t, loginPayload)
+		})
 	})
 
 	t.Run("case=login without registered account with return_to", func(t *testing.T) {
