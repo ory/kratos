@@ -150,10 +150,11 @@ func (s *Tokenizer) TokenizeSession(ctx context.Context, template string, sessio
 
 		evaluatedClaims := gjson.Get(evaluated, "claims")
 		if !evaluatedClaims.IsObject() {
+			err = errors.WithStack(herodot.ErrBadRequest().WithReasonf("Expected tokenizer JsonNet to return a claims object but it did not."))
 			trace.SpanFromContext(ctx).AddEvent(events.NewJsonnetMappingFailed(
 				ctx, err, jsonnet.Bytes(), evaluated, "", "",
 			))
-			return errors.WithStack(herodot.ErrBadRequest().WithWrap(err).WithReasonf("Expected tokenizer JsonNet to return a claims object but it did not."))
+			return err
 		}
 
 		if err := json.Unmarshal([]byte(evaluatedClaims.Raw), &claims); err != nil {
