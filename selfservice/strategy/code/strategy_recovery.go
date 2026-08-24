@@ -183,6 +183,15 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 	} else if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, body.CSRFToken); err != nil {
 		// If a CSRF violation occurs the flow is most likely FUBAR, as the user either lost the CSRF token, or an attack occured.
 		// In this case, we just issue a new flow and "abandon" the old flow.
+		//
+		// When the code has already been submitted too often, prefer that error over CSRF.
+		// Otherwise the stale token from previous failed attempts hides the 410/too-often result.
+		if len(body.Code) > 0 {
+			if submitCount, countErr := s.deps.RecoveryCodePersister().CountRecoveryCodeSubmissions(ctx, f.ID); countErr == nil &&
+				submitCount >= s.deps.Config().SelfServiceCodeMethodMaxSubmissions(ctx) {
+				return s.retryRecoveryFlow(w, r, f.Type, RetryWithError(ErrCodeSubmittedTooOften()))
+			}
+		}
 		return s.retryRecoveryFlow(w, r, flow.TypeBrowser, RetryWithError(err))
 	}
 
