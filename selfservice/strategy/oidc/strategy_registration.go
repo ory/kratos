@@ -216,6 +216,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		if err != nil {
 			return s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
+		f.Active = s.ID()
 		_, err = s.processRegistration(ctx, w, r, f, nil, claims, provider, &AuthCodeContainer{
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
