@@ -1552,6 +1552,70 @@ func TestRecovery_WithContinueWith(t *testing.T) {
 		}
 	})
 
+	t.Run("description=should return submitted-too-often instead of CSRF when max submissions exceeded with a stale csrf token", func(t *testing.T) {
+		for _, testCase := range flowTypeCases {
+			if testCase.ClientType == RecoveryClientTypeAPI {
+				continue
+			}
+			t.Run("type="+testCase.ClientType.String(), func(t *testing.T) {
+				email := testhelpers.RandomEmail()
+				createIdentityToRecover(t, reg, email)
+				c := testCase.GetClient(t)
+				body := submitRecoveryForm(t, c, testCase.ClientType, func(v url.Values) {
+					v.Set("email", email)
+				}, http.StatusOK)
+
+				initialFlowId := gjson.Get(body, "id")
+
+				for submitTry := 0; submitTry < 5; submitTry++ {
+					inner := submitRecoveryCode(t, c, body, testCase.ClientType, "12312312", http.StatusOK)
+					testhelpers.AssertMessage(t, inner, "The recovery code is invalid or has already been used. Please try again.")
+				}
+
+				action := gjson.Get(body, "ui.action").String()
+				require.NotEmpty(t, action)
+
+				values := url.Values{
+					"code":       {"12312312"},
+					"method":     {"code"},
+					"csrf_token": {"stale-csrf-token"},
+				}
+				payload := values.Encode()
+				contentType := "application/x-www-form-urlencoded"
+				if testCase.ClientType != RecoveryClientTypeBrowser {
+					payload = testhelpers.EncodeFormAsJSON(t, true, values)
+					contentType = "application/json"
+				}
+
+				res, err := c.Post(action, contentType, bytes.NewBufferString(payload))
+				require.NoError(t, err)
+				got := string(ioutilx.MustReadAll(res.Body))
+				require.NoError(t, res.Body.Close())
+
+				assert.NotEqual(t, http.StatusForbidden, res.StatusCode, "%s", got)
+				assert.NotEqual(t, text.ErrIDCSRF, gjson.Get(got, "error.id").String(), "%s", got)
+
+				switch testCase.ClientType {
+				case RecoveryClientTypeBrowser:
+					assert.Equal(t, http.StatusOK, res.StatusCode, "%s", got)
+					require.Len(t, gjson.Get(got, "ui.messages").Array(), 1, "%s", got)
+					assert.Equal(t, "The request was submitted too often. Please request another code.", gjson.Get(got, "ui.messages.0.text").String())
+					assert.NotEqual(t, gjson.Get(got, "id"), initialFlowId)
+					assert.True(t, gjson.Get(got, "ui.nodes.#(attributes.name==email)").Exists())
+				case RecoveryClientTypeSPA:
+					assert.Equal(t, http.StatusBadRequest, res.StatusCode, "%s", got)
+					assert.Equal(t, "The request was submitted too often. Please request another code.", gjson.Get(got, "error.reason").String(), "%s", got)
+					continueWith := gjson.Get(got, "error.details.continue_with").Array()
+					assert.Len(t, continueWith, 1, "%s", got)
+					assert.Equal(t, "show_recovery_ui", continueWith[0].Get("action").String(), "%s", got)
+					flowId := continueWith[0].Get("flow.id").String()
+					assert.NotEmpty(t, flowId, "%s", got)
+					require.NotEqual(t, flowId, initialFlowId.String(), "%s", got)
+				}
+			})
+		}
+	})
+
 	t.Run("description=should be able to recover after using invalid code", func(t *testing.T) {
 		for _, testCase := range flowTypeCases {
 			t.Run("type="+testCase.ClientType.String(), func(t *testing.T) {

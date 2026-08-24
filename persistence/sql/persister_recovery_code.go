@@ -77,6 +77,15 @@ func (p *Persister) UseRecoveryCode(ctx context.Context, flowID uuid.UUID, userP
 	return codeRow, nil
 }
 
+func (p *Persister) CountRecoveryCodeSubmissions(ctx context.Context, flowID uuid.UUID) (count int, err error) {
+	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.CountRecoveryCodeSubmissions")
+	defer otelx.End(span, &err)
+
+	q := "SELECT submit_count FROM selfservice_recovery_flows WHERE id = ? AND nid = ?"
+	err = sqlcon.HandleError(p.GetConnection(ctx).RawQuery(q, flowID, p.NetworkID(ctx)).First(&count))
+	return count, err
+}
+
 func (p *Persister) DeleteRecoveryCodesOfFlow(ctx context.Context, flowID uuid.UUID) (err error) {
 	ctx, span := p.r.Tracer(ctx).Tracer().Start(ctx, "persistence.sql.DeleteRecoveryCodesOfFlow")
 	defer otelx.End(span, &err)
