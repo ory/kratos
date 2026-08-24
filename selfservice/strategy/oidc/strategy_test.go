@@ -1410,6 +1410,7 @@ func TestStrategy(t *testing.T) {
 					"transient_payload": {transientPayload},
 				})
 				require.NoError(t, err)
+				defer res.Body.Close()
 				body := ioutilx.MustReadAll(res.Body)
 				require.NotEmpty(t, gjson.GetBytes(body, "session_token").String(), "%s", body)
 			}
@@ -1423,6 +1424,11 @@ func TestStrategy(t *testing.T) {
 			lf := newAPILoginFlow(t, returnTS.URL, time.Minute)
 			submit(t, assertFormValues(t, lf.ID, "test-provider"), loginPayload)
 			postLoginWebhook.AssertTransientPayload(t, loginPayload)
+
+			registrationToLoginPayload := `{"data": "id-token-registration-to-login"}`
+			rf = newAPIRegistrationFlow(t, returnTS.URL, time.Minute)
+			submit(t, assertFormValues(t, rf.ID, "test-provider"), registrationToLoginPayload)
+			postLoginWebhook.AssertTransientPayload(t, registrationToLoginPayload)
 		})
 	})
 
