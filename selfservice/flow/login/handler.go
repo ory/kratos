@@ -445,9 +445,14 @@ func (h *Handler) createNativeLoginFlow(w http.ResponseWriter, r *http.Request) 
 
 	f, _, err := h.NewLoginFlow(w, r, flow.TypeAPI)
 	if err != nil {
-		if !errors.Is(err, flow.ErrCompletedByStrategy) {
-			h.d.Writer().WriteError(w, r, err)
+		if errors.Is(err, flow.ErrCompletedByStrategy) {
+			// The flow was completed by a strategy. This is a control signal and
+			// not an error, so we neither surface it to the client nor record it
+			// on the span via the deferred otelx.End.
+			err = nil
+			return
 		}
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -646,6 +651,10 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request)
 		x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 		return
 	} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+		// The flow was completed by a strategy. This is a control signal and
+		// not an error, so we neither surface it to the client nor record it on
+		// the span via the deferred otelx.End.
+		err = nil
 		return
 	} else if err != nil {
 		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
