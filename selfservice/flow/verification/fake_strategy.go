@@ -32,8 +32,8 @@ func (f FakeStrategy) PopulateVerificationMethod(*http.Request, *Flow) error {
 	return nil
 }
 
-func (f FakeStrategy) Verify(_ http.ResponseWriter, _ *http.Request, _ *Flow) (err error) {
-	return nil
+func (f FakeStrategy) Verify(_ http.ResponseWriter, _ *http.Request, _ *Flow) (completed bool, err error) {
+	return false, nil
 }
 
 func (f FakeStrategy) SendVerificationCode(context.Context, *Flow, *identity.Identity, identity.VerifiableAddressLike) error {

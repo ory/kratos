@@ -48,17 +48,17 @@ func (s *Strategy) handleLoginError(r *http.Request, f *login.Flow, payload upda
 	return err
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		span.SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL1"))
-		return nil, err
+		return nil, false, err
 	}
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.d); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	var p updateLoginFlowWithPasswordMethod
@@ -66,31 +66,31 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return nil, s.handleLoginError(r, f, p, err)
+		return nil, false, s.handleLoginError(r, f, p, err)
 	}
 	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return nil, s.handleLoginError(r, f, p, err)
+		return nil, false, s.handleLoginError(r, f, p, err)
 	}
 
 	identifier := cmp.Or(p.Identifier, p.LegacyIdentifier)
 	i, c, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identifier)
 	if err != nil {
 		time.Sleep(x.RandomDelay(s.d.Config().HasherArgon2(ctx).ExpectedDuration, s.d.Config().HasherArgon2(ctx).ExpectedDeviation))
-		return nil, s.handleLoginError(r, f, p, errors.WithStack(schema.NewInvalidCredentialsError()))
+		return nil, false, s.handleLoginError(r, f, p, errors.WithStack(schema.NewInvalidCredentialsError()))
 	}
 
 	var o identity.CredentialsPassword
 	d := json.NewDecoder(bytes.NewBuffer(c.Config))
 	if err := d.Decode(&o); err != nil {
-		return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)), i.ID)
+		return nil, false, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("The password credentials could not be decoded properly").WithDebug(err.Error()).WithWrap(err)), i.ID)
 	}
 
 	if o.ShouldUsePasswordMigrationHook() {
 		pwHook := s.d.Config().PasswordMigrationHook(ctx)
 		if !pwHook.Enabled {
-			return nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Password migration hook is not enabled but password migration is requested.")), i.ID)
+			return nil, false, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Password migration hook is not enabled but password migration is requested.")), i.ID)
 		}
 
 		migrationHook := hook.NewPasswordMigrationHook(s.d, &pwHook.Config)
@@ -100,15 +100,15 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			Identity:   i,
 		})
 		if err != nil {
-			return nil, s.handleLoginError(r, f, p, x.WrapWithIdentityIDError(err, i.ID))
+			return nil, false, s.handleLoginError(r, f, p, x.WrapWithIdentityIDError(err, i.ID))
 		}
 
 		if err := s.migratePasswordHash(ctx, i.ID, []byte(p.Password)); err != nil {
-			return nil, s.handleLoginError(r, f, p, x.WrapWithIdentityIDError(err, i.ID))
+			return nil, false, s.handleLoginError(r, f, p, x.WrapWithIdentityIDError(err, i.ID))
 		}
 	} else {
 		if err := hash.Compare(ctx, []byte(p.Password), []byte(o.HashedPassword)); err != nil {
-			return nil, s.handleLoginError(r, f, p, errors.WithStack(x.WrapWithIdentityIDError(schema.NewInvalidCredentialsError(), i.ID)))
+			return nil, false, s.handleLoginError(r, f, p, errors.WithStack(x.WrapWithIdentityIDError(schema.NewInvalidCredentialsError(), i.ID)))
 		}
 
 		if !s.d.Hasher(ctx).Understands([]byte(o.HashedPassword)) {
@@ -120,10 +120,10 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, p, errors.WithStack(x.WrapWithIdentityIDError(herodot.ErrInternalServerError().WithReason("Could not update flow").WithDebug(err.Error()), i.ID)))
+		return nil, false, s.handleLoginError(r, f, p, errors.WithStack(x.WrapWithIdentityIDError(herodot.ErrInternalServerError().WithReason("Could not update flow").WithDebug(err.Error()), i.ID)))
 	}
 
-	return i, nil
+	return i, false, nil
 }
 
 func (s *Strategy) migratePasswordHash(ctx context.Context, identifier uuid.UUID, password []byte) (err error) {

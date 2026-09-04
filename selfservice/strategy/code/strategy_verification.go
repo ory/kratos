@@ -141,10 +141,28 @@ func (body *updateVerificationFlowWithCodeMethod) getMethod() verification.Verif
 	return ""
 }
 
-func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
+// Verify implements verification.Strategy. It translates the internal
+// errCompletedByStrategy control signal into the completed return value so that
+// a completed flow is reported as a control signal rather than an error.
+func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (completed bool, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.Verify")
 	span.SetAttributes(attribute.String("selfservice_flows_verification_use", s.deps.Config().SelfServiceFlowVerificationUse(ctx)))
+	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
+	// Translate the internal errCompletedByStrategy control signal into the
+	// completed return value before otelx.End runs, so a completed flow is not
+	// recorded as a span error (this defer runs before the deferred otelx.End).
+	defer func() {
+		if errors.Is(err, errCompletedByStrategy) {
+			completed, err = true, nil
+		}
+	}()
+	err = s.verifyFlow(w, r, f)
+	return
+}
+
+func (s *Strategy) verifyFlow(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
+	ctx := r.Context()
 
 	body, err := s.decodeVerification(r)
 	if err != nil {
@@ -194,7 +212,7 @@ func (s *Strategy) handleLinkClick(ctx context.Context, w http.ResponseWriter, r
 	// the user to handle the flow directly.
 	http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
 
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return errors.WithStack(errCompletedByStrategy)
 }
 
 func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.ResponseWriter, r *http.Request, f *verification.Flow, body *updateVerificationFlowWithCodeMethod) error {
@@ -243,7 +261,7 @@ func (s *Strategy) verificationHandleFormSubmission(ctx context.Context, w http.
 			if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationDuplicateCredentials(), http.StatusBadRequest); err != nil {
 				return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 			}
-			return errors.WithStack(flow.ErrCompletedByStrategy)
+			return errors.WithStack(errCompletedByStrategy)
 		}
 
 		proposedIdentity, err := s.deps.IdentityPool().GetIdentity(ctx, ptc.IdentityID, identity.ExpandDefault)
@@ -301,7 +319,7 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 		if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(), http.StatusOK); err != nil {
 			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 		}
-		return errors.WithStack(flow.ErrCompletedByStrategy)
+		return errors.WithStack(errCompletedByStrategy)
 	} else if err != nil {
 		return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 	}
@@ -322,7 +340,7 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 			if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(), http.StatusOK); err != nil {
 				return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 			}
-			return errors.WithStack(flow.ErrCompletedByStrategy)
+			return errors.WithStack(errCompletedByStrategy)
 		}
 
 		// Security note: the verification flow is unauthenticated by design. The
@@ -341,13 +359,13 @@ func (s *Strategy) verificationUseCode(ctx context.Context, w http.ResponseWrite
 				if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationVerificationCodeInvalidOrAlreadyUsed(), http.StatusOK); err != nil {
 					return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 				}
-				return errors.WithStack(flow.ErrCompletedByStrategy)
+				return errors.WithStack(errCompletedByStrategy)
 			}
 			if errors.Is(applyErr, sqlcon.ErrUniqueViolation()) {
 				if err := s.updateVerificationFlowWithMessage(ctx, w, r, f, text.NewErrorValidationDuplicateCredentials(), http.StatusBadRequest); err != nil {
 					return s.retryVerificationFlowWithError(ctx, w, r, f.Type, err)
 				}
-				return errors.WithStack(flow.ErrCompletedByStrategy)
+				return errors.WithStack(errCompletedByStrategy)
 			}
 			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, applyErr)
 		}
@@ -434,7 +452,7 @@ func (s *Strategy) retryVerificationFlowWithMessage(ctx context.Context, w http.
 		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
 	}
 
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return errors.WithStack(errCompletedByStrategy)
 }
 
 func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.ResponseWriter, r *http.Request, ft flow.Type, verErr error) error {
@@ -473,7 +491,7 @@ func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.Re
 		http.Redirect(w, r, f.AppendTo(s.deps.Config().SelfServiceFlowVerificationUI(ctx)).String(), http.StatusSeeOther)
 	}
 
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return errors.WithStack(errCompletedByStrategy)
 }
 
 func (s *Strategy) SendVerificationCode(ctx context.Context, f *verification.Flow, i *identity.Identity, a identity.VerifiableAddressLike) (err error) {

@@ -77,7 +77,7 @@ func TestHandleError(t *testing.T) {
 	})
 
 	router.HandleFunc("GET /fake-redirect", func(w http.ResponseWriter, r *http.Request) {
-		_, _, err := reg.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
+		_, _, _, err := reg.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser)
 		require.NoError(t, err)
 	})
 

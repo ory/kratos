@@ -124,10 +124,27 @@ type updateVerificationFlowWithLinkMethod struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
+// Verify implements verification.Strategy. It translates the internal
+// errCompletedByStrategy control signal into the completed return value.
+func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.Strategy.Verify")
 	span.SetAttributes(attribute.String("selfservice_flows_verification_use", s.d.Config().SelfServiceFlowVerificationUse(ctx)))
+	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
+	// Translate the internal errCompletedByStrategy control signal into the
+	// completed return value before otelx.End runs, so a completed flow is not
+	// recorded as a span error (this defer runs before the deferred otelx.End).
+	defer func() {
+		if errors.Is(err, errCompletedByStrategy) {
+			completed, err = true, nil
+		}
+	}()
+	err = s.verifyFlow(w, r, f)
+	return
+}
+
+func (s *Strategy) verifyFlow(w http.ResponseWriter, r *http.Request, f *verification.Flow) (err error) {
+	ctx := r.Context()
 
 	body, err := s.decodeVerification(r)
 	if err != nil {
@@ -239,7 +256,7 @@ func (s *Strategy) verificationUseToken(ctx context.Context, w http.ResponseWrit
 				} else {
 					s.d.Writer().Write(w, r, f)
 				}
-				return errors.WithStack(flow.ErrCompletedByStrategy)
+				return errors.WithStack(errCompletedByStrategy)
 			}
 			return s.retryVerificationFlowWithError(ctx, w, r, f.Type, applyErr)
 		}
@@ -323,7 +340,7 @@ func (s *Strategy) retryVerificationFlowWithMessage(ctx context.Context, w http.
 			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return errors.WithStack(errCompletedByStrategy)
 }
 
 func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.ResponseWriter, r *http.Request, ft flow.Type, verErr error) error {
@@ -354,7 +371,7 @@ func (s *Strategy) retryVerificationFlowWithError(ctx context.Context, w http.Re
 			verification.RouteGetFlow), url.Values{"id": {f.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return errors.WithStack(errCompletedByStrategy)
 }
 
 func (s *Strategy) SendVerificationCode(ctx context.Context, f *verification.Flow, i *identity.Identity, addressLike identity.VerifiableAddressLike) error {

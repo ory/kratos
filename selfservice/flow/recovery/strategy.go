@@ -27,7 +27,14 @@ type (
 		IsPrimary() bool
 		NodeGroup() node.UiNodeGroup
 		PopulateRecoveryMethod(*http.Request, *Flow) error
-		Recover(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
+		// Recover attempts to recover the account.
+		//
+		// A strategy may complete the flow itself (for example by sending a
+		// recovery code and rendering the next step). In that case it returns
+		// completed == true with a nil error: this is a control signal, not a
+		// failure, so callers must stop processing without treating it as an
+		// error.
+		Recover(w http.ResponseWriter, r *http.Request, f *Flow) (completed bool, err error)
 	}
 	Strategies       []Strategy
 	StrategyProvider interface {

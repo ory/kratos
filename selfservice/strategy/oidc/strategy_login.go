@@ -331,7 +331,7 @@ func (s *Strategy) UpdateIdentityFromClaims(ctx context.Context, claims *Claims,
 	return changed, nil
 }
 
-func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *registration.Flow, err error) {
+func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, loginFlow *login.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *registration.Flow, completed bool, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processLogin")
 	defer otelx.End(span, &err)
 
@@ -365,7 +365,7 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 					// provider claims, so this is a genuine new sign-up and not an
 					// account linking attempt. Reject it instead of converting the
 					// flow.
-					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(registration.ErrRegistrationDisabled()))
+					return nil, false, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, errors.WithStack(registration.ErrRegistrationDisabled()))
 				}
 
 				var opts []registration.FlowOption
@@ -389,12 +389,12 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 
 				registrationFlow, err := s.d.RegistrationHandler().NewRegistrationFlow(w, r, loginFlow.Type, opts...)
 				if err != nil {
-					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+					return nil, false, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 				}
 
 				err = s.d.SessionTokenExchangePersister().MoveToNewFlow(ctx, loginFlow.ID, registrationFlow.ID)
 				if err != nil {
-					return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+					return nil, false, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 				}
 
 				registrationFlow.OrganizationID = loginFlow.OrganizationID
@@ -407,29 +407,31 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 				// We are converting the flow here, but want to retain the original request URL.
 				registrationFlow.RequestURL = loginFlow.RequestURL
 
-				if _, err := s.processRegistration(ctx, w, r, registrationFlow, token, claims, provider, container); err != nil {
-					return registrationFlow, err
+				if _, regCompleted, err := s.processRegistration(ctx, w, r, registrationFlow, token, claims, provider, container); err != nil {
+					return registrationFlow, false, err
+				} else if regCompleted {
+					return registrationFlow, true, nil
 				}
 
-				return nil, nil
+				return nil, true, nil
 			case ConflictingIdentityVerdictUnknown:
 				fallthrough
 			default:
 				// This should never happen if err == nil, but just for safety:
 				if err != nil {
-					return nil, err
+					return nil, false, err
 				}
-				return nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("The OpenID Connect identity merge policy returned an unknown verdict without other error details, which prevents the sign up from completing. Please report this as a bug."))
+				return nil, false, errors.WithStack(herodot.ErrInternalServerError().WithReason("The OpenID Connect identity merge policy returned an unknown verdict without other error details, which prevents the sign up from completing. Please report this as a bug."))
 			}
 
 		} else {
-			return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
+			return nil, false, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err)
 		}
 	}
 
 	var oidcCredentials identity.CredentialsOIDC
 	if err := json.NewDecoder(bytes.NewBuffer(c.Config)).Decode(&oidcCredentials); err != nil {
-		return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("The OpenID Connect credentials could not be decoded properly").WithDebug(err.Error())), i.ID))
+		return nil, false, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("The OpenID Connect credentials could not be decoded properly").WithDebug(err.Error())), i.ID))
 	}
 
 	sess := session.NewInactiveSession()
@@ -447,37 +449,37 @@ func (s *Strategy) ProcessLogin(ctx context.Context, w http.ResponseWriter, r *h
 			if provider.Config().UpdateIdentityOnLogin == UpdateIdentityOnLoginAutomatic {
 				identityChanged, err := s.UpdateIdentityFromClaims(ctx, claims, provider, i)
 				if err != nil {
-					return nil, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
+					return nil, false, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
 				}
 				if identityChanged {
 					if err := s.d.PrivilegedIdentityPool().UpdateIdentity(ctx, i); err != nil {
-						return nil, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
+						return nil, false, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
 					}
 				}
 			}
 
 			if err = s.d.LoginHookExecutor().PostLoginHook(w, r, node.OpenIDConnectGroup, loginFlow, i, sess, provider.Config().ID); err != nil {
-				return nil, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
+				return nil, false, x.WrapWithIdentityIDError(s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, err), i.ID)
 			}
-			return nil, nil
+			return nil, true, nil
 		}
 	}
 
-	return nil, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("Unable to find matching OpenID Connect credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)), i.ID))
+	return nil, false, s.HandleError(ctx, w, r, loginFlow, provider.Config().ID, nil, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("Unable to find matching OpenID Connect credentials.").WithDebugf(`Unable to find credentials that match the given provider "%s" and subject "%s".`, provider.Config().ID, claims.Subject)), i.ID))
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		span.SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL1"))
-		return nil, err
+		return nil, false, err
 	}
 
 	var p UpdateLoginFlowWithOidcMethod
 	if err := s.newLinkDecoder(ctx, &p, r, &f.IdentitySchema); err != nil {
-		return nil, s.HandleError(ctx, w, r, f, "", nil, err)
+		return nil, false, s.HandleError(ctx, w, r, f, "", nil, err)
 	}
 
 	f.IDToken = p.IDToken
@@ -490,14 +492,14 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 	// parallel OIDC round-trip against the flow.
 	if f.IsTest() {
 		if subtle.ConstantTimeCompare([]byte(p.CSRFToken), []byte(f.CSRFToken)) != 1 {
-			return nil, s.HandleError(ctx, w, r, f, "", nil, errors.WithStack(nosurfx.ErrInvalidCSRFToken()))
+			return nil, false, s.HandleError(ctx, w, r, f, "", nil, errors.WithStack(nosurfx.ErrInvalidCSRFToken()))
 		}
 	}
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
 		span.SetAttributes(attribute.String("not_responsible_reason", "provider ID missing"))
-		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+		return nil, false, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	if !strings.EqualFold(strings.ToLower(p.Method), s.SettingsStrategyID()) && p.Method != "" {
@@ -508,49 +510,53 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			WithField("method", p.Method).
 			Warn("The payload includes a `provider` field but is using a method other than `oidc`. Therefore, social sign in will not be executed.")
 		span.SetAttributes(attribute.String("not_responsible_reason", "method is not oidc"))
-		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+		return nil, false, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
+		return nil, false, s.HandleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
 	}
 
 	provider, err := s.Provider(ctx, pid)
 	if err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+		return nil, false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	req, err := s.validateFlow(ctx, r, f.ID, oidcv1.FlowKind_FLOW_KIND_LOGIN)
 	if err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+		return nil, false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+		return nil, false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
-		return i, nil
+		return i, false, nil
 	}
 
 	if p.IDToken != "" {
 		claims, err := s.ProcessIDToken(r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
-			return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+			return nil, false, s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
-		_, err = s.ProcessLogin(ctx, w, r, f, nil, claims, provider, &AuthCodeContainer{
+		_, _, err = s.ProcessLogin(ctx, w, r, f, nil, claims, provider, &AuthCodeContainer{
 			FlowID: f.ID.String(),
 			Traits: p.Traits,
 		})
-		if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return nil, err
+		if errors.Is(err, errCompletedByStrategy) {
+			// The account-linking path already wrote the response.
+			return nil, true, nil
 		} else if err != nil {
-			return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+			return nil, false, s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
-		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+		// In all non-error cases ProcessLogin has taken over the response (it
+		// posted the login hook or converted the flow to registration), so the
+		// login flow is completed by this strategy.
+		return nil, true, nil
 	}
 
 	state, pkce, err := s.GenerateState(ctx, provider, f, x.RequestBaseURL(r))
 	if err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+		return nil, false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 	var refStore continuity.ContainerReferenceStore
 	if f.Type == flow.TypeAPI {
@@ -569,22 +575,22 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		}),
 		continuity.WithLifespan(time.Minute*30),
 	); err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+		return nil, false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("Could not update flow").WithWrap(err)))
+		return nil, false, s.HandleError(ctx, w, r, f, pid, nil, errors.WithStack(herodot.ErrInternalServerError().WithReason("Could not update flow").WithWrap(err)))
 	}
 
 	var up map[string]string
 	if err := json.NewDecoder(bytes.NewBuffer(p.UpstreamParameters)).Decode(&up); err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up, pkce)
 	if err != nil {
-		return nil, s.HandleError(ctx, w, r, f, pid, nil, err)
+		return nil, false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	if x.IsJSONRequest(r) {
@@ -593,7 +599,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		http.Redirect(w, r, codeURL, http.StatusSeeOther)
 	}
 
-	return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+	return nil, true, nil
 }
 
 func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, lf *login.Flow, _ *session.Session) error {

@@ -72,6 +72,15 @@ var (
 	_ x.Handler                         = (*Strategy)(nil)
 )
 
+// errCompletedByStrategy is an internal control signal used by HandleError to
+// tell its callers that it has already written the HTTP response (for example a
+// redirect on the account-linking path) and that the flow must not be processed
+// further. It never leaves the oidc package: the exported entry points (Login,
+// Register, Settings) and HandleCallback translate it into the completed return
+// value / an early return. It is deliberately kept internal so that the public
+// strategy interfaces model completion as a return value rather than an error.
+var errCompletedByStrategy = errors.New("oidc: flow response completed by strategy")
+
 type Dependencies interface {
 	clock.Provider
 
@@ -569,8 +578,8 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		if ff, err := s.ProcessLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
-			if errors.Is(err, flow.ErrCompletedByStrategy) {
+		if ff, _, err := s.ProcessLogin(ctx, w, r, a, et, claims, provider, cntnr); err != nil {
+			if errors.Is(err, errCompletedByStrategy) {
 				return
 			}
 			if ff != nil {
@@ -584,7 +593,7 @@ func (s *Strategy) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		a.Active = s.ID()
 		a.TransientPayload = cntnr.TransientPayload
 		a.IdentitySchema = cntnr.IdentitySchema
-		if ff, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); errors.Is(err, flow.ErrCompletedByStrategy) {
+		if ff, _, err := s.processRegistration(ctx, w, r, a, et, claims, provider, cntnr); errors.Is(err, errCompletedByStrategy) {
 			return
 		} else if err != nil {
 			if ff != nil {
@@ -746,7 +755,7 @@ func (s *Strategy) HandleError(ctx context.Context, w http.ResponseWriter, r *ht
 			}
 			x.SendFlowErrorAsRedirectOrJSON(w, r, s.d.Writer(), lf, redirectURL.String())
 			// ensure the function does not continue to execute
-			return errors.WithStack(flow.ErrCompletedByStrategy)
+			return errors.WithStack(errCompletedByStrategy)
 		}
 
 		rf.UI.Nodes = node.Nodes{}

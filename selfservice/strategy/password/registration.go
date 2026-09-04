@@ -86,32 +86,32 @@ func (s *Strategy) decode(p *UpdateRegistrationFlowWithPasswordMethod, r *http.R
 	return registration.DecodeBody(p, r, registrationSchema, ds)
 }
 
-func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
+func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.password.Strategy.Register")
 	defer otelx.End(span, &err)
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.d); err != nil {
-		return err
+		return false, err
 	}
 
 	ds, err := f.IdentitySchema.URL(ctx, s.d.Config())
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	var p UpdateRegistrationFlowWithPasswordMethod
 	if err := s.decode(&p, r, ds); err != nil {
-		return s.handleRegistrationError(r, f, p, err)
+		return false, s.handleRegistrationError(r, f, p, err)
 	}
 
 	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return s.handleRegistrationError(r, f, p, err)
+		return false, s.handleRegistrationError(r, f, p, err)
 	}
 
 	if len(p.Password) == 0 {
-		return s.handleRegistrationError(r, f, p, schema.NewRequiredError("#/password", "password"))
+		return false, s.handleRegistrationError(r, f, p, schema.NewRequiredError("#/password", "password"))
 	}
 
 	if len(p.Traits) == 0 {
@@ -133,32 +133,32 @@ func (s *Strategy) Register(_ http.ResponseWriter, r *http.Request, f *registrat
 	}()
 
 	if err != nil {
-		return s.handleRegistrationError(r, f, p, err)
+		return false, s.handleRegistrationError(r, f, p, err)
 	}
 
 	i.Traits = identity.Traits(p.Traits)
 	// We have to set the credential here, so the identity validator can populate the identifiers.
 	// The password hash is computed in parallel and set later.
 	if err := i.SetCredentialsWithConfig(s.ID(), identity.Credentials{Type: s.ID(), Identifiers: []string{}}, json.RawMessage("{}")); err != nil {
-		return s.handleRegistrationError(r, f, p, err)
+		return false, s.handleRegistrationError(r, f, p, err)
 	}
 
 	if err := s.validateCredentials(ctx, i, p.Password); err != nil {
-		return s.handleRegistrationError(r, f, p, err)
+		return false, s.handleRegistrationError(r, f, p, err)
 	}
 
 	select {
 	case err := <-errC:
-		return s.handleRegistrationError(r, f, p, err)
+		return false, s.handleRegistrationError(r, f, p, err)
 	case h := <-hpw:
 		co, err := json.Marshal(&identity.CredentialsPassword{HashedPassword: string(h)})
 		if err != nil {
-			return s.handleRegistrationError(r, f, p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode password options to JSON: %s", err)))
+			return false, s.handleRegistrationError(r, f, p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to encode password options to JSON: %s", err)))
 		}
 		i.UpsertCredentialsConfig(s.ID(), co, 0)
 	}
 
-	return nil
+	return false, nil
 }
 
 func (s *Strategy) validateCredentials(ctx context.Context, i *identity.Identity, pw string) (err error) {

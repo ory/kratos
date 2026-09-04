@@ -17,7 +17,13 @@ import (
 type Strategy interface {
 	ID() identity.CredentialsType
 	NodeGroup() node.UiNodeGroup
-	Register(w http.ResponseWriter, r *http.Request, f *Flow, i *identity.Identity) (err error)
+	// Register attempts to register the identity.
+	//
+	// A strategy may complete the flow itself (for example by redirecting to an
+	// OIDC provider). In that case it returns completed == true with a nil
+	// error: this is a control signal, not a failure, so callers must stop
+	// processing the flow without treating it as an error.
+	Register(w http.ResponseWriter, r *http.Request, f *Flow, i *identity.Identity) (completed bool, err error)
 }
 
 type Strategies []Strategy

@@ -89,10 +89,6 @@ func (s *Strategy) CompletedAuthenticationMethod(ctx context.Context) session.Au
 }
 
 func (s *Strategy) HandleLoginError(r *http.Request, f *login.Flow, body *updateLoginFlowWithCodeMethod, err error, hideIdentifier bool) error {
-	if errors.Is(err, flow.ErrCompletedByStrategy) {
-		return err
-	}
-
 	if f != nil {
 		identifier := ""
 		if body != nil {
@@ -173,20 +169,20 @@ func (s *Strategy) methodEnabledAndAllowedFromRequest(r *http.Request, f *login.
 	return &method, nil
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (_ *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (_ *identity.Identity, completed bool, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.Login")
 	defer otelx.End(span, &err)
 
 	if s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled {
 		if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	} else if s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled {
 		if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel2); err != nil {
-			return nil, err
+			return nil, false, err
 		}
 	} else {
-		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+		return nil, false, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	if p, err := s.methodEnabledAndAllowedFromRequest(r, f); errors.Is(err, flow.ErrStrategyNotResponsible) {
@@ -200,17 +196,17 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 			s.deps.Config().RefreshLoginChooseAddress(ctx)
 		if !codeConfig.MFAEnabled && !allowFirstFactorRefreshAddress {
 			span.SetAttributes(attribute.String("not_responsible_reason", "code method is not enabled"))
-			return nil, err
+			return nil, false, err
 		}
 
 		if p == nil || len(p.Address) == 0 {
 			span.SetAttributes(attribute.String("not_responsible_reason", "method not set or address not set"))
-			return nil, err
+			return nil, false, err
 		}
 
 		// In this special case we only expect `address` to be set.
 	} else if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	var p updateLoginFlowWithCodeMethod
@@ -220,13 +216,13 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginMethodSchema),
 		decoderx.HTTPDecoderAllowedMethods("POST"),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return nil, s.HandleLoginError(r, f, &p, err, false)
+		return nil, false, s.HandleLoginError(r, f, &p, err, false)
 	}
 
 	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return nil, s.HandleLoginError(r, f, &p, err, false)
+		return nil, false, s.HandleLoginError(r, f, &p, err, false)
 	}
 
 	// By Default the flow should be in the 'choose method' state.
@@ -239,29 +235,30 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		)
 		id, addresses, err := s.findIdentityForIdentifier(ctx, identifier, f.RequestedAAL, sess)
 		if err != nil {
-			return nil, s.HandleLoginError(r, f, &p, err, false)
+			return nil, false, s.HandleLoginError(r, f, &p, err, false)
 		}
 		// On a refresh login the identity is fixed by the active session.
 		// A submitted address that resolves to a different identity must not
 		// be able to trigger a code or switch the session (ory/kratos#4194).
 		if f.Refresh && sess.Identity != nil && id.ID != sess.Identity.ID {
-			return nil, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoCodeAuthnCredentials()), false)
+			return nil, false, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoCodeAuthnCredentials()), false)
 		}
-		if err := s.loginSendCode(ctx, w, r, f, id, identifier, addresses, false); err != nil {
-			return nil, s.HandleLoginError(r, f, &p, err, false)
+		completed, err := s.loginSendCode(ctx, w, r, f, id, identifier, addresses, false)
+		if err != nil {
+			return nil, false, s.HandleLoginError(r, f, &p, err, false)
 		}
-		return nil, nil
+		return nil, completed, nil
 	case flow.StateEmailSent:
 		i, err := s.loginVerifyCode(ctx, f, &p, sess)
 		if err != nil {
-			return nil, s.HandleLoginError(r, f, &p, err, true)
+			return nil, false, s.HandleLoginError(r, f, &p, err, true)
 		}
-		return i, nil
+		return i, false, nil
 	case flow.StatePassedChallenge:
-		return nil, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoLoginStrategyResponsible()), false)
+		return nil, false, s.HandleLoginError(r, f, &p, errors.WithStack(schema.NewNoLoginStrategyResponsible()), false)
 	}
 
-	return nil, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unexpected flow state: %s", f.GetState())), false)
+	return nil, false, s.HandleLoginError(r, f, &p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unexpected flow state: %s", f.GetState())), false)
 }
 
 // nonOrgFilter excludes strategies that support organization-based authentication.
@@ -274,12 +271,12 @@ var nonOrgFilter = []login.StrategyFilter{
 	},
 }
 
-func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (err error) {
+func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (completed bool, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.FastLogin1FA")
 	defer otelx.End(span, &err)
 
 	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel1 || !s.deps.Config().SelfServiceCodeStrategy(ctx).PasswordlessEnabled || f.GetState() != flow.StateChooseMethod {
-		return flow.ErrStrategyNotResponsible
+		return false, flow.ErrStrategyNotResponsible
 	}
 
 	var p1 idfirst.UpdateLoginFlowWithIdentifierFirstMethod
@@ -287,12 +284,12 @@ func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(idfirst.LoginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return err
+		return false, err
 	}
 	identifier := p1.Identifier
 	id, addresses, err := s.findIdentityForIdentifier(ctx, identifier, f.RequestedAAL, sess)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// On a refresh login the identity is fixed by the active session. Do not
@@ -300,82 +297,84 @@ func (s *Strategy) FastLogin1FA(w http.ResponseWriter, r *http.Request, f *login
 	// code to a foreign address (ory/kratos#4194). Returning "not responsible"
 	// keeps the response identical to the no-fast-login case (no enumeration).
 	if f.Refresh && sess.Identity != nil && id.ID != sess.Identity.ID {
-		return flow.ErrStrategyNotResponsible
+		return false, flow.ErrStrategyNotResponsible
 	}
 
 	accountEnumerationMitigate := s.deps.Config().SecurityAccountEnumerationMitigate(r.Context())
 
 	if c, err := s.CountActiveFirstFactorCredentials(ctx, id.Credentials); err != nil {
-		return err
+		return false, err
 	} else if c == 0 {
-		return flow.ErrStrategyNotResponsible
+		return false, flow.ErrStrategyNotResponsible
 	} else {
 		for _, strat := range s.deps.LoginStrategies(ctx, nonOrgFilter...) {
 			if strat, ok := strat.(identity.ActiveCredentialsCounter); !ok || strat.ID() == identity.CredentialsTypeCodeAuth {
 				continue
 			} else {
 				if cc, err := strat.CountActiveFirstFactorCredentials(ctx, id.Credentials); err != nil {
-					return err
+					return false, err
 				} else if cc > 0 || accountEnumerationMitigate {
-					return flow.ErrStrategyNotResponsible
+					return false, flow.ErrStrategyNotResponsible
 				}
 			}
 		}
 	}
 
-	if err := s.loginSendCode(ctx, w, r, f, id, identifier, addresses, f.RequestedAAL == "aal2"); err != nil {
-		return err
+	completed, err = s.loginSendCode(ctx, w, r, f, id, identifier, addresses, f.RequestedAAL == "aal2")
+	if err != nil {
+		return false, err
 	}
 
-	return nil
+	return completed, nil
 }
 
-func (s *Strategy) FastLogin2FA(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (err error) {
+func (s *Strategy) FastLogin2FA(w http.ResponseWriter, r *http.Request, f *login.Flow, sess *session.Session) (completed bool, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.FastLogin2FA")
 	defer otelx.End(span, &err)
 
 	if f.RequestedAAL != identity.AuthenticatorAssuranceLevel2 || !s.deps.Config().SelfServiceCodeStrategy(ctx).MFAEnabled || f.GetState() != flow.StateChooseMethod {
-		return flow.ErrStrategyNotResponsible
+		return false, flow.ErrStrategyNotResponsible
 	}
 
 	addresses, err := s.FindCodeAddresses(ctx, sess, r.URL.Query().Get("via"))
 	if err != nil {
-		return err
+		return false, err
 	}
 	if len(addresses) != 1 {
-		return flow.ErrStrategyNotResponsible
+		return false, flow.ErrStrategyNotResponsible
 	}
 	identifier := addresses[0].To
 	id, addresses, err := s.findIdentityForIdentifier(ctx, identifier, f.RequestedAAL, sess)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	fallbackEnabled := s.deps.Config().SelfServiceCodeMethodMissingCredentialFallbackEnabled(ctx)
 
 	if c, err := s.CountActiveMultiFactorCredentials(ctx, sess.Identity.Credentials); err != nil {
-		return err
+		return false, err
 	} else if c == 0 && !fallbackEnabled {
-		return flow.ErrStrategyNotResponsible
+		return false, flow.ErrStrategyNotResponsible
 	} else {
 		for _, strat := range s.deps.LoginStrategies(ctx, login.PrepareOrganizations(r, f, sess)...) {
 			if strat, ok := strat.(identity.ActiveCredentialsCounter); !ok || strat.ID() == identity.CredentialsTypeCodeAuth {
 				continue
 			} else {
 				if cc, err := strat.CountActiveMultiFactorCredentials(ctx, sess.Identity.Credentials); err != nil {
-					return err
+					return false, err
 				} else if cc > 0 {
-					return flow.ErrStrategyNotResponsible
+					return false, flow.ErrStrategyNotResponsible
 				}
 			}
 		}
 	}
 
-	if err := s.loginSendCode(ctx, w, r, f, id, identifier, addresses, true); err != nil {
-		return err
+	completed, err = s.loginSendCode(ctx, w, r, f, id, identifier, addresses, true)
+	if err != nil {
+		return false, err
 	}
 
-	return nil
+	return completed, nil
 }
 
 func (s *Strategy) findIdentifierInVerifiableAddress(i *identity.Identity, identifier string) (*Address, error) {
@@ -513,7 +512,7 @@ func (s *Strategy) findIdentityForIdentifier(ctx context.Context, identifier str
 	return i, addresses, nil
 }
 
-func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, id *identity.Identity, identifier string, addresses []Address, successResponse bool) (err error) {
+func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, id *identity.Identity, identifier string, addresses []Address, successResponse bool) (completed bool, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.loginSendCode")
 	defer otelx.End(span, &err)
 
@@ -525,7 +524,7 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 
 	// Step 2: Delete any previous login codes for this flow ID
 	if err := s.deps.LoginCodePersister().DeleteLoginCodesOfFlow(ctx, f.GetID()); err != nil {
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	// Fetch the OAuth2 login request before sending out the code so that
@@ -533,7 +532,7 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 	if f.OAuth2LoginChallenge != "" {
 		hlr, err := s.deps.Hydra().GetLoginRequest(ctx, string(f.OAuth2LoginChallenge))
 		if err != nil {
-			return errors.WithStack(err)
+			return false, errors.WithStack(err)
 		}
 		f.HydraLoginRequest = hlr
 	}
@@ -541,19 +540,19 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above
 	if err := s.deps.CodeSender().SendCode(ctx, f, id, r.Header, addresses...); err != nil {
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	// sets the flow state to code sent
 	f.SetState(flow.NextState(f.GetState()))
 
 	if err := s.NewCodeUINodes(r, f, &codeIdentifier{Identifier: identifier}); err != nil {
-		return err
+		return false, err
 	}
 
 	f.Active = identity.CredentialsTypeCodeAuth
 	if err = s.deps.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return err
+		return false, err
 	}
 
 	if x.IsJSONRequest(r) {
@@ -568,7 +567,7 @@ func (s *Strategy) loginSendCode(ctx context.Context, w http.ResponseWriter, r *
 
 	// we return an error to the flow handler so that it does not continue execution of the hooks.
 	// we are not done with the login flow yet. The user needs to verify the code and then we need to persist the identity.
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return true, nil
 }
 
 // If identifier is an email, we lower case it because on mobile phones the first letter sometimes is capitalized.

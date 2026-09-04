@@ -674,13 +674,15 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	var s string
 	var updateContext *UpdateContext
 	for _, strat := range h.d.AllSettingsStrategies() {
-		uc, err := strat.Settings(ctx, w, r, f, ss)
+		uc, completed, err := strat.Settings(ctx, w, r, f, ss)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
-		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return
 		} else if err != nil {
 			h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, strat.NodeGroup(), f, ss.Identity, ss, err)
+			return
+		} else if completed {
+			// The strategy completed the flow itself and already wrote the
+			// response. This is a control signal, not a failure.
 			return
 		}
 

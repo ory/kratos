@@ -10,7 +10,6 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
@@ -26,31 +25,30 @@ import (
 	"github.com/ory/kratos/identity"
 	"github.com/ory/kratos/pkg"
 	"github.com/ory/kratos/pkg/testhelpers"
-	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/login"
 	"github.com/ory/kratos/selfservice/strategy/code"
 	"github.com/ory/kratos/session"
 )
 
 // completeByStrategyCodeStrategy embeds the real code strategy but forces its
-// fast-login path to hand control back to the caller via
-// flow.ErrCompletedByStrategy. This is the control signal that the login
-// handlers deliberately swallow for the client.
+// fast-login path to report that it has completed the flow. Completion is a
+// control signal (the strategy has written the response itself), modelled as
+// the `completed` return value rather than an error.
 type completeByStrategyCodeStrategy struct {
 	*code.Strategy
 }
 
-func (s *completeByStrategyCodeStrategy) FastLogin2FA(_ http.ResponseWriter, _ *http.Request, _ *login.Flow, _ *session.Session) error {
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+func (s *completeByStrategyCodeStrategy) FastLogin2FA(_ http.ResponseWriter, _ *http.Request, _ *login.Flow, _ *session.Session) (bool, error) {
+	return true, nil
 }
 
 // TestCreateLoginFlowCompletedByStrategyTelemetry is a regression test for
 // https://github.com/ory/kratos/issues/4109: when a strategy completes the flow
-// and returns flow.ErrCompletedByStrategy, the handler intentionally does not
-// write an error to the client. However, the named `err` used to remain set,
-// so the deferred otelx.End(span, &err) recorded the control signal as a span
-// error/exception. The handler must keep the control signal out of the
-// telemetry path as well.
+// during creation, the handler intentionally does not write an error to the
+// client. Completion is now returned as a control value (completed bool) rather
+// than a sentinel error, so the deferred otelx.End(span, &err) can no longer
+// record it as a span error/exception. This test asserts that neither the
+// client nor the span sees an error on the completed-by-strategy path.
 func TestCreateLoginFlowCompletedByStrategyTelemetry(t *testing.T) {
 	ctx := context.Background()
 	conf, reg := pkg.NewFastRegistryWithMocks(t)
@@ -91,10 +89,10 @@ func TestCreateLoginFlowCompletedByStrategyTelemetry(t *testing.T) {
 
 	handlerSpan := ended[i]
 	assert.NotEqual(t, codes.Error, handlerSpan.Status().Code,
-		"the createNativeLoginFlow span must not be marked as errored on flow.ErrCompletedByStrategy, but was: %q", handlerSpan.Status().Description)
+		"the createNativeLoginFlow span must not be marked as errored when a strategy completes the flow, but was: %q", handlerSpan.Status().Description)
 
 	for _, e := range handlerSpan.Events() {
-		assert.NotEqual(t, "exception", e.Name, "the createNativeLoginFlow span must not record an exception event on flow.ErrCompletedByStrategy")
+		assert.NotEqual(t, "exception", e.Name, "the createNativeLoginFlow span must not record an exception event when a strategy completes the flow")
 	}
 }
 

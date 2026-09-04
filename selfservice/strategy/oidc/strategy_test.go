@@ -279,7 +279,7 @@ func TestStrategy(t *testing.T) {
 
 	newLoginFlow := func(t *testing.T, requestURL string, exp time.Duration, flowType flow.Type) (req *login.Flow) {
 		// Use NewLoginFlow to instantiate the request but change the things we need to control a copy of it.
-		req, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
+		req, _, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(),
 			&http.Request{URL: urlx.ParseOrPanic(requestURL)}, flowType)
 		require.NoError(t, err)
 		req.RequestURL = requestURL

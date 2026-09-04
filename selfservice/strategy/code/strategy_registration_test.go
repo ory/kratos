@@ -860,8 +860,9 @@ func TestCodeRegistrationWithLoginChallenge(t *testing.T) {
 		r := httptest.NewRequest("POST", "/self-service/registration/browser", strings.NewReader(body.Raw))
 		r.Header.Add("Content-Type", "application/json")
 
-		err := s.Register(httptest.NewRecorder(), r, f, i)
-		require.ErrorIs(t, err, flow.ErrCompletedByStrategy)
+		completed, err := s.Register(httptest.NewRecorder(), r, f, i)
+		require.NoError(t, err)
+		require.True(t, completed, "the strategy sent a registration code and should report the flow as completed")
 		require.NotNil(t, f.HydraLoginRequest)
 
 		messages, err := reg.CourierPersister().NextMessages(t.Context(), 10)
@@ -888,7 +889,7 @@ func TestCodeRegistrationWithLoginChallenge(t *testing.T) {
 		r := httptest.NewRequest("POST", "/self-service/registration/browser", strings.NewReader(body.Raw))
 		r.Header.Add("Content-Type", "application/json")
 
-		err := s.Register(httptest.NewRecorder(), r, f, i)
+		_, err := s.Register(httptest.NewRecorder(), r, f, i)
 		require.ErrorIs(t, err, herodot.ErrBadRequest())
 		require.Nil(t, f.HydraLoginRequest)
 

@@ -27,7 +27,14 @@ type (
 		VerificationStrategyID() string
 		NodeGroup() node.UiNodeGroup
 		PopulateVerificationMethod(*http.Request, *Flow) error
-		Verify(w http.ResponseWriter, r *http.Request, f *Flow) (err error)
+		// Verify attempts to verify the address.
+		//
+		// A strategy may complete the flow itself (for example by sending a
+		// verification code and rendering the next step). In that case it returns
+		// completed == true with a nil error: this is a control signal, not a
+		// failure, so callers must stop processing without treating it as an
+		// error.
+		Verify(w http.ResponseWriter, r *http.Request, f *Flow) (completed bool, err error)
 	}
 	PrimaryStrategy interface {
 		Strategy

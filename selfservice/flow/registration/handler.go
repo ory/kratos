@@ -732,12 +732,14 @@ func (h *Handler) updateRegistrationFlow(w http.ResponseWriter, r *http.Request)
 	i := identity.NewIdentity(f.IdentitySchema.ID(ctx, h.d.Config()))
 	var s Strategy
 	for _, ss := range h.d.AllRegistrationStrategies() {
-		if err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {
+		if completed, err := ss.Register(w, r, f, i); errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
-		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return
 		} else if err != nil {
 			h.d.RegistrationFlowErrorHandler().WriteFlowError(w, r, f, ss.ID(), ss.NodeGroup(), err)
+			return
+		} else if completed {
+			// The strategy completed the flow itself and already wrote the
+			// response. This is a control signal, not a failure.
 			return
 		}
 

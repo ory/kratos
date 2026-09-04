@@ -120,25 +120,25 @@ func (s *Strategy) PopulateSettingsMethod(ctx context.Context, r *http.Request, 
 	return nil
 }
 
-func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, completed bool, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.profile.Strategy.Settings")
 	defer otelx.End(span, &err)
 
 	var p updateSettingsFlowWithProfileMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return ctxUpdate, s.continueFlow(ctx, r, ctxUpdate, p)
+		return ctxUpdate, false, s.continueFlow(ctx, r, ctxUpdate, p)
 	} else if err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
 	}
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.SettingsStrategyID(), s.d); err != nil {
-		return ctxUpdate, err
+		return ctxUpdate, false, err
 	}
 
 	option, err := s.newSettingsProfileDecoder(ctx, ctxUpdate.GetSessionIdentity())
 	if err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
 	}
 
 	if err := decoderx.Decode(r, &p, option,
@@ -146,17 +146,17 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.HTTPDecoderJSONFollowsFormFormat(),
 	); err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
 	}
 
 	// Reset after decoding form
 	p.SetFlowID(ctxUpdate.Flow.ID)
 
 	if err := s.continueFlow(ctx, r, ctxUpdate, p); err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
 	}
 
-	return ctxUpdate, nil
+	return ctxUpdate, false, nil
 }
 
 func (s *Strategy) continueFlow(ctx context.Context, r *http.Request, ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithProfileMethod) error {
