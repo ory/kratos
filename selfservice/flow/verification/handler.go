@@ -446,13 +446,15 @@ func (h *Handler) updateVerificationFlow(w http.ResponseWriter, r *http.Request)
 			continue
 		}
 
-		err := ss.Verify(w, r, f)
+		completed, err := ss.Verify(w, r, f)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
-		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return
 		} else if err != nil {
 			h.d.VerificationFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
+			return
+		} else if completed {
+			// The strategy completed the flow itself and already wrote the
+			// response. This is a control signal, not a failure.
 			return
 		}
 

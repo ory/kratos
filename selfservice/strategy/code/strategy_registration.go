@@ -71,10 +71,6 @@ func (p *updateRegistrationFlowWithCodeMethod) GetResend() string {
 }
 
 func (s *Strategy) HandleRegistrationError(ctx context.Context, r *http.Request, f *registration.Flow, body *updateRegistrationFlowWithCodeMethod, err error) error {
-	if errors.Is(err, flow.ErrCompletedByStrategy) {
-		return err
-	}
-
 	if f != nil {
 		if body != nil {
 			action := f.AppendTo(urlx.AppendPaths(s.deps.Config().SelfPublicURL(ctx), registration.RouteSubmitFlow)).String()
@@ -170,28 +166,28 @@ func (s *Strategy) validateAndGetCredentialsFromTraits(ctx context.Context, i *i
 	return cred, &conf, nil
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (err error) {
+func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, i *identity.Identity) (completed bool, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.Register")
 	defer otelx.End(span, &err)
 
 	if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.ID().String(), s.deps); err != nil {
-		return err
+		return false, err
 	}
 
 	ds, err := f.IdentitySchema.URL(ctx, s.deps.Config())
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	var p updateRegistrationFlowWithCodeMethod
 	if err := registration.DecodeBody(&p, r, registrationSchema, ds); err != nil {
-		return s.HandleRegistrationError(ctx, r, f, &p, err)
+		return false, s.HandleRegistrationError(ctx, r, f, &p, err)
 	}
 
 	f.TransientPayload = p.TransientPayload
 
 	if err := flow.EnsureCSRF(s.deps, r, f.Type, s.deps.Config().DisableAPIFlowEnforcement(ctx), s.deps.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return s.HandleRegistrationError(ctx, r, f, &p, err)
+		return false, s.HandleRegistrationError(ctx, r, f, &p, err)
 	}
 
 	// By Default the flow should be in the 'choose method' state.
@@ -199,22 +195,31 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 
 	switch f.GetState() {
 	case flow.StateChooseMethod:
-		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationSendEmail(ctx, w, r, f, &p, i))
+		// registrationSendEmail sends the code and renders the next step; on
+		// success it reports completed == true (the strategy took over the
+		// response), which is a control signal and not a failure.
+		completed, err := s.registrationSendEmail(ctx, w, r, f, &p, i)
+		if err != nil {
+			return false, s.HandleRegistrationError(ctx, r, f, &p, err)
+		}
+		return completed, nil
 	case flow.StateEmailSent:
-		return s.HandleRegistrationError(ctx, r, f, &p, s.registrationVerifyCode(ctx, f, &p, i))
+		// registrationVerifyCode does not complete the flow: on success the
+		// handler continues with the post-registration hook.
+		return false, s.HandleRegistrationError(ctx, r, f, &p, s.registrationVerifyCode(ctx, f, &p, i))
 	case flow.StatePassedChallenge:
-		return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
+		return false, s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 	}
 
-	return s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unexpected flow state: %s", f.GetState())))
+	return false, s.HandleRegistrationError(ctx, r, f, &p, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unexpected flow state: %s", f.GetState())))
 }
 
-func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {
+func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWriter, r *http.Request, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (completed bool, err error) {
 	ctx, span := s.deps.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.code.Strategy.registrationSendEmail")
 	defer otelx.End(span, &err)
 
 	if len(p.Traits) == 0 {
-		return errors.WithStack(schema.NewRequiredError("#/traits", "traits"))
+		return false, errors.WithStack(schema.NewRequiredError("#/traits", "traits"))
 	}
 
 	// Create the Registration code
@@ -222,12 +227,12 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 	// Step 1: validate the identity's traits
 	_, conf, err := s.validateAndGetCredentialsFromTraits(ctx, i, p.Traits)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// Step 2: Delete any previous registration codes for this flow ID
 	if err := s.deps.RegistrationCodePersister().DeleteRegistrationCodesOfFlow(ctx, f.ID); err != nil {
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	// Step 3: Get the identity email and send the code
@@ -241,7 +246,7 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 	if f.OAuth2LoginChallenge != "" {
 		hlr, err := s.deps.Hydra().GetLoginRequest(ctx, string(f.OAuth2LoginChallenge))
 		if err != nil {
-			return errors.WithStack(err)
+			return false, errors.WithStack(err)
 		}
 		f.HydraLoginRequest = hlr
 	}
@@ -249,7 +254,7 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 	// kratos only supports `email` identifiers at the moment with the code method
 	// this is validated in the identity validation step above
 	if err := s.deps.CodeSender().SendCode(ctx, f, i, r.Header, addresses...); err != nil {
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	// sets the flow state to code sent
@@ -259,12 +264,12 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 	// re-initialize the UI with a "clean" new state
 	// this should also provide a "resend" button and an option to change the email address
 	if err := s.NewCodeUINodes(r, f, p.Traits); err != nil {
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	f.Active = identity.CredentialsTypeCodeAuth
 	if err := s.deps.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 
 	if x.IsJSONRequest(r) {
@@ -275,7 +280,7 @@ func (s *Strategy) registrationSendEmail(ctx context.Context, w http.ResponseWri
 
 	// we return an error to the flow handler so that it does not continue execution of the hooks.
 	// we are not done with the registration flow yet. The user needs to verify the code and then we need to persist the identity.
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return true, nil
 }
 
 func (s *Strategy) registrationVerifyCode(ctx context.Context, f *registration.Flow, p *updateRegistrationFlowWithCodeMethod, i *identity.Identity) (err error) {

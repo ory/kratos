@@ -145,11 +145,17 @@ func WithLoginChallenge(loginChallenge string) FlowOption {
 	}
 }
 
-func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (*Flow, *session.Session, error) {
+// NewLoginFlow creates and returns a new login flow.
+//
+// A fast-login strategy may complete the flow during creation. In that case
+// the returned completed bool is true (with a nil error): this is a control
+// signal, not a failure, so callers must stop processing without recording an
+// error.
+func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.Type, opts ...FlowOption) (_ *Flow, _ *session.Session, completed bool, err error) {
 	conf := h.d.Config()
 	f, err := NewFlow(h.d, r, ft)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 	for _, o := range opts {
 		o(f)
@@ -166,14 +172,14 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		if requestedSchema := r.URL.Query().Get("identity_schema"); requestedSchema != "" {
 			identitySchema, err = conf.SelfServiceFlowIdentitySchema(r.Context(), requestedSchema)
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, false, err
 			}
 		}
 		f.IdentitySchema = flow.IdentitySchema(identitySchema)
 	case cs.AddCase(string(identity.AuthenticatorAssuranceLevel2)):
 		f.RequestedAAL = identity.AuthenticatorAssuranceLevel2
 	default:
-		return nil, nil, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
+		return nil, nil, false, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse AuthenticationMethod Assurance Level (AAL): %s", cs.ToUnknownCaseErr()))
 	}
 
 	// We assume an error means the user has no session.
@@ -187,14 +193,14 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		if ft == flow.TypeAPI && returnSessionTokenExchangeCode {
 			e, err := h.d.SessionTokenExchangePersister().CreateSessionTokenExchanger(r.Context(), f.ID)
 			if err != nil {
-				return nil, nil, errors.WithStack(err)
+				return nil, nil, false, errors.WithStack(err)
 			}
 			f.SessionTokenExchangeCode = e.InitCode
 		}
 
 		// We can not request an AAL > 1 because we must first verify the first factor.
 		if f.RequestedAAL > identity.AuthenticatorAssuranceLevel1 {
-			return nil, nil, errors.WithStack(ErrSessionRequiredForHigherAAL())
+			return nil, nil, false, errors.WithStack(ErrSessionRequiredForHigherAAL())
 		}
 
 		// We are setting refresh to false if no session exists.
@@ -203,7 +209,7 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 		goto preLoginHook
 	} else if err != nil {
 		// Some other error happened - return that one.
-		return nil, nil, err
+		return nil, nil, false, err
 	} else {
 		// A session exists already
 		if f.Refresh {
@@ -215,13 +221,13 @@ func (h *Handler) NewLoginFlow(w http.ResponseWriter, r *http.Request, ft flow.T
 
 		// If level is 1 we are not requesting AAL -> we are logged in already.
 		if f.RequestedAAL == identity.AuthenticatorAssuranceLevel1 {
-			return nil, sess, errors.WithStack(ErrAlreadyLoggedIn())
+			return nil, sess, false, errors.WithStack(ErrAlreadyLoggedIn())
 		}
 
 		// We are requesting an assurance level which the session already has. So we are not upgrading the session
 		// in which case we want to return an error.
 		if f.RequestedAAL <= sess.AuthenticatorAssuranceLevel {
-			return nil, sess, errors.WithStack(ErrAlreadyLoggedIn())
+			return nil, sess, false, errors.WithStack(ErrAlreadyLoggedIn())
 		}
 
 		// Looks like we are requesting an AAL which is higher than what the session has.
@@ -274,7 +280,7 @@ preLoginHook:
 		}
 
 		if populateErr != nil {
-			return nil, nil, populateErr
+			return nil, nil, false, populateErr
 		}
 	}
 
@@ -287,7 +293,7 @@ preLoginHook:
 	}
 
 	if err := sortNodes(r.Context(), f.UI.Nodes); err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 
 	if f.Type == flow.TypeBrowser {
@@ -296,25 +302,25 @@ preLoginHook:
 
 	if err := h.d.LoginHookExecutor().PreLoginHook(w, r, f); err != nil {
 		h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, "", node.DefaultGroup, err)
-		return f, sess, nil
+		return f, sess, false, nil
 	}
 
 	if err := h.d.LoginFlowPersister().CreateLoginFlow(r.Context(), f); err != nil {
-		return nil, nil, err
+		return nil, nil, false, err
 	}
 
 	// If the strategy supports fast login, we can attempt a fast path.
 	// We execute the fast login here because it requires the flow to be created first.
 	for _, s := range loginStrategies {
 		if strategy, ok := s.(FastLoginStrategy); ok {
-			if err := strategy.FastLogin2FA(w, r, f, sess); errors.Is(err, flow.ErrStrategyNotResponsible) {
+			if fastCompleted, err := strategy.FastLogin2FA(w, r, f, sess); errors.Is(err, flow.ErrStrategyNotResponsible) {
 				continue
-			} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+			} else if err != nil {
+				return nil, nil, false, err
+			} else if fastCompleted {
 				span := trace.SpanFromContext(r.Context())
 				span.AddEvent(events.NewLoginInitiated(r.Context(), f.ID, ft.String(), f.Refresh, f.OrganizationID, string(f.RequestedAAL)))
-				return nil, nil, err
-			} else if err != nil {
-				return nil, nil, err
+				return nil, nil, true, nil
 			}
 			break
 		}
@@ -322,11 +328,14 @@ preLoginHook:
 
 	span := trace.SpanFromContext(r.Context())
 	span.AddEvent(events.NewLoginInitiated(r.Context(), f.ID, ft.String(), f.Refresh, f.OrganizationID, string(f.RequestedAAL)))
-	return f, nil, nil
+	return f, nil, false, nil
 }
 
 func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (*Flow, error) {
-	nf, _, err := h.NewLoginFlow(w, r, of.Type)
+	// A fast-login strategy cannot complete this flow: FromOldFlow recreates an
+	// (AAL1) flow and only FastLogin2FA completes during creation, so completed
+	// is always false here.
+	nf, _, _, err := h.NewLoginFlow(w, r, of.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -443,11 +452,14 @@ func (h *Handler) createNativeLoginFlow(w http.ResponseWriter, r *http.Request) 
 	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 
-	f, _, err := h.NewLoginFlow(w, r, flow.TypeAPI)
-	if err != nil {
-		if !errors.Is(err, flow.ErrCompletedByStrategy) {
-			h.d.Writer().WriteError(w, r, err)
-		}
+	f, _, completed, err := h.NewLoginFlow(w, r, flow.TypeAPI)
+	if completed {
+		// The flow was completed by a strategy. This is a control signal and not
+		// an error: the strategy already wrote the response, so we neither
+		// surface anything to the client nor record it on the span.
+		return
+	} else if err != nil {
+		h.d.Writer().WriteError(w, r, err)
 		return
 	}
 
@@ -611,7 +623,7 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	a, sess, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
+	a, sess, completed, err := h.NewLoginFlow(w, r, flow.TypeBrowser)
 	if errors.Is(err, ErrAlreadyLoggedIn()) {
 		if hydraLoginRequest != nil {
 			if !hydraLoginRequest.GetSkip() {
@@ -645,7 +657,10 @@ func (h *Handler) createBrowserLoginFlow(w http.ResponseWriter, r *http.Request)
 
 		x.SendFlowCompletedAsRedirectOrJSON(w, r, h.d.Writer(), err, returnTo.String())
 		return
-	} else if errors.Is(err, flow.ErrCompletedByStrategy) {
+	} else if completed {
+		// The flow was completed by a strategy. This is a control signal and not
+		// an error: the strategy already wrote the response, so we neither
+		// surface anything to the client nor record it on the span.
 		return
 	} else if err != nil {
 		h.d.SelfServiceErrorManager().Forward(ctx, w, r, err)
@@ -958,14 +973,16 @@ continueLogin:
 	var i *identity.Identity
 	var group node.UiNodeGroup
 	for _, ss := range h.d.AllLoginStrategies() {
-		interim, err := ss.Login(w, r, f, sess)
+		interim, completed, err := ss.Login(w, r, f, sess)
 		group = ss.NodeGroup()
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
-		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return
 		} else if err != nil {
 			h.d.LoginFlowErrorHandler().WriteFlowError(w, r, f, ss.ID(), group, err)
+			return
+		} else if completed {
+			// The strategy completed the flow itself and already wrote the
+			// response. This is a control signal, not a failure.
 			return
 		}
 

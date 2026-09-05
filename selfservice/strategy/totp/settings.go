@@ -82,39 +82,39 @@ func (p *updateSettingsFlowWithTotpMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
-func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, completed bool, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.totp.Strategy.Settings")
 	defer otelx.End(span, &err)
 
 	var p updateSettingsFlowWithTotpMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return ctxUpdate, s.continueSettingsFlow(ctx, r, ctxUpdate, p)
+		return ctxUpdate, false, s.continueSettingsFlow(ctx, r, ctxUpdate, p)
 	} else if err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	if err := s.decodeSettingsFlow(r, &p); err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	if p.UnlinkTOTP {
 		// This is a submit so we need to manually set the type to TOTP
 		p.Method = s.SettingsStrategyID()
 		if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
-			return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+			return nil, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 		}
 	} else if err := flow.MethodEnabledAndAllowedFromRequest(r, f.GetFlowName(), s.SettingsStrategyID(), s.d); err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
 	if err := s.continueSettingsFlow(ctx, r, ctxUpdate, p); err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	return ctxUpdate, nil
+	return ctxUpdate, false, nil
 }
 
 func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {

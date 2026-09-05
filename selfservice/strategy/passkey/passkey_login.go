@@ -155,7 +155,7 @@ type updateLoginFlowWithPasskeyMethod struct {
 	Login string `json:"passkey_login"`
 }
 
-func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, err error) {
+func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, _ *session.Session) (i *identity.Identity, completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.passkey.Strategy.Login")
 	defer otelx.End(span, &err)
 
@@ -165,7 +165,7 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		decoderx.HTTPDecoderSetValidatePayloads(true),
 		decoderx.MustHTTPRawJSONSchemaCompiler(loginSchema),
 		decoderx.HTTPDecoderJSONFollowsFormFormat()); err != nil {
-		return nil, s.handleLoginError(r, f, err)
+		return nil, false, s.handleLoginError(r, f, err)
 	}
 
 	if len(p.Login) > 0 || p.Method == s.SettingsStrategyID() {
@@ -173,28 +173,28 @@ func (s *Strategy) Login(w http.ResponseWriter, r *http.Request, f *login.Flow, 
 		p.Method = s.SettingsStrategyID()
 	} else {
 		span.SetAttributes(attribute.String("not_responsible_reason", "no login value and mismatched method"))
-		return nil, flow.ErrStrategyNotResponsible
+		return nil, false, flow.ErrStrategyNotResponsible
 	}
 
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
-		return nil, s.handleLoginError(r, f, err)
+		return nil, false, s.handleLoginError(r, f, err)
 	}
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return nil, s.handleLoginError(r, f, err)
+		return nil, false, s.handleLoginError(r, f, err)
 	}
 
 	return s.loginPasswordless(ctx, w, r, f, &p)
 }
 
-func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod) (i *identity.Identity, err error) {
+func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod) (i *identity.Identity, completed bool, err error) {
 	if err := login.CheckAAL(f, identity.AuthenticatorAssuranceLevel1); err != nil {
 		trace.SpanFromContext(ctx).SetAttributes(attribute.String("not_responsible_reason", "requested AAL is not AAL1"))
-		return nil, s.handleLoginError(r, f, err)
+		return nil, false, s.handleLoginError(r, f, err)
 	}
 
 	if err := flow.EnsureCSRF(s.d, r, f.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, p.CSRFToken); err != nil {
-		return nil, s.handleLoginError(r, f, err)
+		return nil, false, s.handleLoginError(r, f, err)
 	}
 
 	if len(p.Login) == 0 {
@@ -202,7 +202,7 @@ func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter,
 		f.UI.Nodes = node.Nodes{}
 
 		if err := s.populateLoginMethodForPasskeys(r, f); err != nil {
-			return nil, s.handleLoginError(r, f, err)
+			return nil, false, s.handleLoginError(r, f, err)
 		}
 
 		redirectTo := f.AppendTo(s.d.Config().SelfServiceFlowLoginUI(ctx)).String()
@@ -212,26 +212,26 @@ func (s *Strategy) loginPasswordless(ctx context.Context, w http.ResponseWriter,
 			http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		}
 
-		return nil, errors.WithStack(flow.ErrCompletedByStrategy)
+		return nil, true, nil
 	}
 
 	return s.loginAuthenticate(ctx, r, f, p, identity.AuthenticatorAssuranceLevel1)
 }
 
-func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod, _ identity.AuthenticatorAssuranceLevel) (*identity.Identity, error) {
+func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *login.Flow, p *updateLoginFlowWithPasskeyMethod, _ identity.AuthenticatorAssuranceLevel) (*identity.Identity, bool, error) {
 	web, err := webauthn.New(s.d.Config().PasskeyConfig(ctx))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
+		return nil, false, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().WithReasonf("Unable to get webAuthn config.").WithDebug(err.Error())))
 	}
 
 	webAuthnResponse, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(p.Login))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
+		return nil, false, s.handleLoginError(r, f, errors.WithStack(herodot.ErrBadRequest().WithReasonf("Unable to parse WebAuthn response.").WithDebug(err.Error())))
 	}
 
 	var webAuthnSess webauthn.SessionData
 	if err := json.Unmarshal([]byte(gjson.GetBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData)).Raw), &webAuthnSess); err != nil {
-		return nil, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().
+		return nil, false, s.handleLoginError(r, f, errors.WithStack(herodot.ErrInternalServerError().
 			WithReasonf("Expected WebAuthN in internal context to be an object but got: %s", err)))
 	}
 	webAuthnSess.UserID = nil
@@ -243,25 +243,25 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 		// Migration strategy: Don't give up yet! If we don't find a "passkey" credential
 		// here, look for a "webauthn" credential next
 		if i, err = s.d.PrivilegedIdentityPool().FindIdentityByWebauthnUserHandle(ctx, userHandle); err != nil {
-			return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
+			return nil, false, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnCredentials()))
 		}
 		credentialType = identity.CredentialsTypeWebAuthn
 	}
 	err = s.d.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, i, identity.ExpandCredentials)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().
+		return nil, false, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().
 			WithReason("Could not load identity credentials").
 			WithWrap(err)), i.ID))
 	}
 
 	c, ok := i.GetCredentials(credentialType)
 	if !ok {
-		return nil, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
+		return nil, false, s.handleLoginError(r, f, errors.WithStack(schema.NewNoWebAuthnRegistered()))
 	}
 
 	var o identity.CredentialsWebAuthnConfig
 	if err := json.Unmarshal(c.Config, &o); err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().
+		return nil, false, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().
 			WithReason("The WebAuthn credentials could not be decoded properly").
 			WithDebug(err.Error()).
 			WithWrap(err)), i.ID))
@@ -273,7 +273,7 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 			return webauthnx.NewUser(userHandle, webAuthCreds, web.Config), nil
 		}, webAuthnSess, webAuthnResponse)
 	if err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")), i.ID))
+		return nil, false, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(schema.NewWebAuthnVerifierWrongError("#/")), i.ID))
 	}
 
 	// Persist the updated signature counter and clone warning for W3C WebAuthn
@@ -285,15 +285,15 @@ func (s *Strategy) loginAuthenticate(ctx context.Context, r *http.Request, f *lo
 	// Remove the WebAuthn URL from the internal context now that it is set!
 	f.InternalContext, err = sjson.DeleteBytes(f.InternalContext, flow.PrefixInternalContextKey(s.ID(), InternalContextKeySessionData))
 	if err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(err), i.ID))
+		return nil, false, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(err), i.ID))
 	}
 
 	f.Active = s.ID()
 	if err = s.d.LoginFlowPersister().UpdateLoginFlow(ctx, f); err != nil {
-		return nil, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("Could not update flow").WithDebug(err.Error())), i.ID))
+		return nil, false, s.handleLoginError(r, f, x.WrapWithIdentityIDError(errors.WithStack(herodot.ErrInternalServerError().WithReason("Could not update flow").WithDebug(err.Error())), i.ID))
 	}
 
-	return i, nil
+	return i, false, nil
 }
 
 func (s *Strategy) PopulateLoginMethodFirstFactorRefresh(r *http.Request, f *login.Flow, _ *session.Session) error {

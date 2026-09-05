@@ -27,7 +27,13 @@ type Strategy interface {
 	SettingsStrategyID() string
 	NodeGroup() node.UiNodeGroup
 	PopulateSettingsMethod(context.Context, *http.Request, *identity.Identity, *Flow) error
-	Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (*UpdateContext, error)
+	// Settings attempts to update the identity's settings.
+	//
+	// A strategy may complete the flow itself (for example by redirecting to an
+	// OIDC provider for account linking). In that case it returns completed ==
+	// true with a nil error: this is a control signal, not a failure, so callers
+	// must stop processing without treating it as an error.
+	Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *Flow, s *session.Session) (*UpdateContext, bool, error)
 }
 
 type Strategies []Strategy

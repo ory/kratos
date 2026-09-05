@@ -1774,8 +1774,9 @@ func TestCodeLoginWithLoginChallenge(t *testing.T) {
 		r := httptest.NewRequest("POST", "/self-service/login/browser", strings.NewReader(body.Raw))
 		r.Header.Add("Content-Type", "application/json")
 
-		_, err := s.Login(httptest.NewRecorder(), r, f, nil)
-		require.ErrorIs(t, err, flow.ErrCompletedByStrategy)
+		_, completed, err := s.Login(httptest.NewRecorder(), r, f, nil)
+		require.NoError(t, err)
+		require.True(t, completed, "the strategy sent a login code and should report the flow as completed")
 		require.NotNil(t, f.HydraLoginRequest)
 
 		messages, err := reg.CourierPersister().NextMessages(t.Context(), 10)
@@ -1801,7 +1802,7 @@ func TestCodeLoginWithLoginChallenge(t *testing.T) {
 		r := httptest.NewRequest("POST", "/self-service/login/browser", strings.NewReader(body.Raw))
 		r.Header.Add("Content-Type", "application/json")
 
-		_, err := s.Login(httptest.NewRecorder(), r, f, nil)
+		_, _, err := s.Login(httptest.NewRecorder(), r, f, nil)
 		require.ErrorIs(t, err, herodot.ErrBadRequest())
 		require.Nil(t, f.HydraLoginRequest)
 

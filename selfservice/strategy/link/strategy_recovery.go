@@ -250,10 +250,34 @@ type _ struct {
 	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
-func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
+// errCompletedByStrategy is an internal control signal used by the link
+// recovery and verification strategies to unwind their call graphs once the
+// strategy has already written the HTTP response. It never leaves the package:
+// the exported Recover and Verify entry points translate it into the completed
+// return value, keeping this control flow out of the error/telemetry path
+// (ory/kratos#4109).
+var errCompletedByStrategy = errors.New("link: flow response completed by strategy")
+
+// Recover implements recovery.Strategy. It translates the internal
+// errCompletedByStrategy control signal into the completed return value.
+func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.Strategy.Recover")
 	span.SetAttributes(attribute.String("selfservice_flows_recovery_use", s.d.Config().SelfServiceFlowRecoveryUse(ctx)))
 	defer otelx.End(span, &err)
+	// Translate the internal errCompletedByStrategy control signal into the
+	// completed return value before otelx.End runs, so a completed flow is not
+	// recorded as a span error (this defer runs before the deferred otelx.End).
+	defer func() {
+		if errors.Is(err, errCompletedByStrategy) {
+			completed, err = true, nil
+		}
+	}()
+	err = s.recoverFlow(w, r, f)
+	return
+}
+
+func (s *Strategy) recoverFlow(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (err error) {
+	ctx := r.Context()
 
 	body, err := s.decodeRecovery(r)
 	if err != nil {
@@ -276,7 +300,7 @@ func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.F
 		} else {
 			session.RedirectOnAuthenticated(s.d)(w, r)
 		}
-		return errors.WithStack(flow.ErrCompletedByStrategy)
+		return errors.WithStack(errCompletedByStrategy)
 	}
 
 	if err := flow.MethodEnabledAndAllowed(r.Context(), f.GetFlowName(), s.RecoveryStrategyID(), body.Method, s.d); err != nil {
@@ -357,7 +381,7 @@ func (s *Strategy) recoveryIssueSession(ctx context.Context, w http.ResponseWrit
 	}
 
 	http.Redirect(w, r, sf.AppendTo(s.d.Config().SelfServiceFlowSettingsUI(r.Context())).String(), http.StatusSeeOther)
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return errors.WithStack(errCompletedByStrategy)
 }
 
 func (s *Strategy) recoveryUseToken(ctx context.Context, w http.ResponseWriter, r *http.Request, fID uuid.UUID, body *recoverySubmitPayload) error {
@@ -427,7 +451,7 @@ func (s *Strategy) retryRecoveryFlowWithMessage(w http.ResponseWriter, r *http.R
 			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return errors.WithStack(errCompletedByStrategy)
 }
 
 func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Request, ft flow.Type, recErr error) error {
@@ -457,7 +481,7 @@ func (s *Strategy) retryRecoveryFlowWithError(w http.ResponseWriter, r *http.Req
 			recovery.RouteGetFlow), url.Values{"id": {req.ID.String()}}).String(), http.StatusSeeOther)
 	}
 
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return errors.WithStack(errCompletedByStrategy)
 }
 
 func (s *Strategy) recoveryHandleFormSubmission(r *http.Request, f *recovery.Flow) error {

@@ -298,12 +298,16 @@ func (e *HookExecutor) PostLoginHook(
 				if err != nil {
 					return errors.WithStack(err)
 				}
-				newFlow, _, err := e.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser,
+				newFlow, _, completed, err := e.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser,
 					WithInternalContext(f.InternalContext),
 					WithOrganizationID(f.OrganizationID),
 				)
 				if err != nil {
 					return errors.WithStack(err)
+				} else if completed {
+					// A fast-login strategy already completed the new flow and
+					// wrote the response. Nothing more to do.
+					return nil
 				}
 
 				x.SendFlowCompletedAsRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())
@@ -353,12 +357,16 @@ func (e *HookExecutor) PostLoginHook(
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			newFlow, _, err := e.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser,
+			newFlow, _, completed, err := e.d.LoginHandler().NewLoginFlow(w, r, flow.TypeBrowser,
 				WithInternalContext(f.InternalContext),
 				WithOrganizationID(f.OrganizationID),
 			)
 			if err != nil {
 				return errors.WithStack(err)
+			} else if completed {
+				// A fast-login strategy already completed the new flow and
+				// wrote the response. Nothing more to do.
+				return nil
 			}
 
 			x.SendFlowCompletedAsRedirectOrJSON(w, r, e.d.Writer(), newFlow, newFlow.AppendTo(e.d.Config().SelfServiceFlowLoginUI(ctx)).String())

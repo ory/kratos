@@ -19,7 +19,13 @@ import (
 type Strategy interface {
 	ID() identity.CredentialsType
 	NodeGroup() node.UiNodeGroup
-	Login(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (i *identity.Identity, err error)
+	// Login attempts to log the identity in.
+	//
+	// A strategy may complete the flow itself (for example by sending a login
+	// code and rendering the next step). In that case it returns completed ==
+	// true with a nil error: this is a control signal, not a failure, so
+	// callers must stop processing the flow without treating it as an error.
+	Login(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (i *identity.Identity, completed bool, err error)
 	CompletedAuthenticationMethod(ctx context.Context) session.AuthenticationMethod
 }
 
@@ -31,9 +37,14 @@ type LinkableStrategy interface {
 	SetDuplicateCredentials(f flow.InternalContexter, duplicateIdentifier string, credentials identity.Credentials, provider string) error
 }
 
+// FastLoginStrategy is implemented by strategies that can complete a login
+// during flow creation (the "fast" path). The returned completed bool is a
+// control signal: when true (with a nil error) the strategy has taken over the
+// response and the caller must stop processing the flow without recording an
+// error.
 type FastLoginStrategy interface {
-	FastLogin1FA(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (err error)
-	FastLogin2FA(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (err error)
+	FastLogin1FA(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (completed bool, err error)
+	FastLogin2FA(w http.ResponseWriter, r *http.Request, f *Flow, sess *session.Session) (completed bool, err error)
 }
 
 func (s Strategies) Strategy(id identity.CredentialsType) (Strategy, error) {

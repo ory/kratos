@@ -178,23 +178,23 @@ func (s *Strategy) decode(p *updateRegistrationFlowWithProfileMethod, r *http.Re
 	return registration.DecodeBody(p, r, registrationSchema, ds)
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (err error) {
+func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity) (completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.profile.Strategy.Register")
 	defer otelx.End(span, &err)
 
 	if !s.d.Config().SelfServiceFlowRegistrationTwoSteps(ctx) {
-		return flow.ErrStrategyNotResponsible
+		return false, flow.ErrStrategyNotResponsible
 	}
 
 	var params updateRegistrationFlowWithProfileMethod
 
 	ds, err := regFlow.IdentitySchema.URL(ctx, s.d.Config())
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if err = s.decode(&params, r, ds); err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 	if params.Method == "profile" || len(params.Screen) > 0 {
 		switch params.Screen {
@@ -216,10 +216,10 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, regFlow *reg
 		return s.returnToProfileForm(ctx, w, r, regFlow, params)
 	}
 
-	return flow.ErrStrategyNotResponsible
+	return false, flow.ErrStrategyNotResponsible
 }
 
-func (s *Strategy) returnToProfileForm(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod) error {
+func (s *Strategy) returnToProfileForm(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod) (completed bool, err error) {
 	regFlow.UI.ResetMessages()
 	regFlow.OrganizationID = uuid.NullUUID{}
 	regFlow.UI.UpdateNodeValuesFromJSON(params.Traits, "traits", node.DefaultGroup)
@@ -231,21 +231,21 @@ func (s *Strategy) returnToProfileForm(ctx context.Context, w http.ResponseWrite
 		}
 
 		if err := populator.PopulateRegistrationMethodProfile(r, regFlow, registration.WithTraits(params.Traits)); err != nil {
-			return s.handleRegistrationError(r, regFlow, params, err)
+			return false, s.handleRegistrationError(r, regFlow, params, err)
 		}
 	}
 
 	ds, err := regFlow.IdentitySchema.URL(r.Context(), s.d.Config())
 	if err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	if err := registration.SortNodes(r.Context(), regFlow.UI.Nodes, ds.String()); err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
@@ -255,10 +255,10 @@ func (s *Strategy) returnToProfileForm(ctx context.Context, w http.ResponseWrite
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 	}
 
-	return flow.ErrCompletedByStrategy
+	return true, nil
 }
 
-func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) error {
+func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.ResponseWriter, r *http.Request, regFlow *registration.Flow, i *identity.Identity, params updateRegistrationFlowWithProfileMethod) (completed bool, err error) {
 	// Reset state-esque flow fields
 	regFlow.Active = ""
 	regFlow.State = "choose_method"
@@ -267,7 +267,7 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 	regFlow.TransientPayload = params.TransientPayload
 
 	if err := flow.EnsureCSRF(s.d, r, regFlow.Type, s.d.Config().DisableAPIFlowEnforcement(ctx), s.d.GenerateCSRFToken, params.CSRFToken); err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	if len(params.Traits) == 0 {
@@ -276,7 +276,7 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 
 	i.Traits = identity.Traits(params.Traits)
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	var didPopulate bool
@@ -290,7 +290,7 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 			didPopulate = true
 			break
 		} else if err != nil {
-			return s.handleRegistrationError(r, regFlow, params, err)
+			return false, s.handleRegistrationError(r, regFlow, params, err)
 		} else {
 			didPopulate = true
 		}
@@ -299,22 +299,22 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 	// If no strategy populated, it means that the account (very likely) does not exist. We show a user not found error,
 	// but only if account enumeration mitigation is disabled. Otherwise, we proceed to render the rest of the form.
 	if !didPopulate && !s.d.Config().SecurityAccountEnumerationMitigate(ctx) {
-		return s.handleRegistrationError(r, regFlow, params, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
+		return false, s.handleRegistrationError(r, regFlow, params, errors.WithStack(schema.NewNoRegistrationStrategyResponsible()))
 	}
 
 	regFlow.UI.UpdateNodeValuesFromJSON(json.RawMessage(i.Traits), "traits", node.DefaultGroup)
 
 	ds, err := regFlow.IdentitySchema.URL(r.Context(), s.d.Config())
 	if err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	if err := registration.SortNodes(r.Context(), regFlow.UI.Nodes, ds.String()); err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, regFlow); err != nil {
-		return s.handleRegistrationError(r, regFlow, params, err)
+		return false, s.handleRegistrationError(r, regFlow, params, err)
 	}
 
 	redirectTo := regFlow.AppendTo(s.d.Config().SelfServiceFlowRegistrationUI(ctx)).String()
@@ -324,7 +324,7 @@ func (s *Strategy) showCredentialsSelection(ctx context.Context, w http.Response
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 	}
 
-	return flow.ErrCompletedByStrategy
+	return true, nil
 }
 
 func (s *Strategy) handleRegistrationError(r *http.Request, regFlow *registration.Flow, params updateRegistrationFlowWithProfileMethod, err error) error {

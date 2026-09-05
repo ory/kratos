@@ -103,44 +103,44 @@ func (p *updateSettingsFlowWithWebAuthnMethod) SetFlowID(rid uuid.UUID) {
 	p.Flow = rid.String()
 }
 
-func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, err error) {
+func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.Request, f *settings.Flow, ss *session.Session) (_ *settings.UpdateContext, completed bool, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.webauthn.Strategy.Settings")
 	defer otelx.End(span, &err)
 
 	if f.Type != flow.TypeBrowser {
 		span.SetAttributes(attribute.String("not_responsible_reason", "flow is not a browser flow"))
-		return nil, flow.ErrStrategyNotResponsible
+		return nil, false, flow.ErrStrategyNotResponsible
 	}
 	var p updateSettingsFlowWithWebAuthnMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
-		return ctxUpdate, s.continueSettingsFlow(ctx, w, r, ctxUpdate, p)
+		return ctxUpdate, false, s.continueSettingsFlow(ctx, w, r, ctxUpdate, p)
 	} else if err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	if err := s.decodeSettingsFlow(r, &p); err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
 	if len(p.Register)+len(p.Remove) > 0 {
 		// This method has only two submit buttons
 		p.Method = s.SettingsStrategyID()
 		if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), p.Method, s.d); err != nil {
-			return nil, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+			return nil, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 		}
 	} else {
 		span.SetAttributes(attribute.String("not_responsible_reason", "neither register nor remove is set"))
-		return nil, errors.WithStack(flow.ErrStrategyNotResponsible)
+		return nil, false, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
 	if err := s.continueSettingsFlow(ctx, w, r, ctxUpdate, p); err != nil {
-		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
+		return ctxUpdate, false, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
 
-	return ctxUpdate, nil
+	return ctxUpdate, false, nil
 }
 
 func (s *Strategy) decodeSettingsFlow(r *http.Request, dest interface{}) error {

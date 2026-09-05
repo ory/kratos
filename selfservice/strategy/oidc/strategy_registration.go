@@ -161,19 +161,28 @@ func (s *Strategy) newLinkDecoder(ctx context.Context, p interface{}, r *http.Re
 	return nil
 }
 
-func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, _ *identity.Identity) (err error) {
+func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registration.Flow, _ *identity.Identity) (completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.oidc.Strategy.Register")
 	defer otelx.End(span, &err)
+	// HandleError signals account-linking completion via the internal
+	// errCompletedByStrategy marker. Translate it into the completed return
+	// value before otelx.End runs so this control signal is not recorded as a
+	// span error (this defer runs before the deferred otelx.End above).
+	defer func() {
+		if errors.Is(err, errCompletedByStrategy) {
+			completed, err = true, nil
+		}
+	}()
 
 	var p UpdateRegistrationFlowWithOidcMethod
 	if err := s.newLinkDecoder(ctx, &p, r, &f.IdentitySchema); err != nil {
-		return s.HandleError(ctx, w, r, f, "", nil, err)
+		return false, s.HandleError(ctx, w, r, f, "", nil, err)
 	}
 
 	pid := p.Provider // this can come from both url query and post body
 	if pid == "" {
 		span.SetAttributes(attribute.String("not_responsible_reason", "provider ID missing"))
-		return errors.WithStack(flow.ErrStrategyNotResponsible)
+		return false, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	f.TransientPayload = p.TransientPayload
@@ -188,51 +197,53 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 			WithField("method", p.Method).
 			Warn("The payload includes a `provider` field but is using a method other than `oidc`. Therefore, social sign in will not be executed.")
 		span.SetAttributes(attribute.String("not_responsible_reason", "method is not oidc"))
-		return errors.WithStack(flow.ErrStrategyNotResponsible)
+		return false, errors.WithStack(flow.ErrStrategyNotResponsible)
 	}
 
 	if err := flow.MethodEnabledAndAllowed(ctx, f.GetFlowName(), s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
-		return s.HandleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
+		return false, s.HandleError(ctx, w, r, f, pid, nil, s.handleMethodNotAllowedError(err))
 	}
 
 	provider, err := s.Provider(ctx, pid)
 	if err != nil {
-		return s.HandleError(ctx, w, r, f, pid, nil, err)
+		return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	req, err := s.validateFlow(ctx, r, f.ID, oidcv1.FlowKind_FLOW_KIND_REGISTRATION)
 	if err != nil {
-		return s.HandleError(ctx, w, r, f, pid, nil, err)
+		return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	if authenticated, err := s.alreadyAuthenticated(ctx, w, r, req); err != nil {
-		return s.HandleError(ctx, w, r, f, pid, nil, err)
+		return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	} else if authenticated {
-		return errors.WithStack(registration.ErrAlreadyLoggedIn())
+		return false, errors.WithStack(registration.ErrAlreadyLoggedIn())
 	}
 
 	if p.IDToken != "" {
 		claims, err := s.ProcessIDToken(r, provider, p.IDToken, p.IDTokenNonce)
 		if err != nil {
-			return s.HandleError(ctx, w, r, f, pid, nil, err)
+			return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
-		_, err = s.processRegistration(ctx, w, r, f, nil, claims, provider, &AuthCodeContainer{
+		_, _, err = s.processRegistration(ctx, w, r, f, nil, claims, provider, &AuthCodeContainer{
 			FlowID:           f.ID.String(),
 			Traits:           p.Traits,
 			TransientPayload: f.TransientPayload,
 			IdentitySchema:   f.IdentitySchema,
 		})
-		if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return err
+		if errors.Is(err, errCompletedByStrategy) {
+			// The account-linking path already wrote the response.
+			return true, nil
 		} else if err != nil {
-			return s.HandleError(ctx, w, r, f, pid, nil, err)
+			return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
-		return errors.WithStack(flow.ErrCompletedByStrategy)
+		// In all non-error cases processRegistration has taken over the response.
+		return true, nil
 	}
 
 	state, pkce, err := s.GenerateState(ctx, provider, f, x.RequestBaseURL(r))
 	if err != nil {
-		return s.HandleError(ctx, w, r, f, pid, nil, err)
+		return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	var refStore continuity.ContainerReferenceStore
@@ -252,7 +263,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		}),
 		continuity.WithLifespan(time.Minute*30),
 	); err != nil {
-		return s.HandleError(ctx, w, r, f, pid, nil, err)
+		return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 
 	// Native/API flows have no cookie — the continuity container ID was written to
@@ -260,18 +271,18 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 	// restore it from the database.
 	if f.Type == flow.TypeAPI {
 		if err := s.d.RegistrationFlowPersister().UpdateRegistrationFlow(ctx, f); err != nil {
-			return s.HandleError(ctx, w, r, f, pid, nil, err)
+			return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 		}
 	}
 
 	var up map[string]string
 	if err := json.NewDecoder(bytes.NewBuffer(p.UpstreamParameters)).Decode(&up); err != nil {
-		return err
+		return false, err
 	}
 
 	codeURL, err := getAuthRedirectURL(ctx, provider, f, state, up, pkce)
 	if err != nil {
-		return s.HandleError(ctx, w, r, f, pid, nil, err)
+		return false, s.HandleError(ctx, w, r, f, pid, nil, err)
 	}
 	if x.IsJSONRequest(r) {
 		s.d.Writer().WriteError(w, r, flow.NewBrowserLocationChangeRequiredError(codeURL))
@@ -279,7 +290,7 @@ func (s *Strategy) Register(w http.ResponseWriter, r *http.Request, f *registrat
 		http.Redirect(w, r, codeURL, http.StatusSeeOther)
 	}
 
-	return errors.WithStack(flow.ErrCompletedByStrategy)
+	return true, nil
 }
 
 func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow) (*login.Flow, error) {
@@ -298,7 +309,9 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 		opts = append(opts, login.WithLoginChallenge(rf.OAuth2LoginChallenge.String()))
 	}
 
-	lf, _, err := s.d.LoginHandler().NewLoginFlow(w, r, rf.Type, opts...)
+	// Account linking recreates an AAL1 login flow, which a fast-login strategy
+	// cannot complete during creation, so completed is always false here.
+	lf, _, _, err := s.d.LoginHandler().NewLoginFlow(w, r, rf.Type, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -322,9 +335,18 @@ func (s *Strategy) registrationToLogin(ctx context.Context, w http.ResponseWrite
 	return lf, nil
 }
 
-func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, err error) {
+func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWriter, r *http.Request, rf *registration.Flow, token *identity.CredentialsOIDCEncryptedTokens, claims *Claims, provider Provider, container *AuthCodeContainer) (_ *login.Flow, completed bool, err error) {
 	ctx, span := s.d.Tracer(ctx).Tracer().Start(ctx, "selfservice.strategy.oidc.Strategy.processRegistration")
 	defer otelx.End(span, &err)
+	// HandleError signals account-linking completion via the internal
+	// errCompletedByStrategy marker. Translate it into the completed return
+	// value before otelx.End runs so this control signal is not recorded as a
+	// span error (this defer runs before the deferred otelx.End above).
+	defer func() {
+		if errors.Is(err, errCompletedByStrategy) {
+			completed, err = true, nil
+		}
+	}()
 
 	if _, _, err := s.d.PrivilegedIdentityPool().FindByCredentialsIdentifier(ctx, s.ID(), identity.OIDCUniqueID(provider.Config().ID, claims.Subject)); err == nil {
 		// If the identity already exists, we should perform the login flow instead.
@@ -342,24 +364,24 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 
 		lf, err := s.registrationToLogin(ctx, w, r, rf)
 		if err != nil {
-			return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+			return nil, false, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 		}
 
-		if _, err := s.ProcessLogin(ctx, w, r, lf, token, claims, provider, container); err != nil {
-			return lf, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+		if _, _, err := s.ProcessLogin(ctx, w, r, lf, token, claims, provider, container); err != nil {
+			return lf, false, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 		}
 
-		return nil, nil
+		return nil, true, nil
 	}
 
 	i, va, err := s.newIdentityFromClaims(ctx, claims, provider, container, rf.IdentitySchema)
 	if err != nil {
-		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
+		return nil, false, s.HandleError(ctx, w, r, rf, provider.Config().ID, nil, err)
 	}
 
 	// Validate the identity itself
 	if err := s.d.IdentityValidator().Validate(ctx, i); err != nil {
-		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, false, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	for n := range i.VerifiableAddresses {
@@ -376,7 +398,7 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 
 	creds, err := identity.NewOIDCLikeCredentials(token, s.ID(), provider.Config().ID, claims.Subject, provider.Config().OrganizationID)
 	if err != nil {
-		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, false, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
 	i.SetCredentials(s.ID(), *creds)
@@ -388,10 +410,10 @@ func (s *Strategy) processRegistration(ctx context.Context, w http.ResponseWrite
 		UpstreamACR:  claims.ACR,
 		UpstreamAMR:  claims.AMR,
 	}); err != nil {
-		return nil, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
+		return nil, false, s.HandleError(ctx, w, r, rf, provider.Config().ID, i.Traits, err)
 	}
 
-	return nil, nil
+	return nil, true, nil
 }
 
 // EvaluateClaimsMapper runs the Jsonnet mapper for the given claims and returns

@@ -439,13 +439,15 @@ func (h *Handler) updateRecoveryFlow(w http.ResponseWriter, r *http.Request) {
 	var g node.UiNodeGroup
 	var found bool
 	for _, ss := range h.d.AllRecoveryStrategies() {
-		err := ss.Recover(w, r, f)
+		completed, err := ss.Recover(w, r, f)
 		if errors.Is(err, flow.ErrStrategyNotResponsible) {
 			continue
-		} else if errors.Is(err, flow.ErrCompletedByStrategy) {
-			return
 		} else if err != nil {
 			h.d.RecoveryFlowErrorHandler().WriteFlowError(w, r, f, ss.NodeGroup(), err)
+			return
+		} else if completed {
+			// The strategy completed the flow itself and already wrote the
+			// response. This is a control signal, not a failure.
 			return
 		}
 
