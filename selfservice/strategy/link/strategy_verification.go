@@ -129,7 +129,6 @@ type updateVerificationFlowWithLinkMethod struct {
 func (s *Strategy) Verify(w http.ResponseWriter, r *http.Request, f *verification.Flow) (completed bool, err error) {
 	ctx, span := s.d.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.link.Strategy.Verify")
 	span.SetAttributes(attribute.String("selfservice_flows_verification_use", s.d.Config().SelfServiceFlowVerificationUse(ctx)))
-	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 	// Translate the internal errCompletedByStrategy control signal into the
 	// completed return value before otelx.End runs, so a completed flow is not

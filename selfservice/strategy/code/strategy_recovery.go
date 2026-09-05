@@ -173,7 +173,6 @@ var errCompletedByStrategy = errors.New("code: flow response completed by strate
 func (s *Strategy) Recover(w http.ResponseWriter, r *http.Request, f *recovery.Flow) (completed bool, err error) {
 	ctx, span := s.deps.Tracer(r.Context()).Tracer().Start(r.Context(), "selfservice.strategy.code.Strategy.Recover")
 	span.SetAttributes(attribute.String("selfservice_flows_recovery_use", s.deps.Config().SelfServiceFlowRecoveryUse(ctx)))
-	r = r.WithContext(ctx)
 	defer otelx.End(span, &err)
 	// Translate the internal errCompletedByStrategy control signal into the
 	// completed return value before otelx.End runs, so a completed flow is not
