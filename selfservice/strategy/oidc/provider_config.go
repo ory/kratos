@@ -228,8 +228,9 @@ func (p Configuration) Redir(public *url.URL) string {
 }
 
 type ConfigurationCollection struct {
-	BaseRedirectURI string          `json:"base_redirect_uri"`
-	Providers       []Configuration `json:"providers"`
+	BaseRedirectURI              string          `json:"base_redirect_uri"`
+	Providers                    []Configuration `json:"providers"`
+	SuppressGenericProviderNodes bool            `json:"suppress_generic_provider_nodes"`
 }
 
 // !!! WARNING !!!

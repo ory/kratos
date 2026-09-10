@@ -641,7 +641,9 @@ func (s *Strategy) populateMethod(r *http.Request, f flow.Flow, message func(pro
 	}
 
 	f.GetUI().SetCSRF(s.d.GenerateCSRFToken(r))
-	AddProviders(f.GetUI(), conf.Providers, message, s.ID())
+	if !conf.SuppressGenericProviderNodes {
+		AddProviders(f.GetUI(), conf.Providers, message, s.ID())
+	}
 
 	return nil
 }

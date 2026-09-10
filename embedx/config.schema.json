@@ -2134,6 +2134,11 @@
                       "items": {
                         "$ref": "#/definitions/selfServiceOIDCProvider"
                       }
+                    },
+                    "suppress_generic_provider_nodes": {
+                      "type": "boolean",
+                      "title": "Suppress Generic Provider Buttons",
+                      "description": "If enabled, login and registration UIs do not include a submit button for every configured provider. Nodes targeted at a specific identity (linked credentials, refresh flows) are still rendered. Disabled by default."
                     }
                   }
                 }
