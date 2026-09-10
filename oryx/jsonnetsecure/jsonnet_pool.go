@@ -36,6 +36,7 @@ import (
 
 const (
 	KiB                = 1024
+	jsonnetInputLimit  = 4 * 1024 * KiB
 	jsonnetOutputLimit = 256 * KiB
 	jsonnetErrLimit    = 1 * KiB
 )

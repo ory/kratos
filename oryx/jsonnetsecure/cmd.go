@@ -77,6 +77,7 @@ Non-recoverable errors are written to stderr and the program will terminate with
 
 func scan(w io.Writer, r io.Reader) error {
 	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 0, 64*KiB), jsonnetInputLimit)
 	scanner.Split(splitNull)
 	for scanner.Scan() {
 		json, err := eval(scanner.Bytes())
