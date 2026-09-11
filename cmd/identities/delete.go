@@ -4,6 +4,7 @@
 package identities
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -26,7 +27,7 @@ func NewDeleteCmd() *cobra.Command {
 
 func NewDeleteIdentityCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "identity id-0 [id-1] [id-2] [id-n]",
+		Use:   "identity <id> [<id> ...]",
 		Short: "Delete one or more identities by their ID(s)",
 		Long: fmt.Sprintf(`This command deletes one or more identities by ID. To delete an identity by some selector, e.g. the recovery email address, use the list command in combination with jq.
 
@@ -43,13 +44,17 @@ func NewDeleteIdentityCmd() *cobra.Command {
 
 			var (
 				deleted = make([]cmdx.OutputIder, 0, len(args))
-				failed  = make(map[string]error)
+				failed  bool
 			)
 
 			for _, a := range args {
 				_, err := c.IdentityAPI.DeleteIdentity(cmd.Context(), a).Execute()
 				if err != nil {
-					failed[a] = cmdx.PrintOpenAPIError(cmd, err)
+					failed = true
+					_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "%s: ", a)
+					if err := cmdx.PrintOpenAPIError(cmd, err); err != nil && !errors.Is(err, cmdx.ErrNoPrintButFail) {
+						_, _ = fmt.Fprintln(cmd.ErrOrStderr(), err)
+					}
 					continue
 				}
 				deleted = append(deleted, cmdx.OutputIder(a))
@@ -61,8 +66,7 @@ func NewDeleteIdentityCmd() *cobra.Command {
 				cmdx.PrintTable(cmd, &cmdx.OutputIderCollection{Items: deleted})
 			}
 
-			cmdx.PrintErrors(cmd, failed)
-			if len(failed) != 0 {
+			if failed {
 				return cmdx.FailSilently(cmd)
 			}
 
