@@ -23,7 +23,7 @@ var _ MappedNullable = &UpdateLoginFlowWithCodeMethod{}
 type UpdateLoginFlowWithCodeMethod struct {
 	// Address is the address to send the code to, in case that there are multiple addresses. This field is only used in two-factor flows and is ineffective for passwordless flows.
 	Address *string `json:"address,omitempty"`
-	// Code is the 6 digits code sent to the user
+	// Code is the one-time code sent to the user
 	Code *string `json:"code,omitempty"`
 	// CSRFToken is the anti-CSRF token
 	CsrfToken string `json:"csrf_token"`

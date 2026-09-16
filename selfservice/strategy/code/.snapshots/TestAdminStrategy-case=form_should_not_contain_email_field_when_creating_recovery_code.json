@@ -7,9 +7,9 @@
       "type": "text",
       "required": true,
       "autocomplete": "one-time-code",
-      "pattern": "[0-9]+",
+      "pattern": "[0-9a-z]{12}",
       "disabled": false,
-      "maxlength": 6,
+      "maxlength": 12,
       "node_type": "input"
     },
     "messages": [],

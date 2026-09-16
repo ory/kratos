@@ -680,7 +680,7 @@ func (s *Strategy) recoveryV2HandleStateConfirmingAddress(r *http.Request, f *re
 	f.UI.Messages.Set(uiText)
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithInputAttributes(func(a *node.InputAttributes) {
 		a.Required = true
-		a.Pattern = "[0-9]+"
+		a.Pattern = CodePattern
 		a.MaxLength = CodeLength
 		a.Autocomplete = node.InputAttributeAutocompleteOneTimeCode
 	})).
@@ -804,7 +804,7 @@ func (s *Strategy) recoveryHandleFormSubmission(w http.ResponseWriter, r *http.R
 	f.UI.Messages.Set(text.NewRecoveryEmailWithCodeSent())
 	f.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithInputAttributes(func(a *node.InputAttributes) {
 		a.Required = true
-		a.Pattern = "[0-9]+"
+		a.Pattern = CodePattern
 		a.MaxLength = CodeLength
 		a.Autocomplete = node.InputAttributeAutocompleteOneTimeCode
 	})).

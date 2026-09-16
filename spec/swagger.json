@@ -7395,7 +7395,7 @@
           "type": "string"
         },
         "code": {
-          "description": "Code is the 6 digits code sent to the user",
+          "description": "Code is the one-time code sent to the user",
           "type": "string"
         },
         "csrf_token": {

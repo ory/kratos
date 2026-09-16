@@ -33,6 +33,16 @@ var defaultConfig = func() map[string]any {
 	return cfg
 }()
 
+func TestGenerateCode(t *testing.T) {
+	seen := map[string]struct{}{}
+	for range 100 {
+		generated := code.GenerateCode()
+		assert.Regexp(t, "^"+code.CodePattern+"$", generated)
+		seen[generated] = struct{}{}
+	}
+	assert.Len(t, seen, 100)
+}
+
 func TestMaskAddress(t *testing.T) {
 	for _, tc := range []struct {
 		address  string

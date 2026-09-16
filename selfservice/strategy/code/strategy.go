@@ -564,10 +564,13 @@ func SetDefaultFlowState(f flow.Flow, resend string) {
 	}
 }
 
-const CodeLength = 6
+const (
+	CodeLength  = 12
+	CodePattern = "[0-9a-z]{12}"
+)
 
 func GenerateCode() string {
-	return randx.MustString(CodeLength, randx.Numeric)
+	return randx.MustString(CodeLength, randx.AlphaLowerNum)
 }
 
 // MaskAddress masks an address by replacing the middle part with asterisks.

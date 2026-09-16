@@ -10,7 +10,7 @@ import {
 import { expect } from "../fixtures"
 import { LoginFlowStyle, OryKratosConfiguration } from "../../shared/config"
 
-export const codeRegex = /(\d{6})/
+export const codeRegex = /(?:^|code is: |Use code |#| )([0-9a-z]{12})$/m
 
 /**
  * Extracts the recovery or verification code from a mail
@@ -20,8 +20,8 @@ export const codeRegex = /(\d{6})/
  */
 export function extractCode(mail: Message) {
   const result = codeRegex.exec(mail.html || mail.text)
-  if (result != null && result.length > 0) {
-    return result[0]
+  if (result != null && result.length > 1) {
+    return result[1]
   }
   return null
 }

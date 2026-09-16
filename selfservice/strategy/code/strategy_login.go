@@ -52,7 +52,7 @@ type updateLoginFlowWithCodeMethod struct {
 	// required: true
 	CSRFToken string `json:"csrf_token" form:"csrf_token"`
 
-	// Code is the 6 digits code sent to the user
+	// Code is the one-time code sent to the user
 	//
 	// required: false
 	Code string `json:"code" form:"code"`

@@ -185,7 +185,7 @@ func (s *Strategy) createRecoveryCodeForIdentity(w http.ResponseWriter, r *http.
 	recoveryFlow.State = flow.StateEmailSent
 	recoveryFlow.UI.Nodes = node.Nodes{}
 	recoveryFlow.UI.Nodes.Append(node.NewInputField("code", nil, node.CodeGroup, node.InputAttributeTypeText, node.WithRequiredInputAttribute, node.WithInputAttributes(func(a *node.InputAttributes) {
-		a.Pattern = "[0-9]+"
+		a.Pattern = CodePattern
 		a.MaxLength = CodeLength
 		a.Autocomplete = node.InputAttributeAutocompleteOneTimeCode
 	})).
