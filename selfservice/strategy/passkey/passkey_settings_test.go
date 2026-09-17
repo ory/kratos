@@ -27,6 +27,7 @@ import (
 	"github.com/tidwall/gjson"
 
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 
@@ -489,6 +490,80 @@ func TestCompleteSettings(t *testing.T) {
 
 		t.Run("type=api", func(t *testing.T) {
 			run(t, "api")
+		})
+	})
+
+	t.Run("case=should pass transient payload to after settings hooks", func(t *testing.T) {
+		webhook := hooktest.NewServer()
+		t.Cleanup(webhook.Close)
+		webhook.SetConfig(t, fix.conf.GetProvider(t.Context()), config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, identity.CredentialsTypePasskey.String()))
+
+		transientPayload := `{"stuff":"42"}`
+		run := func(t *testing.T, flowType string) {
+			id := fix.createIdentity(t)
+			allCred, ok := id.GetCredentials(identity.CredentialsTypePasskey)
+			require.True(t, ok)
+
+			var cc identity.CredentialsWebAuthnConfig
+			require.NoError(t, json.Unmarshal(allCred.Config, &cc))
+			require.NotEmpty(t, cc.Credentials)
+
+			values := func(v url.Values) {
+				v.Set(node.PasskeyRemove, fmt.Sprintf("%x", cc.Credentials[0].ID))
+				v.Set("transient_payload", transientPayload)
+			}
+
+			var body string
+			if flowType == "api" {
+				body, _ = doAPIFlow(t, values, id)
+			} else {
+				body, _ = doBrowserFlow(t, flowType == "spa", values, id)
+			}
+
+			require.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
+			webhook.AssertTransientPayload(t, transientPayload)
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, "browser")
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, "spa")
+		})
+
+		t.Run("type=api", func(t *testing.T) {
+			run(t, "api")
+		})
+
+		t.Run("type=browser/resumed after reauthentication", func(t *testing.T) {
+			id := fix.createIdentity(t)
+			allCred, ok := id.GetCredentials(identity.CredentialsTypePasskey)
+			require.True(t, ok)
+
+			var cc identity.CredentialsWebAuthnConfig
+			require.NoError(t, json.Unmarshal(allCred.Config, &cc))
+			require.NotEmpty(t, cc.Credentials)
+
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, fix.reg, id)
+
+			loginUI := fix.conf.GetProvider(t.Context()).String(config.ViperKeySelfServiceLoginUI)
+			fix.conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			t.Cleanup(func() {
+				fix.conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "5m")
+				fix.conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginUI, loginUI)
+			})
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(fix.publicTS, browserClient), fix.conf)
+
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, false, fix.publicTS)
+			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			values.Set(node.PasskeyRemove, fmt.Sprintf("%x", cc.Credentials[0].ID))
+			values.Set("transient_payload", transientPayload)
+
+			body, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserClient, testhelpers.EncodeFormAsJSON(t, false, values))
+			require.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
+			require.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
+			webhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 

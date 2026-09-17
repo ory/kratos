@@ -44,6 +44,7 @@ import (
 	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/kratos/x"
 	"github.com/ory/x/assertx"
 	"github.com/ory/x/httpx"
@@ -481,6 +482,56 @@ func TestStrategyTraits(t *testing.T) {
 			actual := expectSuccess(t, false, false, browserUser1, payload("not-john-doe-browser@mail.com"))
 			check(t, actual)
 			assert.Empty(t, gjson.Get(actual, "continue_with").Array(), "%s", actual)
+		})
+	})
+
+	t.Run("flow=should pass transient payload to after settings hooks", func(t *testing.T) {
+		setPrivileged(t)
+
+		webhook := hooktest.NewServer()
+		t.Cleanup(webhook.Close)
+		webhook.SetConfig(t, conf.GetProvider(ctx), config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, settings.StrategyProfile))
+
+		transientPayload := `{"stuff":"42"}`
+		payload := func(v url.Values) {
+			v.Set("method", settings.StrategyProfile)
+			v.Set("traits.should_big_number", "9001")
+			v.Set("transient_payload", transientPayload)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			expectSuccess(t, true, false, apiUser1, payload)
+			webhook.AssertTransientPayload(t, transientPayload)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			expectSuccess(t, false, true, browserUser1, payload)
+			webhook.AssertTransientPayload(t, transientPayload)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			expectSuccess(t, false, false, browserUser1, payload)
+			webhook.AssertTransientPayload(t, transientPayload)
+		})
+
+		t.Run("type=browser/resumed after reauthentication", func(t *testing.T) {
+			setUnprivileged(t)
+
+			bi := newIdentityWithPassword(x.NewUUID().String() + "@ory.sh")
+			browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(ctx, t, reg, bi)
+			browserUser.Jar.SetCookies(nosurfx.WithFakeCSRFCookie(t, reg, publicTS.URL))
+
+			loginUI := conf.GetProvider(ctx).String(config.ViperKeySelfServiceLoginUI)
+			t.Cleanup(func() {
+				conf.MustSet(ctx, config.ViperKeySelfServiceLoginUI, loginUI)
+			})
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser), conf)
+
+			expectSuccess(t, false, false, browserUser, func(v url.Values) {
+				payload(v)
+				v.Set("traits.email", x.NewUUID().String()+"@ory.sh")
+			})
+			webhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 

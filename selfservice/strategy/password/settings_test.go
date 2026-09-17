@@ -30,6 +30,7 @@ import (
 	"github.com/ory/kratos/pkg/testhelpers"
 	"github.com/ory/kratos/selfservice/flow"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/x"
 	"github.com/ory/kratos/x/nosurfx"
@@ -553,6 +554,56 @@ func TestSettings(t *testing.T) {
 		t.Run("type=browser", func(t *testing.T) {
 			actual := expectSuccess(t, false, false, browserUser, payload)
 			check(t, actual, bi)
+		})
+	})
+
+	t.Run("description=should pass transient payload to after settings hooks", func(t *testing.T) {
+		webhook := hooktest.NewServer()
+		t.Cleanup(webhook.Close)
+		webhook.SetConfig(t, conf.GetProvider(t.Context()), config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, identity.CredentialsTypePassword.String()))
+
+		transientPayload := `{"stuff":"42"}`
+		payload := func(v url.Values) {
+			v.Set("method", "password")
+			v.Set("password", randx.MustString(16, randx.AlphaNum))
+			v.Set("transient_payload", transientPayload)
+		}
+
+		t.Run("type=api", func(t *testing.T) {
+			ai := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			apiUser := testhelpers.NewHTTPClientWithIdentitySessionToken(t.Context(), t, reg, ai)
+			expectSuccess(t, true, false, apiUser, payload)
+			webhook.AssertTransientPayload(t, transientPayload)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			si := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			spaUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, si)
+			expectSuccess(t, false, true, spaUser, payload)
+			webhook.AssertTransientPayload(t, transientPayload)
+		})
+
+		t.Run("type=browser", func(t *testing.T) {
+			bi := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, bi)
+			expectSuccess(t, false, false, browserUser, payload)
+			webhook.AssertTransientPayload(t, transientPayload)
+		})
+
+		t.Run("type=browser/resumed after reauthentication", func(t *testing.T) {
+			bi := newIdentityWithoutCredentials(x.NewUUID().String() + "@ory.sh")
+			browserUser := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, bi)
+
+			loginUI := conf.GetProvider(t.Context()).String(config.ViperKeySelfServiceLoginUI)
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			t.Cleanup(func() {
+				conf.MustSet(context.Background(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+				conf.MustSet(context.Background(), config.ViperKeySelfServiceLoginUI, loginUI)
+			})
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserUser), conf)
+
+			expectSuccess(t, false, false, browserUser, payload)
+			webhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 

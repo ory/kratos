@@ -235,6 +235,11 @@ type updateSettingsFlowWithPasskeyMethod struct {
 	//
 	// swagger:ignore
 	Flow string `json:"flow"`
+
+	// Transient data to pass along to any webhooks
+	//
+	// required: false
+	TransientPayload json.RawMessage `json:"transient_payload,omitempty" form:"transient_payload"`
 }
 
 func (p *updateSettingsFlowWithPasskeyMethod) GetFlowID() uuid.UUID {
@@ -250,6 +255,8 @@ func (s *Strategy) continueSettingsFlow(
 	w http.ResponseWriter, r *http.Request,
 	ctxUpdate *settings.UpdateContext, p updateSettingsFlowWithPasskeyMethod,
 ) error {
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
+
 	if len(p.Register+p.Remove) > 0 {
 		if err := flow.MethodEnabledAndAllowed(ctx, flow.SettingsFlow, s.SettingsStrategyID(), s.SettingsStrategyID(), s.d); err != nil {
 			return err

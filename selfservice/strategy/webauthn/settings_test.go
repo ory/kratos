@@ -29,6 +29,7 @@ import (
 
 	kratos "github.com/ory/kratos/pkg/httpclient"
 	"github.com/ory/kratos/selfservice/flow/settings"
+	"github.com/ory/kratos/selfservice/hook/hooktest"
 	"github.com/ory/kratos/text"
 	"github.com/ory/kratos/ui/node"
 
@@ -528,6 +529,63 @@ func TestCompleteSettings(t *testing.T) {
 
 		t.Run("type=spa", func(t *testing.T) {
 			run(t, true)
+		})
+	})
+
+	t.Run("case=should pass transient payload to after settings hooks", func(t *testing.T) {
+		webhook := hooktest.NewServer()
+		t.Cleanup(webhook.Close)
+		webhook.SetConfig(t, conf.GetProvider(t.Context()), config.HookStrategyKey(config.ViperKeySelfServiceSettingsAfter, identity.CredentialsTypeWebAuthn.String()))
+
+		transientPayload := `{"stuff":"42"}`
+		run := func(t *testing.T, spa bool) {
+			id := createIdentity(t.Context(), t, reg)
+			id.DeleteCredentialsType(identity.CredentialsTypePassword)
+			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":false}]}`), 0)
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), id, identity.ManagerAllowWriteProtectedTraits))
+
+			body, _ := doBrowserFlow(t, spa, func(v url.Values) {
+				v.Set(node.WebAuthnRemove, "666f6f666f6f")
+				v.Set("transient_payload", transientPayload)
+			}, id)
+
+			require.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
+			webhook.AssertTransientPayload(t, transientPayload)
+		}
+
+		t.Run("type=browser", func(t *testing.T) {
+			run(t, false)
+		})
+
+		t.Run("type=spa", func(t *testing.T) {
+			run(t, true)
+		})
+
+		t.Run("type=browser/resumed after reauthentication", func(t *testing.T) {
+			id := createIdentity(t.Context(), t, reg)
+			id.DeleteCredentialsType(identity.CredentialsTypePassword)
+			id.UpsertCredentialsConfig(identity.CredentialsTypeWebAuthn, sqlxx.JSONRawMessage(`{"credentials":[{"id":"Zm9vZm9v","display_name":"foo","is_passwordless":false}]}`), 0)
+			require.NoError(t, reg.IdentityManager().Update(t.Context(), id, identity.ManagerAllowWriteProtectedTraits))
+
+			browserClient := testhelpers.NewHTTPClientWithIdentitySessionCookie(t.Context(), t, reg, id)
+
+			loginUI := conf.GetProvider(t.Context()).String(config.ViperKeySelfServiceLoginUI)
+			conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1ns")
+			t.Cleanup(func() {
+				conf.MustSet(t.Context(), config.ViperKeySelfServiceSettingsPrivilegedAuthenticationAfter, "1m")
+				conf.MustSet(t.Context(), config.ViperKeySelfServiceLoginUI, loginUI)
+			})
+			_ = testhelpers.NewSettingsLoginAcceptAPIServer(t, testhelpers.NewSDKCustomClient(publicTS, browserClient), conf)
+
+			f := testhelpers.InitializeSettingsFlowViaBrowser(t, browserClient, false, publicTS)
+			values := testhelpers.SDKFormFieldsToURLValues(f.Ui.Nodes)
+			values.Set(node.WebAuthnRemove, "666f6f666f6f")
+			values.Set("transient_payload", transientPayload)
+
+			body, res := testhelpers.SettingsMakeRequest(t, false, false, f, browserClient, testhelpers.EncodeFormAsJSON(t, false, values))
+			require.Equal(t, http.StatusOK, res.StatusCode, "%s", body)
+			require.EqualValues(t, flow.StateSuccess, gjson.Get(body, "state").String(), body)
+			webhook.AssertTransientPayload(t, transientPayload)
 		})
 	})
 
