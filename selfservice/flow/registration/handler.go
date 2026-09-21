@@ -206,6 +206,10 @@ func (h *Handler) FromOldFlow(w http.ResponseWriter, r *http.Request, of Flow) (
 		return nil, err
 	}
 
+	if err := h.d.SessionTokenExchangePersister().MoveToNewFlow(r.Context(), of.ID, nf.ID); err != nil {
+		return nil, err
+	}
+
 	nf.RequestURL = of.RequestURL
 	nf.IdentitySchema = of.IdentitySchema
 	return nf, nil

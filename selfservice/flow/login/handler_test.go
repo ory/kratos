@@ -620,6 +620,24 @@ func TestFlowLifecycle(t *testing.T) {
 				}
 			})
 
+			t.Run("case=FromOldFlow moves session token exchanger to replacement flow", func(t *testing.T) {
+				req := testhelpers.NewTestHTTPRequest(t, "GET", ts.URL+login.RouteInitAPIFlow+"?return_session_token_exchange_code=true", nil)
+				oldFlow, _, err := reg.LoginHandler().NewLoginFlow(httptest.NewRecorder(), req, flow.TypeAPI)
+				require.NoError(t, err)
+
+				newFlow, err := reg.LoginHandler().FromOldFlow(httptest.NewRecorder(), req, *oldFlow)
+				require.NoError(t, err)
+
+				codes, found, err := reg.SessionTokenExchangePersister().CodeForFlow(ctx, newFlow.ID)
+				require.NoError(t, err)
+				assert.True(t, found)
+				assert.NotEmpty(t, codes.InitCode)
+
+				_, foundOld, err := reg.SessionTokenExchangePersister().CodeForFlow(ctx, oldFlow.ID)
+				require.NoError(t, err)
+				assert.False(t, foundOld)
+			})
+
 			t.Run("case=can not request refresh and aal at the same time on unauthenticated request", func(t *testing.T) {
 				res, body := initFlow(t, url.Values{"refresh": {"true"}, "aal": {"aal2"}}, true)
 				assert.Contains(t, res.Request.URL.String(), login.RouteInitAPIFlow)
