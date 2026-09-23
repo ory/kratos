@@ -127,6 +127,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	var p updateSettingsFlowWithProfileMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
+		ctxUpdate.Flow.TransientPayload = p.TransientPayload
 		return ctxUpdate, s.continueFlow(ctx, r, ctxUpdate, p)
 	} else if err != nil {
 		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
