@@ -136,6 +136,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
 	if err := s.continueSettingsFlow(ctx, w, r, ctxUpdate, p); err != nil {
 		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}

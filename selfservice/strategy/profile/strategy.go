@@ -151,6 +151,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 
 	// Reset after decoding form
 	p.SetFlowID(ctxUpdate.Flow.ID)
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
 
 	if err := s.continueFlow(ctx, r, ctxUpdate, p); err != nil {
 		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, nil, p, err)
