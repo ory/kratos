@@ -82,6 +82,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 	var p updateSettingsFlowWithPasswordMethod
 	ctxUpdate, err := settings.PrepareUpdate(s.d, w, r, f, ss, settings.ContinuityKey(s.SettingsStrategyID()), &p)
 	if errors.Is(err, settings.ErrContinuePreviousAction) {
+		ctxUpdate.Flow.TransientPayload = p.TransientPayload
 		return ctxUpdate, s.continueSettingsFlow(ctx, r, ctxUpdate, p)
 	} else if err != nil {
 		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
@@ -97,6 +98,7 @@ func (s *Strategy) Settings(ctx context.Context, w http.ResponseWriter, r *http.
 
 	// This does not come from the payload!
 	p.Flow = ctxUpdate.Flow.ID.String()
+	ctxUpdate.Flow.TransientPayload = p.TransientPayload
 	if err := s.continueSettingsFlow(ctx, r, ctxUpdate, p); err != nil {
 		return ctxUpdate, s.handleSettingsError(ctx, w, r, ctxUpdate, p, err)
 	}
