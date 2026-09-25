@@ -39,12 +39,24 @@ func (g *ProviderYandex) Config() *Configuration {
 }
 
 func (g *ProviderYandex) oauth2(ctx context.Context) *oauth2.Config {
+	// Defaults target the international Yandex OAuth hosts. Operators serving
+	// Russian-locale users can override via auth_url / token_url, e.g.
+	// https://oauth.yandex.ru/authorize and https://oauth.yandex.ru/token.
+	authURL := "https://oauth.yandex.com/authorize"
+	tokenURL := "https://oauth.yandex.com/token"
+	if g.config.AuthURL != "" {
+		authURL = g.config.AuthURL
+	}
+	if g.config.TokenURL != "" {
+		tokenURL = g.config.TokenURL
+	}
+
 	return &oauth2.Config{
 		ClientID:     g.config.ClientID,
 		ClientSecret: g.config.ClientSecret,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  "https://oauth.yandex.com/authorize",
-			TokenURL: "https://oauth.yandex.com/token",
+			AuthURL:  authURL,
+			TokenURL: tokenURL,
 		},
 		Scopes:      g.config.Scope,
 		RedirectURL: g.config.Redir(g.reg.Config().OIDCRedirectURIBase(ctx)),
