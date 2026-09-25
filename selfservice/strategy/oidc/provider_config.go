@@ -78,13 +78,13 @@ type Configuration struct {
 	IssuerURL string `json:"issuer_url"`
 
 	// AuthURL is the authorize url, typically something like: https://example.org/oauth2/auth
-	// Should only be used when the OAuth2 / OpenID Connect server is not supporting OpenID Connect Discovery and when
-	// `provider` is set to `generic`.
+	// Used when `provider` is `generic` (no OpenID Connect Discovery), `jackson`, or `yandex`
+	// (optional override; defaults to https://oauth.yandex.com/authorize).
 	AuthURL string `json:"auth_url"`
 
 	// TokenURL is the token url, typically something like: https://example.org/oauth2/token
-	// Should only be used when the OAuth2 / OpenID Connect server is not supporting OpenID Connect Discovery and when
-	// `provider` is set to `generic`.
+	// Used when `provider` is `generic` (no OpenID Connect Discovery), `jackson`, or `yandex`
+	// (optional override; defaults to https://oauth.yandex.com/token).
 	TokenURL string `json:"token_url"`
 
 	// Tenant is the Azure AD Tenant to use for authentication, and must be set when `provider` is set to `microsoft`.
