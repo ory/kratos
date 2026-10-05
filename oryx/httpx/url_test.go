@@ -74,6 +74,16 @@ func TestIncomingRequestURL(t *testing.T) {
 			expected: "https://auth.example.com/self-service/login",
 		},
 		{
+			name:    "encoded prefix: Path decoded, URL not double-encoded",
+			rawPath: "/self-service/login",
+			host:    "auth.example.com",
+			headers: map[string]string{
+				"X-Forwarded-Proto":  "https",
+				"X-Forwarded-Prefix": "/my%20app",
+			},
+			expected: "https://auth.example.com/my%20app/self-service/login",
+		},
+		{
 			name:    "root prefix is a no-op",
 			rawPath: "/self-service/login",
 			host:    "auth.example.com",

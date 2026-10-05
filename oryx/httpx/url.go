@@ -34,13 +34,35 @@ func IncomingRequestURL(r *http.Request) *url.URL {
 	// unreachable path. Prepend the forwarded prefix to restore the externally
 	// visible path.
 	if prefix := strings.TrimSpace(r.Header.Get("X-Forwarded-Prefix")); prefix != "" {
-		// Normalise to a single leading slash and no trailing slash so joining
-		// with the request path never produces "//" or a missing separator.
-		prefix = "/" + strings.Trim(prefix, "/")
-		if prefix != "/" {
-			source.Path = prefix + source.Path
-			if source.RawPath != "" {
-				source.RawPath = prefix + source.RawPath
+		// The prefix may arrive percent-encoded (e.g. "/my%20app"). url.Path is
+		// the decoded path and url.RawPath its encoding, so we must prepend the
+		// *decoded* prefix to Path and a *valid encoded* prefix to RawPath, and
+		// keep the two consistent — otherwise String() would double-encode the
+		// prefix or drop an existing %2F from the request path.
+		encodedPrefix := "/" + strings.Trim(prefix, "/")
+		if encodedPrefix != "/" {
+			// Decode for Path; fall back to the raw value if it is not valid
+			// percent-encoding.
+			decodedPrefix := encodedPrefix
+			if d, err := url.PathUnescape(encodedPrefix); err == nil {
+				decodedPrefix = d
+			}
+
+			// Determine the request's current encoded path (RawPath is only set
+			// when it differs from the default encoding of Path).
+			rawPath := source.RawPath
+			if rawPath == "" {
+				rawPath = source.EscapedPath()
+			}
+
+			source.Path = decodedPrefix + source.Path
+			combinedRaw := encodedPrefix + rawPath
+			// Only set RawPath if it validly encodes the new Path; otherwise
+			// leave it empty and let url.String() derive the encoding from Path.
+			if p, err := url.PathUnescape(combinedRaw); err == nil && p == source.Path {
+				source.RawPath = combinedRaw
+			} else {
+				source.RawPath = ""
 			}
 		}
 	}
