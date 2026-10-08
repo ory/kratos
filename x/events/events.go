@@ -497,13 +497,17 @@ func NewWebhookSucceeded(ctx context.Context, triggerID uuid.UUID, webhookID str
 }
 
 func NewWebhookFailed(ctx context.Context, err error, triggerID uuid.UUID, id string) (string, trace.EventOption) {
+	errStr := ""
+	if err != nil {
+		errStr = err.Error()
+	}
 	return WebhookFailed.String(),
 		trace.WithAttributes(
 			append(
 				semconv.AttributesFromContext(ctx),
 				attrWebhookID(id),
 				attrWebhookTriggerID(triggerID),
-				otelattr.String("Error", err.Error()),
+				otelattr.String("Error", errStr),
 				attrErrorReason(err),
 			)...,
 		)
@@ -562,6 +566,9 @@ func NewRegistrationInitiated(ctx context.Context, flowID uuid.UUID, flowType st
 }
 
 func reasonForError(err error) string {
+	if err == nil {
+		return ""
+	}
 	if ve := new(schema.ValidationError); errors.As(err, &ve) {
 		return ve.Message
 	}
