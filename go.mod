@@ -1,6 +1,6 @@
 module github.com/ory/kratos
 
-go 1.26
+go 1.27.3
 
 replace (
 	github.com/coreos/go-oidc/v3 => github.com/ory/go-oidc/v3 v3.0.0-20250124100243-69986dfaf891
