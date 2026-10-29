@@ -639,6 +639,17 @@ func TestSession(t *testing.T) {
 	assert.Equal(t, true, p.SessionWhoAmICaching(ctx))
 }
 
+func TestVerificationHookAutoInjection(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	l := logrusx.New("", "")
+	p := config.MustNew(t, l, &contextx.Default{}, configx.SkipValidation())
+
+	assert.Equal(t, false, p.SelfServiceVerificationHookAutoInjectionDisabled(ctx))
+	p.MustSet(ctx, config.ViperKeyDisableVerificationHookAutoInjection, true)
+	assert.Equal(t, true, p.SelfServiceVerificationHookAutoInjectionDisabled(ctx))
+}
+
 func TestCookies(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

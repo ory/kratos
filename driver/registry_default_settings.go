@@ -33,7 +33,7 @@ func (m *RegistryDefault) PostSettingsPostPersistHooks(ctx context.Context, sett
 		}
 	}
 
-	if m.Config().SelfServiceFlowVerificationEnabled(ctx) {
+	if m.Config().SelfServiceFlowVerificationEnabled(ctx) && !m.Config().SelfServiceVerificationHookAutoInjectionDisabled(ctx) {
 		hooks = slices.Insert(hooks, 0, settings.PostHookPostPersistExecutor(m.HookVerifier()))
 	}
 

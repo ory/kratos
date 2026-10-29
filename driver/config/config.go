@@ -111,6 +111,7 @@ const (
 	ViperKeyUseLegacyRequireVerifiedLoginError               = "feature_flags.legacy_require_verified_login_error"
 	ViperKeyLegacyAllowInsecureOrigins                       = "feature_flags.legacy_allow_insecure_origins"
 	ViperKeyRefreshLoginChooseAddress                        = "feature_flags.refresh_login_choose_address"
+	ViperKeyDisableVerificationHookAutoInjection             = "feature_flags.disable_verification_hook_auto_injection"
 	ViperKeySessionRefreshMinTimeLeft                        = "session.earliest_possible_extend"
 	ViperKeyCookieSameSite                                   = "cookies.same_site"
 	ViperKeyCookieDomain                                     = "cookies.domain"
@@ -757,6 +758,10 @@ func (p *Config) UseLegacyShowVerificationUI(ctx context.Context) bool {
 
 func (p *Config) UseLegacyRequireVerifiedLoginError(ctx context.Context) bool {
 	return p.GetProvider(ctx).Bool(ViperKeyUseLegacyRequireVerifiedLoginError)
+}
+
+func (p *Config) SelfServiceVerificationHookAutoInjectionDisabled(ctx context.Context) bool {
+	return p.GetProvider(ctx).Bool(ViperKeyDisableVerificationHookAutoInjection)
 }
 
 func (p *Config) SelfServiceFlowRecoveryEnabled(ctx context.Context) bool {
