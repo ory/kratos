@@ -245,13 +245,25 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 	s, err := h.r.SessionManager().FetchFromRequest(ctx, r, ExpandEverything, identity.ExpandEverythingButCredentials)
 	c := h.r.Config()
 	if err != nil {
-		// We cache errors (and set cache header only when configured) where no session was found.
-		if noSess := new(ErrNoActiveSessionFound); c.SessionWhoAmICaching(ctx) && errors.As(err, &noSess) && noSess.CredentialsMissing {
-			w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
+		// Separate the "no active session" case (401 is correct) from transient
+		// DB/context errors — otherwise a lookup that failed for infrastructure
+		// reasons (pool wait cancellation, driver timeout, ...) is reported as
+		// 401, misleading clients into treating a still-valid session as
+		// expired. See https://github.com/ory/kratos/issues/4581.
+		var noActive *ErrNoActiveSessionFound
+		if errors.As(err, &noActive) {
+			if c.SessionWhoAmICaching(ctx) && noActive.CredentialsMissing {
+				w.Header().Set("Ory-Session-Cache-For", fmt.Sprintf("%d", int64(time.Minute.Seconds())))
+			}
+			h.r.Logger().WithRequest(r).WithError(err).Info("No valid session found.")
+			h.r.Writer().WriteError(w, r, ErrNoSessionFound().WithWrap(err))
+			return
 		}
 
-		h.r.Logger().WithRequest(r).WithError(err).Info("No valid session found.")
-		h.r.Writer().WriteError(w, r, ErrNoSessionFound().WithWrap(err))
+		// Transient infrastructure error — surface the underlying status so
+		// clients retry instead of logging the user out.
+		h.r.Logger().WithRequest(r).WithError(err).Warn("Session lookup failed with a transient error.")
+		h.r.Writer().WriteError(w, r, err)
 		return
 	}
 
