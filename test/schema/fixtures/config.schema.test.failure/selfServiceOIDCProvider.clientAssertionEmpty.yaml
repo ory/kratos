@@ -1,0 +1,6 @@
+id: foo
+provider: microsoft
+client_id: foo
+mapper_url: https://example.com
+microsoft_tenant: organizations
+microsoft_client_assertion_file: ""

@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
+	"os"
 	"strings"
 
 	gooidc "github.com/coreos/go-oidc/v3/oidc"
@@ -20,7 +21,12 @@ import (
 	"github.com/ory/x/httpx"
 )
 
-var _ OAuth2Provider = (*ProviderMicrosoft)(nil)
+var (
+	_ OAuth2Provider       = (*ProviderMicrosoft)(nil)
+	_ OAuth2TokenExchanger = (*ProviderMicrosoft)(nil)
+)
+
+const clientAssertionTypeJWTBearer = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
 type ProviderMicrosoft struct {
 	*ProviderGenericOIDC
@@ -50,6 +56,39 @@ func (m *ProviderMicrosoft) OAuth2(ctx context.Context) (*oauth2.Config, error) 
 	}
 
 	return m.oauth2ConfigFromEndpoint(ctx, endpoint), nil
+}
+
+// Exchange exchanges the authorization code for a token. If `microsoft_client_assertion_file` is set,
+// the client authenticates with the JWT from that file (RFC 7523 `client_assertion`) instead of the
+// client secret, which enables Microsoft Entra ID workload identity federation. The file is read on
+// every call because projected service account tokens are rotated by the kubelet.
+func (m *ProviderMicrosoft) Exchange(ctx context.Context, code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
+	o, err := m.OAuth2(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if m.config.ClientAssertionFile == "" {
+		return o.Exchange(ctx, code, opts...)
+	}
+
+	assertion, err := os.ReadFile(m.config.ClientAssertionFile)
+	if err != nil {
+		return nil, errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("Unable to read `microsoft_client_assertion_file` of the `microsoft` oidc provider %s: %s", m.config.ID, err))
+	}
+
+	clientAssertion := strings.TrimSpace(string(assertion))
+	if clientAssertion == "" {
+		return nil, errors.WithStack(herodot.ErrMisconfiguration().WithReasonf("The `microsoft_client_assertion_file` of the `microsoft` oidc provider %s is empty", m.config.ID))
+	}
+
+	o.ClientSecret = ""
+	o.Endpoint.AuthStyle = oauth2.AuthStyleInParams
+	opts = append(opts,
+		oauth2.SetAuthURLParam("client_assertion_type", clientAssertionTypeJWTBearer),
+		oauth2.SetAuthURLParam("client_assertion", clientAssertion),
+	)
+	return o.Exchange(ctx, code, opts...)
 }
 
 func (m *ProviderMicrosoft) Claims(ctx context.Context, exchange *oauth2.Token, _ url.Values) (*Claims, error) {

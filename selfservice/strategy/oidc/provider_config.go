@@ -92,6 +92,13 @@ type Configuration struct {
 	// `8eaef023-2b34-4da1-9baa-8bc8c9d6a490` or `contoso.onmicrosoft.com`.
 	Tenant string `json:"microsoft_tenant"`
 
+	// ClientAssertionFile is the path to a file containing a JWT which is sent as `client_assertion`
+	// (RFC 7523) instead of `client_secret` when exchanging the authorization code. It enables
+	// Microsoft Entra ID workload identity federation, e.g. with the projected service account token
+	// written by Azure Workload Identity. The file is re-read on every exchange.
+	// Only supported when `provider` is set to `microsoft`.
+	ClientAssertionFile string `json:"microsoft_client_assertion_file"`
+
 	// SubjectSource is a flag which controls from which endpoint the subject identifier is taken by microsoft provider.
 	// Can be either `userinfo` or `me` or `oid`.
 	// If the value is `userinfo` then the subject identifier is taken from sub field of userinfo standard endpoint response.

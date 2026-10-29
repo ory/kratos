@@ -553,6 +553,13 @@
             "contoso.onmicrosoft.com"
           ]
         },
+        "microsoft_client_assertion_file": {
+          "title": "Microsoft client assertion file",
+          "description": "Path to a file containing a JWT which is sent as `client_assertion` instead of `client_secret` when exchanging the authorization code. Use with Microsoft Entra ID workload identity federation, e.g. the projected Kubernetes service account token from Azure Workload Identity. The file is re-read on every exchange, so rotated tokens are picked up. Only supported by the `microsoft` provider. When set, `client_secret` is optional.",
+          "type": "string",
+          "minLength": 1,
+          "examples": ["/var/run/secrets/azure/tokens/azure-identity-token"]
+        },
         "subject_source": {
           "title": "Microsoft subject source",
           "description": "Controls which source the subject identifier is taken from by microsoft provider. If set to `userinfo` (the default) then the identifier is taken from the `sub` field of OIDC ID token or data received from `/userinfo` standard OIDC endpoint. If set to `me` then the `id` field of data structure received from `https://graph.microsoft.com/v1.0/me` is taken as an identifier. If the value is `oid` then the the oid (Object ID) is taken to identify users across different services.",
@@ -676,14 +683,18 @@
             "required": ["provider"]
           },
           "then": {
-            "required": ["microsoft_tenant"]
+            "required": ["microsoft_tenant"],
+            "anyOf": [
+              { "required": ["client_secret"] },
+              { "required": ["microsoft_client_assertion_file"] }
+            ]
           },
           "else": {
             "not": {
-              "properties": {
-                "microsoft_tenant": {}
-              },
-              "required": ["microsoft_tenant"]
+              "anyOf": [
+                { "required": ["microsoft_tenant"] },
+                { "required": ["microsoft_client_assertion_file"] }
+              ]
             }
           }
         },
@@ -713,7 +724,19 @@
             ]
           },
           "else": {
-            "required": ["client_secret"],
+            "if": {
+              "not": {
+                "properties": {
+                  "provider": {
+                    "const": "microsoft"
+                  }
+                },
+                "required": ["provider"]
+              }
+            },
+            "then": {
+              "required": ["client_secret"]
+            },
             "allOf": [
               {
                 "not": {
