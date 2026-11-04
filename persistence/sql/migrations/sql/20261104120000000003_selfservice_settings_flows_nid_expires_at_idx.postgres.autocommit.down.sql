@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS selfservice_settings_flows_nid_expires_at_idx;
