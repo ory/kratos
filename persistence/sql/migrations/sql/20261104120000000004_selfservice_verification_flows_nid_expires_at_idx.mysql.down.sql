@@ -1,0 +1,1 @@
+DROP INDEX selfservice_verification_flows_nid_expires_at_idx ON selfservice_verification_flows;
