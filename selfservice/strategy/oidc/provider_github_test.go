@@ -44,6 +44,10 @@ func (m *mockGitHubRegistry) HTTPClient(ctx context.Context, opts ...httpx.Resil
 	return m.client
 }
 
+// TestGitHubPublicRawClaimsAllowlist verifies that gitHubPublicRawClaims maps only
+// the approved public GitHub profile fields, strictly excludes private/security data,
+// preserves explicit zero/false/empty-string values, formats timestamps as UTC RFC3339,
+// and omits absent or nil fields.
 func TestGitHubPublicRawClaimsAllowlist(t *testing.T) {
 	t.Parallel()
 
@@ -52,7 +56,7 @@ func TestGitHubPublicRawClaimsAllowlist(t *testing.T) {
 	strPtr := func(v string) *string { return &v }
 	boolPtr := func(v bool) *bool { return &v }
 
-	createdAtTime, err := time.Parse(time.RFC3339, "2008-01-14T04:33:35Z")
+	createdAtTime, err := time.Parse(time.RFC3339, "2008-01-14T06:33:35+02:00")
 	require.NoError(t, err)
 	updatedAtTime, err := time.Parse(time.RFC3339, "2026-02-01T12:00:00Z")
 	require.NoError(t, err)
