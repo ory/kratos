@@ -90,6 +90,7 @@ func (g *ProviderGitHub) Claims(ctx context.Context, exchange *oauth2.Token, que
 		Picture:   user.GetAvatarURL(),
 		Profile:   user.GetHTMLURL(),
 		UpdatedAt: user.GetUpdatedAt().Unix(),
+		RawClaims: gitHubPublicRawClaims(user),
 	}
 
 	// GitHub does not provide the user's private emails in the call to `/user`. Therefore, if scope "user:email" is set,

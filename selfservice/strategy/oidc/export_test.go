@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
+	ghapi "github.com/google/go-github/v89/github"
 
 	oidcv1 "github.com/ory/kratos/gen/oidc/v1"
 	"github.com/ory/kratos/selfservice/flow"
@@ -39,4 +40,9 @@ func (s *Strategy) ProcessTestLoginForTest(ctx context.Context, w http.ResponseW
 // assert the idempotency guard against an already-captured DebugPayload.
 func (s *Strategy) FinishTestLoginForTest(ctx context.Context, w http.ResponseWriter, r *http.Request, f *login.Flow, dp *login.DebugPayload) error {
 	return s.finishTestLogin(ctx, w, r, f, dp)
+}
+
+// ExportGitHubPublicRawClaims exposes gitHubPublicRawClaims for external test package assertion.
+func ExportGitHubPublicRawClaims(user *ghapi.User) map[string]any {
+	return gitHubPublicRawClaims(user)
 }
