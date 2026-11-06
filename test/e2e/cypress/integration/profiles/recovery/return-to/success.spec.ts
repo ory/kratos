@@ -22,7 +22,7 @@ context("Recovery with `return_to`", () => {
       profile: "recovery-mfa",
     },
   ].forEach(({ app, recovery, settings, profile }) => {
-    describe("Recovery with `return_to` query paramter success", () => {
+    describe("Recovery with `return_to` query parameter success", () => {
       before(() => {
         cy.deleteMail()
         cy.useConfigProfile(profile)
