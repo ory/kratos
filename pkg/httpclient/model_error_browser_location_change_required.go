@@ -20,7 +20,7 @@ var _ MappedNullable = &ErrorBrowserLocationChangeRequired{}
 
 // ErrorBrowserLocationChangeRequired struct for ErrorBrowserLocationChangeRequired
 type ErrorBrowserLocationChangeRequired struct {
-	Error *ErrorGeneric `json:"error,omitempty"`
+	Error *GenericError `json:"error,omitempty"`
 	// Points to where to redirect the user to next.
 	RedirectBrowserTo    *string `json:"redirect_browser_to,omitempty"`
 	AdditionalProperties map[string]interface{}
@@ -46,9 +46,9 @@ func NewErrorBrowserLocationChangeRequiredWithDefaults() *ErrorBrowserLocationCh
 }
 
 // GetError returns the Error field value if set, zero value otherwise.
-func (o *ErrorBrowserLocationChangeRequired) GetError() ErrorGeneric {
+func (o *ErrorBrowserLocationChangeRequired) GetError() GenericError {
 	if o == nil || IsNil(o.Error) {
-		var ret ErrorGeneric
+		var ret GenericError
 		return ret
 	}
 	return *o.Error
@@ -56,7 +56,7 @@ func (o *ErrorBrowserLocationChangeRequired) GetError() ErrorGeneric {
 
 // GetErrorOk returns a tuple with the Error field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *ErrorBrowserLocationChangeRequired) GetErrorOk() (*ErrorGeneric, bool) {
+func (o *ErrorBrowserLocationChangeRequired) GetErrorOk() (*GenericError, bool) {
 	if o == nil || IsNil(o.Error) {
 		return nil, false
 	}
@@ -72,8 +72,8 @@ func (o *ErrorBrowserLocationChangeRequired) HasError() bool {
 	return false
 }
 
-// SetError gets a reference to the given ErrorGeneric and assigns it to the Error field.
-func (o *ErrorBrowserLocationChangeRequired) SetError(v ErrorGeneric) {
+// SetError gets a reference to the given GenericError and assigns it to the Error field.
+func (o *ErrorBrowserLocationChangeRequired) SetError(v GenericError) {
 	o.Error = &v
 }
 
