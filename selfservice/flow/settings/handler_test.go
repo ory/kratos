@@ -177,6 +177,41 @@ func TestHandler(t *testing.T) {
 			})
 		})
 
+		t.Run("description=highest_available considers only configured methods", func(t *testing.T) {
+			for _, isAPI := range []bool{true, false} {
+				for _, method := range []string{"totp", "webauthn"} {
+					t.Run(fmt.Sprintf("api=%t/method=%s", isAPI, method), func(t *testing.T) {
+						previous := conf.GetProvider(ctx).Get(config.ViperKeySelfServiceSettingsRequiredAAL)
+						t.Cleanup(func() {
+							conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, previous)
+						})
+						conf.MustSet(ctx, config.ViperKeySelfServiceSettingsRequiredAAL, map[string]interface{}{
+							"value":              config.HighestAvailableAAL,
+							"considered_methods": []string{method},
+						})
+
+						res, body := initFlow(t, aal2Identity, isAPI)
+						if method == "totp" {
+							require.Equalf(t, http.StatusOK, res.StatusCode, "%s", body)
+							assertion(t, body, isAPI)
+							assert.NotEmpty(t, gjson.GetBytes(body, "id").String(), "%s", body)
+							if !isAPI {
+								assert.Contains(t, res.Request.URL.String(), reg.Config().SelfServiceFlowSettingsUI(ctx).String())
+							}
+						} else if isAPI {
+							require.Equalf(t, http.StatusForbidden, res.StatusCode, "%s", body)
+							assertx.EqualAsJSON(t,
+								session.NewErrAALNotSatisfied(publicTS.URL+"/self-service/login/browser?aal=aal2"),
+								json.RawMessage(body))
+						} else {
+							assert.Contains(t, res.Request.URL.String(), reg.Config().SelfServiceFlowLoginUI(ctx).String())
+							assert.Equal(t, "Please complete the second authentication challenge.", gjson.GetBytes(body, "ui.messages.0.text").String(), "%s", body)
+						}
+					})
+				}
+			}
+		})
+
 		t.Run("description=init a flow as browser", func(t *testing.T) {
 			t.Run("case=unauthorized users are redirected to login preserving redirect_to param", func(t *testing.T) {
 				c := testhelpers.NewClientWithCookies(t)

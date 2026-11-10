@@ -689,12 +689,16 @@ func (m *Manager) CountActiveFirstFactorCredentials(ctx context.Context, i *Iden
 	return count, nil
 }
 
-func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Identity) (count int, err error) {
+// CountActiveMultiFactorCredentials counts MFA credentials across all strategies unless consideredMethods limits them.
+func (m *Manager) CountActiveMultiFactorCredentials(ctx context.Context, i *Identity, consideredMethods ...string) (count int, err error) {
 	// This trace is more noisy than it's worth in diagnostic power.
 	// ctx, span := m.r.Tracer(ctx).Tracer().Start(ctx, "identity.Manager.CountActiveMultiFactorCredentials")
 	// defer otelx.End(span, &err)
 
 	for _, strategy := range m.r.ActiveCredentialsCounterStrategies(ctx) {
+		if consideredMethods != nil && !slices.Contains(consideredMethods, strategy.ID().String()) {
+			continue
+		}
 		current, err := strategy.CountActiveMultiFactorCredentials(ctx, i.Credentials)
 		if err != nil {
 			return 0, err

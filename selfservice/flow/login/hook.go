@@ -87,7 +87,7 @@ func NewHookExecutor(d executorDependencies) *HookExecutor {
 }
 
 func (e *HookExecutor) checkAAL(ctx context.Context, s *session.Session, a *Flow) error {
-	err := e.d.SessionManager().DoesSessionSatisfy(ctx, s, e.d.Config().SessionWhoAmIAAL(ctx))
+	err := e.d.SessionManager().DoesSessionSatisfy(ctx, s, e.d.Config().SessionWhoAmIAAL(ctx), session.WithConsideredMethods(e.d.Config().SessionWhoAmIConsideredMethods(ctx)...))
 	if err == nil {
 		return nil
 	}

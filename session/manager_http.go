@@ -80,8 +80,9 @@ func NewManagerHTTP(r managerHTTPDependencies) *ManagerHTTP {
 }
 
 type options struct {
-	requestURL string
-	upsertAAL  bool
+	requestURL        string
+	upsertAAL         bool
+	consideredMethods []string
 }
 
 type ManagerOptions func(*options)
@@ -90,6 +91,14 @@ type ManagerOptions func(*options)
 func WithRequestURL(requestURL string) ManagerOptions {
 	return func(opts *options) {
 		opts.requestURL = requestURL
+	}
+}
+
+// WithConsideredMethods limits which enrolled MFA methods trigger highest_available.
+// It does not restrict which methods can satisfy AAL2. A nil list preserves the unfiltered policy.
+func WithConsideredMethods(methods ...string) ManagerOptions {
+	return func(opts *options) {
+		opts.consideredMethods = methods
 	}
 }
 
@@ -382,6 +391,24 @@ func (s *ManagerHTTP) DoesSessionSatisfy(ctx context.Context, sess *Session, req
 			if err != nil {
 				return err
 			}
+		}
+
+		if managerOpts.consideredMethods != nil {
+			// The cached AAL is global, so a filtered policy must inspect credentials
+			// without replacing the identity's cached availability.
+			if len(sess.Identity.Credentials) == 0 {
+				if err := s.r.PrivilegedIdentityPool().HydrateIdentityAssociations(ctx, sess.Identity, identity.ExpandCredentials); err != nil {
+					return err
+				}
+			}
+			count, err := s.r.IdentityManager().CountActiveMultiFactorCredentials(ctx, sess.Identity, managerOpts.consideredMethods...)
+			if err != nil {
+				return err
+			}
+			if count > 0 {
+				return NewErrAALNotSatisfied(loginURL.String())
+			}
+			return nil
 		}
 
 		if aal, ok := sess.Identity.InternalAvailableAAL.ToAAL(); ok && aal == identity.AuthenticatorAssuranceLevel2 {

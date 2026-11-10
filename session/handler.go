@@ -259,6 +259,7 @@ func (h *Handler) whoami(w http.ResponseWriter, r *http.Request) {
 	if err := h.r.SessionManager().DoesSessionSatisfy(ctx, s, c.SessionWhoAmIAAL(ctx),
 		// For the time being we want to update the AAL in the database if it is unset.
 		UpsertAAL,
+		WithConsideredMethods(c.SessionWhoAmIConsideredMethods(ctx)...),
 	); errors.As(err, &aalErr) {
 		h.r.Logger().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
@@ -887,7 +888,7 @@ func (h *Handler) listMySessions(w http.ResponseWriter, r *http.Request) {
 	c := h.r.Config()
 
 	var aalErr *ErrAALNotSatisfied
-	if err := h.r.SessionManager().DoesSessionSatisfy(r.Context(), s, c.SessionWhoAmIAAL(r.Context())); errors.As(err, &aalErr) {
+	if err := h.r.SessionManager().DoesSessionSatisfy(r.Context(), s, c.SessionWhoAmIAAL(r.Context()), WithConsideredMethods(c.SessionWhoAmIConsideredMethods(r.Context())...)); errors.As(err, &aalErr) {
 		h.r.Logger().WithRequest(r).WithError(err).Info("Session was found but AAL is not satisfied for calling this endpoint.")
 		h.r.Writer().WriteError(w, r, err)
 		return

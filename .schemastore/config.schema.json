@@ -877,9 +877,44 @@
     "featureRequiredAal": {
       "title": "Required Authenticator Assurance Level",
       "description": "Sets what Authenticator Assurance Level (used for 2FA) is required to access this feature. If set to `highest_available` then this endpoint requires the highest AAL the identity has set up. If set to `aal1` then the identity can access this feature without 2FA.",
-      "type": "string",
-      "enum": ["aal1", "highest_available"],
-      "default": "highest_available"
+      "default": "highest_available",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["aal1", "highest_available"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value"],
+          "properties": {
+            "value": {
+              "type": "string",
+              "enum": ["aal1", "highest_available"]
+            },
+            "considered_methods": {
+              "description": "Limits which enrolled MFA methods trigger the highest_available requirement. If any listed method has active MFA credentials according to its credential counter, AAL2 is required; otherwise AAL1 is sufficient. Any valid AAL2 session satisfies the requirement, regardless of the authentication method used. Globally disabling a strategy does not necessarily exclude its credentials. Only valid with value highest_available. If omitted, all methods are considered as before.",
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": ["totp", "code", "lookup_secret", "webauthn"]
+              }
+            }
+          },
+          "if": {
+            "required": ["considered_methods"]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "const": "highest_available"
+              }
+            }
+          }
+        }
+      ]
     },
     "selfServiceAfterSettings": {
       "type": "object",

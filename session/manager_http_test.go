@@ -762,6 +762,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 		withAMR               session.AuthenticationMethods
 		sessionManagerOptions []session.ManagerOptions
 		expectedFunc          func(t *testing.T, err error, tcError error)
+		cachedAAL             identity.AuthenticatorAssuranceLevel
 	}{
 		{
 			desc:    "with highest_available a password user is aal1",
@@ -918,6 +919,151 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			errIs: new(session.ErrAALNotSatisfied),
 		},
 
+		{
+			desc:                  "considering totp does not require aal2 for backup codes only",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), lookupSecrets()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("totp"), session.UpsertAAL},
+			cachedAAL:             identity.AuthenticatorAssuranceLevel2,
+		},
+		{
+			desc:                  "considering totp requires aal2 for configured totp even when disabled",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), totp()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("totp"), session.UpsertAAL},
+			errAs:                 new(session.ErrAALNotSatisfied),
+			cachedAAL:             identity.AuthenticatorAssuranceLevel1,
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return contextx.WithConfigValue(ctx, "selfservice.methods.totp.enabled", false)
+			},
+		},
+		{
+			desc:                  "considering code for settings requires aal2 for configured mfa code",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), code()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("code")},
+			errAs:                 new(session.ErrAALNotSatisfied),
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return contextx.WithConfigValues(ctx, map[string]any{
+					"selfservice.methods.code.passwordless_enabled": false,
+					"selfservice.methods.code.mfa_enabled":          true,
+				})
+			},
+		},
+		{
+			desc:                  "considering totp for login does not require aal2 for configured mfa code",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), code()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("totp")},
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return contextx.WithConfigValues(ctx, map[string]any{
+					"selfservice.methods.code.passwordless_enabled": false,
+					"selfservice.methods.code.mfa_enabled":          true,
+				})
+			},
+		},
+		{
+			desc:                  "considering code v2 requires aal2 for configured mfa code v2",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), codeV2()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("code")},
+			errAs:                 new(session.ErrAALNotSatisfied),
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return contextx.WithConfigValue(ctx, "selfservice.methods.code.mfa_enabled", true)
+			},
+		},
+		{
+			desc:                  "considering code does not require aal2 when code mfa is disabled",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), code(), totp()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("code")},
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return contextx.WithConfigValue(ctx, "selfservice.methods.code.mfa_enabled", false)
+			},
+		},
+		{
+			desc:                  "considering multiple methods requires aal2 when only the last method matches",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), totp()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("code", "totp")},
+			errAs:                 new(session.ErrAALNotSatisfied),
+		},
+		{
+			desc:                  "considering multiple methods requires aal2 when only the first method matches",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), totp()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("totp", "code")},
+			errAs:                 new(session.ErrAALNotSatisfied),
+		},
+		{
+			desc:                  "considering totp accepts existing aal2 authenticated with backup codes",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), totp(), lookupSecrets()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword], amrs[identity.CredentialsTypeLookup]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("totp")},
+		},
+		{
+			desc:                  "considering an unknown method does not require aal2",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), totp(), lookupSecrets()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("unknown")},
+		},
+		{
+			desc:                  "considering totp does not require aal2 without credentials",
+			matcher:               config.HighestAvailableAAL,
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypeRecoveryCode]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("totp")},
+		},
+		{
+			desc:                  "considering code does not require aal2 for empty code credentials",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), codeEmpty(), totp()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("code")},
+			withContext: func(t *testing.T, ctx context.Context) context.Context {
+				return contextx.WithConfigValue(ctx, "selfservice.methods.code.mfa_enabled", true)
+			},
+		},
+		{
+			desc:                  "considering webauthn does not require aal2 for empty credentials",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), webAuthEmpty(), totp()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("webauthn")},
+		},
+		{
+			desc:                  "considering webauthn does not require aal2 for passwordless credentials",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), passwordlessWebAuth(), totp()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("webauthn")},
+		},
+		{
+			desc:                  "considering webauthn requires aal2 for mfa credentials",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), mfaWebAuth()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods("webauthn")},
+			errAs:                 new(session.ErrAALNotSatisfied),
+		},
+		{
+			desc:                  "nil considered methods preserves legacy backup code requirement",
+			matcher:               config.HighestAvailableAAL,
+			creds:                 []identity.Credentials{password(), lookupSecrets()},
+			withAMR:               session.AuthenticationMethods{amrs[identity.CredentialsTypePassword]},
+			sessionManagerOptions: []session.ManagerOptions{session.WithConsideredMethods([]string(nil)...)},
+			errAs:                 new(session.ErrAALNotSatisfied),
+		},
+
 		// Legacy tests
 		{
 			desc:    "has=aal1, requested=highest, available=aal0, credential=code",
@@ -1062,6 +1208,17 @@ func TestDoesSessionSatisfy(t *testing.T) {
 				id.SetCredentials(c.Type, c)
 			}
 			require.NoError(t, reg.IdentityManager().Create(ctx, id, identity.ManagerAllowWriteProtectedTraits))
+			assertCachedAAL := func(s *session.Session) {
+				if tc.cachedAAL == "" {
+					return
+				}
+				expected := identity.NewNullableAuthenticatorAssuranceLevel(tc.cachedAAL)
+				require.NotNil(t, s.Identity)
+				assert.Equal(t, expected, s.Identity.InternalAvailableAAL, "filtered checks must not mutate the attached global AAL cache")
+				stored, err := reg.IdentityPool().GetIdentity(ctx, id.ID, identity.ExpandNothing)
+				require.NoError(t, err)
+				assert.Equal(t, expected, stored.InternalAvailableAAL, "filtered checks must not persist a scoped AAL even with UpsertAAL")
+			}
 
 			req := testhelpers.NewTestHTTPRequest(t, "GET", "/sessions/whoami", nil)
 			s := session.NewInactiveSession()
@@ -1069,8 +1226,14 @@ func TestDoesSessionSatisfy(t *testing.T) {
 				s.CompletedLoginFor(m.Method, m.AAL)
 			}
 			require.NoError(t, reg.SessionManager().ActivateSession(req, s, id, time.Now().UTC()))
+			// Activation refreshes the global AAL; seed stale cache values only afterwards.
+			if tc.cachedAAL != "" {
+				id.InternalAvailableAAL = identity.NewNullableAuthenticatorAssuranceLevel(tc.cachedAAL)
+				require.NoError(t, reg.PrivilegedIdentityPool().UpdateIdentityColumns(ctx, id, "available_aal"))
+			}
 
 			err := reg.SessionManager().DoesSessionSatisfy(ctx, s, string(tc.matcher), tc.sessionManagerOptions...)
+			assertCachedAAL(s)
 			if tc.errAs != nil || tc.errIs != nil {
 				if tc.expectedFunc != nil {
 					tc.expectedFunc(t, err, tc.errAs)
@@ -1088,6 +1251,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			// This should still work even if the session does not have identity data attached yet ...
 			s.Identity = nil
 			err = reg.SessionManager().DoesSessionSatisfy(ctx, s, string(tc.matcher), tc.sessionManagerOptions...)
+			assertCachedAAL(s)
 			if tc.errAs != nil {
 				if tc.expectedFunc != nil {
 					// If there is no identity, we can't expect the error to contain the identity
@@ -1111,6 +1275,7 @@ func TestDoesSessionSatisfy(t *testing.T) {
 			s.Identity = id
 			s.Identity.Credentials = nil
 			err = reg.SessionManager().DoesSessionSatisfy(ctx, s, string(tc.matcher), tc.sessionManagerOptions...)
+			assertCachedAAL(s)
 			if tc.errAs != nil {
 				if tc.expectedFunc != nil {
 					tc.expectedFunc(t, err, tc.errAs)
