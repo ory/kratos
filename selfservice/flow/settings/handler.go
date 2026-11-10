@@ -277,7 +277,7 @@ func (h *Handler) createNativeSettingsFlow(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, s, h.d.Config().SelfServiceSettingsRequiredAAL(ctx)); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, s, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), session.WithConsideredMethods(h.d.Config().SelfServiceSettingsConsideredMethods(ctx)...)); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -371,7 +371,7 @@ func (h *Handler) createBrowserSettingsFlow(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	var managerOptions []session.ManagerOptions
+	managerOptions := []session.ManagerOptions{session.WithConsideredMethods(h.d.Config().SelfServiceSettingsConsideredMethods(ctx)...)}
 	requestURL := x.RequestURL(r)
 	if requestURL.Query().Get("return_to") != "" {
 		managerOptions = append(managerOptions, session.WithRequestURL(requestURL.String()))
@@ -491,7 +491,7 @@ func (h *Handler) getSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	// to a page displaying raw JSON to the client (browser), which is not what we want.
 	// Let's rather carry over the flow ID as a query parameter and redirect to the settings UI URL.
 	requestURL := urlx.CopyWithQuery(h.d.Config().SelfServiceFlowSettingsUI(ctx), url.Values{"flow": {rid.String()}})
-	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, sess, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), session.WithRequestURL(requestURL.String())); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, sess, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), session.WithConsideredMethods(h.d.Config().SelfServiceSettingsConsideredMethods(ctx)...), session.WithRequestURL(requestURL.String())); err != nil {
 		h.d.Writer().WriteError(w, r, err)
 		return
 	}
@@ -661,7 +661,7 @@ func (h *Handler) updateSettingsFlow(w http.ResponseWriter, r *http.Request) {
 	}
 
 	requestURL := x.RequestURL(r).String()
-	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, ss, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), session.WithRequestURL(requestURL)); err != nil {
+	if err := h.d.SessionManager().DoesSessionSatisfy(ctx, ss, h.d.Config().SelfServiceSettingsRequiredAAL(ctx), session.WithConsideredMethods(h.d.Config().SelfServiceSettingsConsideredMethods(ctx)...), session.WithRequestURL(requestURL)); err != nil {
 		h.d.SettingsFlowErrorHandler().WriteFlowError(ctx, w, r, node.DefaultGroup, f, nil, nil, err)
 		return
 	}

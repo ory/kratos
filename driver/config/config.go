@@ -1450,7 +1450,27 @@ func (p *Config) CookieDomain(ctx context.Context) string {
 }
 
 func (p *Config) SessionWhoAmIAAL(ctx context.Context) string {
-	return p.GetProvider(ctx).String(ViperKeySessionWhoAmIAAL)
+	return p.requiredAAL(ctx, ViperKeySessionWhoAmIAAL)
+}
+
+func (p *Config) SessionWhoAmIConsideredMethods(ctx context.Context) []string {
+	return p.consideredMethods(ctx, ViperKeySessionWhoAmIAAL)
+}
+
+func (p *Config) requiredAAL(ctx context.Context, key string) string {
+	provider := p.GetProvider(ctx)
+	if provider.Exists(key + ".value") {
+		return provider.String(key + ".value")
+	}
+	return provider.String(key)
+}
+
+func (p *Config) consideredMethods(ctx context.Context, key string) []string {
+	provider := p.GetProvider(ctx)
+	if !provider.Exists(key + ".considered_methods") {
+		return nil
+	}
+	return provider.Strings(key + ".considered_methods")
 }
 
 func (p *Config) SessionWhoAmICaching(ctx context.Context) bool {
@@ -1489,7 +1509,11 @@ func (p *Config) SessionRefreshMinTimeLeft(ctx context.Context) time.Duration {
 }
 
 func (p *Config) SelfServiceSettingsRequiredAAL(ctx context.Context) string {
-	return p.GetProvider(ctx).String(ViperKeySelfServiceSettingsRequiredAAL)
+	return p.requiredAAL(ctx, ViperKeySelfServiceSettingsRequiredAAL)
+}
+
+func (p *Config) SelfServiceSettingsConsideredMethods(ctx context.Context) []string {
+	return p.consideredMethods(ctx, ViperKeySelfServiceSettingsRequiredAAL)
 }
 
 func (p *Config) CookieSameSiteMode(ctx context.Context) http.SameSite {

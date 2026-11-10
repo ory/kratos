@@ -510,6 +510,67 @@ func TestLoginExecutor(t *testing.T) {
 			)
 		})
 
+		t.Run("highest_available considers only configured methods", func(t *testing.T) {
+			ctx := contextx.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, map[string]interface{}{
+				"value":              config.HighestAvailableAAL,
+				"considered_methods": []string{"totp"},
+			})
+			for _, tc := range []struct {
+				name       string
+				withTOTP   bool
+				withAAL2   bool
+				wantStepUp bool
+			}{
+				{name: "backup codes alone do not trigger step-up despite cached aal2"},
+				{name: "totp triggers step-up", withTOTP: true, wantStepUp: true},
+				{name: "backup code aal2 satisfies totp policy", withTOTP: true, withAAL2: true},
+			} {
+				t.Run(tc.name, func(t *testing.T) {
+					s := &session.Session{
+						AMR: session.AuthenticationMethods{{
+							Method: identity.CredentialsTypePassword,
+							AAL:    identity.AuthenticatorAssuranceLevel1,
+						}},
+						AuthenticatorAssuranceLevel: identity.AuthenticatorAssuranceLevel1,
+						Identity: &identity.Identity{
+							InternalAvailableAAL: identity.NullableAuthenticatorAssuranceLevel{
+								NullString: sql.NullString{String: string(identity.AuthenticatorAssuranceLevel2), Valid: true},
+							},
+							Credentials: map[identity.CredentialsType]identity.Credentials{
+								identity.CredentialsTypeLookup: {
+									Type:   identity.CredentialsTypeLookup,
+									Config: []byte(`{"recovery_codes":[{}]}`),
+								},
+							},
+						},
+					}
+					if tc.withTOTP {
+						s.Identity.Credentials[identity.CredentialsTypeTOTP] = identity.Credentials{
+							Type:   identity.CredentialsTypeTOTP,
+							Config: []byte(`{"totp_url":"otpauth://totp/test?secret=JBSWY3DPEHPK3PXP"}`),
+						}
+					}
+					if tc.withAAL2 {
+						s.AMR = append(s.AMR, session.AuthenticationMethod{
+							Method: identity.CredentialsTypeLookup,
+							AAL:    identity.AuthenticatorAssuranceLevel2,
+						})
+						s.AuthenticatorAssuranceLevel = identity.AuthenticatorAssuranceLevel2
+					}
+
+					err := login.CheckAALForTest(ctx, reg.LoginHookExecutor(), s, nil)
+					if tc.wantStepUp {
+						aalErr := new(session.ErrAALNotSatisfied)
+						require.ErrorAs(t, err, &aalErr)
+						assert.Equal(t, returnToServer.URL+"/self-service/login/browser?aal=aal2", aalErr.RedirectTo)
+					} else {
+						require.NoError(t, err)
+					}
+					assert.Equal(t, string(identity.AuthenticatorAssuranceLevel2), s.Identity.InternalAvailableAAL.String)
+				})
+			}
+		})
+
 		t.Run("copies parameters to redirect URL when AAL is not sufficient", func(t *testing.T) {
 			ctx := contextx.WithConfigValue(ctx, config.ViperKeySessionWhoAmIAAL, config.HighestAvailableAAL)
 			aalErr := new(session.ErrAALNotSatisfied)
