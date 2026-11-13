@@ -7,6 +7,57 @@
                 {
                     "properties": {
                         "version": {
+                            "const": "v26.2.0"
+                        }
+                    },
+                    "required": [
+                        "version"
+                    ]
+                },
+                {
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v26.2.0/.schemastore/config.schema.json"
+                }
+            ]
+        },
+        {
+            "allOf": [
+                {
+                    "properties": {
+                        "version": {
+                            "const": "v25.4.0"
+                        }
+                    },
+                    "required": [
+                        "version"
+                    ]
+                },
+                {
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v25.4.0/.schemastore/config.schema.json"
+                }
+            ]
+        },
+        {
+            "allOf": [
+                {
+                    "properties": {
+                        "version": {
+                            "const": "v1.3.1"
+                        }
+                    },
+                    "required": [
+                        "version"
+                    ]
+                },
+                {
+                    "$ref": "https://raw.githubusercontent.com/ory/kratos/v1.3.1/.schemastore/config.schema.json"
+                }
+            ]
+        },
+        {
+            "allOf": [
+                {
+                    "properties": {
+                        "version": {
                             "const": "v1.3.0"
                         }
                     },
