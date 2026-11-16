@@ -156,6 +156,43 @@ func TestDispatchSMTPWireProtocol(t *testing.T) {
 		}, 5*time.Second, 50*time.Millisecond)
 	})
 
+	t.Run("case=message has a Message-ID header", func(t *testing.T) {
+		smtpURL, rec := newRecordingSMTPServer(t)
+		c, _ := newWireCourier(t, smtpURL, nil)
+
+		_, err := c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
+			To: "user@example.org", Subject: "s", Body: "b",
+		}))
+		require.NoError(t, err)
+		require.NoError(t, c.DispatchQueue(t.Context()))
+
+		require.EventuallyWithT(t, func(t *assert.CollectT) {
+			_, data := rec.snapshot()
+			lines := headerLines(data, "Message-ID:")
+			if assert.Len(t, lines, 1) {
+				assert.Regexp(t, `^Message-ID: <[0-9a-f-]{36}@ory\.sh>$`, lines[0])
+			}
+		}, 5*time.Second, 50*time.Millisecond)
+	})
+
+	t.Run("case=configured Message-ID header is not overwritten", func(t *testing.T) {
+		smtpURL, rec := newRecordingSMTPServer(t)
+		c, _ := newWireCourier(t, smtpURL, map[string]any{
+			config.ViperKeyCourierSMTPHeaders + ".Message-ID": "<custom@example.org>",
+		})
+
+		_, err := c.QueueEmail(t.Context(), templates.NewTestStub(&templates.TestStubModel{
+			To: "user@example.org", Subject: "s", Body: "b",
+		}))
+		require.NoError(t, err)
+		require.NoError(t, c.DispatchQueue(t.Context()))
+
+		require.EventuallyWithT(t, func(t *assert.CollectT) {
+			_, data := rec.snapshot()
+			assert.Equal(t, []string{"Message-ID: <custom@example.org>"}, headerLines(data, "Message-ID:"))
+		}, 5*time.Second, 50*time.Millisecond)
+	})
+
 	t.Run("case=non-rfc recipient produces exactly one RCPT and one To header", func(t *testing.T) {
 		smtpURL, rec := newRecordingSMTPServer(t)
 		c, _ := newWireCourier(t, smtpURL, nil)
