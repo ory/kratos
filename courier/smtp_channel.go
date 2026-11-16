@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
 	"go.opentelemetry.io/otel/trace"
@@ -53,6 +54,21 @@ func NewSMTPChannelWithCustomTemplates(deps Dependencies, cfg *config.SMTPConfig
 
 func (c *SMTPChannel) ID() string {
 	return "email"
+}
+
+// messageIDHeader returns an RFC 5322 msg-id of the form "<id@domain>". The
+// domain is taken from the sender address, falling back to the SMTP host.
+func messageIDHeader(id uuid.UUID, fromAddress, smtpHost string) string {
+	domain := smtpHost
+	if addr, err := stdmail.ParseAddress(fromAddress); err == nil {
+		if _, d, ok := strings.Cut(addr.Address, "@"); ok && d != "" {
+			domain = d
+		}
+	}
+	if domain == "" {
+		domain = "localhost"
+	}
+	return "<" + id.String() + "@" + domain + ">"
 }
 
 func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
@@ -104,8 +120,19 @@ func (c *SMTPChannel) Dispatch(ctx context.Context, msg Message) (err error) {
 	gm.SetHeader("Subject", msg.Subject)
 
 	headers := cfg.Headers
+	hasMessageID := false
 	for k, v := range headers {
+		if strings.EqualFold(k, "Message-ID") {
+			hasMessageID = true
+		}
 		gm.SetHeader(k, v)
+	}
+
+	// RFC 5322, section 3.6.4 says that every message SHOULD have a Message-ID.
+	// Not every SMTP relay adds one, and some receiving servers reject messages
+	// without it. A configured Message-ID header takes precedence.
+	if !hasMessageID {
+		gm.SetHeader("Message-ID", messageIDHeader(msg.ID, cfg.FromAddress, c.smtpClient.Host))
 	}
 
 	gm.SetBody("text/plain", msg.Body)
