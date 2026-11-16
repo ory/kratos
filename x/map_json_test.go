@@ -58,6 +58,29 @@ func TestTypeMap(t *testing.T) {
 	assert.Error(t, err)
 }
 
+// TestTypeMapOnlyMatchesExactBooleans ensures that string values which merely
+// start with "false", contain "true", or end with "on" are kept as strings
+// instead of being treated as (unparseable) booleans. See the alternation
+// grouping in regexMatchBool.
+func TestTypeMapOnlyMatchesExactBooleans(t *testing.T) {
+	r, err := TypeMap(map[string]string{
+		"name":   "Jon",
+		"animal": "dragon",
+		"who":    "person",
+		"super":  "truest",
+		"myth":   "falsehood",
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, map[string]interface{}{
+		"name":   "Jon",
+		"animal": "dragon",
+		"who":    "person",
+		"super":  "truest",
+		"myth":   "falsehood",
+	}, r)
+}
+
 func TestUntypedMapToJSON(t *testing.T) {
 	r, err := UntypedMapToJSON(map[string]string{
 		"string":  "string",
